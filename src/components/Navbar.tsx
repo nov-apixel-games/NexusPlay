@@ -6,14 +6,19 @@ import { supabase } from '../lib/supabase';
 interface NavbarProps {
   onMenuClick: () => void;
   userProfile?: any;
+  session?: any;
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
 }
 
-export default function Navbar({ onMenuClick, userProfile, onLoginClick, onLogoutClick }: NavbarProps) {
+export default function Navbar({ onMenuClick, userProfile, session, onLoginClick, onLogoutClick }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
+  
+  // Usar session como fallback secundario si userProfile aún no carga
+  const isAuth = !!session || !!userProfile;
+  const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
 
   useEffect(() => {
     if (!userProfile) {
@@ -93,8 +98,8 @@ export default function Navbar({ onMenuClick, userProfile, onLoginClick, onLogou
       </div>
 
       <div className="flex items-center gap-4 relative">
-        {userProfile ? (
-           <>
+        {isAuth ? (
+          <>
               <div className="relative" ref={notifRef}>
                 <button 
                    onClick={() => setShowNotifications(!showNotifications)}
@@ -142,12 +147,12 @@ export default function Navbar({ onMenuClick, userProfile, onLoginClick, onLogou
 
               <div className="flex items-center gap-3">
                  <div className="hidden sm:block text-right">
-                   <div className="text-sm font-bold text-white leading-tight">{userProfile.username}</div>
-                   <div className="text-[10px] text-gray-400 capitalize">{userProfile.role}</div>
+                   <div className="text-sm font-bold text-white leading-tight truncate max-w-[120px]">{username}</div>
+                   <div className="text-[10px] text-gray-400 capitalize">{userProfile?.role || 'user'}</div>
                  </div>
                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 p-0.5 shadow-lg shadow-cyan-500/20">
                     <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-sm font-black text-white uppercase">
-                      {userProfile.username?.charAt(0) || <UserIcon className="w-4 h-4"/>}
+                      {username?.charAt(0) || <UserIcon className="w-4 h-4"/>}
                     </div>
                  </div>
                  <button onClick={onLogoutClick} className="p-2 text-gray-400 hover:text-red-400 transition-colors ml-2" title="Cerrar sesión">

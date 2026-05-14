@@ -2,6 +2,7 @@ export interface AppItem {
   id: string;
   name: string;
   developer: string;
+  developerId?: string;
   rating: number;
   downloads: string;
   category: string;
@@ -17,6 +18,8 @@ export interface AppItem {
   downloadUrl?: string;
   featured?: boolean;
   date?: string;
+  iconPublicId?: string;
+  screenshotsPublicIds?: string[];
 }
 
 export interface Category {

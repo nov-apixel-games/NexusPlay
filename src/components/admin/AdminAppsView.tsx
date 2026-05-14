@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Smartphone, Check, X, Star, Trash2, Edit } from 'lucide-react';
+import { Smartphone, Check, X, Star, Trash2, Edit, Loader2 } from 'lucide-react';
 import { AppItem } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { deleteFromCloudinary } from '../../lib/cloudinary';
 
 export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], setApps: (a: AppItem[]) => void, addToast: any }) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const toggleHighlight = async (id: string) => {
     const app = apps.find(a => a.id === id);
@@ -20,14 +22,56 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
   };
 
   const deleteApp = async (id: string) => {
-    if(confirm("¿Seguro que deseas eliminar esta app?")) {
-      const { error } = await supabase.from('apps').delete().eq('id', id);
-      if (error) {
-        addToast('Error al eliminar app.', 'error');
-        return;
+    console.log("Delete triggered for ID:", id);
+    
+    const app = apps.find(a => a.id === id);
+    if (!app) {
+      alert("Error: App no encontrada en la lista.");
+      return;
+    }
+
+    const confirmMessage = `¿ELIMINAR DEFINITIVAMENTE "${app.name.toUpperCase()}"?\n\n- Se borrará de la base de datos.\n- Se borrarán las fotos de Cloudinary.\n\nConfirma de nuevo para proceder.`;
+    
+    if (window.confirm(confirmMessage)) {
+      setIsDeleting(id);
+      try {
+        // Log para depuración
+        console.log("Iniciando borrado de Cloudinary para:", app.name);
+        
+        // 1. Cloudinary (con manejo de errores individual para que no bloquee todo)
+        try {
+          if (app.iconPublicId) {
+            await deleteFromCloudinary(app.iconPublicId);
+          }
+          if (app.screenshotsPublicIds && app.screenshotsPublicIds.length > 0) {
+            for (const pid of app.screenshotsPublicIds) {
+              await deleteFromCloudinary(pid);
+            }
+          }
+        } catch (cloudErr) {
+          console.warn("Error borrando de Cloudinary (continuando con DB):", cloudErr);
+        }
+
+        // 2. Supabase
+        console.log("Borrando de Supabase ID:", id);
+        const { error } = await supabase.from('apps').delete().eq('id', id);
+        
+        if (error) {
+          console.error("Supabase Delete Error:", error);
+          throw new Error(error.message);
+        }
+
+        // 3. Éxito
+        setApps(prev => prev.filter(a => a.id !== id));
+        addToast(`App "${app.name}" eliminada con éxito.`, 'info');
+        alert("¡Eliminado correctamente!");
+      } catch (err: any) {
+        console.error("Fallo total:", err);
+        addToast(`Error al eliminar: ${err.message}`, 'error');
+        alert("Error al eliminar: " + err.message);
+      } finally {
+        setIsDeleting(null);
       }
-      setApps(apps.filter(a => a.id !== id));
-      addToast('App eliminada.', 'info');
     }
   };
 
@@ -99,7 +143,24 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                         </>
                       )}
                       <button className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-200 hover:bg-red-900/30 hover:text-white transition-colors"><Edit className="w-4 h-4" /></button>
-                      <button onClick={() => deleteApp(app.id)} className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-500 hover:bg-red-600/20 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      <button 
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteApp(app.id);
+                        }}
+                        disabled={isDeleting === app.id}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-black font-black uppercase text-xs transition-all active:scale-95 shadow-lg disabled:opacity-50 border-2 border-white/20"
+                      >
+                        {isDeleting === app.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            <span>Eliminar</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </td>
                 </tr>

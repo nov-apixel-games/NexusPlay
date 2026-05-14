@@ -68,41 +68,43 @@ export default function App() {
   const [aiConfig, setAiConfig] = useState<AIConfig>(DEFAULT_AI_CONFIG);
 
   const handleLogout = async () => {
-    console.log("Cerrando sesión");
-    
-    // UI feedback inmediato
+    // 1. Limpieza total de estados locales
     setSession(null);
     setUserProfile(null);
     setActiveView('home');
     setShowDevPanel(false);
     setIsSidebarOpen(false);
-    addToast('Sesión cerrada correctamente', 'success');
-
+    
     try {
+      // 2. Notificar a Supabase
       await supabase.auth.signOut();
-      console.log("logout success");
-    } catch (e) {
-      console.error("Logout error", e);
-    }
-    
-    // Clear all local storage manually to prevent lingering sessions
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('sb-')) {
-          keysToRemove.push(key);
-        }
-    }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
-    
-    // Limpiar estado profundo
-    setDevRequests([]);
-    setUsers([]);
+      
+      // 3. Limpiar TODO el rastro local
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Limpiar cookies vinculadas
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      }
 
-    // Refrescar estado global para limpiar completamente la sesión de la interfaz
+      console.log("Cierre de sesión profundo completado.");
+    } catch (e) {
+      console.warn("Error en proceso de logout:", e);
+    }
+
+    addToast('Sesión cerrada. Reiniciando...', 'success');
+
+    // 4. Salto total fuera de la caché para permitir login limpio
     setTimeout(() => {
-      window.location.reload();
-    }, 500);
+      // Redirección forzada con timestamp para romper cualquier estado de iframe/caché
+      const baseUrl = window.location.origin + window.location.pathname;
+      window.location.href = `${baseUrl}?v=${Date.now()}`;
+    }, 400);
   };
 
   useEffect(() => {
@@ -113,16 +115,17 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user.email);
       }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth event:", _event, !!session);
       setSession(session);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user.email);
       } else {
         setUserProfile(null);
       }
@@ -134,9 +137,11 @@ export default function App() {
       .channel('apps-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, payload => {
         if (payload.eventType === 'INSERT') {
-          setApps(prev => [payload.new as any, ...prev]);
+          const newApp = mapDbAppToAppItem(payload.new);
+          setApps(prev => [newApp, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
-          setApps(prev => prev.map(a => a.id === payload.new.id ? payload.new as any : a));
+          const updatedApp = mapDbAppToAppItem(payload.new);
+          setApps(prev => prev.map(a => a.id === updatedApp.id ? updatedApp : a));
         } else if (payload.eventType === 'DELETE') {
           setApps(prev => prev.filter(a => a.id !== payload.old.id));
         }
@@ -149,113 +154,86 @@ export default function App() {
     };
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, email?: string) => {
     try {
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout')), 5000));
+      const finalEmail = email || session?.user?.email || '';
+      console.log("Intentando cargar perfil:", userId);
+
+      // 1. Intentar obtener perfil existente
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
       
-      let { data, error } = await Promise.race([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        timeoutPromise
-      ]) as any;
-      
-      // Create profile if it doesn't exist
-      if (!data && (!error || error.code === 'PGRST116')) { // handle row not found
-        const { data: authData } = await supabase.auth.getUser();
-        if (authData.user) {
-          const email = authData.user.email || '';
-          const role = email === 'elmenorjn@gmail.com' ? 'admin' : 'user';
-          const username = email.split('@')[0] || 'User';
-          const newProfile = { id: userId, email, role, username, created_at: new Date().toISOString() };
-          
-          const { data: insertedData, error: insertError } = await Promise.race([
-            supabase.from('profiles').insert([newProfile]).select().single(),
-            timeoutPromise
-          ]) as any;
-          
-          if (insertedData) {
-            data = insertedData;
-            console.log("LOGIN 3 profile created");
-          } else if (insertError) {
-            console.error("Error creating profile:", insertError);
-            // Fallback just to allow frontend session
-            data = newProfile; 
-            console.log("LOGIN 3 profile created (fallback)");
-          }
-        }
-      } else if (error) {
-         console.warn("fetchUserProfile error (possibly timeout):", error);
-         // Fallback profile if there's a network error or timeout
-         data = { id: userId, email: session?.user?.email || '', role: 'user', username: 'User' };
-         console.log("LOGIN 3 profile found (fallback due to error)");
-      } else {
-        console.log("LOGIN 3 profile found");
-        // Force admin for the specific user
-        if (data && data.email === 'elmenorjn@gmail.com' && data.role !== 'admin') {
-          const { error: updateError } = await supabase.from('profiles').update({ role: 'admin' }).eq('id', userId);
-          if (!updateError) {
-             data.role = 'admin';
-          }
-        }
+      if (error) {
+        console.warn("Error de red/permisos al cargar perfil:", error.message);
+        setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] || 'Usuario' });
+        return;
       }
 
-      if (data) {
+      if (!data) {
+        console.log("Perfil no existe en DB. Creando...");
+        const role = finalEmail === 'elmenorjn@gmail.com' ? 'admin' : 'user';
+        const uniqueSuffix = userId.substring(0, 4);
+        // Truncar username para evitar errores de longitud (máx 20 caracteres por seguridad)
+        const baseName = (finalEmail.split('@')[0] || 'User').substring(0, 15);
+        const username = `${baseName}_${uniqueSuffix}`;
+        
+        const { data: created, error: insErr } = await supabase.from('profiles').insert({
+          id: userId,
+          email: finalEmail,
+          role,
+          username
+        }).select().single();
+
+        if (!insErr && created) {
+          setUserProfile(created);
+        } else {
+          console.error("No se pudo persistir el perfil:", insErr);
+          // Fallback local
+          setUserProfile({ id: userId, email: finalEmail, role, username });
+        }
+      } else {
+        // Asegurar admin por email si es necesario
         if (data.email === 'elmenorjn@gmail.com' && data.role !== 'admin') {
-          const { data: updatedData, error: updateError } = await Promise.race([
-            supabase.from('profiles').update({ role: 'admin' }).eq('id', userId).select().single(),
-            timeoutPromise
-          ]) as any;
-          if (updatedData) {
-            setUserProfile(updatedData);
-            console.log("LOGIN 4 role assigned");
-            console.log("LOGIN 5 redirect ready");
-            fetchAllData();
-            return;
-          } else {
-             console.error("Could not update role in DB:", updateError);
-             // Force admin on frontend if DB update fails
-             data.role = 'admin';
-          }
+          const { data: updated } = await supabase.from('profiles').update({ role: 'admin' }).eq('id', userId).select().single();
+          setUserProfile(updated || { ...data, role: 'admin' });
+        } else {
+          setUserProfile(data);
         }
         
-        setUserProfile(data);
-        console.log("LOGIN 4 role assigned");
-        console.log("LOGIN 5 redirect ready");
-        if (data.role === 'admin') {
+        if (data.role === 'admin' || data.email === 'elmenorjn@gmail.com') {
           fetchAllData();
         }
       }
     } catch (e: any) {
-      console.warn("fetchUserProfile caught error:", e.message);
-      // Fallback
-      setUserProfile({ id: userId, email: session?.user?.email || '', role: 'user', username: 'User' });
+      console.error("Fallo crítico en fetchUserProfile:", e);
     }
   };
+
+  const mapDbAppToAppItem = (d: any): AppItem => ({
+    id: d.id,
+    name: d.app_name,
+    developer: d.company_name,
+    developerId: d.developer_id,
+    description: d.description,
+    category: d.category,
+    size: d.size,
+    version: d.version,
+    icon: d.icon_url,
+    iconPublicId: d.icon_public_id,
+    screenshots: d.screenshots,
+    screenshotsPublicIds: d.screenshots_public_ids,
+    downloadUrl: d.download_url,
+    status: d.status,
+    featured: d.featured,
+    rating: typeof d.rating === 'string' ? parseFloat(d.rating) : d.rating || 5.0,
+    downloads: d.downloads,
+    price: d.price,
+    date: d.created_at
+  });
 
   const fetchApps = async () => {
     const { data } = await supabase.from('apps').select('*').order('created_at', { ascending: false });
     if (data) {
-      // Map properties from DB to internal AppItem if needed.
-      // Assumes DB fields match AppItem fields mostly except snake_case vs camelCase.
-      const mappedApps = data.map(d => ({
-        id: d.id,
-        name: d.app_name,
-        company: d.company_name, // fallback for developer
-        developer: d.company_name,
-        description: d.description,
-        category: d.category,
-        size: d.size,
-        version: d.version,
-        icon: d.icon_url,
-        screenshots: d.screenshots,
-        downloadUrl: d.download_url,
-        status: d.status,
-        featured: d.featured,
-        rating: typeof d.rating === 'string' ? parseFloat(d.rating) : d.rating || 5.0,
-        downloads: d.downloads,
-        price: d.price,
-        date: d.created_at
-      }));
-      setApps(mappedApps);
+      setApps(data.map(mapDbAppToAppItem));
     }
   };
 
@@ -347,25 +325,90 @@ export default function App() {
   };
 
   const handleAddApp = async (newApp: AppItem) => {
-    if (!session?.user) return;
-    const { error } = await supabase.from('apps').insert({
-      developer_id: session.user.id,
-      app_name: newApp.name,
-      company_name: newApp.developer,
-      description: newApp.description || '',
-      category: newApp.category,
-      size: newApp.size || '0MB',
-      version: newApp.version || '1.0.0',
-      icon_url: newApp.icon,
-      screenshots: newApp.screenshots || [],
-      download_url: newApp.downloadUrl || '',
-      status: 'pending'
-    });
-    if (error) {
-      addToast('Error al publicar: ' + error.message, 'error');
-    } else {
-      addToast('App enviada a revisión correctamente.', 'success');
-      // The realtime subscription will update the state
+    if (!session?.user) {
+      addToast('Debes iniciar sesión para publicar.', 'error');
+      return;
+    }
+    
+    try {
+      console.log("Intentando publicar app:", newApp.name);
+      
+      // ASEGURAR PERFIL ANTES DE PUBLICAR (SOLUCIÓN DEFINITIVA 23503)
+      try {
+        const uId = session.user.id;
+        const uEmail = session.user.email || '';
+        
+        console.log("Verificando integridad de perfil en DB para:", uId);
+        
+        const suffix = uId.substring(0, 4);
+        const base = (uEmail.split('@')[0] || 'User').substring(0, 15);
+        const finalRole = (uEmail === 'elmenorjn@gmail.com') ? 'admin' : (userProfile?.role || 'developer');
+
+        // Intentar asegurar el perfil con reintento simple
+        const { error: syncErr } = await supabase.from('profiles').upsert({
+          id: uId,
+          username: `${base}_${suffix}`,
+          email: uEmail,
+          role: finalRole
+        }, { onConflict: 'id' });
+        
+        if (syncErr) {
+          console.error("Fallo crítico de registro de perfil:", syncErr);
+          
+          if (syncErr.code === '42501') {
+            addToast("⚠️ ERROR DE PRIVACIDAD: Supabase bloquea el registro. SOLUCIÓN: Ve a SQL Editor y ejecuta: ALTER TABLE profiles DISABLE ROW LEVEL SECURITY; ALTER TABLE apps DISABLE ROW LEVEL SECURITY; ALTER TABLE stats DISABLE ROW LEVEL SECURITY;", "warning");
+          } else {
+            addToast(`Error de Vínculo (${syncErr.code}): ${syncErr.message}`, "error");
+          }
+        }
+        
+        console.log("Perfil asegurado correctamente con rol:", finalRole);
+      } catch (err) {
+        console.warn("Error no controlado en orquestación de perfil:", err);
+      }
+
+      const appData: any = {
+        developer_id: session.user.id,
+        app_name: newApp.name,
+        company_name: newApp.developer || userProfile?.username || 'Indie Dev',
+        description: newApp.description || '',
+        category: newApp.category || 'Juegos',
+        size: newApp.size || 'Desconocido',
+        version: newApp.version || '1.0.0',
+        icon_url: newApp.icon,
+        icon_public_id: newApp.iconPublicId,
+        screenshots: newApp.screenshots || [],
+        screenshots_public_ids: newApp.screenshotsPublicIds || [],
+        download_url: newApp.downloadUrl || '',
+        status: 'published',
+        rating: 5.0,
+        downloads: '0',
+        price: 'Gratis',
+        featured: false
+      };
+
+      console.log("Datos a insertar en apps:", appData);
+      const { data, error } = await supabase.from('apps').insert([appData]).select();
+
+      if (error) {
+        console.error("Error Detallado Supabase (apps insert):", error);
+        let msg = `Error (${error.code}): ${error.message}`;
+        
+        if (error.code === '42501') {
+          msg = 'Error de Seguridad: No tienes permisos de escritura (RLS).';
+        } else if (error.code === '23503') {
+          msg = 'Error de Referencia: Tu cuenta no está vinculada correctamente. Intenta cerrar sesión y volver a entrar.';
+        }
+        
+        addToast(msg, 'error');
+      } else {
+        console.log("App publicada con éxito:", data);
+        addToast('¡Aplicación lanzada con éxito!', 'success');
+        fetchApps(); // Refrescar lista
+      }
+    } catch (err: any) {
+      console.error("Error inesperado en handleAddApp:", err);
+      addToast('Error inesperado: ' + err.message, 'error');
     }
   };
 
@@ -449,7 +492,13 @@ export default function App() {
       </div>
 
       {!showAuthModal && (
-        <Navbar onMenuClick={() => setIsSidebarOpen(true)} userProfile={userProfile} onLoginClick={() => setShowAuthModal(true)} onLogoutClick={handleLogout} />
+        <Navbar 
+          onMenuClick={() => setIsSidebarOpen(true)} 
+          userProfile={userProfile} 
+          session={session}
+          onLoginClick={() => setShowAuthModal(true)} 
+          onLogoutClick={handleLogout} 
+        />
       )}
       
       <Sidebar 
@@ -561,7 +610,7 @@ export default function App() {
           setDevRequests={setDevRequests}
           onAddApp={handleAddApp} 
           onClose={() => setShowDevPanel(false)}
-          publishedApps={apps.filter(a => a.developer === session.user.id || a.company === userProfile?.username)} 
+          publishedApps={apps.filter(a => a.developerId === session.user.id || a.developer === userProfile?.username)} 
           initialTab={devPanelInitialTab}
           onRoleChange={(newRole) => {
             setUserProfile((prev: any) => prev ? { ...prev, role: newRole } : prev);

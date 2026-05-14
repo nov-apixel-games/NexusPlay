@@ -114,7 +114,7 @@ export function AdminUsers({ users, setUsers, addToast }: { users: UserItem[], s
        addToast(`Error al cambiar rol: ${error.message}`, 'error');
        return;
     }
-    setUsers(users.map(u => u.id === id ? { ...u, role } : u));
+    setUsers(users.map(u => u.id === id ? { ...u, role: role as 'user' | 'developer' | 'admin' } : u));
     addToast(`Rol de usuario actualizado a ${role}`, 'success');
   };
 
