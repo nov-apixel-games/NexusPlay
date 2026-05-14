@@ -1,35 +1,56 @@
 import { useState } from 'react';
 import { Smartphone, Check, X, Star, Trash2, Edit } from 'lucide-react';
 import { AppItem } from '../../types';
+import { supabase } from '../../lib/supabase';
 
 export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], setApps: (a: AppItem[]) => void, addToast: any }) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const toggleHighlight = (id: string) => {
-    setApps(apps.map(a => a.id === id ? { ...a, isHighlighted: !a.isHighlighted } : a));
+  const toggleHighlight = async (id: string) => {
+    const app = apps.find(a => a.id === id);
+    if (!app) return;
+    
+    const { error } = await supabase.from('apps').update({ featured: !app.featured }).eq('id', id);
+    if (error) {
+      addToast('Error al modificar estado.', 'error');
+      return;
+    }
+    setApps(apps.map(a => a.id === id ? { ...a, featured: !a.featured } : a));
     addToast('Estado de destacado modificado.', 'success');
   };
 
-  const deleteApp = (id: string) => {
+  const deleteApp = async (id: string) => {
     if(confirm("¿Seguro que deseas eliminar esta app?")) {
+      const { error } = await supabase.from('apps').delete().eq('id', id);
+      if (error) {
+        addToast('Error al eliminar app.', 'error');
+        return;
+      }
       setApps(apps.filter(a => a.id !== id));
       addToast('App eliminada.', 'info');
     }
   };
 
-  const updateStatus = (id: string, status: 'published' | 'rejected') => {
+  const updateStatus = async (id: string, status: 'published' | 'rejected') => {
+    const { error } = await supabase.from('apps').update({ status }).eq('id', id);
+    if (error) {
+       addToast('Error al actualizar estado.', 'error');
+       return;
+    }
     setApps(apps.map(a => a.id === id ? { ...a, status } : a));
     addToast(`App ${status === 'published' ? 'publicada' : 'rechazada'}.`, status === 'published' ? 'success' : 'error');
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-black text-white flex items-center gap-2"><Smartphone className="w-6 h-6 text-cyan-400" /> Gestión de Apps</h2>
+      <h2 className="text-2xl font-black text-white flex items-center gap-2">
+        <Smartphone className="w-6 h-6 text-red-500" /> Gestión de Apps
+      </h2>
       
-      <div className="glass-panel rounded-3xl overflow-hidden border-white/5">
+      <div className="glass-panel rounded-3xl overflow-hidden border-red-900/20 bg-[#120505]/50">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-white/5 text-gray-400 font-semibold uppercase text-xs">
+            <thead className="bg-red-950/30 text-red-200/60 font-semibold uppercase text-xs">
               <tr>
                 <th className="px-6 py-4">Aplicación</th>
                 <th className="px-6 py-4">Desarrollador</th>
@@ -38,19 +59,19 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                 <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-red-900/20 text-red-50">
               {apps.map(app => (
-                <tr key={app.id} className="hover:bg-white/5 transition-colors">
+                <tr key={app.id} className="hover:bg-red-900/10 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <img src={app.icon} alt="" className="w-10 h-10 rounded-lg object-cover bg-white/10" referrerPolicy="no-referrer" />
+                      <img src={app.icon} alt="" className="w-10 h-10 rounded-lg object-cover bg-red-900/20 border border-red-900/20" referrerPolicy="no-referrer" />
                       <div>
                         <div className="font-bold text-white">{app.name}</div>
-                        <div className="text-xs text-gray-500">{app.category} • {app.downloads}</div>
+                        <div className="text-xs text-red-200/50">{app.category} • {app.downloads}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-400 font-medium">{app.developer}</td>
+                  <td className="px-6 py-4 text-red-200/70 font-medium">{app.developer}</td>
                   <td className="px-6 py-4">
                     {app.status === 'pending' ? (
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Pendiente</span>
@@ -63,22 +84,22 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => toggleHighlight(app.id)}
-                      className={`p-2 rounded-xl transition-colors ${app.isHighlighted ? 'bg-yellow-500/20 text-yellow-400' : 'text-gray-600 hover:bg-white/5 hover:text-white'}`}
+                      className={`p-2 rounded-xl transition-colors ${app.featured ? 'bg-yellow-500/20 text-yellow-400' : 'text-gray-600 hover:bg-white/5 hover:text-white'}`}
                       title="Destacar App"
                     >
-                      <Star className={`w-4 h-4 ${app.isHighlighted ? 'fill-yellow-400' : ''}`} />
+                      <Star className={`w-4 h-4 ${app.featured ? 'fill-yellow-400' : ''}`} />
                     </button>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex gap-2 justify-end">
                       {app.status === 'pending' && (
                         <>
-                          <button onClick={() => updateStatus(app.id, 'published')} className="p-2 rounded-xl bg-green-500/10 text-green-400 hover:bg-green-500/20"><Check className="w-4 h-4" /></button>
-                          <button onClick={() => updateStatus(app.id, 'rejected')} className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20"><X className="w-4 h-4" /></button>
+                          <button onClick={() => updateStatus(app.id, 'published')} className="p-2 rounded-xl bg-green-500/10 text-green-400 hover:bg-green-500/20 shadow-sm"><Check className="w-4 h-4" /></button>
+                          <button onClick={() => updateStatus(app.id, 'rejected')} className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm"><X className="w-4 h-4" /></button>
                         </>
                       )}
-                      <button className="p-2 rounded-xl bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"><Edit className="w-4 h-4" /></button>
-                      <button onClick={() => deleteApp(app.id)} className="p-2 rounded-xl bg-red-500/5 text-red-500 hover:bg-red-500/20"><Trash2 className="w-4 h-4" /></button>
+                      <button className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-200 hover:bg-red-900/30 hover:text-white transition-colors"><Edit className="w-4 h-4" /></button>
+                      <button onClick={() => deleteApp(app.id)} className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-500 hover:bg-red-600/20 transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>

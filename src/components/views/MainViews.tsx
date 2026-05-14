@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings } from 'lucide-react';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User } from 'lucide-react';
 import AppGrid, { AppCard } from '../AppGrid';
 import { AppItem, Category } from '../../types';
 import { CATEGORIES } from '../../data';
@@ -107,32 +107,88 @@ export function RankingView({ apps }: { apps: AppItem[] }) {
   );
 }
 
-export function ProfileView() {
+export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction }: { 
+  session?: any, 
+  userProfile?: any, 
+  onLoginClick?: () => void,
+  onDeveloperAction?: (action: 'activate' | 'open') => void 
+}) {
+  if (!session) {
+    return (
+      <div className="pt-24 px-6 max-w-3xl mx-auto pb-16 flex flex-col items-center text-center space-y-6">
+        <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+          <User className="w-10 h-10 text-gray-500" />
+        </div>
+        <h1 className="text-3xl font-black">Tu Cuenta Nexus</h1>
+        <p className="text-gray-400 max-w-sm">Inicia sesión o regístrate para acceder a tus descargas, guardar favoritos y sincronizar tu progreso en los juegos.</p>
+        <button 
+          onClick={onLoginClick}
+          className="mt-4 px-8 py-3 bg-cyan-500 text-black font-bold rounded-xl hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
+        >
+          Iniciar sesión / Registrarse
+        </button>
+      </div>
+    );
+  }
+
+  const username = userProfile?.username || session.user?.email?.split('@')[0] || 'Usuario';
+  const email = session.user?.email || '';
+  const isAdmin = userProfile?.role === 'admin';
+  const isDeveloper = userProfile?.role === 'developer' || isAdmin;
+  const initial = username.charAt(0).toUpperCase();
+
   return (
     <div className="pt-24 px-6 max-w-3xl mx-auto pb-16 space-y-8">
       <div className="glass-panel p-8 rounded-3xl border-white/5 flex flex-col sm:flex-row items-center gap-6">
         <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 p-1">
-          <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-3xl font-black">E</div>
+          <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-3xl font-black">{initial}</div>
         </div>
         <div className="text-center sm:text-left flex-1">
-          <h1 className="text-2xl font-black mb-1">elmenorjn</h1>
-          <p className="text-gray-400 text-sm mb-4">elmenorjn@gmail.com</p>
-          <div className="flex items-center justify-center sm:justify-start gap-4">
-            <div className="px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/20">Usuario Verificado</div>
-            <div className="px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 text-xs font-bold border border-cyan-500/20">Admin</div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+            <h1 className="text-2xl font-black">{username}</h1>
+            <div className="flex gap-2">
+              <div className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-bold border border-green-500/20 uppercase">Verificado</div>
+              {isAdmin && (
+                <div className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold border border-amber-500/20 uppercase">Admin</div>
+              )}
+              {isDeveloper && !isAdmin && (
+                <div className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20 uppercase">Dev</div>
+              )}
+            </div>
           </div>
+          <p className="text-gray-400 text-sm mb-4">{email}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass-panel p-6 rounded-3xl border-white/5 hover:border-white/10 transition-colors">
-          <h3 className="font-bold mb-2 flex items-center gap-2"><Settings className="w-5 h-5 text-gray-400" /> Configuración de Cuenta</h3>
-          <p className="text-sm text-gray-400 mb-4">Actualiza tus contraseñas, método de pago y preferencias de notificaciones.</p>
+          <h3 className="font-bold mb-2 flex items-center gap-2"><Settings className="w-5 h-5 text-gray-400" /> Configuración</h3>
+          <p className="text-sm text-gray-400 mb-4">Actualiza tus contraseñas y preferencias de notificaciones.</p>
           <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors">Administrar</button>
         </div>
+        
+        {/* Sección de Desarrollador */}
+        <div className="glass-panel p-6 rounded-3xl border-white/5 hover:border-cyan-500/20 transition-all bg-gradient-to-br from-transparent to-cyan-500/5">
+           <h3 className="font-bold mb-2 flex items-center gap-2">
+            <Layers className={`w-5 h-5 ${isDeveloper ? 'text-cyan-400' : 'text-gray-500'}`} /> 
+            {isDeveloper ? 'Panel Desarrollador' : 'Programa de Desarrolladores'}
+          </h3>
+           <p className="text-sm text-gray-400 mb-4">
+            {isDeveloper 
+              ? 'Sube nuevos juegos, gestiona tus aplicaciones publicadas y revisa estadísticas.' 
+              : 'Únete a nuestra comunidad y publica tus propios juegos y aplicaciones.'}
+          </p>
+           <button 
+             onClick={() => onDeveloperAction?.(isDeveloper ? 'open' : 'activate')}
+             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDeveloper ? 'bg-cyan-500 text-black hover:bg-cyan-400' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+           >
+             {isDeveloper ? 'Ir al Panel' : 'Activar Ahora'}
+           </button>
+        </div>
+
         <div className="glass-panel p-6 rounded-3xl border-white/5 hover:border-white/10 transition-colors">
            <h3 className="font-bold mb-2 flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-green-400" /> Seguridad</h3>
-           <p className="text-sm text-gray-400 mb-4">Gestiona las sesiones activas y la autenticación de dos factores.</p>
+           <p className="text-sm text-gray-400 mb-4">Gestiona las sesiones activas y la seguridad de tu cuenta.</p>
            <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors">Seguridad</button>
         </div>
       </div>

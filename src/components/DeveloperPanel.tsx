@@ -1,62 +1,117 @@
-import { useState } from 'react';
-import { X, Upload, Link as LinkIcon, Image as ImageIcon, CheckCircle, ShieldAlert, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Upload, Link as LinkIcon, Image as ImageIcon, CheckCircle, ShieldAlert, Send, Code, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppItem, DevRequest } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface DeveloperPanelProps {
   userEmail: string | null;
+  userId: string;
+  userProfile: any;
+  isApproved: boolean;
   devRequests: DevRequest[];
   setDevRequests: (reqs: DevRequest[]) => void;
   onAddApp: (app: AppItem) => void;
   onUpdateApp: (app: AppItem) => void;
   onClose: () => void;
   publishedApps: AppItem[];
+  initialTab?: 'upload' | 'my-apps' | 'requirements';
+  onRoleChange?: (role: string) => void;
 }
 
-export default function DeveloperPanel({ userEmail, devRequests, setDevRequests, onAddApp, onUpdateApp, onClose, publishedApps }: DeveloperPanelProps) {
-  const [reqData, setReqData] = useState({ name: '', company: '', experience: '', appTypes: '', message: '' });
+export default function DeveloperPanel({ 
+  userEmail, 
+  userId, 
+  userProfile, 
+  isApproved, 
+  devRequests, 
+  setDevRequests, 
+  onAddApp, 
+  onUpdateApp, 
+  onClose, 
+  publishedApps,
+  initialTab = 'upload',
+  onRoleChange
+}: DeveloperPanelProps) {
+  const [reqData, setReqData] = useState({ company: '', teamDescription: '', experience: '', appTypes: '', links: '', message: '' });
   
   const [formData, setFormData] = useState({
     name: '',
-    company: '',
+    company: userProfile?.username || '',
     description: '',
     category: 'Herramientas',
     size: '',
     version: '',
     icon: '',
     screenshot: '',
+    screenshot2: '',
+    changelog: '',
     downloadUrl: ''
   });
   
   const [isSuccess, setIsSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'my-apps' | 'requirements'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'my-apps' | 'requirements'>(initialTab);
 
-  const currentRequest = devRequests.find(r => r.email === userEmail);
-  const isApproved = currentRequest?.status === 'approved' || userEmail === 'elmenorjn@gmail.com'; // admin is always approved
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
-  const handleRequestAccess = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userEmail) return;
+  const [currentRequest, setCurrentRequest] = useState<any>(null);
+
+  useEffect(() => {
+    if (userId) {
+      supabase.from('developer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setCurrentRequest(data[0]);
+          }
+        });
+    }
+  }, [userId]);
+
+  const handleActivateAccount = async () => {
+    if (!userId) return;
     
-    const newReq: DevRequest = {
-      id: Math.random().toString(36).substr(2, 9),
-      userId: userEmail,
-      name: reqData.name,
-      email: userEmail,
-      company: reqData.company,
-      experience: reqData.experience,
-      appTypes: reqData.appTypes,
-      message: reqData.message,
-      status: 'pending',
-      date: new Date().toISOString()
-    };
-    
-    setDevRequests([newReq, ...devRequests]);
+    // Automatic approval: update status to approved and set role to developer
+    const { data: requestData, error: requestError } = await supabase.from('developer_requests').insert({
+      user_id: userId,
+      full_name: userProfile?.username || userEmail || 'Usuario',
+      studio_name: 'Nexus Developer',
+      experience: 'Auto-activado',
+      app_type: 'Games',
+      message: 'Cuenta activada instantáneamente por el usuario.',
+      status: 'approved'
+    }).select().single();
+
+    if (requestError) {
+      console.warn("Soft error creating request log:", requestError.message);
+    }
+
+    // Update profile role
+    const { error: profileError } = await supabase.from('profiles').update({
+      role: 'developer'
+    }).eq('id', userId);
+
+    if (profileError) {
+      alert("Error al activar: " + profileError.message);
+    } else {
+      onRoleChange?.('developer');
+      setActiveTab('upload');
+      setCurrentRequest(requestData || { status: 'approved' });
+    }
   };
 
   const handleAppSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.downloadUrl.toLowerCase().endsWith('.apk') && !formData.downloadUrl.includes('drive.google.com') && !formData.downloadUrl.includes('mega.nz') && !formData.downloadUrl.includes('mediafire.com')) {
+    if (
+      !formData.downloadUrl.toLowerCase().endsWith('.apk') && 
+      !formData.downloadUrl.includes('drive.google.com') && 
+      !formData.downloadUrl.includes('mega.nz') && 
+      !formData.downloadUrl.includes('mediafire.com') &&
+      !formData.downloadUrl.includes('dropbox.com')
+    ) {
       alert("Solo se aceptan archivos .APK válidos o links de Mega, MediaFire, Google Drive.");
       return;
     }
@@ -70,12 +125,13 @@ export default function DeveloperPanel({ userEmail, devRequests, setDevRequests,
       size: formData.size,
       version: formData.version,
       icon: formData.icon || 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=128&h=128&fit=crop',
-      screenshots: [formData.screenshot],
+      screenshots: [formData.screenshot, formData.screenshot2].filter(Boolean),
       downloadUrl: formData.downloadUrl,
       status: 'pending',
       rating: 5.0,
       downloads: '0',
       price: 'Gratis',
+      description: formData.description + (formData.changelog ? `\n\n### Changelog\n${formData.changelog}` : ''),
       date: new Date().toISOString()
     };
     
@@ -83,6 +139,19 @@ export default function DeveloperPanel({ userEmail, devRequests, setDevRequests,
     setIsSuccess(true);
     setTimeout(() => {
       setIsSuccess(false);
+      setFormData({
+        name: '',
+        company: userProfile?.username || '',
+        description: '',
+        category: 'Herramientas',
+        size: '',
+        version: '',
+        icon: '',
+        screenshot: '',
+        screenshot2: '',
+        changelog: '',
+        downloadUrl: ''
+      });
       setActiveTab('my-apps');
     }, 2000);
   };
@@ -111,39 +180,27 @@ export default function DeveloperPanel({ userEmail, devRequests, setDevRequests,
         </div>
 
         <div className="overflow-y-auto p-6 md:p-8 flex-1 custom-scrollbar">
-          {!isApproved ? (
-            currentRequest ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-                <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-500 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
-                  <ShieldAlert className="w-10 h-10" />
-                </div>
-                <h3 className="text-2xl font-bold">Solicitud en Revisión</h3>
-                <p className="text-gray-400 max-w-sm">
-                  Tu solicitud ha sido enviada y está siendo revisada por nuestro equipo. Recibirás una notificación cuando sea aprobada.
+          {!isApproved && currentRequest?.status !== 'approved' ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center gap-6">
+              <div className="w-24 h-24 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-400 animate-pulse transition-all">
+                <Code className="w-12 h-12" />
+              </div>
+              <div className="max-w-md">
+                <h3 className="text-3xl font-black mb-2 uppercase tracking-tight">Activa tu cuenta</h3>
+                <p className="text-gray-400">
+                  Presiona el botón para convertirte en desarrollador de NexusPlay e iniciar tu viaje publicando juegos.
                 </p>
               </div>
-            ) : (
-              <div className="max-w-xl mx-auto">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2">Solicita Acceso</h3>
-                  <p className="text-gray-400 text-sm">
-                    Para publicar en NexusPlay debes solicitar acceso como desarrollador. Nuestro equipo revisará tu solicitud. Cuando sea aprobada recibirás una notificación.
-                  </p>
+              <button 
+                onClick={handleActivateAccount}
+                className="group relative px-12 py-5 bg-cyan-500 text-black font-black uppercase rounded-2xl overflow-hidden active:scale-95 transition-all shadow-[0_0_40px_rgba(34,211,238,0.2)]"
+              >
+                <div className="relative z-10 flex items-center gap-3">
+                  Activar Ahora <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </div>
-                <form onSubmit={handleRequestAccess} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <input required type="text" placeholder="Nombre completo" value={reqData.name} onChange={e => setReqData({...reqData, name: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-colors" />
-                    <input required type="text" placeholder="Nombre de tu estudio/compañía" value={reqData.company} onChange={e => setReqData({...reqData, company: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-colors" />
-                  </div>
-                  <input required type="text" placeholder="Experiencia previa (ej: 3 años)" value={reqData.experience} onChange={e => setReqData({...reqData, experience: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-colors" />
-                  <input required type="text" placeholder="Qué tipo de apps publicarás?" value={reqData.appTypes} onChange={e => setReqData({...reqData, appTypes: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-colors" />
-                  <textarea required placeholder="Mensaje adicional sobre ti o tu equipo" value={reqData.message} onChange={e => setReqData({...reqData, message: e.target.value})} className="w-full h-24 bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:border-cyan-400 transition-colors resize-none"></textarea>
-                  <button type="submit" className="w-full h-14 bg-cyan-500 text-black font-black uppercase rounded-xl hover:bg-cyan-400 transition-colors flex items-center justify-center gap-2">
-                    Enviar Solicitud <Send className="w-5 h-5" />
-                  </button>
-                </form>
-              </div>
-            )
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
+              </button>
+            </div>
           ) : (
             <>
               <div className="flex gap-4 mb-8 border-b border-white/5 pb-4">
@@ -241,9 +298,19 @@ export default function DeveloperPanel({ userEmail, devRequests, setDevRequests,
                           <input required type="url" value={formData.icon} onChange={(e) => setFormData({...formData, icon: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-all font-medium" />
                         </div>
                       </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-500 uppercase px-1"><Upload className="inline w-3 h-3"/> Capturas (URL 1)</label>
+                          <input required type="url" value={formData.screenshot} onChange={(e) => setFormData({...formData, screenshot: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-all font-medium" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-500 uppercase px-1"><Upload className="inline w-3 h-3"/> Capturas (URL 2)</label>
+                          <input required type="url" value={formData.screenshot2} onChange={(e) => setFormData({...formData, screenshot2: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-all font-medium" />
+                        </div>
+                      </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-500 uppercase px-1"><Upload className="inline w-3 h-3"/> Capturas (URL 1)</label>
-                        <input required type="url" value={formData.screenshot} onChange={(e) => setFormData({...formData, screenshot: e.target.value})} className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-cyan-400 transition-all font-medium" />
+                        <label className="text-xs font-bold text-gray-500 uppercase px-1">Changelog (Opcional)</label>
+                        <textarea value={formData.changelog} onChange={(e) => setFormData({...formData, changelog: e.target.value})} className="w-full h-16 bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:border-cyan-400 transition-all resize-none"></textarea>
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-gray-500 uppercase px-1"><LinkIcon className="inline w-3 h-3"/> Link de descarga (Mega/Drive)</label>
