@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  
+  --color-nexus-bg: #030712;
+  --color-nexus-card: #0f172a;
+  --color-nexus-cyan: #00f2ff;
+  --color-nexus-green: #00ff88;
+  --color-nexus-purple: #8b5cf6;
+  --color-nexus-pink: #ec4899;
+}
+
+@layer base {
+  body {
+    @apply bg-nexus-bg text-white antialiased selection:bg-nexus-cyan/30;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-nexus-card/50 backdrop-blur-md border border-white/5;
+  }
+  
+  .neon-text-gradient {
+    @apply bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent;
+  }
+
+  .neon-border {
+    @apply border border-cyan-500/30 shadow-[0_0_10px_-3px_rgba(0,242,255,0.2)];
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-nexus-card rounded-full hover:bg-nexus-cyan/50 transition-colors;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
