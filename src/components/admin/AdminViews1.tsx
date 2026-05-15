@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { AppItem, UserItem } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { SystemMetrics } from './SystemMetrics';
 
 export function AdminDashboard({ apps, users }: { apps: AppItem[], users: UserItem[] }) {
   const [cpu, setCpu] = useState(35);
@@ -55,19 +56,7 @@ export function AdminDashboard({ apps, users }: { apps: AppItem[], users: UserIt
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse glow-red" /> Live DB / Vercel Edge
-            </div>
-          </div>
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Zap className="w-5 h-5 text-rose-500" /> Rendimiento del Sistema</h3>
-          <div className="space-y-4">
-            <ProgressBar label="CPU Usage" value={Math.round(cpu)} color="bg-red-500" />
-            <ProgressBar label="RAM / Memory Reserve" value={Math.round(ram)} color="bg-rose-500" />
-            <ProgressBar label="I/O & Latency" value={Math.round(io)} color="bg-red-400" />
-          </div>
-        </div>
+        <SystemMetrics />
       </div>
     </div>
   );

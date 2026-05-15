@@ -51,7 +51,12 @@ export async function uploadToCloudinary(file: File, subFolder: string = ''): Pr
 }
 
 export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
-  console.log(`[Frontend] Solicitando eliminación segura de: ${publicId}`);
+  if (!publicId) {
+    console.warn("[Cloudinary] No public_id provided for deletion, skipping.");
+    return true;
+  }
+
+  console.log(`[Cloudinary] Solicitando eliminación de: ${publicId}`);
   
   try {
     const response = await fetch('/api/delete-image', {
@@ -60,16 +65,17 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
       body: JSON.stringify({ public_id: publicId }),
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Error al eliminar de Cloudinary via Backend:", errorData);
+      console.error("[Cloudinary] Fallo al eliminar desde backend:", data);
       return false;
     }
 
-    const data = await response.json();
+    console.log(`[Cloudinary] Resultado exitoso para ${publicId}:`, data);
     return data.success;
   } catch (error) {
-    console.error("Error de comunicación con el backend para eliminar:", error);
+    console.error(`[Cloudinary] Error de red al intentar eliminar ${publicId}:`, error);
     return false;
   }
 }

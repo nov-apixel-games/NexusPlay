@@ -21,57 +21,67 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
     addToast('Estado de destacado modificado.', 'success');
   };
 
-  const deleteApp = async (id: string) => {
-    console.log("Delete triggered for ID:", id);
-    
+  const deleteApp = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const app = apps.find(a => a.id === id);
     if (!app) {
-      alert("Error: App no encontrada en la lista.");
+      addToast('Error: Aplicación no encontrada.', 'error');
       return;
     }
 
-    const confirmMessage = `¿ELIMINAR DEFINITIVAMENTE "${app.name.toUpperCase()}"?\n\n- Se borrará de la base de datos.\n- Se borrarán las fotos de Cloudinary.\n\nConfirma de nuevo para proceder.`;
+    const confirmMessage = `¿ELIMINAR DEFINITIVAMENTE "${app.name.toUpperCase()}"?\n\n- Se borrará de la base de datos local y remota.\n- Se eliminarán icono y capturas de Cloudinary.\n\n⚠️ ESTA OPERACIÓN ES IRREVERSIBLE.`;
     
-    if (window.confirm(confirmMessage)) {
-      setIsDeleting(id);
-      try {
-        // Log para depuración
-        console.log("Iniciando borrado de Cloudinary para:", app.name);
-        
-        // 1. Cloudinary (con manejo de errores individual para que no bloquee todo)
-        try {
-          if (app.iconPublicId) {
-            await deleteFromCloudinary(app.iconPublicId);
-          }
-          if (app.screenshotsPublicIds && app.screenshotsPublicIds.length > 0) {
-            for (const pid of app.screenshotsPublicIds) {
-              await deleteFromCloudinary(pid);
-            }
-          }
-        } catch (cloudErr) {
-          console.warn("Error borrando de Cloudinary (continuando con DB):", cloudErr);
-        }
+    if (!window.confirm(confirmMessage)) return;
 
-        // 2. Supabase
-        console.log("Borrando de Supabase ID:", id);
-        const { error } = await supabase.from('apps').delete().eq('id', id);
-        
-        if (error) {
-          console.error("Supabase Delete Error:", error);
-          throw new Error(error.message);
-        }
+    setIsDeleting(id);
+    console.log(`[Admin] Iniciando eliminación de: ${app.name}`);
 
-        // 3. Éxito
-        setApps(prev => prev.filter(a => a.id !== id));
-        addToast(`App "${app.name}" eliminada con éxito.`, 'info');
-        alert("¡Eliminado correctamente!");
-      } catch (err: any) {
-        console.error("Fallo total:", err);
-        addToast(`Error al eliminar: ${err.message}`, 'error');
-        alert("Error al eliminar: " + err.message);
-      } finally {
-        setIsDeleting(null);
+    try {
+      // 1. ELIMINAR DE CLOUDINARY
+      // Intentamos borrar el icono
+      if (app.iconPublicId) {
+        console.log(`[Admin] Borrando icono de Cloudinary: ${app.iconPublicId}`);
+        await deleteFromCloudinary(app.iconPublicId);
       }
+
+      // Intentamos borrar las capturas
+      if (app.screenshotsPublicIds && app.screenshotsPublicIds.length > 0) {
+        console.log(`[Admin] Borrando ${app.screenshotsPublicIds.length} capturas de Cloudinary...`);
+        for (const pid of app.screenshotsPublicIds) {
+          await deleteFromCloudinary(pid);
+        }
+      }
+
+      // 2. ELIMINAR DE SUPABASE
+      console.log(`[Admin] Ejecutando DELETE en Supabase para ID: ${id}`);
+      const { error: dbError } = await supabase
+        .from('apps')
+        .delete()
+        .eq('id', id);
+
+      if (dbError) {
+        console.error("[Admin] Error de Supabase:", dbError);
+        let errorMsg = `Error de Base de Datos: ${dbError.message}`;
+        if (dbError.code === '42501') {
+          errorMsg = "PERMISO DENEGADO (RLS). Debes habilitar la política 'DELETE' para administradores en Supabase.";
+        }
+        throw new Error(errorMsg);
+      }
+
+      // 3. ACTUALIZAR UI
+      setApps(prev => prev.filter(a => a.id !== id));
+      addToast(`App "${app.name}" eliminada correctamente.`, 'info');
+      console.log("[Admin] Eliminación completada.");
+
+    } catch (error: any) {
+      console.error("[Admin] Fallo en el proceso de eliminación:", error);
+      addToast(error.message || 'Error al procesar la eliminación.', 'error');
+      // No alertamos aquí para no molestar si el toast ya salió, pero el usuario pidió que funcione sí o sí
+      alert("ATENCIÓN: " + (error.message || 'Error al eliminar.'));
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -144,10 +154,9 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                       )}
                       <button className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-200 hover:bg-red-900/30 hover:text-white transition-colors"><Edit className="w-4 h-4" /></button>
                       <button 
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          deleteApp(app.id);
+                        onClick={(e) => {
+                          console.log("Button clicked, app ID:", app.id);
+                          deleteApp(app.id, e);
                         }}
                         disabled={isDeleting === app.id}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-black font-black uppercase text-xs transition-all active:scale-95 shadow-lg disabled:opacity-50 border-2 border-white/20"
