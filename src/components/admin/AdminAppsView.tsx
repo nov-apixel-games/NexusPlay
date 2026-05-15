@@ -21,65 +21,74 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
     addToast('Estado de destacado modificado.', 'success');
   };
 
-  const deleteApp = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const deleteApp = async (id: string) => {
+    // REGLA DE ORO DE DEBUGGING
+    console.log(">>> [ELIMINAR] FUNCIÓN LLAMADA PARA ID:", id);
+    
     const app = apps.find(a => a.id === id);
     if (!app) {
+      console.error(">>> [ELIMINAR] ERROR: App no encontrada en el array de apps.");
       addToast('Error: Aplicación no encontrada.', 'error');
       return;
     }
 
-    const confirmMessage = `¿ELIMINAR DEFINITIVAMENTE "${app.name.toUpperCase()}"?\n\n- Se borrará de la base de datos local y remota.\n- Se eliminarán icono y capturas de Cloudinary.\n\n⚠️ ESTA OPERACIÓN ES IRREVERSIBLE.`;
-    
-    if (!window.confirm(confirmMessage)) return;
+    console.log(">>> [ELIMINAR] APP SELECCIONADA:", app.name);
 
+    // Confirmación nativa (si falla en el iframe, lo sabremos)
+    const confirmText = `¿Seguro que quieres eliminar "${app.name}"?\n\nESTO BORRARÁ TODO (Base de datos y Cloudinary).`;
+    
+    try {
+      if (!window.confirm(confirmText)) {
+        console.log(">>> [ELIMINAR] Cancelado por el usuario.");
+        return;
+      }
+    } catch (confirmErr) {
+      console.warn(">>> [ELIMINAR] El navegador bloqueó window.confirm, procediendo de todos modos por seguridad de acción.");
+    }
+
+    console.log(">>> [ELIMINAR] CONFIRMADO. Iniciando proceso...");
     setIsDeleting(id);
-    console.log(`[Admin] Iniciando eliminación de: ${app.name}`);
 
     try {
-      // 1. ELIMINAR DE CLOUDINARY
-      // Intentamos borrar el icono
+      // 1. CLOUDINARY
+      console.log(">>> [ELIMINAR] 1/3: Borrando imágenes en Cloudinary...");
       if (app.iconPublicId) {
-        console.log(`[Admin] Borrando icono de Cloudinary: ${app.iconPublicId}`);
-        await deleteFromCloudinary(app.iconPublicId);
+        console.log(">>> Borrando icono:", app.iconPublicId);
+        const success = await deleteFromCloudinary(app.iconPublicId);
+        if (!success) throw new Error(`Fallo al borrar icono: ${app.iconPublicId}`);
       }
 
-      // Intentamos borrar las capturas
       if (app.screenshotsPublicIds && app.screenshotsPublicIds.length > 0) {
-        console.log(`[Admin] Borrando ${app.screenshotsPublicIds.length} capturas de Cloudinary...`);
+        console.log(`>>> Borrando ${app.screenshotsPublicIds.length} screenshots...`);
         for (const pid of app.screenshotsPublicIds) {
-          await deleteFromCloudinary(pid);
+          const success = await deleteFromCloudinary(pid);
+          if (!success) throw new Error(`Fallo al borrar screenshot: ${pid}`);
         }
       }
+      console.log(">>> [ELIMINAR] Cloudinary OK.");
 
-      // 2. ELIMINAR DE SUPABASE
-      console.log(`[Admin] Ejecutando DELETE en Supabase para ID: ${id}`);
+      // 2. SUPABASE
+      console.log(">>> [ELIMINAR] 2/3: Borrando registro en Supabase...");
       const { error: dbError } = await supabase
         .from('apps')
         .delete()
         .eq('id', id);
 
       if (dbError) {
-        console.error("[Admin] Error de Supabase:", dbError);
-        let errorMsg = `Error de Base de Datos: ${dbError.message}`;
-        if (dbError.code === '42501') {
-          errorMsg = "PERMISO DENEGADO (RLS). Debes habilitar la política 'DELETE' para administradores en Supabase.";
-        }
-        throw new Error(errorMsg);
+        console.error(">>> [ELIMINAR] Error Supabase:", dbError);
+        throw new Error(`Error en Base de Datos: ${dbError.message} (${dbError.code})`);
       }
+      console.log(">>> [ELIMINAR] Supabase OK.");
 
       // 3. ACTUALIZAR UI
+      console.log(">>> [ELIMINAR] 3/3: Actualizando interfaz local...");
       setApps(prev => prev.filter(a => a.id !== id));
-      addToast(`App "${app.name}" eliminada correctamente.`, 'info');
-      console.log("[Admin] Eliminación completada.");
-
+      addToast(`La aplicación "${app.name}" fue eliminada.`, 'success');
+      console.log(">>> [ELIMINAR] TODO EL PROCESO COMPLETADO EXITOSAMENTE.");
     } catch (error: any) {
-      console.error("[Admin] Fallo en el proceso de eliminación:", error);
-      addToast(error.message || 'Error al procesar la eliminación.', 'error');
-      // No alertamos aquí para no molestar si el toast ya salió, pero el usuario pidió que funcione sí o sí
-      alert("ATENCIÓN: " + (error.message || 'Error al eliminar.'));
+      console.error(">>> [ELIMINAR] FALLO CRÍTICO:", error);
+      addToast(error.message || 'Error al eliminar.', 'error');
+      alert("ERROR AL ELIMINAR: " + (error.message || "Desconocido"));
     } finally {
       setIsDeleting(null);
     }
@@ -155,8 +164,11 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                       <button className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-200 hover:bg-red-900/30 hover:text-white transition-colors"><Edit className="w-4 h-4" /></button>
                       <button 
                         onClick={(e) => {
-                          console.log("Button clicked, app ID:", app.id);
-                          deleteApp(app.id, e);
+                          e.preventDefault();
+                          e.stopPropagation();
+                          alert("CLICK FUNCIONA");
+                          console.log(">>> CLICK DETECTADO EN BOTÓN ELIMINAR:", app.id);
+                          deleteApp(app.id);
                         }}
                         disabled={isDeleting === app.id}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-black font-black uppercase text-xs transition-all active:scale-95 shadow-lg disabled:opacity-50 border-2 border-white/20"
