@@ -4,7 +4,7 @@ import { AppItem } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { deleteFromCloudinary } from '../../lib/cloudinary';
 
-export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], setApps: (a: AppItem[]) => void, addToast: any }) {
+export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], setApps: (updater: AppItem[] | ((prev: AppItem[]) => AppItem[])) => void, addToast: any }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 

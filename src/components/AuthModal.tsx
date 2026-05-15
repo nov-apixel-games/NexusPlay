@@ -6,13 +6,15 @@ import { motion, AnimatePresence } from 'motion/react';
 interface AuthModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  onNavigate: (view: string) => void;
 }
 
-export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
+export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -39,6 +41,10 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !termsAccepted) {
+      setError('Debes aceptar los Términos y Condiciones para continuar.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
@@ -285,6 +291,28 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 />
                 <label htmlFor="remember" className="ml-2 text-sm text-gray-400 cursor-pointer">
                   Recordarme en este dispositivo
+                </label>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="flex items-center pt-2 px-1 gap-2">
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="w-4 h-4 rounded bg-[#0d111c] border-white/10 text-cyan-500 focus:ring-cyan-500"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-400">
+                  He leído y acepto los {' '}
+                  <button type="button" onClick={() => onNavigate('terms')} className="text-cyan-400 font-bold hover:underline">
+                    Términos y Condiciones
+                  </button>{' '}
+                  y la{' '}
+                  <button type="button" onClick={() => onNavigate('cookies')} className="text-cyan-400 font-bold hover:underline">
+                    Política de Cookies
+                  </button>
                 </label>
               </div>
             )}

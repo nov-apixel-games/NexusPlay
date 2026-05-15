@@ -1,203 +1,1085 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, Smartphone, ShieldAlert, Users, Code, MonitorPlay, 
-  Settings, LogOut, Search, Bell, Menu, X, BrainCircuit 
+  Shield, Trash2, CheckCircle, XCircle, ChevronLeft, BarChart, 
+  Smartphone, Users, Code, MessageSquare, List, Settings, BrainCircuit,
+  Star, Activity, AlertTriangle, Terminal, Search, Database, Menu, X,
+  DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, Play, UploadCloud,
+  Zap
 } from 'lucide-react';
-import { AppItem, UserItem, AIConfig } from '../types';
-import { AdminDashboard, AdminUsers } from './admin/AdminViews1';
-import { AdminAds, AdminSettings, AdminModeration, AdminAI } from './admin/AdminViews2';
-import { AdminAppsList } from './admin/AdminAppsView';
-import { motion, AnimatePresence } from 'motion/react';
-import { ToastType } from './Toast';
-
-export const DEFAULT_ADS = {
-  general: true,
-  bannerMobile: false,
-  interstitial: true,
-  rewarded: false,
-  publisherId: 'pub-XXXX',
-  rateLimit: 50
-};
+import { supabase } from '../lib/supabase';
+import { deleteFromCloudinary } from '../lib/cloudinary';
+import { AppItem, DevRequest } from '../types';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 interface AdminPanelProps {
+  onBack: () => void;
+  userProfile: any;
   apps: AppItem[];
-  setApps: (a: AppItem[]) => void;
-  users: UserItem[];
-  setUsers: (u: UserItem[]) => void;
-  settings: any;
-  setSettings: (s: any) => void;
-  aiConfig: AIConfig;
-  setAiConfig: (c: AIConfig) => void;
-  devRequests: any[];
-  setDevRequests: (reqs: any[]) => void;
-  addToast: (msg: string, type: ToastType) => void;
-  onExit: () => void;
+  setApps: (u: any) => void;
+  devRequests: DevRequest[];
+  setDevRequests: (reqs: DevRequest[]) => void;
 }
 
-const ADMIN_MENU = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'apps', label: 'Gestión Apps', icon: Smartphone },
-  { id: 'moderation', label: 'Moderación', icon: ShieldAlert },
-  { id: 'users', label: 'Usuarios', icon: Users },
-  { id: 'ads', label: 'Monetización', icon: MonitorPlay },
-  { id: 'ai', label: 'Nexus AI Admin', icon: BrainCircuit },
-  { id: 'settings', label: 'Configuración', icon: Settings },
-];
-
-export default function AdminPanel({ apps, setApps, users, setUsers, settings, setSettings, aiConfig, setAiConfig, devRequests, setDevRequests, addToast, onExit }: AdminPanelProps) {
+export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequests, setDevRequests }: AdminPanelProps) {
+  const isAdmin = userProfile?.role === 'admin';
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState({ users: 0, pending: 0, approved: 0, msgs: 0 });
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [maintenance, setMaintenance] = useState(() => localStorage.getItem('nexus_maintenance') === 'true');
+  const [logs, setLogs] = useState<any[]>(() => {
+    try { return JSON.parse(localStorage.getItem('nexus_admin_logs') || '[]'); } catch { return []; }
+  });
 
-  // In a real app we'd fetch these from Supabase
-  const [adsConfig, setAdsConfig] = useState(DEFAULT_ADS);
-  const [reports, setReports] = useState([]);
+  const [adsConfig, setAdsConfig] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('nexus_ads_config') || '{"publisherId":"","clientId":"","active":false}'); } catch { return { publisherId: '', clientId: '', active: false }; }
+  });
 
-  const renderContent = () => {
-    switch(activeTab) {
-      case 'dashboard': return <AdminDashboard apps={apps} users={users} />;
-      case 'apps': return <AdminAppsList apps={apps} setApps={setApps} addToast={addToast} />;
-      case 'users': return <AdminUsers users={users} setUsers={setUsers} addToast={addToast} />;
-      case 'moderation': return <AdminModeration reports={reports} setReports={setReports} addToast={addToast} />;
-      case 'ads': return <AdminAds config={adsConfig} setConfig={setAdsConfig} addToast={addToast} />;
-      case 'ai': return <AdminAI apps={apps} setApps={setApps} users={users} setUsers={setUsers} requests={devRequests} setRequests={setDevRequests} config={aiConfig} setConfig={setAiConfig} addToast={addToast} />;
-      case 'settings': return <AdminSettings settings={settings} setSettings={setSettings} addToast={addToast} />;
-      default: 
-        return (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <ShieldAlert className="w-16 h-16 text-yellow-500 mb-6" />
-            <h2 className="text-2xl font-bold mb-2">Sección en Construcción</h2>
-            <p className="text-gray-400">Esta sección ({activeTab}) se activará pronto.</p>
-          </div>
-        );
-    }
+  const [infraStats, setInfraStats] = useState({
+    supabasePing: 0,
+    cloudinaryPing: 0,
+    isSupabaseUp: true,
+    isCloudinaryUp: true,
+  });
+
+  const [aiCmd, setAiCmd] = useState('');
+  const [aiOutput, setAiOutput] = useState<string[]>([
+     'NEXUS AI (Admin Mode) - Inicializado.',
+     'Esperando directivas de sistema...'
+  ]);
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Custom Modal for Delete
+  const [appToDelete, setAppToDelete] = useState<AppItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  // AdSense y métricas reales
+  const saveAdsConfig = () => {
+    localStorage.setItem('nexus_ads_config', JSON.stringify(adsConfig));
+    addLog('ADSENSE', 'Configuración', `AdSense actualizado. Activo: ${adsConfig.active}`, 'success');
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] bg-[#0a0202] flex overflow-hidden font-sans selection:bg-red-500/30">
-      <div className="w-72 bg-[#120505] border-r border-red-900/20 flex-col hidden lg:flex">
-        <div className="h-16 flex items-center px-6 border-b border-white/5 shrink-0">
-          <div className="font-black text-xl text-white tracking-tighter flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-sm shadow-[0_0_15px_rgba(220,38,38,0.5)]">AD</div>
-            Nexus<span className="text-red-500">Admin</span>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-1 no-scrollbar">
-          {ADMIN_MENU.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                activeTab === item.id 
-                  ? 'bg-red-500/10 text-red-500 font-bold border border-red-500/20 shadow-[inset_0_0_10px_rgba(239,68,68,0.1)]' 
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium'
-              }`}
-            >
-              <item.icon className="w-5 h-5 shrink-0" />
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div className="p-4 border-t border-white/5 shrink-0">
-          <button 
-            onClick={onExit}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-gray-400 transition-all font-bold"
-          >
-            <LogOut className="w-5 h-5" />
-            Salir del Panel
+  const checkInfra = async () => {
+     const startSupa = Date.now();
+     try {
+       await supabase.from('apps').select('id').limit(1);
+       setInfraStats(s => ({...s, supabasePing: Date.now() - startSupa, isSupabaseUp: true}));
+     } catch (e) {
+       setInfraStats(s => ({...s, isSupabaseUp: false}));
+     }
+
+     const startCloud = Date.now();
+     try {
+       await fetch('https://res.cloudinary.com', { mode: 'no-cors' });
+       setInfraStats(s => ({...s, cloudinaryPing: Date.now() - startCloud, isCloudinaryUp: true}));
+     } catch (e) {
+       setInfraStats(s => ({...s, isCloudinaryUp: false}));
+     }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'infra') {
+      checkInfra();
+      const interval = setInterval(checkInfra, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (isAdmin) {
+       fetchMessages();
+       fetchUsers();
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [apps, users, messages]);
+
+  // Modo Mantenimiento
+  useEffect(() => {
+    let el = document.getElementById('nexus-maintenance-banner');
+    if (maintenance) {
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'nexus-maintenance-banner';
+        el.className = 'fixed top-0 left-0 w-full bg-red-600 text-white font-black text-center py-1.5 z-[9999] uppercase tracking-[0.3em] text-xs shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center justify-center gap-4 animate-pulse';
+        el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> MODO MANTENIMIENTO ACTIVO - SISTEMA BLOQUEADO';
+        document.body.appendChild(el);
+      }
+    } else {
+      if (el) el.remove();
+    }
+  }, [maintenance]);
+
+  const addLog = (action: string, entity: string, details: string, status: 'success' | 'error' | 'info') => {
+    const newLog = { id: Date.now(), timestamp: new Date().toISOString(), action, entity, details, status };
+    setLogs(prev => {
+       const updated = [newLog, ...prev].slice(0, 500);
+       localStorage.setItem('nexus_admin_logs', JSON.stringify(updated));
+       return updated;
+    });
+  };
+
+  const fetchMessages = async () => {
+    const { data } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
+    if (data) setMessages(data);
+  };
+
+  const fetchUsers = async () => {
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (data) setUsers(data);
+  };
+
+  const calculateStats = () => {
+    setStats({
+      users: users.length,
+      pending: apps.filter(a => a.status === 'pending').length,
+      approved: apps.filter(a => a.status === 'published').length,
+      msgs: messages.length
+    });
+  };
+
+  if (!isAdmin) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#050000] text-red-500 flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1a0000] to-[#050000]">
+        <div className="bg-black/50 p-12 rounded-3xl border border-red-900/30 backdrop-blur-md flex flex-col items-center text-center shadow-[0_0_50px_rgba(220,38,38,0.1)]">
+          <Shield className="w-20 h-20 mb-6 text-red-600 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
+          <h1 className="text-4xl font-black mb-4 tracking-widest uppercase text-white">Acceso Denegado</h1>
+          <p className="text-red-400 mb-8 max-w-md font-light text-lg">Área clasificada. Se requiere nivel de autorización supremo para visualizar este contenido.</p>
+          <button onClick={onBack} className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95">
+            <ChevronLeft className="w-5 h-5" /> Retirarse
           </button>
         </div>
       </div>
+    );
+  }
 
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0a0202] relative">
-        <header className="h-16 glass-panel border-b border-red-900/20 flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-10 bg-[#0a0202]/80 backdrop-blur-xl">
-          <div className="flex items-center gap-3 lg:hidden">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-colors">
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="font-black text-lg text-white tracking-tight">Nexus<span className="text-red-500">Admin</span></div>
-          </div>
-          
-          <div className="hidden lg:flex flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input type="text" placeholder="Buscar en el panel..." className="w-full h-10 bg-red-950/20 border border-red-900/30 rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-red-500/50 transition-colors text-white" />
-          </div>
+  // --- ACCIONES BACKEND RESTRICCIONES ---
 
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-white/5 rounded-lg text-gray-400 relative transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-[#030712]"></span>
-            </button>
-            <div className="h-8 pl-1 pr-3 rounded-full bg-red-950/30 border border-red-900/30 flex items-center gap-2 relative overflow-hidden">
-              <div className="absolute inset-0 bg-red-500/5 mix-blend-overlay"></div>
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_10px_rgba(220,38,38,0.5)] z-10">
-                AD
-              </div>
-              <span className="text-xs font-bold text-red-100 hidden sm:block z-10">Admin</span>
-            </div>
-          </div>
-        </header>
+  // Gestión de Apps
+  const handleAppStatus = async (id: string, status: 'published' | 'rejected') => {
+    console.log(`[ACCIÓN INICIADA] Cambiar estado de app ${id} a ${status}`);
+    const { error } = await supabase.from('apps').update({ status }).eq('id', id);
+    if (!error) {
+      console.log(`[RESPUESTA SUPABASE] Éxito. Estado actualizado.`);
+      addLog('ESTADO APP', id, `Estado cambiado a ${status}`, 'success');
+      setApps((prev: AppItem[]) => prev.map(a => a.id === id ? { ...a, status } : a));
+    } else {
+      console.log(`[ERROR EXACTO] Supabase:`, error);
+      addLog('ESTADO APP', id, `Error: ${error.message}`, 'error');
+    }
+  };
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          <motion.div 
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="w-full h-full max-w-7xl mx-auto"
-          >
-            {renderContent()}
-          </motion.div>
-        </main>
+  const toggleFeatured = async (app: AppItem) => {
+    const newFeatured = !app.featured;
+    console.log(`[ACCIÓN INICIADA] Destacar/No Destacar app ${app.name} -> ${newFeatured}`);
+    const { error } = await supabase.from('apps').update({ featured: newFeatured }).eq('id', app.id);
+    if (error) {
+       console.log(`[ERROR EXACTO] Supabase:`, error);
+       addLog('DESTACAR APP', app.name, `Error: ${error.message}`, 'error');
+    } else {
+       console.log(`[RESPUESTA SUPABASE] Éxito. featured=${newFeatured}`);
+       addLog('DESTACAR APP', app.name, `App marcada como featured=${newFeatured}`, 'success');
+       setApps((prev: AppItem[]) => prev.map(a => a.id === app.id ? { ...a, featured: newFeatured } : a));
+    }
+  };
+
+  const handleAppDeleteConfirm = async () => {
+    if (!appToDelete) return;
+    
+    setIsDeleting(true);
+    setDeleteError('');
+    console.log(`[ACCIÓN INICIADA] ELIMINAR APP: ${appToDelete.name}`);
+    addLog('ELIMINAR APP', appToDelete.name, `Iniciada secuencia de purga profunda...`, 'info');
+
+    try {
+      let clIcon = true;
+      if (appToDelete.iconPublicId) {
+         clIcon = await deleteFromCloudinary(appToDelete.iconPublicId);
+         console.log(`[RESPUESTA CLOUDINARY] Icono borrado: ${clIcon}`);
+      }
+      let clScreens = true;
+      for (const pid of (appToDelete.screenshotsPublicIds || [])) {
+         const sr = await deleteFromCloudinary(pid);
+         if (!sr) clScreens = false;
+         console.log(`[RESPUESTA CLOUDINARY] Captura (${pid}) borrada: ${sr}`);
+      }
+
+      const { error } = await supabase.from('apps').delete().eq('id', appToDelete.id);
+      
+      if (error) {
+         throw new Error(`Fallo en BD: ${error.message}`);
+      }
+
+      console.log(`[RESPUESTA SUPABASE] Éxito. Entidad Purgada.`);
+      addLog('ELIMINAR APP', appToDelete.name, `Purgada. Cloudinary Icon: ${clIcon} Screens: ${clScreens}`, 'success');
+
+      setApps((prev: AppItem[]) => prev.filter(a => a.id !== appToDelete.id));
+      setAppToDelete(null);
+    } catch (e: any) {
+      console.log(`[ERROR EXACTO] Excepción: `, e);
+      setDeleteError(e.message);
+      addLog('ELIMINAR APP', appToDelete.name, `Crash Crítico: ${e.message}`, 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Gestión de Usuarios
+  const setRole = async (user: any, role: string) => {
+    console.log(`[ACCIÓN INICIADA] Cambiando rol de ${user.email} a ${role}`);
+    const { error } = await supabase.from('profiles').update({ role }).eq('id', user.id);
+    if (error) {
+       console.log(`[ERROR EXACTO] Supabase: `, error);
+       addLog('CAMBIO ROL USUARIO', user.email || user.id, `Error: ${error.message}`, 'error');
+    } else {
+       console.log(`[RESPUESTA SUPABASE] Éxito`);
+       addLog('CAMBIO ROL USUARIO', user.email || user.id, `Rol cambiado a ${role}`, 'success');
+       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role } : u));
+    }
+  };
+
+  const deleteUser = async (user: any) => {
+    if (!window.confirm(`¿Eliminar definitivamente al usuario ${user.email}? Esto afectará sus relaciones.`)) return;
+    console.log(`[ACCIÓN INICIADA] ELIMINAR USUARIO: ${user.email}`);
+    
+    // Solo borramos la entrada de profiles.
+    const { error } = await supabase.from('profiles').delete().eq('id', user.id);
+    if (error) {
+       console.log(`[ERROR EXACTO] `, error);
+       addLog('ELIMINAR USUARIO', user.email || user.id, `Fallo: ${error.message}`, 'error');
+       alert("Error eliminando perfil: " + error.message);
+    } else {
+       console.log(`[RESPUESTA SUPABASE] Éxito`);
+       addLog('ELIMINAR USUARIO', user.email || user.id, `Usuario eliminado`, 'success');
+       setUsers(prev => prev.filter(u => u.id !== user.id));
+    }
+  };
+
+  // Gestión de Desarrolladores
+  const handleDevRequest = async (req: DevRequest, approve: boolean) => {
+    const status = approve ? 'approved' : 'rejected';
+    console.log(`[ACCIÓN INICIADA] Resolver solicitud Dev de ${req.userId} a ${status}`);
+
+    const { error } = await supabase.from('developer_requests').update({ status }).eq('id', req.id);
+    if (error) {
+        console.log(`[ERROR EXACTO] `, error);
+        addLog('SOLICITUD DEV', req.name, `Error BD: ${error.message}`, 'error');
+        return;
+    }
+    
+    if (approve) {
+       const { error: rErr } = await supabase.from('profiles').update({ role: 'developer' }).eq('id', req.userId);
+       if (rErr) {
+          console.log(`[ERROR EXACTO] No se pudo cambiar rol:`, rErr);
+          addLog('SOLICITUD DEV', req.name, `Solicitud aprobada pero falló cambiar rol: ${rErr.message}`, 'error');
+       } else {
+          console.log(`[RESPUESTA SUPABASE] Éxito completo.`);
+          addLog('SOLICITUD DEV', req.name, `Aprobada y rol actualizado.`, 'success');
+          // Actualizar local
+          setUsers(prev => prev.map(u => u.id === req.userId ? { ...u, role: 'developer' } : u));
+       }
+    } else {
+       addLog('SOLICITUD DEV', req.name, `Rechazada.`, 'info');
+    }
+
+    setDevRequests(devRequests.map(r => r.id === req.id ? { ...r, status } : r));
+  };
+
+
+  // UI y Render
+  const menu = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart },
+    { id: 'apps', label: 'Aplicaciones', icon: Smartphone },
+    { id: 'users', label: 'Usuarios', icon: Users },
+    { id: 'devs', label: 'Peticiones Dev', icon: Code },
+    { id: 'monetization', label: 'Monetización', icon: DollarSign },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'infra', label: 'Infraestructura', icon: Activity },
+    { id: 'messages', label: 'Reportes', icon: MessageSquare },
+    { id: 'logs', label: 'Logs Sistema', icon: List },
+    { id: 'ai', label: 'NEXUS AI', icon: BrainCircuit },
+    { id: 'settings', label: 'Configuración', icon: Settings },
+  ];
+
+  // Helper chart data real
+  const last7Days = Array.from({length: 7}).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dateStr = d.toISOString().split('T')[0];
+    return {
+      name: d.toLocaleDateString('es-ES', {weekday: 'short'}),
+      dateStr,
+      nuevos_usuarios: users.filter(u => u.created_at?.startsWith(dateStr)).length,
+      nuevas_apps: apps.filter(a => a.created_at?.startsWith(dateStr)).length,
+    };
+  });
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-[#030000] flex text-red-50 font-sans selection:bg-red-900/50">
+      
+      {/* Modal PURGAR */}
+      {appToDelete && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isDeleting && setAppToDelete(null)} />
+          <div className="relative bg-[#0a0000] border border-red-900/50 p-8 rounded-3xl max-w-lg w-full shadow-[0_0_50px_rgba(220,38,38,0.3)] animate-fade-in">
+             <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 bg-red-950/40 rounded-full flex items-center justify-center border border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.4)]">
+                   <AlertTriangle className="w-8 h-8 text-red-500" />
+                </div>
+             </div>
+             <h3 className="text-2xl font-black text-center text-white mb-2 uppercase tracking-tighter">Confirmar Purga</h3>
+             <p className="text-gray-400 text-center mb-6">¿Estás absolutamente seguro de que deseas obliterar la aplicación <span className="text-red-400 font-bold">"{appToDelete.name}"</span>? Esta acción es irreversible, eliminará los archivos binarios de visualización (Cloudinary) y borrará los registros cruzados en la base de datos maestra (Supabase).</p>
+             
+             {deleteError && (
+               <div className="p-4 bg-red-950/30 border border-red-900/50 rounded-xl mb-6 flex items-start gap-3">
+                 <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                 <p className="text-red-300 text-sm font-mono break-words">{deleteError}</p>
+               </div>
+             )}
+
+             <div className="flex gap-4">
+                <button 
+                  onClick={() => setAppToDelete(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-xl border border-white/10 hover:bg-white/5 font-bold text-gray-300 transition-colors disabled:opacity-50"
+                >Cancelar</button>
+                <button 
+                  onClick={handleAppDeleteConfirm}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDeleting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                  {isDeleting ? 'Purgando...' : 'PURGAR APP'}
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Top Header */}
+      <div className="md:hidden absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#050000] to-transparent z-40 flex items-center px-4 justify-between pointer-events-none">
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)} 
+          className="pointer-events-auto p-2 bg-red-950/40 border border-red-900/40 rounded-xl text-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)] active:scale-95 transition-transform"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
 
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] lg:hidden"
-            />
-            <motion.div 
-              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 h-full w-72 bg-[#120505] z-[120] border-r border-red-900/30 flex flex-col lg:hidden shadow-[20px_0_50px_rgba(220,38,38,0.05)]"
-            >
-              <div className="h-16 flex items-center justify-between px-6 border-b border-red-900/20 shrink-0">
-                <div className="font-black text-xl text-white tracking-tighter">Nexus<span className="text-red-500">Admin</span></div>
-                <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-gray-400">
-                   <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                {ADMIN_MENU.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      activeTab === item.id 
-                        ? 'bg-red-500/10 text-red-500 font-bold border border-red-500/20 shadow-[inset_0_0_10px_rgba(239,68,68,0.1)]' 
-                        : 'text-gray-400 hover:bg-white/5 hover:text-white font-medium'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5 shrink-0" />
-                    {item.label}
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[105] transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Oscuro */}
+      <aside className={`fixed inset-y-0 left-0 z-[110] transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} w-72 md:w-80 border-r border-red-900/20 bg-gradient-to-b from-[#050000] to-[#020000] flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.5)] shrink-0`}>
+        <div className="p-6 md:p-8 border-b border-red-900/20 bg-gradient-to-b from-red-950/20 to-transparent flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-red-950/40 border border-red-900/40 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+              <Shield className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-black text-red-600 tracking-tighter shadow-red-500/20 drop-shadow-md">NEXUS<span className="text-white">ADMIN</span></h2>
+              <span className="text-[9px] md:text-[10px] text-red-400 uppercase tracking-[0.2em] font-black block">Acceso Nivel 5</span>
+            </div>
+          </div>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-2 text-gray-500 hover:text-white rounded-lg transition-colors">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="p-3 md:p-4 flex-1 space-y-1 overflow-y-auto custom-scrollbar">
+           {menu.map(m => (
+             <button 
+               key={m.id}
+               onClick={() => { setActiveTab(m.id); setSearchQuery(''); setIsMobileMenuOpen(false); }}
+               className={`w-full flex items-center gap-3 md:gap-4 px-4 py-3 md:px-5 md:py-4 rounded-xl md:rounded-2xl font-bold transition-all text-sm md:text-sm ${
+                 activeTab === m.id ? 'bg-gradient-to-r from-red-900/40 to-transparent text-red-400 border border-red-900/40 shadow-inner' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+               }`}
+             >
+               <m.icon className={`w-5 h-5 shrink-0 ${activeTab === m.id ? 'text-red-500' : 'text-gray-600'}`} /> 
+               {m.label}
+             </button>
+           ))}
+        </div>
+        <div className="p-4 md:p-6 border-t border-red-900/20 bg-black/40">
+           <button onClick={onBack} className="w-full flex items-center justify-center gap-3 bg-red-950/30 hover:bg-red-900/50 border border-red-900/30 text-white font-black py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.15)] active:scale-95 group uppercase tracking-widest text-[10px] md:text-xs">
+             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retirarse
+           </button>
+        </div>
+      </aside>
+
+      {/* Área Principal */}
+      <main className="flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#130000] to-[#030000] p-4 pt-20 sm:p-6 md:p-12 custom-scrollbar relative w-full overflow-x-hidden">
+        <div className="max-w-6xl mx-auto space-y-8 md:space-y-10 pb-20 w-full">
+           
+           {/* DASHBOARD */}
+           {activeTab === 'dashboard' && (
+             <div className="space-y-8 md:space-y-10 animate-fade-in">
+               <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white mb-2">Comando Central</h3>
+                  <p className="text-red-500/60 font-medium text-sm md:text-lg">Visión global de la infraestructura de NexusPlay.</p>
+               </header>
+               
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                 {[
+                   { t: 'Usuarios', v: stats.users, i: Users, c: 'text-blue-500', bc: 'border-blue-900/20', h: 'hover:border-blue-900/40' },
+                   { t: 'Publicadas', v: stats.approved, i: Smartphone, c: 'text-green-500', bc: 'border-green-900/20', h: 'hover:border-green-900/40' },
+                   { t: 'Peticiones', v: stats.pending, i: AlertTriangle, c: 'text-orange-500', bc: 'border-orange-900/20', h: 'hover:border-orange-900/40' },
+                   { t: 'Transmisiones', v: stats.msgs, i: Database, c: 'text-purple-500', bc: 'border-purple-900/20', h: 'hover:border-purple-900/40' },
+                 ].map((s, i) => (
+                   <div key={i} className={`bg-[#0a0000] border ${s.bc} p-4 md:p-6 rounded-2xl md:rounded-3xl relative overflow-hidden shadow-2xl group ${s.h} transition-colors`}>
+                     <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity"><s.i className="w-24 h-24 md:w-32 md:h-32 text-white" /></div>
+                     <p className={`text-[9px] md:text-[10px] font-black ${s.c} uppercase tracking-[0.2em] mb-2 md:mb-4 opacity-80 break-words`}>{s.t}</p>
+                     <p className="text-3xl md:text-5xl font-black text-white">{s.v}</p>
+                   </div>
+                 ))}
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                  <div className="bg-[#080000] border border-red-900/10 rounded-2xl md:rounded-3xl p-5 md:p-8">
+                     <h4 className="text-xl font-bold text-white mb-6 flex items-center gap-3"><Activity className="text-red-500" /> Actividad Reciente</h4>
+                     <div className="space-y-4">
+                        {logs.slice(0, 5).map((log, idx) => (
+                          <div key={idx} className="flex gap-4 items-start border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                             <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${log.status === 'error' ? 'bg-red-500' : log.status === 'success' ? 'bg-green-500' : 'bg-blue-500'}`} />
+                             <div>
+                               <p className="text-sm font-bold text-gray-200">{log.action}</p>
+                               <p className="text-xs text-gray-500 mt-0.5">{log.details}</p>
+                               <span className="text-[10px] text-gray-600 font-mono mt-1 block">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                             </div>
+                          </div>
+                        ))}
+                        {logs.length === 0 && <p className="text-gray-600 text-sm">Sin registros recientes.</p>}
+                     </div>
+                  </div>
+               </div>
+             </div>
+           )}
+
+           {/* APLICACIONES */}
+           {activeTab === 'apps' && (
+             <div className="space-y-8 animate-fade-in">
+                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 w-full lg:max-w-none">
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Directorio de Entidades</h3>
+                    <p className="text-red-400 text-sm md:text-base">Control maestro de software publicadas.</p>
+                  </div>
+                  <div className="relative w-full sm:max-w-sm">
+                    <input 
+                      type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Identificador ID o Nombre..."
+                      className="w-full bg-black/50 border border-red-900/30 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-red-500 text-sm md:text-base"
+                    />
+                    <Search className="w-4 h-4 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                  </div>
+                </header>
+                <div className="space-y-4 w-full">
+                  {apps.length === 0 && <p className="text-gray-500 bg-[#0a0000] p-10 rounded-3xl border border-red-900/20 text-center">Sin resultados.</p>}
+                  {apps.filter(x => x.name.toLowerCase().includes(searchQuery.toLowerCase())).map(app => (
+                    <div key={app.id} className={`bg-[#080000] border ${app.featured ? 'border-amber-900/40' : 'border-red-900/20'} p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-red-900/50 transition-colors shadow-lg`}>
+                       <div className="flex items-center gap-5">
+                         <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-2xl object-cover bg-black border border-white/5" />
+                         <div>
+                           <div className="flex items-center gap-2 mb-1">
+                             <h4 className="font-bold text-white text-lg leading-tight">{app.name}</h4>
+                             {app.featured && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
+                           </div>
+                           <p className="text-sm text-gray-400">{app.developer} <span className="mx-2 text-red-900/50">|</span> <span className={`font-bold ${app.status === 'pending' ? 'text-orange-500' : app.status === 'published' ? 'text-green-500' : 'text-red-500'}`}>{app.status.toUpperCase()}</span> <span className="mx-2 text-red-900/50">|</span> <Download className="w-3 h-3 inline mr-1" /> {app.downloads || 0}</p>
+                           <p className="text-xs text-gray-600 mt-1 font-mono">ID: {app.id} • Creada: {new Date(app.created_at).toLocaleDateString()}</p>
+                         </div>
+                       </div>
+                       
+                       <div className="flex flex-wrap gap-2 shrink-0">
+                         {app.status === 'pending' && (
+                           <>
+                             <button onClick={() => handleAppStatus(app.id, 'published')} className="bg-green-950/30 border border-green-900/30 text-green-500 hover:bg-green-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all">Aprobar</button>
+                             <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-orange-950/30 border border-orange-900/30 text-orange-500 hover:bg-orange-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all">Rechazar</button>
+                           </>
+                         )}
+                         {app.status === 'published' && (
+                           <>
+                             <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                               <EyeOff className="w-3 h-3" /> Ocultar
+                             </button>
+                             <button onClick={() => toggleFeatured(app)} className={`${app.featured ? 'bg-amber-900/20 text-amber-500 border-amber-900/30 hover:bg-amber-900 hover:text-white' : 'bg-white/5 text-amber-500/70 border-white/5 hover:bg-amber-900/20 hover:text-amber-500'} border px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1`}>
+                                <Star className="w-3 h-3" /> {app.featured ? 'Normalizar' : 'Destacar'}
+                             </button>
+                           </>
+                         )}
+                         <a href={`/app/${app.id}`} target="_blank" rel="noreferrer" className="bg-blue-950/30 border border-blue-900/30 text-blue-500 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                            <Eye className="w-3 h-3" /> Ver
+                         </a>
+                         <button onClick={() => alert("Función Editar en desarrollo")} className="bg-gray-950/30 border border-gray-900/30 text-gray-400 hover:bg-gray-700 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                             <Edit className="w-3 h-3" /> Editar
+                          </button>
+                          <button onClick={() => setAppToDelete(app)} className="bg-red-950/30 border border-red-900/30 text-red-500 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 group">
+                           <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Purgar
+                         </button>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+           )}
+
+           {/* MONETIZACIÓN */}
+           {activeTab === 'monetization' && (
+             <div className="space-y-8 animate-fade-in w-full">
+                <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Monetización y AdSense</h3>
+                  <p className="text-red-400 text-sm md:text-base">Gestión real de anuncios y configuración de red publicitaria.</p>
+                </header>
+
+                <div className="bg-[#080000] border border-red-900/20 rounded-3xl p-6 md:p-8">
+                   <h4 className="text-xl font-bold text-white mb-6">Estado de Configuración AdSense</h4>
+                   
+                   <div className="space-y-4 max-w-lg">
+                      <div className="flex items-center gap-4 mb-6">
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input 
+                            type="checkbox" 
+                            checked={adsConfig.active} 
+                            onChange={e => setAdsConfig({...adsConfig, active: e.target.checked})} 
+                            className="sr-only peer"
+                          />
+                          <div className="w-14 h-7 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 outline-none border border-red-900/40"></div>
+                        </label>
+                        <span className={`font-bold ${adsConfig.active ? 'text-green-500' : 'text-gray-500'}`}>{adsConfig.active ? 'Monetización Activa' : 'Monetización Pausada'}</span>
+                      </div>
+
+                      {adsConfig.active && (
+                        <div className="space-y-4 animate-fade-in">
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-widest">Publisher ID</label>
+                            <input value={adsConfig.publisherId} onChange={e => setAdsConfig({...adsConfig, publisherId: e.target.value})} type="text" className="w-full bg-black/50 border border-red-900/30 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none font-mono text-sm shadow-inner" placeholder="pub-xxxxxxxxxxxxxxxx" />
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-2 font-bold uppercase tracking-widest">Client ID</label>
+                            <input value={adsConfig.clientId} onChange={e => setAdsConfig({...adsConfig, clientId: e.target.value})} type="text" className="w-full bg-black/50 border border-red-900/30 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none font-mono text-sm shadow-inner" placeholder="ca-app-pub-xxxxxxxxxxxxxxxx" />
+                          </div>
+                        </div>
+                      )}
+                      
+                      <button onClick={saveAdsConfig} className="bg-red-900/50 hover:bg-red-600 text-white font-bold px-8 py-3 rounded-xl mt-6 border border-red-900/50 shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all">Guardar Configuración</button>
+                   </div>
+                </div>
+
+                {!adsConfig.active ? (
+                   <div className="p-10 border border-red-900/20 bg-red-950/10 rounded-3xl mt-6 text-center">
+                     <DollarSign className="w-12 h-12 mx-auto mb-4 text-red-900/50" />
+                     <p className="text-gray-500 max-w-md mx-auto">AdSense no configurado o inactivo. No se generarán ingresos en las aplicaciones.</p>
+                   </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div className="bg-[#080000] border border-green-900/30 p-6 md:p-8 rounded-3xl shadow-xl">
+                      <p className="text-xs font-black text-green-500 uppercase tracking-widest mb-2">Publisher ID Guardado</p>
+                      <p className="text-xl font-mono text-white">{adsConfig.publisherId || 'Pendiente'}</p>
+                    </div>
+                    <div className="bg-[#080000] border border-blue-900/30 p-6 md:p-8 rounded-3xl shadow-xl">
+                      <p className="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">Red de Anuncios</p>
+                      <p className="text-xl font-black text-white">Google AdSense</p>
+                    </div>
+                  </div>
+                )}
+             </div>
+           )}
+
+           {/* ANALYTICS */}
+           {activeTab === 'analytics' && (
+             <div className="space-y-8 animate-fade-in w-full">
+                <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Telemetría Avanzada (Real)</h3>
+                  <p className="text-red-400 text-sm md:text-base">Métricas, crecimiento y engagement extraídos directamente de la base de datos.</p>
+                </header>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                   <div className="bg-[#080000] border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl w-full">
+                      <h4 className="text-xl font-bold text-white mb-8">Nuevos Usuarios (Últimos 7 días)</h4>
+                      <div className="w-full h-72">
+                         <ResponsiveContainer width="100%" height="100%">
+                           <AreaChart data={last7Days} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                             <defs>
+                                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                </linearGradient>
+                             </defs>
+                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                             <XAxis dataKey="name" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
+                             <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                             <RechartsTooltip contentStyle={{ backgroundColor: '#0a0000', borderColor: '#1e3a8a', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} cursor={{ stroke: '#ffffff20' }} />
+                             <Area type="monotone" dataKey="nuevos_usuarios" name="Usuarios" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorUsers)" />
+                           </AreaChart>
+                         </ResponsiveContainer>
+                      </div>
+                   </div>
+
+                   <div className="bg-[#080000] border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl w-full">
+                      <h4 className="text-xl font-bold text-white mb-8">Nuevas Aplicaciones (Últimos 7 días)</h4>
+                      <div className="w-full h-72">
+                         <ResponsiveContainer width="100%" height="100%">
+                           <LineChart data={last7Days} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                             <XAxis dataKey="name" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
+                             <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                             <RechartsTooltip contentStyle={{ backgroundColor: '#0a0000', borderColor: '#7f1d1d', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} cursor={{ stroke: '#ffffff20' }} />
+                             <Line type="monotone" dataKey="nuevas_apps" name="Apps" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#f87171' }} />
+                           </LineChart>
+                         </ResponsiveContainer>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="bg-[#080000] border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl">
+                   <h4 className="text-xl font-bold text-white mb-6">Top Entidades Más Descargadas (Real)</h4>
+                   <div className="space-y-4">
+                     {apps.filter(a => a.status === 'published' && (a.downloads || 0) > 0).sort((a,b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 3).map((app, i) => (
+                       <div key={app.id} className="flex items-center justify-between p-4 bg-black/40 border border-white/5 rounded-2xl">
+                          <div className="flex items-center gap-4">
+                             <div className="text-2xl font-black text-red-900/50 w-8 text-center">{i + 1}</div>
+                             <img src={app.icon} alt={app.name} className="w-12 h-12 rounded-xl object-cover bg-black border border-white/5" />
+                             <div>
+                                <h5 className="font-bold text-white">{app.name}</h5>
+                                <p className="text-xs text-gray-500">{app.developer}</p>
+                             </div>
+                          </div>
+                          <div className="text-right">
+                             <p className="font-black text-lg text-white">{app.downloads || 0}</p>
+                             <p className="text-xs text-gray-500 uppercase tracking-widest">Instalaciones Reales</p>
+                          </div>
+                       </div>
+                     ))}
+                     {apps.filter(a => a.status === 'published' && (a.downloads || 0) > 0).length === 0 && (
+                       <p className="text-gray-500 text-sm text-center p-6 border border-white/5 rounded-2xl bg-black/30">Ninguna aplicación ha registrado descargas todavía.</p>
+                     )}
+                   </div>
+                </div>
+             </div>
+           )}
+
+           {/* INFRAESTRUCTURA Y SISTEMA */}
+           {activeTab === 'infra' && (
+             <div className="space-y-8 animate-fade-in w-full">
+                <header className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Sistema e Infraestructura</h3>
+                    <p className="text-red-400 text-sm md:text-base">Métricas en tiempo real de los servicios y dependencias.</p>
+                  </div>
+                  <button onClick={checkInfra} className="bg-red-950/30 hover:bg-red-900/60 border border-red-900/40 text-red-400 rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-2">
+                    <Activity className="w-4 h-4" /> Refrescar Ping
                   </button>
-                ))}
-              </div>
-              <div className="p-4 border-t border-white/5 shrink-0">
-                <button 
-                  onClick={onExit}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl hover:bg-red-500/10 hover:text-red-400 text-gray-400 transition-all font-bold"
-                >
-                  <LogOut className="w-5 h-5" />
-                  Salir
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                </header>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* SUPABASE CARD */}
+                  <div className={`p-6 md:p-8 rounded-3xl border ${infraStats.isSupabaseUp ? 'bg-[#080000] border-green-900/30 shadow-[0_0_30px_rgba(34,197,94,0.1)]' : 'bg-red-950/30 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]'} relative overflow-hidden group`}>
+                     <div className="absolute top-6 right-6 flex items-center gap-2">
+                        {infraStats.isSupabaseUp ? (
+                          <span className="flex items-center gap-2 text-green-500 text-xs font-bold uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/> Online</span>
+                        ) : (
+                          <span className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"/> Offline / Error</span>
+                        )}
+                     </div>
+                     <Database className={`w-12 h-12 mb-4 ${infraStats.isSupabaseUp ? 'text-green-500/80' : 'text-red-500'}`} />
+                     <h4 className="text-2xl font-black text-white mb-2">Base de Datos</h4>
+                     <p className="text-gray-400 text-sm max-w-sm mb-6">Supabase PostgreSQL y funciones Serverless de autenticación.</p>
+                     
+                     <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Latencia DB (Ping)</p>
+                         <p className="text-xl font-mono text-white">{infraStats.supabasePing} ms</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Total Registros (Apps)</p>
+                         <p className="text-xl font-mono text-white">{apps.length}</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Usuarios Auth</p>
+                         <p className="text-xl font-mono text-white">{users.length}</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Solicitudes Dev</p>
+                         <p className="text-xl font-mono text-white">{devRequests.length}</p>
+                       </div>
+                     </div>
+                  </div>
+
+                  {/* CLOUDINARY CARD */}
+                  <div className={`p-6 md:p-8 rounded-3xl border ${infraStats.isCloudinaryUp ? 'bg-[#080000] border-blue-900/30 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'bg-red-950/30 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]'} relative overflow-hidden group`}>
+                     <div className="absolute top-6 right-6 flex items-center gap-2">
+                        {infraStats.isCloudinaryUp ? (
+                          <span className="flex items-center gap-2 text-blue-500 text-xs font-bold uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"/> Online</span>
+                        ) : (
+                          <span className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"/> Offline / CORS</span>
+                        )}
+                     </div>
+                     <UploadCloud className={`w-12 h-12 mb-4 ${infraStats.isCloudinaryUp ? 'text-blue-500/80' : 'text-red-500'}`} />
+                     <h4 className="text-2xl font-black text-white mb-2">Almacenamiento CDN</h4>
+                     <p className="text-gray-400 text-sm max-w-sm mb-6">Cloudinary Media Delivery, transformación y persistencia binaria.</p>
+                     
+                     <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Latencia Envío (Ping)</p>
+                         <p className="text-xl font-mono text-white">{infraStats.cloudinaryPing} ms</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Iconos Indexados</p>
+                         <p className="text-xl font-mono text-white">{apps.filter(x => x.iconPublicId).length}</p>
+                       </div>
+                       <div className="col-span-2 mt-2">
+                         <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+                           <span>Operaciones Aprox. (Locales)</span>
+                           <span className={apps.length > 50 ? 'text-orange-500' : 'text-green-500'}>{apps.length > 50 ? 'Alta Carga' : 'Óptimo'}</span>
+                         </div>
+                         <div className="w-full bg-black/50 rounded-full h-1.5 border border-white/10">
+                           <div className={`h-1.5 rounded-full ${apps.length > 50 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, (apps.length / 100) * 100)}%` }}></div>
+                         </div>
+                       </div>
+                     </div>
+                  </div>
+                </div>
+
+                {(!infraStats.isSupabaseUp || !infraStats.isCloudinaryUp) && (
+                  <div className="p-6 bg-red-950/20 border border-red-500/50 rounded-2xl flex items-start gap-4">
+                     <AlertTriangle className="w-8 h-8 text-red-500 shrink-0" />
+                     <div>
+                       <h5 className="font-bold text-white text-lg mb-1">¡Alerta Crítica de Sistema!</h5>
+                       <p className="text-red-300 text-sm font-mono leading-relaxed">
+                         {!infraStats.isSupabaseUp && "ERROR 0xDB: Pérdida prolongada de conexión con la capa PostgreSQL de Supabase. Revisa las políticas o el límite de recursos mensuales. "}
+                         {!infraStats.isCloudinaryUp && "ERROR 0xCD: Las comprobaciones de latencia contra los nodos de Cloudinary han fallado. Posibles bloqueos CORS o interrupciones de red general."}
+                       </p>
+                     </div>
+                  </div>
+                )}
+             </div>
+           )}
+
+           {/* USUARIOS */}
+           {activeTab === 'users' && (
+             <div className="space-y-8 animate-fade-in">
+                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 w-full lg:max-w-none">
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Nodos de Usuario</h3>
+                    <p className="text-red-400 text-sm md:text-base">Control de entidades registradas en el clúster.</p>
+                  </div>
+                  <div className="relative w-full sm:max-w-sm">
+                    <input 
+                      type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Buscar por email..."
+                      className="w-full bg-black/50 border border-red-900/30 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-red-500 text-sm md:text-base"
+                    />
+                    <Search className="w-4 h-4 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                  </div>
+                </header>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+                  {users.filter(u => (u.email || '').toLowerCase().includes(searchQuery.toLowerCase())).map(u => (
+                    <div key={u.id} className="bg-[#080000] border border-red-900/20 p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-xl flex flex-col hover:border-red-900/40 transition-colors w-full">
+                       <div className="flex justify-between items-start mb-4">
+                          <div className="truncate pr-4">
+                            <h4 className="font-bold text-white truncate">{u.full_name || 'Agente Anónimo'}</h4>
+                            <p className="text-sm text-gray-400 mt-1 truncate">{u.email}</p>
+                          </div>
+                          <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-lg border ${u.role === 'admin' ? 'bg-red-950/40 text-red-400 border-red-900/50' : u.role === 'developer' ? 'bg-cyan-950/40 text-cyan-400 border-cyan-900/50' : u.role === 'banned' ? 'bg-orange-950/30 border-orange-900/50 text-orange-500' : 'bg-gray-900/40 text-gray-400 border-gray-700/50'}`}>
+                            {u.role || 'user'}
+                          </span>
+                       </div>
+                       
+                       <div className="mt-auto pt-4 border-t border-white/5 flex flex-wrap gap-2">
+                         {u.role !== 'admin' && (
+                           <>
+                             {u.role === 'banned' ? (
+                               <button onClick={() => setRole(u, 'user')} className="bg-white/5 hover:bg-white/10 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex-1 text-center">Restaurar</button>
+                             ) : (
+                               <button onClick={() => setRole(u, 'banned')} className="bg-orange-950/20 hover:bg-orange-900/40 border border-orange-900/30 text-orange-500 px-3 py-2 rounded-lg text-xs font-bold transition-all flex-1 text-center">Bloquear</button>
+                             )}
+                             <button onClick={() => deleteUser(u)} className="bg-red-950/20 hover:bg-red-900/40 border border-red-900/30 text-red-500 px-3 py-2 rounded-lg text-xs font-bold transition-all flex-none flex justify-center items-center gap-1 group">
+                               <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                             </button>
+                           </>
+                         )}
+                       </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+           )}
+
+           {/* DESARROLLADORES */}
+           {activeTab === 'devs' && (
+             <div className="space-y-8 animate-fade-in">
+                <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Cola de Credenciales Dev</h3>
+                  <p className="text-red-400 text-sm md:text-base">Peticiones de acceso API y consola.</p>
+                </header>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                  {devRequests.filter(r => r.status === 'pending').length === 0 && <p className="text-gray-500 col-span-full">Sin peticiones nuevas.</p>}
+                  {devRequests.filter(r => r.status === 'pending').map(req => (
+                    <div key={req.id} className="bg-[#080000] border border-red-900/20 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col h-full hover:border-red-900/40 transition-colors">
+                       <div className="flex justify-between items-start mb-6">
+                          <div>
+                            <h4 className="font-bold text-white text-xl">{req.name}</h4>
+                            <p className="text-sm font-bold text-red-500 mt-1 uppercase tracking-wider">{req.company}</p>
+                            <p className="text-xs text-gray-500 mt-3 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-cyan-500"/> Exp: {req.experience}</p>
+                          </div>
+                       </div>
+                       <div className="flex-1">
+                          <p className="text-sm text-gray-300 bg-black/50 p-5 rounded-2xl border border-white/5 mb-6 leading-relaxed italic shadow-inner">"{req.message}"</p>
+                       </div>
+                       <div className="flex gap-4 mt-auto">
+                         <button onClick={() => handleDevRequest(req, true)} className="flex-1 bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] flex justify-center items-center gap-2 active:scale-95 uppercase tracking-wider">
+                           <CheckCircle className="w-5 h-5" /> Conceder
+                         </button>
+                         <button onClick={() => handleDevRequest(req, false)} className="flex-1 bg-red-950/20 hover:bg-red-900/40 border border-red-900/30 text-gray-300 font-bold py-4 rounded-xl text-sm transition-all flex justify-center items-center gap-2 active:scale-95 uppercase tracking-wider">
+                           <XCircle className="w-5 h-5" /> Denegar
+                         </button>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+           )}
+
+           {/* MENSAJES */}
+           {activeTab === 'messages' && (
+             <div className="space-y-8 animate-fade-in">
+                <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Transmisiones Externas</h3>
+                  <p className="text-red-400 text-sm md:text-base">Buzón de comunicaciones y reportes.</p>
+                </header>
+                <div className="space-y-4 md:space-y-6">
+                  {messages.length === 0 && <p className="text-gray-500 bg-[#0a0000] p-8 md:p-10 rounded-2xl md:rounded-3xl border border-red-900/20 text-center">Bandeja cifrada vacía.</p>}
+                  {messages.map(msg => (
+                    <div key={msg.id} className="bg-[#080000] border border-red-900/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col sm:flex-row gap-4 md:gap-6 group hover:border-red-900/40 transition-colors">
+                       <div className="shrink-0 w-12 h-12 md:w-14 md:h-14 bg-red-950/30 rounded-xl md:rounded-2xl flex items-center justify-center border border-red-900/30 mt-1">
+                          <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
+                       </div>
+                       <div className="flex-1 w-full overflow-hidden">
+                         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
+                            <h4 className="font-bold text-white text-lg md:text-xl tracking-tight truncate">{msg.subject}</h4>
+                            <span className="self-start sm:self-auto text-[10px] md:text-xs font-black text-gray-500 bg-black/50 border border-white/10 px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl uppercase tracking-widest whitespace-nowrap">{new Date(msg.created_at).toLocaleDateString()}</span>
+                         </div>
+                         <p className="text-xs md:text-sm font-bold text-red-400 mt-1 mb-3 md:mb-4 truncate">{msg.name} <span className="opacity-50 mx-1">|</span> {msg.email}</p>
+                         <p className="text-sm md:text-base text-gray-300 leading-relaxed bg-black/60 p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/5 shadow-inner whitespace-pre-wrap word-break">{msg.message}</p>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+           )}
+
+           {/* LOGS */}
+           {activeTab === 'logs' && (
+             <div className="space-y-8 animate-fade-in">
+                <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Registros del Sistema</h3>
+                    <p className="text-red-400 text-sm md:text-base">Monitoreo absoluto de actividades críticas.</p>
+                  </div>
+                  <button onClick={() => { localStorage.removeItem('nexus_admin_logs'); setLogs([]); }} className="bg-white/5 hover:bg-red-900/40 text-gray-400 hover:text-white px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent hover:border-red-900/30 flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
+                    <Trash2 className="w-4 h-4"/> Limpiar Buffer
+                  </button>
+                </header>
+                <div className="bg-[#080000] border border-red-900/20 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+                   <div className="overflow-x-auto custom-scrollbar">
+                     <table className="w-full text-left text-sm text-gray-400">
+                        <thead className="bg-black/50 text-xs uppercase font-black tracking-widest text-red-600 border-b border-red-900/20">
+                          <tr>
+                            <th className="px-6 py-5">Timestamp</th>
+                            <th className="px-6 py-5">Categoría</th>
+                            <th className="px-6 py-5">Entidad</th>
+                            <th className="px-6 py-5">Detalle</th>
+                            <th className="px-6 py-5">Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-red-900/10 font-mono">
+                          {logs.map(log => (
+                            <tr key={log.id} className="hover:bg-red-950/10 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap">{new Date(log.timestamp).toLocaleString()}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-white font-bold">{log.action}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">{log.entity}</td>
+                              <td className="px-6 py-4 truncate max-w-xs" title={log.details}>{log.details}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-3 py-1 rounded border ${log.status === 'success' ? 'bg-green-950/30 text-green-500 border-green-900/30' : log.status === 'error' ? 'bg-red-950/30 text-red-500 border-red-900/30' : 'bg-blue-950/30 text-blue-500 border-blue-900/30'}`}>
+                                  {log.status.toUpperCase()}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                     </table>
+                     {logs.length === 0 && <div className="p-10 text-center text-gray-600">No hay registros generados en esta sesión.</div>}
+                   </div>
+                </div>
+             </div>
+           )}
+
+           {/* SETTINGS */}
+           {activeTab === 'settings' && (
+             <div className="space-y-8 animate-fade-in">
+                <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Configuración del Sistema</h3>
+                  <p className="text-red-400 text-sm md:text-base">Parámetros globales y recursos principales.</p>
+                </header>
+                
+                <div className="bg-[#080000] border border-red-900/20 rounded-2xl md:rounded-3xl p-6 md:p-12 shadow-2xl w-full">
+                   
+                   <div className="space-y-8">
+                     {/* Web Logo Upload */}
+                     <div className="border border-white/10 bg-black/40 p-6 md:p-8 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                       <div className="flex-1">
+                         <div className="flex items-center gap-3 mb-2">
+                           <UploadCloud className="w-5 h-5 text-blue-500"/>
+                           <h4 className="text-lg font-bold text-white tracking-tight">Icono / Logo de la Web</h4>
+                         </div>
+                         <p className="text-xs md:text-sm text-gray-400 max-w-md">Sube el logo principal. Se guardará en la carpeta "icono web" de Cloudinary y actualizará el Favicon de la plataforma en tiempo real.</p>
+                       </div>
+                       
+                       <div className="shrink-0 flex items-center gap-4">
+                         {localStorage.getItem('nexus_web_logo') && (
+                           <img src={localStorage.getItem('nexus_web_logo')!} alt="Web Logo" className="w-12 h-12 rounded-xl object-cover bg-black border border-white/10" />
+                         )}
+                         <label className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)] inline-flex items-center gap-2">
+                           Subir Icono
+                           <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                             const file = e.target.files?.[0];
+                             if(!file) return;
+                             try {
+                               // Simulate or actual upload
+                               addLog('SISTEMA', 'Web Logo', 'Iniciando subida a Cloudinary (carpeta: icono web)...', 'info');
+                               
+                               const formData = new FormData();
+                               formData.append('file', file);
+                               formData.append('upload_preset', 'Iconos y capturas');
+                               formData.append('folder', 'icono web'); // specifically requested folder
+                               
+                               const res = await fetch(`https://api.cloudinary.com/v1_1/dnpnmhmht/image/upload`, {
+                                 method: 'POST', body: formData
+                               });
+                               
+                               if(!res.ok) throw new Error("Fallo al subir a Cloudinary");
+                               const data = await res.json();
+                               
+                               localStorage.setItem('nexus_web_logo', data.secure_url);
+                               
+                               // Actualizar favicon en tiempo real
+                               let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+                               if (!link) {
+                                 link = document.createElement('link');
+                                 link.rel = 'icon';
+                                 document.getElementsByTagName('head')[0].appendChild(link);
+                               }
+                               link.href = data.secure_url;
+                               
+                               addLog('SISTEMA', 'Web Logo', 'Icono actualizado con éxito', 'success');
+                               alert("Icono de la web actualizado correctamente.");
+                             } catch(err: any) {
+                               addLog('SISTEMA', 'Web Logo', `Error: ${err.message}`, 'error');
+                               alert("Error subiendo el logo: " + err.message);
+                             }
+                           }} />
+                         </label>
+                       </div>
+                     </div>
+
+                     <div className={`border p-6 md:p-8 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all ${maintenance ? 'bg-red-950/20 border-red-500/50 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'bg-black/40 border-red-900/20'}`}>
+                       <div className="flex-1">
+                         <div className="flex items-center gap-3 mb-2">
+                           <Shield className={`w-5 h-5 md:w-6 md:h-6 ${maintenance ? 'text-red-500' : 'text-gray-500'}`}/>
+                           <h4 className="text-lg md:text-xl font-bold text-white tracking-tight">Bloqueo General (Mantenimiento)</h4>
+                         </div>
+                         <p className="text-xs md:text-sm text-gray-400 max-w-md">Bloquea el acceso a todos los módulos y muestra un banner global de emergencia ineludible.</p>
+                       </div>
+                       
+                       <label className="relative inline-flex items-center cursor-pointer shrink-0 self-start sm:self-auto">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only peer"
+                            checked={maintenance}
+                            onChange={(e) => {
+                              const val = e.target.checked;
+                              setMaintenance(val);
+                              localStorage.setItem('nexus_maintenance', val.toString());
+                              addLog('MANTENIMIENTO', 'Sistema Global', `Status actualizado a: ${val}`, 'info');
+                            }}
+                          />
+                          <div className="w-16 h-8 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600 outline-none border border-red-900/40"></div>
+                        </label>
+                     </div>
+                   </div>
+                      
+                </div>
+             </div>
+           )}
+
+           {/* AI ADMIN */}
+           {activeTab === 'ai' && (
+             <div className="space-y-8 animate-fade-in flex flex-col h-[calc(100vh-12rem)]">
+                <header className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white flex items-center gap-2 md:gap-3"><BrainCircuit className="text-red-500 w-6 h-6 md:w-8 md:h-8" /> NEXUS AI Admin</h3>
+                    <p className="text-red-400 text-sm md:text-base mt-1 md:mt-0">Terminal de sobreescritura neuronal directa.</p>
+                  </div>
+                  <div className="flex self-start sm:self-auto items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-green-500 bg-green-500/10 px-3 md:px-4 py-1.5 md:py-2 rounded-xl border border-green-500/20">
+                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse" /> En Línea
+                  </div>
+                </header>
+
+                <div className="flex gap-2 flex-wrap shrink-0">
+                   <button onClick={() => { setAiCmd('Analizar rendimiento global'); setAiOutput(prev => [...prev, '> Analizar rendimiento global', `[NEXUS AI]: Rendimiento actual. Latencia DB: ${infraStats.supabasePing}ms. CDN Cloudinary: ${infraStats.cloudinaryPing}ms.`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><Zap className="w-3 h-3" /> Analizar Rendimiento</button>
+                   <button onClick={() => { setAiCmd('Detectar anomalías o errores'); setAiOutput(prev => [...prev, '> Detectar anomalías o errores', `[NEXUS AI]: Escaneando logs... Errores recientes encontrados: ${logs.filter(l => l.status === 'error').length}. ${!infraStats.isSupabaseUp ? 'ALERTA: Supabase Offline' : ''}`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><Activity className="w-3 h-3" /> Detectar Errores</button>
+                   <button onClick={() => { setAiCmd('Revisar estado de red monetaria'); setAiOutput(prev => [...prev, '> Revisar estado de red monetaria', `[NEXUS AI]: AdSense ${adsConfig.active ? 'ACTIVO' : 'PAUSADO'}. Publisher ID: ${adsConfig.publisherId || 'Mínimo/Vacío'}`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><TrendingUp className="w-3 h-3" /> Revisar Red de Ads</button>
+                   <button onClick={() => { setAiCmd('Estado general'); setAiOutput(prev => [...prev, '> Estado general', `[NEXUS AI]: Total usuarios: ${users.length}. Apps totales: ${apps.length}. Pendientes revisión: ${apps.filter(x => x.status === 'pending').length}`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><BrainCircuit className="w-3 h-3" /> Estado General</button>
+                </div>
+
+                <div className="flex-1 min-h-[400px] bg-[#050000] rounded-2xl md:rounded-3xl border border-red-900/30 overflow-hidden flex flex-col font-mono shadow-2xl relative w-full">
+                   <div className="h-10 bg-black border-b border-red-900/30 flex items-center px-4 gap-2 shrink-0">
+                      <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                      <div className="w-3 h-3 rounded-full bg-orange-500/50" />
+                      <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                      <span className="text-[10px] text-gray-500 ml-4">root@nexus-ai:~#</span>
+                   </div>
+                   
+                   <div className="flex-1 p-6 overflow-y-auto space-y-2 text-sm text-gray-300">
+                     {aiOutput.map((l, i) => (
+                       <div key={i} className={l.startsWith('>') ? 'text-cyan-400' : l.includes('ERROR') ? 'text-red-500' : 'text-green-500/80'}>{l}</div>
+                     ))}
+                   </div>
+                   
+                   <form 
+                     onSubmit={(e) => {
+                       e.preventDefault();
+                       if(!aiCmd.trim()) return;
+                       setAiOutput(p => [...p, `> ${aiCmd}`, 'Ejecutando directiva restrictiva en Sandbox C...', 'Acceso de red simulado...', 'NEXUS AI respeta los protocolos actuales. Nada que hacer.']);
+                       addLog('NEXUS AI COMANDO', 'Terminal', aiCmd, 'info');
+                       setAiCmd('');
+                     }} 
+                     className="p-4 bg-black/60 border-t border-red-900/30 flex gap-4 shrink-0"
+                   >
+                      <Terminal className="text-red-500 w-5 h-5 shrink-0 mt-0.5" />
+                      <input 
+                        type="text" 
+                        value={aiCmd} 
+                        onChange={e => setAiCmd(e.target.value)}
+                        placeholder="Ingresar comando directo..."
+                        className="flex-1 bg-transparent border-none outline-none text-white font-mono"
+                        autoFocus
+                      />
+                   </form>
+                </div>
+             </div>
+           )}
+
+        </div>
+      </main>
     </div>
   );
 }

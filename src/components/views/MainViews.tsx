@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User } from 'lucide-react';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search } from 'lucide-react';
+import { motion } from 'motion/react';
 import AppGrid, { AppCard } from '../AppGrid';
 import { AppItem, Category } from '../../types';
 import { CATEGORIES } from '../../data';
@@ -261,6 +262,7 @@ export function EventsView() {
   );
 }
 
+// ... existing code ...
 export function AchievementsView() {
   return (
     <div className="pt-24 px-6 max-w-4xl mx-auto pb-16 text-center">
@@ -288,3 +290,59 @@ export function AchievementsView() {
     </div>
   );
 }
+
+export function SearchView({ apps }: { apps: AppItem[] }) {
+  const [query, setQuery] = useState('');
+  const filtered = apps.filter(a => a.name.toLowerCase().includes(query.toLowerCase()) || a.developer.toLowerCase().includes(query.toLowerCase()) || a.category.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="pt-24 px-6 max-w-7xl mx-auto pb-24"
+    >
+      <div className="max-w-3xl mx-auto mb-12">
+        <h1 className="text-4xl font-black mb-6 flex items-center justify-center gap-3 tracking-tight"><Search className="w-8 h-8 text-cyan-500" /> Búsqueda Avanzada</h1>
+        <div className="relative group">
+          <input 
+            type="text" 
+            value={query} 
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Juegos, aplicaciones, desarrolladores..." 
+            className="w-full h-16 bg-[#050B14] border border-white/10 rounded-2xl pl-14 pr-6 text-xl text-white focus:outline-none focus:border-cyan-500 focus:bg-white/5 transition-all shadow-xl group-hover:border-white/20"
+            autoFocus
+          />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-cyan-500 transition-colors" />
+          {query && (
+            <button onClick={() => setQuery('')} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-1 transition-colors">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {query && (
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-gray-400 font-medium">Resultados para <span className="text-white">"{query}"</span></p>
+          <span className="text-sm font-bold bg-white/5 px-3 py-1 rounded-full text-cyan-400 border border-white/10">{filtered.length} encontrados</span>
+        </div>
+      )}
+
+      {filtered.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-6">
+          {filtered.map(app => (
+            <AppCard key={app.id} app={app} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 bg-[#050B14] rounded-3xl border border-white/5">
+          <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Sin resultados</h2>
+          <p className="text-gray-400">No hemos encontrado nada que coincida con "{query}". Intenta con otros términos.</p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+

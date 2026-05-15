@@ -1,205 +1,150 @@
-import { useState, useRef, useEffect } from 'react';
-import { BrainCircuit, Send, User, Bot, AlertTriangle, Key, ArrowLeft } from 'lucide-react';
-import { AIConfig } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { BrainCircuit, Send, User, Ghost, Trash2, ArrowLeft } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { motion } from 'motion/react';
 import Markdown from 'react-markdown';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
+interface NexusAIChatProps {
+  onBack: () => void;
+  apiKey?: string;
 }
 
-export default function NexusAIChat({ config, onReturn }: { config: AIConfig, onReturn: () => void }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function NexusAIChat({ onBack, apiKey }: NexusAIChatProps) {
+  const [messages, setMessages] = useState<{role: 'user'|'model', content: string}[]>([]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    const saved = localStorage.getItem('nexus_ai_chat');
+    if (saved) {
+       try { setMessages(JSON.parse(saved)); } catch (e) {}
+    }
+  }, []);
 
-  if (!config.enabled) {
-    return (
-      <div className="fixed inset-0 z-[200] bg-[#030712] flex flex-col items-center justify-center text-center p-6">
-        <button onClick={onReturn} className="absolute top-6 left-6 p-3 rounded-full bg-white/5 text-gray-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <div className="w-20 h-20 bg-nexus-cyan/10 rounded-full flex items-center justify-center mb-6">
-          <BrainCircuit className="w-10 h-10 text-nexus-cyan" />
-        </div>
-        <h1 className="text-4xl font-black mb-4 tracking-tighter">Nexus AI <span className="text-gray-500">Desactivado</span></h1>
-        <p className="text-gray-400 mb-8 leading-relaxed max-w-md">
-          El asistente impulsado por inteligencia artificial está temporalmente inactivo. 
-          Los administradores de la plataforma deben habilitarlo desde el panel de control.
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      localStorage.setItem('nexus_ai_chat', JSON.stringify(messages));
+    } else {
+      localStorage.removeItem('nexus_ai_chat');
+    }
+  }, [messages]);
 
-  if (!config.apiKey) {
-    return (
-      <div className="fixed inset-0 z-[200] bg-[#030712] flex flex-col items-center justify-center text-center p-6">
-        <button onClick={onReturn} className="absolute top-6 left-6 p-3 rounded-full bg-white/5 text-gray-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mb-6">
-          <Key className="w-10 h-10 text-yellow-500" />
-        </div>
-        <h1 className="text-3xl font-black mb-4">Falta Configuración</h1>
-        <p className="text-gray-400 mb-8 max-w-md">
-          Nexus AI está activo, pero falta la clave de API (API Key) para conectar con el motor de inferencia. Configúralo en el modo administrador.
-        </p>
-      </div>
-    );
-  }
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!input.trim() || loading) return;
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    const key = apiKey || process.env.GEMINI_API_KEY;
+    if (!key) {
+       setMessages(p => [...p, { role: 'model', content: '❌ ERROR: API Key no configurada globalmente.'}]);
+       return;
+    }
 
-    const userMessage = input.trim();
+    const tempInput = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsLoading(true);
-    setError(null);
+    setMessages(p => [...p, { role: 'user', content: tempInput }]);
+    setLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: config.apiKey });
-      
-      const formattedHistory = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }));
-
-      // In real scenario we would pass history properly if configured to use chat history.
-      const response = await ai.models.generateContent({
-        model: config.model || 'gemini-2.5-flash',
-        contents: [
-            ...formattedHistory,
-            { role: 'user', parts: [{ text: userMessage }] }
-        ]
+      const ai = new GoogleGenAI({ apiKey: key });
+      const chat = ai.chats.create({
+         model: 'gemini-2.5-flash',
+         config: {
+           systemInstruction: "Eres Nexus AI, asistente IA integrado de forma nativa en NexusPlay."
+         }
       });
-
-      setMessages(prev => [...prev, { role: 'assistant', content: response.text || 'Sin respuesta.' }]);
+      // Feed history if needed... For now, single shot to avoid parsing history
+      const result = await chat.sendMessage({ message: tempInput });
+      if (result.text) {
+        setMessages(p => [...p, { role: 'model', content: result.text! }]);
+      }
     } catch (err: any) {
-      console.error('Nexus AI Error:', err);
-      // Wait, let's catch auth or connection errors
-      const msg = err?.message || 'Error desconocido de conexión';
-      setError(`No se pudo generar la respuesta: ${msg}`);
-      
-      // Keep user message but allow retry or something similar? Actually we can just show error inline or below.
+      setMessages(p => [...p, { role: 'model', content: `❌ Falla de conexión neuronal. Error: ${err.message}` }]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }} 
-      animate={{ opacity: 1, scale: 1 }} 
-      exit={{ opacity: 0 }} 
-      className="fixed inset-0 z-[200] bg-[#030712] flex flex-col overflow-hidden"
-    >
-      <div className="h-20 shrink-0 border-b border-white/5 flex items-center px-6 gap-6 relative z-10 bg-black/40 backdrop-blur-md">
-        <button onClick={onReturn} className="p-3 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-6 h-6" />
+    <div className="fixed inset-0 z-[100] bg-[#020617] flex flex-col font-sans">
+      <header className="h-20 shrink-0 border-b border-white/5 bg-[#020617]/90 backdrop-blur-md flex items-center justify-between px-6 z-10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center gap-4">
+           <button onClick={onBack} className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-transform active:scale-95">
+              <ArrowLeft className="w-6 h-6" />
+           </button>
+           <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-cyan-900/40 rounded-2xl flex items-center justify-center border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                 <BrainCircuit className="w-6 h-6 text-cyan-400" />
+              </div>
+              <div>
+                 <h1 className="text-xl font-black text-white tracking-tighter shadow-cyan-500/50 drop-shadow-sm">NEXUS AI</h1>
+                 <p className="text-[10px] uppercase font-black tracking-widest text-cyan-500/80">Inteligencia Generativa</p>
+              </div>
+           </div>
+        </div>
+        <button onClick={() => setMessages([])} className="p-3 text-red-500/70 hover:text-red-400 bg-red-950/20 hover:bg-red-950/40 rounded-xl transition-all border border-red-900/20 group">
+           <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
         </button>
-        <div className="w-12 h-12 rounded-xl bg-nexus-cyan/20 flex items-center justify-center">
-          <BrainCircuit className="w-6 h-6 text-nexus-cyan" />
-        </div>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-            Nexus AI <div className="px-2 py-0.5 rounded-md bg-nexus-cyan/20 text-nexus-cyan text-[10px] uppercase font-bold tracking-wider">Beta</div>
-          </h1>
-          <p className="text-xs text-gray-400 font-medium hidden sm:block">Modelo Activo: {config.model}</p>
-        </div>
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-hidden flex flex-col relative max-w-5xl mx-auto w-full">
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 scroll-smooth">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center opacity-50 space-y-4">
-              <BrainCircuit className="w-16 h-16 text-nexus-cyan mb-2" />
-              <p className="text-sm font-medium">Inicia una conversación con Nexus AI</p>
-            </div>
-          ) : (
-            messages.map((msg, idx) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                key={idx} 
-                className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-              >
-                <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center shadow-lg ${msg.role === 'user' ? 'bg-gradient-to-tr from-cyan-500 to-blue-500 text-white' : 'bg-white/10 text-nexus-cyan'}`}>
-                  {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-6 h-6" />}
-                </div>
-                <div 
-                  className={`max-w-[80%] rounded-2xl p-4 prose prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:rounded-xl prose-a:text-cyan-400 ${
-                    msg.role === 'user' 
-                      ? 'bg-nexus-cyan/10 border border-nexus-cyan/20 text-white rounded-tr-sm' 
-                      : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-sm'
-                  }`}
-                >
-                  <Markdown>{msg.content}</Markdown>
-                </div>
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#08122c] to-[#020617] custom-scrollbar">
+         <div className="max-w-4xl mx-auto space-y-8">
+            {messages.length === 0 && (
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-24 text-center">
+                 <div className="w-24 h-24 rounded-full bg-cyan-950/30 flex items-center justify-center mb-6 border border-cyan-900/30 shadow-[0_0_50px_rgba(34,211,238,0.05)]">
+                    <BrainCircuit className="w-12 h-12 text-cyan-500" />
+                 </div>
+                 <h2 className="text-3xl font-black text-white mb-2 tracking-tight">¿En qué puedo asistirte?</h2>
+                 <p className="text-gray-400 max-w-sm font-light">Conectado a la base de datos neuronal de NexusPlay para responder a tus consultas de forma inmediata.</p>
               </motion.div>
-            ))
-          )}
-          
-          {isLoading && (
-            <div className="flex gap-4">
-              <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-white/10 text-nexus-cyan shadow-[0_0_15px_rgba(34,211,238,0.2)] animate-pulse">
-                <Bot className="w-6 h-6" />
+            )}
+            
+            {messages.map((m, i) => (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={i} className={`flex gap-4 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                 <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg ${m.role === 'user' ? 'bg-gradient-to-br from-cyan-400 to-blue-600 text-white' : 'bg-[#0a0f24] border border-cyan-900/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.1)]'}`}>
+                    {m.role === 'user' ? <User className="w-6 h-6" /> : <Ghost className="w-6 h-6" />}
+                 </div>
+                 <div className={`max-w-[85%] p-5 sm:p-6 rounded-3xl ${m.role === 'user' ? 'bg-cyan-600/10 border border-cyan-500/20 text-white rounded-tr-sm shadow-xl' : 'bg-black/40 border border-white/5 text-gray-200 rounded-tl-sm shadow-xl'}`}>
+                    <div className="prose prose-invert prose-p:leading-relaxed text-[15px] sm:text-base max-w-none">
+                       <Markdown>{m.content}</Markdown>
+                    </div>
+                 </div>
+              </motion.div>
+            ))}
+            
+            {loading && (
+              <div className="flex gap-4">
+                 <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center bg-[#0a0f24] border border-cyan-900/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+                    <Ghost className="w-6 h-6" />
+                 </div>
+                 <div className="bg-black/40 border border-white/5 p-5 rounded-3xl rounded-tl-sm flex items-center gap-3">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full animate-bounce" />
+                    </div>
+                 </div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm p-4 w-24 flex items-center justify-center gap-1">
-                <div className="w-2 h-2 bg-nexus-cyan rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-nexus-cyan rounded-full animate-bounce delay-100"></div>
-                <div className="w-2 h-2 bg-nexus-cyan rounded-full animate-bounce delay-200"></div>
-              </div>
-            </div>
-          )}
+            )}
+            <div ref={endRef} />
+         </div>
+      </main>
 
-          {error && (
-            <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-sm">
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-              <p>{error}</p>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="p-4 sm:p-6 bg-[#030712]/90 backdrop-blur-xl shrink-0 mt-auto border-t border-white/5">
-          <form 
-            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-            className="flex gap-3 max-w-4xl mx-auto"
-          >
-            <input
-              type="text"
+      <footer className="p-4 sm:p-6 bg-[#020617] border-t border-white/5 pb-8 sm:pb-6">
+         <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-3 relative">
+            <input 
+              type="text" 
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Escribe tu mensaje a la IA..."
-              disabled={isLoading}
-              className="flex-1 h-14 bg-white/5 border border-white/10 rounded-2xl px-5 text-sm md:text-base focus:outline-none focus:border-nexus-cyan/50 focus:bg-white/10 transition-all text-white placeholder-gray-500 disabled:opacity-50"
+              onChange={e => setInput(e.target.value)}
+              placeholder="Inicia la transferencia de datos..."
+              className="flex-1 bg-black/80 border border-cyan-900/30 focus:border-cyan-500 focus:bg-black text-white rounded-2xl pl-6 pr-4 h-16 transition-all outline-none shadow-inner text-base lg:text-lg"
             />
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className="w-14 h-14 rounded-2xl bg-cyan-500 flex flex-col items-center justify-center text-black hover:bg-cyan-400 active:scale-95 shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:hover:shadow-none"
-            >
-              <Send className="w-5 h-5" />
+            <button disabled={loading || !input.trim()} type="submit" className="h-16 px-6 sm:px-10 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 text-white font-black transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(34,211,238,0.3)] active:scale-95">
+               <span className="hidden sm:inline">ENVIAR</span> <Send className="w-5 h-5" />
             </button>
-          </form>
-        </div>
-      </div>
-    </motion.div>
+         </form>
+      </footer>
+    </div>
   );
 }

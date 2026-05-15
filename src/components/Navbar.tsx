@@ -78,9 +78,9 @@ export default function Navbar({ onMenuClick, userProfile, session, onLoginClick
           className="group flex items-center gap-3 transition-transform hover:scale-105 active:scale-95"
         >
           <img 
-            src="/logo.png" 
+            src={localStorage.getItem('nexus_web_logo') || "/logo.png"}
             alt="NexusPlay Logo" 
-            className="w-10 h-10 object-contain rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.2)] group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all" 
+            className="w-10 h-10 object-cover rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.2)] group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all" 
           />
           <span className="font-black tracking-tighter text-white hidden sm:block text-2xl">
             Nexus<span className="text-cyan-400">Play</span>

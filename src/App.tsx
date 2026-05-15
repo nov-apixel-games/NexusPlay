@@ -18,8 +18,8 @@ import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 import { ShieldAlert, Heart, Menu, Search, Bell } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Footer from './components/Footer';
-import { ContactView, LegalPage, HelpView } from './components/views/LegalViews';
-import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView } from './components/views/MainViews';
+import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditionsView, CookiePolicyView, AboutView } from './components/views/LegalViews';
+import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 
@@ -108,6 +108,18 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Aplicar logo web si existe
+    const webLogo = localStorage.getItem('nexus_web_logo');
+    if (webLogo) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = webLogo;
+    }
+
     if (!isSupabaseConfigured) {
       addToast('Faltan configurar variables de entorno de Supabase.', 'error');
       return;
@@ -356,7 +368,7 @@ export default function App() {
           console.error("Fallo crítico de registro de perfil:", syncErr);
           
           if (syncErr.code === '42501') {
-            addToast("⚠️ ERROR DE PRIVACIDAD: Supabase bloquea el registro. SOLUCIÓN: Ve a SQL Editor y ejecuta: ALTER TABLE profiles DISABLE ROW LEVEL SECURITY; ALTER TABLE apps DISABLE ROW LEVEL SECURITY; ALTER TABLE stats DISABLE ROW LEVEL SECURITY;", "warning");
+            addToast("⚠️ ERROR DE PRIVACIDAD: Supabase bloquea el registro. SOLUCIÓN: Ve a SQL Editor y ejecuta: ALTER TABLE profiles DISABLE ROW LEVEL SECURITY; ALTER TABLE apps DISABLE ROW LEVEL SECURITY; ALTER TABLE stats DISABLE ROW LEVEL SECURITY;", "error");
           } else {
             addToast(`Error de Vínculo (${syncErr.code}): ${syncErr.message}`, "error");
           }
@@ -412,53 +424,107 @@ export default function App() {
     }
   };
 
-  if (activeView === 'admin-panel' && isAdmin) {
-    return (
-      <>
-        <ToastContainer toasts={toasts} removeToast={removeToast} />
-        <AdminPanel 
-          apps={apps} 
-          setApps={setApps} 
-          users={users}
-          setUsers={setUsers}
-          settings={settings}
-          setSettings={setSettings}
-          aiConfig={aiConfig}
-          setAiConfig={setAiConfig}
-          devRequests={devRequests}
-          setDevRequests={setDevRequests}
-          addToast={addToast}
-          onExit={() => setActiveView('home')} 
-        />
-      </>
-    );
-  }
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeView]);
 
-  if (settings.maintenanceMode && !isAdmin) {
-    return (
-      <div className="min-h-screen bg-[#030712] text-white flex flex-col items-center justify-center p-6 text-center">
-        <ShieldAlert className="w-20 h-20 text-yellow-500 mb-6" />
-        <h1 className="text-3xl font-black mb-4">Mantenimiento</h1>
-        <p className="text-gray-400 max-w-md">
-          {settings.storeName} está en mantenimiento actualmente. Estamos mejorando la plataforma de nueva generación.
-        </p>
-      </div>
-    );
-  }
-
-  if (activeView === 'nexus-ai') {
-    return (
-      <AnimatePresence mode="wait">
-        <NexusAIChat config={aiConfig} onReturn={() => setActiveView('home')} />
-      </AnimatePresence>
-    );
-  }
-
-  // Filter published apps for the store
   const publishedApps = apps.filter(a => a.status === 'published');
 
+  const ActiveViewContent = () => {
+    switch (activeView) {
+      case 'home':
+        return (
+          <>
+            <Hero storeName={settings.storeName} slogan={settings.slogan} />
+            <CategorySection />
+            <AppGrid apps={publishedApps} />
+          </>
+        );
+      case 'games':
+        return <GamesView apps={publishedApps} />;
+      case 'explore':
+        return <ExploreView apps={publishedApps} />;
+      case 'ranking':
+        return <RankingView apps={publishedApps} />;
+      case 'search':
+        return <SearchView apps={publishedApps} />;
+      case 'admin-panel':
+        return (
+           <AdminPanel 
+             onBack={() => setActiveView('home')} 
+             userProfile={userProfile}
+             apps={apps} 
+             setApps={setApps} 
+             devRequests={devRequests}
+             setDevRequests={setDevRequests}
+           />
+        );
+      case 'nexus-ai':
+        return <NexusAIChat apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} />;
+      case 'profile':
+        return (
+          <ProfileView 
+            session={session} 
+            userProfile={userProfile} 
+            onLoginClick={() => setShowAuthModal(true)} 
+            onDeveloperAction={(action) => {
+              if (action === 'activate') {
+                handleActivateDeveloper();
+              } else if (action === 'open') {
+                setDevPanelInitialTab('upload');
+                setShowDevPanel(true);
+              }
+            }}
+          />
+        );
+      case 'favorites':
+        return (
+          <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 min-h-[60vh]">
+            <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500" /> Mis Favoritos</h1>
+            <AppGrid apps={publishedApps.slice(0,2)} />
+          </div>
+        );
+      case 'downloads':
+        return <DownloadsView apps={publishedApps} />;
+      case 'events':
+        return <EventsView />;
+      case 'achievements':
+        return <AchievementsView />;
+      case 'collections':
+        return <CollectionsView />;
+      case 'contact':
+        return <ContactView onBack={() => setActiveView('home')} />;
+      case 'help':
+        return <HelpView onBack={() => setActiveView('home')} />;
+      case 'privacy':
+        return <PrivacyPolicyView storeName={settings.storeName} onBack={() => setActiveView('home')} />;
+      case 'terms':
+        return <TermsAndConditionsView storeName={settings.storeName} onBack={() => setActiveView('home')} />;
+      case 'cookies':
+        return <CookiePolicyView storeName={settings.storeName} onBack={() => setActiveView('home')} />;
+      case 'about':
+        return <AboutView storeName={settings.storeName} onBack={() => setActiveView('home')} />;
+      default:
+        // Attempt to redirect if unknown view
+        return (
+          <div className="pt-32 px-6 min-h-[60vh] flex flex-col items-center justify-center text-center">
+            <h1 className="text-4xl font-black neon-text-gradient mb-4 uppercase tracking-tighter">404</h1>
+            <p className="text-gray-400">Página no encontrada o en desarrollo.</p>
+            <button 
+              onClick={() => setActiveView('home')}
+              className="mt-8 px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-nexus-cyan/10 hover:text-nexus-cyan transition-all"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        );
+    }
+  };
+
+  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel';
+
   return (
-    <div className="min-h-screen bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30">
+    <div className="min-h-screen bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showAuthModal && (
         <AuthModal 
@@ -466,7 +532,11 @@ export default function App() {
           onSuccess={() => {
             setShowAuthModal(false);
             addToast('Sesión iniciada correctamente', 'success');
-          }} 
+          }}
+          onNavigate={(view) => {
+            setShowAuthModal(false);
+            setActiveView(view);
+          }}
         />
       )}
       {/* Background Abstract Effects */}
@@ -491,7 +561,7 @@ export default function App() {
         </svg>
       </div>
 
-      {!showAuthModal && (
+      {!showAuthModal && !isFullScreenView && (
         <Navbar 
           onMenuClick={() => setIsSidebarOpen(true)} 
           userProfile={userProfile} 
@@ -510,95 +580,30 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <main className="max-w-7xl mx-auto flex-1 w-full relative z-10">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeView}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeView === 'home' ? (
-              <>
-                <Hero storeName={settings.storeName} slogan={settings.slogan} />
-                <CategorySection />
-                <AppGrid apps={publishedApps} />
-              </>
-            ) : activeView === 'games' ? (
-              <GamesView apps={publishedApps} />
-            ) : activeView === 'explore' ? (
-              <ExploreView apps={publishedApps} />
-            ) : activeView === 'ranking' ? (
-              <RankingView apps={publishedApps} />
-            ) : activeView === 'profile' ? (
-              <ProfileView 
-                session={session} 
-                userProfile={userProfile} 
-                onLoginClick={() => setShowAuthModal(true)} 
-                onDeveloperAction={(action) => {
-                  if (action === 'activate') {
-                    handleActivateDeveloper();
-                  } else if (action === 'open') {
-                    setDevPanelInitialTab('upload');
-                    setShowDevPanel(true);
-                  }
-                }}
-              />
-            ) : activeView === 'favorites' ? (
-              <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 min-h-[60vh]">
-                <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500" /> Mis Favoritos</h1>
-                <AppGrid apps={publishedApps.slice(0,2)} />
-              </div>
-            ) : activeView === 'downloads' ? (
-              <DownloadsView apps={publishedApps} />
-            ) : activeView === 'events' ? (
-              <EventsView />
-            ) : activeView === 'achievements' ? (
-              <AchievementsView />
-            ) : activeView === 'collections' ? (
-              <CollectionsView />
-            ) : activeView === 'contact' ? (
-              <ContactView />
-            ) : activeView === 'help' ? (
-              <HelpView />
-            ) : activeView === 'privacy' ? (
-              <LegalPage title="Política de Privacidad" lastUpdated="14 de Mayo, 2026">
-                <p>En {settings.storeName}, valoramos tu privacidad. Esta política describe qué datos recopilamos...</p>
-                <h3>Recopilación de Datos</h3>
-                <p>Al utilizar nuestros servicios, recogemos el mínimo de información necesaria para proporcionarte la mejor experiencia.</p>
-              </LegalPage>
-            ) : activeView === 'terms' ? (
-              <LegalPage title="Términos y Condiciones" lastUpdated="14 de Mayo, 2026">
-                <p>Bienvenido a {settings.storeName}. Al continuar accediendo a la plataforma, aceptas adherirte a estos términos.</p>
-                <h3>Uso de la Plataforma</h3>
-                <p>Te comprometes a utilizar las aplicaciones aquí distribuidas bajo los términos de las respectivas licencias de terceros.</p>
-              </LegalPage>
-            ) : activeView === 'cookies' ? (
-               <LegalPage title="Política de Cookies" lastUpdated="14 de Mayo, 2026">
-                 <p>Utilizamos cookies esenciales para el correcto funcionamiento de autenticación y preferencias del sistema.</p>
-               </LegalPage>
-            ) : activeView === 'about' ? (
-               <LegalPage title="Sobre Nosotros" lastUpdated="14 de Mayo, 2026">
-                 <p>{settings.storeName} nace con la misión de redefinir la distribución digital brindando una curación impecable y una plataforma ultrarrápida.</p>
-               </LegalPage>
-            ) : (
-              <div className="pt-32 px-6 min-h-[60vh] flex flex-col items-center justify-center text-center">
-                <h1 className="text-4xl font-black neon-text-gradient mb-4 uppercase tracking-tighter">Vista: {activeView}</h1>
-                <p className="text-gray-400">Esta sección está en desarrollo.</p>
-                <button 
-                  onClick={() => setActiveView('home')}
-                  className="mt-8 px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-nexus-cyan/10 hover:text-nexus-cyan transition-all"
-                >
-                  Volver al inicio
-                </button>
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      {isFullScreenView ? (
+         <div className="flex-1 w-full h-screen">
+            <ActiveViewContent />
+         </div>
+      ) : (
+        <main className="max-w-7xl mx-auto flex-1 w-full relative z-10 flex flex-col">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeView}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="flex-1 w-full flex flex-col"
+            >
+              <ActiveViewContent />
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      )}
 
-      <Footer onNavigate={handleAction} />
+      {!isFullScreenView && (
+        <Footer onNavigate={handleAction} />
+      )}
 
       {showDevPanel && session && (
         <DeveloperPanel 
@@ -622,23 +627,9 @@ export default function App() {
         />
       )}
 
-      {!showAuthModal && (
+      {!showAuthModal && activeView !== 'nexus-ai' && activeView !== 'admin-panel' && (
         <BottomNav activeView={activeView} onNavigate={handleAction} />
       )}
-
-      <footer className="hidden sm:flex border-t border-white/5 py-8 px-6 mt-12 items-center justify-between text-gray-500 text-xs">
-        <div className="flex items-center gap-6">
-           <span>© 2026 {settings.storeName} Corp.</span>
-           <button onClick={() => setActiveView('privacy')} className="hover:text-cyan-400 transition-colors">Privacidad</button>
-           <button onClick={() => setActiveView('terms')} className="hover:text-cyan-400 transition-colors">Términos</button>
-        </div>
-        <div className="flex items-center gap-4">
-           <span className="flex items-center gap-1">
-             <div className="w-1.5 h-1.5 rounded-full bg-nexus-green shadow-[0_0_5px_rgba(0,255,136,1)]" />
-             Conectado a Supabase
-           </span>
-        </div>
-      </footer>
     </div>
   );
 }

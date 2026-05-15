@@ -1,9 +1,10 @@
+import React from 'react';
 import { Star, Download, Sparkles, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { DEMO_APPS } from '../data';
 import { AppItem } from '../types';
 
-export function AppCard({ app }: { app: AppItem }) {
+export const AppCard = React.memo(({ app }: { app: AppItem }) => {
   return (
     <motion.div 
       whileHover={{ y: -4 }}
@@ -15,6 +16,8 @@ export function AppCard({ app }: { app: AppItem }) {
           alt={app.name} 
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
+          loading="lazy"
+          decoding="async"
           onError={(e) => {
             (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(app.name) + '&background=random&color=fff';
           }}
@@ -44,7 +47,9 @@ export function AppCard({ app }: { app: AppItem }) {
       </div>
     </motion.div>
   );
-}
+});
+
+AppCard.displayName = 'AppCard';
 
 export default function AppGrid({ apps = DEMO_APPS }: { apps?: AppItem[] }) {
   return (
