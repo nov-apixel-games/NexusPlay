@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import GoogleAdSense from './components/GoogleAdSense';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Hero from './components/Hero';
@@ -525,6 +526,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col">
+      <GoogleAdSense />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showAuthModal && (
         <AuthModal 

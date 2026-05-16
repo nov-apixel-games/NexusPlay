@@ -88,7 +88,8 @@ export default function DeveloperPanel({
       // Usamos el nombre de la app para la carpeta, o el usuario si no hay nombre aún
       const folderName = formData.name.trim() || userProfile?.username || 'unknown_app';
       
-      const result = await uploadToCloudinary(file, folderName);
+      const subFolder = field === 'icon' ? `${folderName}/icono` : `${folderName}/screenshots`;
+      const result = await uploadToCloudinary(file, subFolder);
       
       setFormData(prev => ({ ...prev, [field]: result.url }));
       setPublicIds(prev => ({ ...prev, [field]: result.public_id }));

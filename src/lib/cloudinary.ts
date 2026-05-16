@@ -50,6 +50,35 @@ export async function uploadToCloudinary(file: File, subFolder: string = ''): Pr
   }
 }
 
+export async function deleteFolderFromCloudinary(folderName: string): Promise<boolean> {
+  if (!folderName) return true;
+
+  console.log(`[Cloudinary] Solicitando eliminación de la carpeta: ${folderName}`);
+  
+  try {
+    const sanitizedFolder = folderName.replace(/[^a-zA-Z0-9_/]/g, '_');
+    const folderPath = `nexus_app/${sanitizedFolder}`;
+
+    const response = await fetch('/api/delete-folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: folderPath }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      console.error("[Cloudinary] Fallo al eliminar carpeta desde backend:", data);
+      return false;
+    }
+
+    console.log(`[Cloudinary] Resultado exitoso para carpeta ${folderPath}:`, data);
+    return data.success;
+  } catch (error) {
+    console.error(`[Cloudinary] Error de red al intentar eliminar carpeta ${folderName}:`, error);
+    return false;
+  }
+}
 export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
   if (!publicId) {
     console.warn("[Cloudinary] No public_id provided for deletion, skipping.");

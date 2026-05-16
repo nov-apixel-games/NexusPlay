@@ -4,10 +4,10 @@ import {
   Smartphone, Users, Code, MessageSquare, List, Settings, BrainCircuit,
   Star, Activity, AlertTriangle, Terminal, Search, Database, Menu, X,
   DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, Play, UploadCloud,
-  Zap
+  Zap, Server
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { deleteFromCloudinary } from '../lib/cloudinary';
+import { deleteFromCloudinary, deleteFolderFromCloudinary } from '../lib/cloudinary';
 import { AppItem, DevRequest } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
@@ -33,16 +33,14 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     try { return JSON.parse(localStorage.getItem('nexus_admin_logs') || '[]'); } catch { return []; }
   });
 
-  const [adsConfig, setAdsConfig] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('nexus_ads_config') || '{"publisherId":"","clientId":"","active":false}'); } catch { return { publisherId: '', clientId: '', active: false }; }
-  });
-
   const [infraStats, setInfraStats] = useState({
     supabasePing: 0,
     cloudinaryPing: 0,
     isSupabaseUp: true,
     isCloudinaryUp: true,
   });
+  const [nodeStats, setNodeStats] = useState<any>(null);
+  const [cloudStats, setCloudStats] = useState<any>(null);
 
   const [aiCmd, setAiCmd] = useState('');
   const [aiOutput, setAiOutput] = useState<string[]>([
@@ -58,12 +56,39 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
   const [deleteError, setDeleteError] = useState('');
 
   // AdSense y métricas reales
-  const saveAdsConfig = () => {
-    localStorage.setItem('nexus_ads_config', JSON.stringify(adsConfig));
-    addLog('ADSENSE', 'Configuración', `AdSense actualizado. Activo: ${adsConfig.active}`, 'success');
+  const [adsConfig, setAdsConfig] = useState<any>({ publisherId: '', clientId: '', active: false });
+
+  useEffect(() => {
+    fetchAdsConfig();
+  }, []);
+
+  const fetchAdsConfig = async () => {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'ads_config').single();
+    if (data && data.value) {
+      setAdsConfig(data.value);
+    }
+  };
+
+  const saveAdsConfig = async () => {
+    const { error } = await supabase.from('settings').upsert({ key: 'ads_config', value: adsConfig });
+    if(error) {
+       addLog('ADSENSE', 'Configuración', `Error guardando: ${error.message}`, 'error');
+       alert("Error guardando configuración AdSense. ¿Existe la tabla 'settings'?");
+    } else {
+       addLog('ADSENSE', 'Configuración', `AdSense actualizado en BD. Activo: ${adsConfig.active}`, 'success');
+    }
   };
 
   const checkInfra = async () => {
+     try {
+       const res = await fetch('/api/system-stats');
+       const data = await res.json();
+       if (data.success) {
+         setNodeStats(data.systemInfo);
+         setCloudStats(data.cloudinaryUsage);
+       }
+     } catch (e) {}
+
      const startSupa = Date.now();
      try {
        await supabase.from('apps').select('id').limit(1);
@@ -198,16 +223,23 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     addLog('ELIMINAR APP', appToDelete.name, `Iniciada secuencia de purga profunda...`, 'info');
 
     try {
+      // Intentamos borrar la carpeta entera de Cloudinary generada para esta app
+      let clFolder = true;
+      const folderName = appToDelete.name.trim() || appToDelete.developer?.trim() || 'unknown_app';
+      clFolder = await deleteFolderFromCloudinary(folderName);
+      console.log(`[RESPUESTA CLOUDINARY] Carpeta borrada: ${clFolder}`);
+
+      // Por si acaso, intentamos borrar los IDs individuales también para asegurar que no queden rastros antiguos
       let clIcon = true;
       if (appToDelete.iconPublicId) {
          clIcon = await deleteFromCloudinary(appToDelete.iconPublicId);
-         console.log(`[RESPUESTA CLOUDINARY] Icono borrado: ${clIcon}`);
+         console.log(`[RESPUESTA CLOUDINARY] Icono borrado (individual): ${clIcon}`);
       }
       let clScreens = true;
       for (const pid of (appToDelete.screenshotsPublicIds || [])) {
          const sr = await deleteFromCloudinary(pid);
          if (!sr) clScreens = false;
-         console.log(`[RESPUESTA CLOUDINARY] Captura (${pid}) borrada: ${sr}`);
+         console.log(`[RESPUESTA CLOUDINARY] Captura (${pid}) borrada (individual): ${sr}`);
       }
 
       const { error } = await supabase.from('apps').delete().eq('id', appToDelete.id);
@@ -737,15 +769,53 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                        </div>
                        <div className="col-span-2 mt-2">
                          <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-widest mb-2">
-                           <span>Operaciones Aprox. (Locales)</span>
-                           <span className={apps.length > 50 ? 'text-orange-500' : 'text-green-500'}>{apps.length > 50 ? 'Alta Carga' : 'Óptimo'}</span>
+                           <span>Uso Storage CDN (Real)</span>
+                           <span className="text-blue-400">{cloudStats?.storage?.usage !== undefined ? (cloudStats.storage.usage / 1024 / 1024).toFixed(2) + ' MB' : 'Calculando...'}</span>
                          </div>
                          <div className="w-full bg-black/50 rounded-full h-1.5 border border-white/10">
-                           <div className={`h-1.5 rounded-full ${apps.length > 50 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, (apps.length / 100) * 100)}%` }}></div>
+                           <div className={`h-1.5 rounded-full ${apps.length > 50 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, ((cloudStats?.storage?.usage || 0) / (100 * 1024 * 1024)) * 100)}%` }}></div>
                          </div>
                        </div>
                      </div>
                   </div>
+
+                  {/* HOST SERVER CARD */}
+                  {nodeStats && (
+                  <div className={`p-6 md:p-8 rounded-3xl border bg-[#080000] border-purple-900/30 shadow-[0_0_30px_rgba(168,85,247,0.1)] relative overflow-hidden group col-span-1 md:col-span-2`}>
+                     <Server className={`w-12 h-12 mb-4 text-purple-500/80`} />
+                     <h4 className="text-2xl font-black text-white mb-2">Host Server (Vercel Node)</h4>
+                     <p className="text-gray-400 text-sm max-w-sm mb-6">Métricas en tiempo real del entorno anfitrión y uso de recursos.</p>
+                     
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-6">
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Uptime Nodo</p>
+                         <p className="text-xl font-mono text-white">{Math.floor(nodeStats.processUptime / 60)} min</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Plataforma</p>
+                         <p className="text-xl font-mono text-white max-w-[120px] truncate">{nodeStats.osPlatform}</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Total RAM</p>
+                         <p className="text-xl font-mono text-white">{(nodeStats.totalMem / 1024 / 1024 / 1024).toFixed(2)} GB</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">RAM Libre</p>
+                         <p className="text-xl font-mono text-white">{(nodeStats.freeMem / 1024 / 1024 / 1024).toFixed(2)} GB</p>
+                       </div>
+                     </div>
+                     
+                     <div className="mt-6 border-t border-white/10 pt-6">
+                        <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+                           <span>Uso CPU (Promedio Core)</span>
+                           <span className="text-purple-400">{nodeStats.cpuCores} Cores Activos</span>
+                        </div>
+                        <div className="w-full bg-black/50 rounded-full h-1.5 border border-white/10 overflow-hidden">
+                           <div className={`h-1.5 rounded-full bg-purple-500`} style={{ width: `70%` }}></div>
+                        </div>
+                     </div>
+                  </div>
+                  )}
                 </div>
 
                 {(!infraStats.isSupabaseUp || !infraStats.isCloudinaryUp) && (
