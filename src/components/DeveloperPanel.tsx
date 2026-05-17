@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Upload, Link as LinkIcon, Image as ImageIcon, CheckCircle, ShieldAlert, Send, Code, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Upload, Link as LinkIcon, Image as ImageIcon, CheckCircle, ShieldAlert, Send, Code, ArrowRight, Loader2, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppItem, DevRequest } from '../types';
 import { supabase } from '../lib/supabase';
@@ -34,26 +34,28 @@ export default function DeveloperPanel({
   initialTab = 'upload',
   onRoleChange
 }: DeveloperPanelProps) {
+  const [editingAppId, setEditingAppId] = useState<string | null>(null);
+
   const [reqData, setReqData] = useState({ company: '', teamDescription: '', experience: '', appTypes: '', links: '', message: '' });
   
   const [formData, setFormData] = useState({
     name: '',
     company: userProfile?.username || '',
+    shortDescription: '',
     description: '',
     category: 'Herramientas',
     size: '',
     version: '',
+    compatibility: 'Android 8.0+',
+    whatsNew: '',
     icon: '',
-    screenshot: '',
-    screenshot2: '',
-    changelog: '',
+    screenshots: [] as string[],
     downloadUrl: ''
   });
 
   const [publicIds, setPublicIds] = useState({
     icon: '',
-    screenshot: '',
-    screenshot2: ''
+    screenshots: [] as string[]
   });
   
   const [isSuccess, setIsSuccess] = useState(false);
@@ -70,7 +72,7 @@ export default function DeveloperPanel({
 
   useEffect(() => {
     if (userId) {
-      supabase.from('developer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1)
+      supabase.from('dev_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1)
         .then(({ data }) => {
           if (data && data.length > 0) {
             setCurrentRequest(data[0]);
@@ -79,20 +81,24 @@ export default function DeveloperPanel({
     }
   }, [userId]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'icon' | 'screenshot' | 'screenshot2') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'icon' | 'screenshot') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setIsUploading(true);
-      // Usamos el nombre de la app para la carpeta, o el usuario si no hay nombre aún
       const folderName = formData.name.trim() || userProfile?.username || 'unknown_app';
       
       const subFolder = field === 'icon' ? `${folderName}/icono` : `${folderName}/screenshots`;
       const result = await uploadToCloudinary(file, subFolder);
       
-      setFormData(prev => ({ ...prev, [field]: result.url }));
-      setPublicIds(prev => ({ ...prev, [field]: result.public_id }));
+      if (field === 'icon') {
+        setFormData(prev => ({ ...prev, icon: result.url }));
+        setPublicIds(prev => ({ ...prev, icon: result.public_id }));
+      } else {
+        setFormData(prev => ({ ...prev, screenshots: [...prev.screenshots, result.url].slice(0, 4) }));
+        setPublicIds(prev => ({ ...prev, screenshots: [...prev.screenshots, result.public_id].slice(0, 4) }));
+      }
     } catch (error: any) {
       alert("Error al subir imagen: " + error.message);
     } finally {
@@ -138,14 +144,14 @@ export default function DeveloperPanel({
         if (updErr) throw updErr;
       }
 
-      // 2. Registro en developer_requests (Aseguramos nombre de tabla correcto)
+      // 2. Registro en dev_requests (Aseguramos nombre de tabla correcto)
       try {
-        await supabase.from('developer_requests').upsert({ 
+        await supabase.from('dev_requests').upsert({ 
           user_id: userId, 
-          full_name: userProfile?.username || email.split('@')[0],
-          studio_name: 'Indie Studio',
+          email: email,
+          company: 'Indie Studio',
           status: 'approved',
-          experience: 'Actuación automática'
+          experience: 'Activación automática'
         }, { onConflict: 'user_id' });
       } catch (e) { 
         console.warn("Log error ignorado:", e); 
@@ -164,6 +170,45 @@ export default function DeveloperPanel({
     }
   };
 
+  const resetForm = () => {
+    setEditingAppId(null);
+    setFormData({
+      name: '',
+      company: userProfile?.username || '',
+      shortDescription: '',
+      description: '',
+      category: 'Juegos',
+      size: '',
+      version: '',
+      compatibility: 'Android 8.0+',
+      whatsNew: '',
+      icon: '',
+      screenshots: [],
+      downloadUrl: ''
+    });
+    setPublicIds({ icon: '', screenshots: [] });
+  };
+
+  const handleEditClick = (app: AppItem) => {
+    setEditingAppId(app.id);
+    setFormData({
+      name: app.name,
+      company: app.developer,
+      shortDescription: app.shortDescription || '',
+      description: app.description || '',
+      category: app.category,
+      size: app.size || '',
+      version: app.version || '1.0.0', // Show current version to help them increment
+      compatibility: app.compatibility || 'Android 8.0+',
+      whatsNew: '', // Reset changelog for new update
+      icon: app.icon,
+      screenshots: app.screenshots || [],
+      downloadUrl: app.downloadUrl || ''
+    });
+    setPublicIds({ icon: app.iconPublicId || '', screenshots: app.screenshotsPublicIds || [] });
+    setActiveTab('upload');
+  };
+
   const handleAppSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -177,8 +222,83 @@ export default function DeveloperPanel({
       return;
     }
 
-    if (!formData.screenshot) {
+    if (formData.screenshots.length === 0) {
       alert("Sube al menos una captura de pantalla para mostrar tu juego.");
+      return;
+    }
+
+    if (editingAppId) {
+      // Update existing app
+      const appToUpdate = publishedApps.find(a => a.id === editingAppId);
+      if (appToUpdate) {
+        // Basic version validation
+        const currentVer = appToUpdate.version || '0.0.0';
+        
+        // Simple comparison: check if string is exactly same or if we should try more complex logic
+        // For simplicity and user intent, let's at least block the SAME version.
+        if (formData.version === currentVer) {
+          alert("Debes incrementar la versión para publicar una actualización (ej: de " + currentVer + " a la siguiente)");
+          return;
+        }
+
+        if (!formData.whatsNew.trim()) {
+           alert("Describe los cambios de esta actualización en el campo 'Novedades'.");
+           return;
+        }
+
+        try {
+          setIsUploading(true);
+          const oldVersionData = {
+            version: currentVer,
+            changelog: appToUpdate.whatsNew || appToUpdate.changelog || 'Lanzamiento inicial',
+            date: appToUpdate.date || appToUpdate.updated_at || new Date().toISOString(),
+            downloadUrl: appToUpdate.downloadUrl
+          };
+          
+          const previousVersions = appToUpdate.previous_versions ? [...appToUpdate.previous_versions, oldVersionData] : [oldVersionData];
+          
+          const { error } = await supabase.from('apps').update({
+            app_name: formData.name,
+            description: formData.description,
+            short_description: formData.shortDescription,
+            compatibility: formData.compatibility,
+            changelog: formData.whatsNew,
+            category: formData.category,
+            size: formData.size,
+            version: formData.version,
+            icon_url: formData.icon,
+            icon_public_id: publicIds.icon,
+            screenshots: formData.screenshots,
+            screenshots_public_ids: publicIds.screenshots,
+            download_url: formData.downloadUrl,
+            previous_versions: previousVersions,
+            updated_at: new Date().toISOString()
+          }).eq('id', editingAppId);
+
+          if (error) throw error;
+
+          // Notify followers (optional - logic placeholder)
+          try {
+            await supabase.from('notifications').insert({
+              title: `Actualización: ${formData.name}`,
+              message: `La aplicación ${formData.name} se ha actualizado a la versión ${formData.version}. ¡Mira qué hay de nuevo!`,
+              type: 'system',
+              is_global: true
+            });
+          } catch(notifErr) { console.warn("Notif error:", notifErr); }
+
+          setIsSuccess(true);
+          setTimeout(() => {
+            setIsSuccess(false);
+            resetForm();
+            setActiveTab('my-apps');
+          }, 2000);
+        } catch(e: any) {
+          alert('Error al actualizar: ' + e.message);
+        } finally {
+          setIsUploading(false);
+        }
+      }
       return;
     }
 
@@ -186,40 +306,32 @@ export default function DeveloperPanel({
       id: Math.random().toString(36).substr(2, 9),
       name: formData.name,
       developer: formData.company,
-      description: formData.description + (formData.changelog ? `\n\n### Novedades\n${formData.changelog}` : ''),
+      description: formData.description,
+      shortDescription: formData.shortDescription,
+      compatibility: formData.compatibility,
+      whatsNew: formData.whatsNew,
       category: formData.category,
       size: formData.size || 'Desconocido',
       version: formData.version || '1.0.0',
       icon: formData.icon,
       iconPublicId: publicIds.icon,
-      screenshots: [formData.screenshot, formData.screenshot2].filter(Boolean),
-      screenshotsPublicIds: [publicIds.screenshot, publicIds.screenshot2].filter(Boolean),
+      screenshots: formData.screenshots,
+      screenshotsPublicIds: publicIds.screenshots,
       downloadUrl: formData.downloadUrl,
-      status: 'published',
+      status: 'pending', // Usually pending for approval, but we kept 'published' previously. Let's keep 'published' for fast testing as before.
       rating: 5.0,
       downloads: '0',
       price: 'Gratis',
       date: new Date().toISOString()
     };
+    newApp.status = 'published';
     
     onAddApp(newApp);
     setIsSuccess(true);
     
     setTimeout(() => {
       setIsSuccess(false);
-      setFormData({
-        name: '',
-        company: userProfile?.username || '',
-        description: '',
-        category: 'Juegos',
-        size: '',
-        version: '',
-        icon: '',
-        screenshot: '',
-        screenshot2: '',
-        changelog: '',
-        downloadUrl: ''
-      });
+      resetForm();
       setActiveTab('my-apps');
     }, 2000);
   };
@@ -429,10 +541,11 @@ export default function DeveloperPanel({
                                <p className="text-white font-black">{app.downloads || '0'}</p>
                              </div>
                             <button 
-                              onClick={() => onUpdateApp?.(app)}
-                              className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-cyan-400 transition-all opacity-0 group-hover:opacity-100"
-                            >
-                               <Code className="w-5 h-5" />
+                               onClick={() => handleEditClick(app)}
+                               className="p-3 bg-white/5 hover:bg-cyan-500/10 rounded-xl text-gray-400 hover:text-cyan-400 transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2"
+                             >
+                                <span className="text-[10px] font-black uppercase hidden md:block">Actualizar</span>
+                                <Zap className="w-5 h-5" />
                             </button>
                           </div>
                         </div>
@@ -495,37 +608,43 @@ export default function DeveloperPanel({
                           <h4 className="text-xs font-black text-purple-400 uppercase tracking-widest flex items-center gap-2">
                              <ImageIcon className="w-4 h-4" /> MULTIMEDIA
                           </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4">
                             <div className="flex flex-col gap-2">
                               <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Icono</label>
-                              <div className="relative group overflow-hidden h-32 bg-black/40 border border-white/10 rounded-2xl hover:border-cyan-400 transition-all shadow-inner">
+                              <div className="relative group overflow-hidden h-24 bg-black/40 border border-white/10 rounded-2xl hover:border-cyan-400 transition-all shadow-inner w-24">
                                 {formData.icon ? (
                                   <div className="relative h-full flex flex-col items-center justify-center gap-2 p-2">
-                                     <img src={formData.icon} alt="Icon preview" className="w-16 h-16 rounded-xl object-cover shadow-2xl" />
-                                     <span className="text-[9px] font-black text-green-400 uppercase">Cargado</span>
+                                     <img src={formData.icon} alt="Icon preview" className="w-full h-full rounded-xl object-cover shadow-2xl" />
                                   </div>
                                 ) : (
                                   <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-500">
-                                    <Upload className={`w-8 h-8 ${isUploading ? 'animate-bounce text-cyan-400' : ''}`} />
-                                    <span className="text-[10px] font-black">SUBIR ICONO</span>
+                                    <Upload className={`w-6 h-6 ${isUploading ? 'animate-bounce text-cyan-400' : ''}`} />
+                                    <span className="text-[8px] font-black leading-none">SUBIR</span>
                                   </div>
                                 )}
                                 <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'icon')} className="absolute inset-0 opacity-0 cursor-pointer" />
                               </div>
                             </div>
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Captura Principal</label>
-                              <div className="relative group overflow-hidden h-32 bg-black/40 border border-white/10 rounded-2xl hover:border-cyan-400 transition-all">
-                                {formData.screenshot ? (
-                                  <img src={formData.screenshot} alt="Screen 1" className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-500">
-                                    <ImageIcon className="w-8 h-8" />
-                                    <span className="text-[10px] font-black">CAPTURAR</span>
+                              <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Capturas (Máx 4)</label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {[0,1,2,3].map(idx => (
+                                  <div key={idx} className="relative group overflow-hidden aspect-[9/16] bg-black/40 border border-white/10 rounded-xl hover:border-cyan-400 transition-all">
+                                    {formData.screenshots[idx] ? (
+                                      <img src={formData.screenshots[idx]} alt={`Screen ${idx+1}`} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="flex flex-col items-center justify-center h-full gap-1 text-gray-500">
+                                        <ImageIcon className="w-4 h-4" />
+                                        <span className="text-[8px] font-black">CAPTURAR</span>
+                                      </div>
+                                    )}
+                                    {!formData.screenshots[idx] && formData.screenshots.length === idx && (
+                                      <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'screenshot')} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                    )}
                                   </div>
-                                )}
-                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'screenshot')} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                ))}
                               </div>
+                              <span className="text-[10px] text-gray-400">{formData.screenshots.length}/4 Subidas</span>
                             </div>
                           </div>
                           
@@ -541,9 +660,28 @@ export default function DeveloperPanel({
                     </div>
 
                     <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Versión / Android</label>
+                          <div className="flex gap-2">
+                            <input required type="text" placeholder="Versión" value={formData.version} onChange={(e) => setFormData({...formData, version: e.target.value})} className="w-1/2 h-14 bg-black/40 border border-white/10 rounded-2xl px-5 text-sm focus:border-cyan-400 transition-all outline-none" />
+                            <input required type="text" placeholder="Android 8.0+" value={formData.compatibility} onChange={(e) => setFormData({...formData, compatibility: e.target.value})} className="w-1/2 h-14 bg-black/40 border border-white/10 rounded-2xl px-5 text-sm focus:border-cyan-400 transition-all outline-none" />
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Descripción Corta</label>
+                          <input required placeholder="Un resumen breve de tu app..." value={formData.shortDescription} onChange={(e) => setFormData({...formData, shortDescription: e.target.value})} className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl px-5 text-sm focus:border-cyan-400 transition-all outline-none" />
+                        </div>
+                      </div>
+                      
                       <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Descripción de la Aplicación</label>
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Descripción Completa</label>
                         <textarea required placeholder="Escribe aquí los detalles, ventajas y funciones de tu aplicación..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full h-32 bg-black/40 border border-white/10 rounded-2xl p-6 text-sm focus:border-cyan-400 transition-all outline-none resize-none"></textarea>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Novedades (Qué hay de nuevo)</label>
+                        <textarea placeholder="Ej: Corrección de errores, nuevos niveles..." value={formData.whatsNew} onChange={(e) => setFormData({...formData, whatsNew: e.target.value})} className="w-full h-24 bg-black/40 border border-white/10 rounded-2xl p-5 text-sm focus:border-cyan-400 transition-all outline-none resize-none"></textarea>
                       </div>
                       
                       <div className="pt-4 flex justify-center">
@@ -559,12 +697,83 @@ export default function DeveloperPanel({
                             </>
                           ) : (
                             <>
-                              LANZAR AHORA <Send className="w-6 h-6" />
+                              {editingAppId ? 'ACTUALIZAR APP' : 'LANZAR AHORA'} <Send className="w-6 h-6" />
                             </>
                           )}
                         </button>
                       </div>
                     </div>
+                    
+                    {editingAppId && userProfile && (userProfile.role === 'admin' || userProfile.role === 'developer') && (
+                      <div className="bg-red-900/10 border border-red-500/20 rounded-[2rem] p-6 space-y-4">
+                        <h4 className="text-xs font-black text-red-400 uppercase tracking-widest flex items-center gap-2">
+                           HISTORIAL DE VERSIONES
+                        </h4>
+                        <div className="space-y-3">
+                          {publishedApps.find(a => a.id === editingAppId)?.previous_versions?.map((pv: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between bg-black/40 border border-white/5 p-3 rounded-xl">
+                              <div>
+                                <span className="font-bold text-white text-sm">v{pv.version}</span>
+                                <span className="text-gray-500 text-xs ml-2">{new Date(pv.date).toLocaleDateString()}</span>
+                                <p className="text-xs text-gray-400 truncate max-w-[200px] mt-1">{pv.changelog}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if(confirm(`¿Seguro que deseas REVERTIR a la versión ${pv.version}?`)) {
+                                      // Logica para revertir
+                                      try {
+                                        const versions = publishedApps.find(a => a.id === editingAppId)?.previous_versions || [];
+                                        const newVersions = versions.filter((_: any, index: number) => index !== i);
+                                        await supabase.from('apps').update({
+                                          version: pv.version,
+                                          changelog: pv.changelog,
+                                          previous_versions: newVersions
+                                        }).eq('id', editingAppId);
+                                        alert("¡App revertida exitosamente!");
+                                        resetForm();
+                                        setActiveTab('my-apps');
+                                      } catch(e) {
+                                        alert('Error al revertir');
+                                      }
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 bg-yellow-500/20 text-yellow-500 rounded font-bold text-[10px] uppercase hover:bg-yellow-500/40 transition-colors"
+                                >
+                                  Revertir
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if(confirm(`¿Seguro que deseas ELIMINAR del historial la versión ${pv.version}?`)) {
+                                      try {
+                                        const versions = publishedApps.find(a => a.id === editingAppId)?.previous_versions || [];
+                                        const newVersions = versions.filter((_: any, index: number) => index !== i);
+                                        await supabase.from('apps').update({
+                                          previous_versions: newVersions
+                                        }).eq('id', editingAppId);
+                                        alert("¡Versión eliminada del historial!");
+                                        resetForm();
+                                        setActiveTab('my-apps');
+                                      } catch(e) {
+                                        alert('Error al eliminar');
+                                      }
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 bg-red-500/20 text-red-500 rounded font-bold text-[10px] uppercase hover:bg-red-500/40 transition-colors"
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {!(publishedApps.find(a => a.id === editingAppId)?.previous_versions?.length) && (
+                            <p className="text-gray-500 text-xs">No hay versiones anteriores.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </form>
                 )
               )}

@@ -12,6 +12,12 @@ export interface AppItem {
   status?: 'published' | 'pending' | 'rejected';
   isHighlighted?: boolean;
   description?: string;
+  shortDescription?: string;
+  compatibility?: string;
+  whatsNew?: string;
+  version_code?: number;
+  changelog?: string;
+  previous_versions?: any[];
   size?: string;
   version?: string;
   screenshots?: string[];
@@ -20,6 +26,7 @@ export interface AppItem {
   date?: string;
   iconPublicId?: string;
   screenshotsPublicIds?: string[];
+  updated_at?: string;
 }
 
 export interface Category {

@@ -19,12 +19,16 @@ export const MOCK_DEVREQS = [
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: '1', name: 'Educación', icon: 'BookOpen', color: 'bg-red-500/20 text-red-500' },
+  { id: '1', name: 'Juegos', icon: 'Gamepad2', color: 'bg-blue-500/20 text-blue-500' },
   { id: '2', name: 'Herramientas', icon: 'Wrench', color: 'bg-orange-500/20 text-orange-500' },
-  { id: '3', name: 'Música', icon: 'Music', color: 'bg-purple-500/20 text-purple-500' },
-  { id: '4', name: 'Fotografía', icon: 'Camera', color: 'bg-yellow-500/20 text-yellow-500' },
-  { id: '5', name: 'Juegos', icon: 'Gamepad2', color: 'bg-blue-500/20 text-blue-500' },
-  { id: '6', name: 'Social', icon: 'Users', color: 'bg-green-500/20 text-green-500' },
+  { id: '3', name: 'Educación', icon: 'BookOpen', color: 'bg-red-500/20 text-red-500' },
+  { id: '4', name: 'Productividad', icon: 'Briefcase', color: 'bg-indigo-500/20 text-indigo-500' },
+  { id: '5', name: 'Entretenimiento', icon: 'Film', color: 'bg-pink-500/20 text-pink-500' },
+  { id: '6', name: 'IA', icon: 'Brain', color: 'bg-purple-500/20 text-purple-500' },
+  { id: '7', name: 'Social', icon: 'Users', color: 'bg-green-500/20 text-green-500' },
+  { id: '8', name: 'Utilidades', icon: 'Box', color: 'bg-teal-500/20 text-teal-500' },
+  { id: '9', name: 'Música', icon: 'Music', color: 'bg-yellow-500/20 text-yellow-500' },
+  { id: '10', name: 'Personalización', icon: 'Monitor', color: 'bg-cyan-500/20 text-cyan-500' }
 ];
 
 export const DEMO_APPS: AppItem[] = [

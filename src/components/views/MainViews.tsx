@@ -1,20 +1,27 @@
-import { useState } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import AppGrid, { AppCard } from '../AppGrid';
 import { AppItem, Category } from '../../types';
 import { CATEGORIES } from '../../data';
+import { supabase } from '../../lib/supabase';
 
-export function GamesView({ apps }: { apps: AppItem[] }) {
+export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
   const gameApps = apps.filter(a => a.category.toLowerCase() === 'juegos' || a.category.toLowerCase() === 'acción' || a.category.toLowerCase() === 'aventura' || a.category.toLowerCase() === 'estrategia');
   
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [sortBy, setSortBy] = useState<'downloads'|'rating'>('downloads');
 
+  const getDownloadsNum = (d: any) => {
+    if (typeof d === 'number') return d;
+    if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
+    return 0;
+  };
+
   const filtered = gameApps
     .filter(a => activeCategory === 'Todos' || a.category.toLowerCase() === activeCategory.toLowerCase())
     .sort((a, b) => {
-      if(sortBy === 'downloads') return parseInt(b.downloads.replace(/[^0-9]/g, '')) - parseInt(a.downloads.replace(/[^0-9]/g, ''));
+      if(sortBy === 'downloads') return getDownloadsNum(b.downloads) - getDownloadsNum(a.downloads);
       return b.rating - a.rating;
     });
 
@@ -36,18 +43,24 @@ export function GamesView({ apps }: { apps: AppItem[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-6">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-3 gap-y-5">
         {filtered.map(app => (
-          <AppCard key={app.id} app={app} />
+          <AppCard key={app.id} app={app} onClick={() => onAppClick?.(app)} />
         ))}
       </div>
     </div>
   );
 }
 
-export function ExploreView({ apps }: { apps: AppItem[] }) {
-  const recommended = apps.slice(0, 4);
-  const trends = apps.slice().sort((a, b) => b.rating - a.rating).slice(0, 4);
+export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], onAppClick?: (app: AppItem) => void, onAction?: (action: string) => void }) {
+  const getDownloadsNum = (d: any) => {
+    if (typeof d === 'number') return d;
+    if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
+    return 0;
+  };
+
+  const recommended = apps.slice().sort(() => 0.5 - Math.random()).slice(0, 12);
+  const trends = apps.slice().sort((a, b) => getDownloadsNum(b.downloads) - getDownloadsNum(a.downloads)).slice(0, 4);
 
   return (
     <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 space-y-12">
@@ -57,30 +70,35 @@ export function ExploreView({ apps }: { apps: AppItem[] }) {
           <div className="glass-panel p-6 md:p-8 rounded-3xl border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-transparent relative overflow-hidden group hover:border-cyan-500/40 transition-colors">
             <h2 className="text-2xl font-bold mb-2 relative z-10 w-2/3">Top Recomendaciones para ti</h2>
             <p className="text-gray-400 text-sm mb-6 relative z-10 w-2/3">Basado en tu historial de descargas e intereses actuales.</p>
-            <button className="px-5 py-2 bg-cyan-500 text-black font-bold rounded-xl text-sm relative z-10 hover:scale-105 transition-transform shadow-lg shadow-cyan-500/20">Ver Lista</button>
-            <Compass className="absolute -bottom-10 -right-10 w-48 h-48 text-cyan-500/10 group-hover:scale-110 transition-transform" />
+            <button onClick={() => onAction?.('games')} className="px-5 py-2 bg-cyan-500 text-black font-bold rounded-xl text-sm relative z-10 hover:scale-105 transition-transform shadow-lg shadow-cyan-500/20 cursor-pointer">Ver Catálogo</button>
+            <Compass className="absolute -bottom-10 -right-10 w-48 h-48 text-cyan-500/10 group-hover:scale-110 transition-transform pointer-events-none" />
           </div>
           <div className="glass-panel p-6 md:p-8 rounded-3xl border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-transparent relative overflow-hidden group hover:border-purple-500/40 transition-colors">
             <h2 className="text-2xl font-bold mb-2 relative z-10 w-2/3">Tendencias Semanales</h2>
             <p className="text-gray-400 text-sm mb-6 relative z-10 w-2/3">Lo más popular y descargado por la comunidad esta semana.</p>
-            <button className="px-5 py-2 bg-purple-500 text-white font-bold rounded-xl text-sm relative z-10 hover:scale-105 transition-transform shadow-lg shadow-purple-500/20">Explorar</button>
-            <Star className="absolute -bottom-10 -right-10 w-48 h-48 text-purple-500/10 group-hover:scale-110 transition-transform" />
+            <button onClick={() => onAction?.('ranking')} className="px-5 py-2 bg-purple-500 text-white font-bold rounded-xl text-sm relative z-10 hover:scale-105 transition-transform shadow-lg shadow-purple-500/20 cursor-pointer">Explorar Ranking</button>
+            <Star className="absolute -bottom-10 -right-10 w-48 h-48 text-purple-500/10 group-hover:scale-110 transition-transform pointer-events-none" />
           </div>
         </div>
       </div>
 
       <div>
         <h2 className="text-xl font-bold mb-6">Selección Inteligente</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-6">
-          {recommended.map(app => <AppCard key={app.id} app={app} />)}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-3 gap-y-5">
+          {recommended.map(app => <AppCard key={app.id} app={app} onClick={() => onAppClick?.(app)} />)}
         </div>
       </div>
     </div>
   );
 }
 
-export function RankingView({ apps }: { apps: AppItem[] }) {
-  const sortedByDownloads = apps.slice().sort((a, b) => parseInt(b.downloads.replace(/[^0-9]/g, '')) - parseInt(a.downloads.replace(/[^0-9]/g, '')));
+export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const getDownloadsNum = (d: any) => {
+    if (typeof d === 'number') return d;
+    if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
+    return 0;
+  };
+  const sortedByDownloads = apps.slice().sort((a, b) => getDownloadsNum(b.downloads) - getDownloadsNum(a.downloads)).slice(0, 100);
   
   return (
     <div className="pt-24 px-6 max-w-4xl mx-auto pb-16">
@@ -88,11 +106,11 @@ export function RankingView({ apps }: { apps: AppItem[] }) {
       
       <div className="space-y-3">
         {sortedByDownloads.map((app, idx) => (
-          <div key={app.id} className="glass-panel p-4 rounded-2xl flex items-center gap-4 hover:border-white/10 transition-colors bg-white/5">
+          <div key={app.id} onClick={() => onAppClick?.(app)} className="glass-panel p-4 rounded-2xl flex items-center gap-4 hover:border-white/10 transition-colors bg-white/5 cursor-pointer">
             <div className={`w-8 font-black text-xl text-center ${idx===0 ? 'text-yellow-400' : idx===1 ? 'text-gray-300' : idx===2 ? 'text-orange-400' : 'text-gray-500'}`}>
               #{idx + 1}
             </div>
-            <img src={app.icon} alt={app.name} className="w-14 h-14 rounded-xl object-cover bg-white/10" />
+            <img src={app.icon} alt={app.name} className="w-12 h-12 rounded-[1rem] object-cover bg-white/10 shadow-sm" />
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-lg text-white truncate">{app.name}</h3>
               <p className="text-xs text-gray-400 truncate">{app.developer}</p>
@@ -162,12 +180,6 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass-panel p-6 rounded-3xl border-white/5 hover:border-white/10 transition-colors">
-          <h3 className="font-bold mb-2 flex items-center gap-2"><Settings className="w-5 h-5 text-gray-400" /> Configuración</h3>
-          <p className="text-sm text-gray-400 mb-4">Actualiza tus contraseñas y preferencias de notificaciones.</p>
-          <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors">Administrar</button>
-        </div>
-        
         {/* Sección de Desarrollador */}
         <div className="glass-panel p-6 rounded-3xl border-white/5 hover:border-cyan-500/20 transition-all bg-gradient-to-br from-transparent to-cyan-500/5">
            <h3 className="font-bold mb-2 flex items-center gap-2">
@@ -197,66 +209,167 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   );
 }
 
-export function DownloadsView({ apps }: { apps: AppItem[] }) {
-  const downloaded = apps.slice(1, 4); // Mock data
+export function DownloadsView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const [downloadedApps, setDownloadedApps] = useState<AppItem[]>([]);
+
+  useEffect(() => {
+    const downloadedIds = JSON.parse(localStorage.getItem('nexus_downloaded_ids') || '[]');
+    const filtered = apps.filter(a => downloadedIds.includes(a.id));
+    setDownloadedApps(filtered);
+  }, [apps]);
+
+  const clearHistory = () => {
+    if (confirm("¿Estás seguro de que quieres limpiar tu historial de descargas?")) {
+      localStorage.removeItem('nexus_downloaded_ids');
+      setDownloadedApps([]);
+    }
+  };
 
   return (
     <div className="pt-24 px-6 max-w-4xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-black flex items-center gap-3"><Download className="w-8 h-8 text-cyan-400" /> Mis Descargas</h1>
-        <button className="text-sm text-red-400 hover:text-red-300 font-bold transition-colors">Limpiar Historial</button>
+        {downloadedApps.length > 0 && (
+          <button 
+            onClick={clearHistory}
+            className="text-sm text-red-400 hover:text-red-300 font-bold transition-colors"
+          >
+            Limpiar Historial
+          </button>
+        )}
       </div>
 
       <div className="space-y-4">
-        {downloaded.map(app => (
-          <div key={app.id} className="glass-panel p-4 rounded-2xl flex items-center gap-4 hover:bg-white/5 transition-colors border-white/5">
-            <img src={app.icon} className="w-16 h-16 rounded-xl" alt="" />
-            <div className="flex-1 min-w-0">
-               <h3 className="font-bold text-lg text-white truncate">{app.name}</h3>
-               <p className="text-xs text-gray-400">Descargado hace 2 días</p>
+        {downloadedApps.map(app => {
+          const installedVersion = localStorage.getItem(`nexus_app_version_${app.id}`);
+          const hasUpdate = installedVersion && installedVersion !== app.version;
+          
+          return (
+            <div 
+              key={app.id} 
+              onClick={() => onAppClick?.(app)} 
+              className={`glass-panel p-4 rounded-2xl flex items-center gap-4 hover:bg-white/5 transition-colors border-white/5 cursor-pointer relative overflow-hidden group ${hasUpdate ? 'border-green-500/30 bg-green-500/5' : ''}`}
+            >
+              {hasUpdate && (
+                <div className="absolute top-0 right-0 py-1 px-3 bg-green-500 text-black text-[9px] font-black uppercase tracking-tighter rounded-bl-xl shadow-lg animate-pulse">
+                  Actualización Disponibe
+                </div>
+              )}
+
+              <img src={app.icon} className="w-12 h-12 rounded-[1rem] shadow-lg object-cover" alt={app.name} />
+              <div className="flex-1 min-w-0">
+                 <h3 className="font-bold text-lg text-white truncate">{app.name}</h3>
+                 <div className="flex items-center gap-2 mt-1">
+                   <span className="text-xs text-gray-500">v{installedVersion || '1.0'}</span>
+                   {hasUpdate && (
+                     <>
+                        <ArrowRight className="w-3 h-3 text-green-500" />
+                        <span className="text-xs text-green-400 font-bold">v{app.version}</span>
+                     </>
+                   )}
+                 </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {hasUpdate ? (
+                  <button className="px-4 py-2 bg-green-500 text-black font-black rounded-xl text-xs hover:bg-green-400 transition-all flex items-center gap-2">
+                    <Zap className="w-4 h-4" /> ACTUALIZAR
+                  </button>
+                ) : (
+                  <>
+                    <button className="hidden sm:block px-4 py-2 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white font-bold rounded-xl text-sm transition-colors border border-white/5">Instalar de nuevo</button>
+                    <button className="sm:hidden p-2 bg-white/5 text-gray-400 rounded-xl border border-white/5"><Download className="w-5 h-5"/></button>
+                  </>
+                )}
+              </div>
             </div>
-            <button className="hidden sm:block px-4 py-2 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 font-bold rounded-xl text-sm transition-colors">Descargar de nuevo</button>
-            <button className="sm:hidden p-2 bg-cyan-500/10 text-cyan-400 rounded-xl"><Download className="w-5 h-5"/></button>
+          );
+        })}
+        {downloadedApps.length === 0 && (
+          <div className="text-center py-20 px-6 bg-white/5 border border-dashed border-white/10 rounded-[2rem]">
+            <div className="w-20 h-20 bg-gray-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+               <Download className="w-10 h-10 text-gray-600" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">No tienes descargas recientes</h2>
+            <p className="text-gray-400 text-sm max-w-xs mx-auto">Explora nuestro catálogo y empieza a descargar los mejores juegos y aplicaciones.</p>
+            <button 
+              onClick={() => window.location.hash = ''} 
+              className="mt-8 px-6 py-2 bg-nexus-cyan text-black font-black rounded-xl hover:scale-105 transition-all text-xs uppercase"
+            >
+              Explorar Catálogo
+            </button>
           </div>
-        ))}
-        {downloaded.length === 0 && <p className="text-gray-500 text-center py-10">No tienes descargas recientes.</p>}
+        )}
       </div>
     </div>
   );
 }
 
-export function CollectionsView() {
+export function CollectionsView({ apps, onAppClick }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void }) {
   const cols = [
-    { title: 'Juegos de Terror 2026', desc: 'Sustos garantizados para jugar a oscuras', color: 'from-purple-900 to-black' },
-    { title: 'Productividad Extrema', desc: 'Organiza tu vida entera con estas apps', color: 'from-blue-900 to-cyan-900' },
+    { title: 'Top Juegos', desc: 'Sustos y diversión garantizados', color: 'from-purple-900 to-black', filter: (a:AppItem) => a.category.toLowerCase().includes('jueg') },
+    { title: 'Productividad Extrema', desc: 'Organiza tu vida entera con estas apps', color: 'from-blue-900 to-cyan-900', filter: (a:AppItem) => a.category.toLowerCase().includes('produc') || a.category.toLowerCase().includes('herr') },
   ];
   return (
-    <div className="pt-24 px-6 max-w-5xl mx-auto pb-16">
-      <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Layers className="w-8 h-8 text-purple-400" /> Colecciones</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {cols.map((c, i) => (
-          <div key={i} className={`p-8 rounded-3xl bg-gradient-to-br ${c.color} border border-white/10 hover:scale-[1.02] cursor-pointer transition-transform shadow-2xl`}>
-             <h2 className="text-2xl font-black mb-2">{c.title}</h2>
-             <p className="text-gray-300 mb-6">{c.desc}</p>
-             <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold backdrop-blur-md transition-colors">Explorar Colección</button>
-          </div>
-        ))}
+    <div className="pt-24 px-6 max-w-7xl mx-auto pb-16">
+      <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Layers className="w-8 h-8 text-purple-400" /> Colecciones Destacadas</h1>
+      <div className="flex flex-col gap-12">
+        {cols.map((c, i) => {
+           const filteredApps = apps?.filter(c.filter).slice(0, 5) || [];
+           return (
+            <div key={i} className="flex flex-col">
+              <div className={`p-8 rounded-[2rem] bg-gradient-to-br ${c.color} border border-white/10 shadow-2xl mb-6`}>
+                 <h2 className="text-3xl font-black mb-2">{c.title}</h2>
+                 <p className="text-gray-300 font-medium">{c.desc}</p>
+              </div>
+              {filteredApps.length > 0 ? (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-x-3 gap-y-5">
+                   {filteredApps.map(app => (
+                     <AppCard key={app.id} app={app} onClick={() => onAppClick?.(app)} />
+                   ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm px-4">No hay aplicaciones en esta colección todavía.</p>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   );
 }
 
-export function EventsView() {
+export function EventsView({ apps, onAppClick }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const newlyUpdated = apps?.filter(a => a.previous_versions && a.previous_versions.length > 0).slice(0, 3) || [];
+  
   return (
-    <div className="pt-24 px-6 max-w-4xl mx-auto pb-16">
-      <h1 className="text-3xl font-black mb-8 text-white">Eventos & Lanzamientos</h1>
+    <div className="pt-24 px-6 max-w-5xl mx-auto pb-16">
+      <h1 className="text-3xl font-black mb-8 text-white flex items-center gap-3"><Zap className="w-8 h-8 text-yellow-400" /> Eventos & Novedades</h1>
       <div className="space-y-6">
-        <div className="glass-panel p-6 rounded-3xl border-cyan-500/30 bg-cyan-500/5 relative overflow-hidden">
-          <div className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-black px-2 py-1 uppercase rounded-md animate-pulse">EN VIVO</div>
-          <h2 className="text-xl font-bold mb-2 text-cyan-400">Torneo Global Free Fire</h2>
-          <p className="text-gray-300 text-sm mb-4">Compite por 1M de NexusCoins en este evento especial de fin de semana.</p>
-          <button className="px-5 py-2 bg-cyan-500 text-black font-bold rounded-xl text-sm hover:bg-cyan-400 transition-colors">Participar Ahora</button>
+        <div className="glass-panel p-6 sm:p-8 rounded-[2rem] border-cyan-500/30 bg-cyan-500/5 relative overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.1)]">
+          <div className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-black px-3 py-1.5 uppercase rounded-lg animate-pulse tracking-widest shadow-lg shadow-red-500/20">EVENTO EN VIVO</div>
+          <h2 className="text-2xl font-black mb-3 text-cyan-400 drop-shadow-md">NexusPlay Developer Fest 2026</h2>
+          <p className="text-gray-300 mb-6 max-w-xl text-lg leading-relaxed">Conoce las nuevas herramientas de desarrollo, actualizaciones de seguridad y el nuevo modelo Nexus AI para crear apps más rápido.</p>
+          <button className="px-6 py-3 bg-cyan-500 text-black font-black uppercase tracking-wider rounded-xl text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(34,211,238,0.3)]">Explorar Evento</button>
         </div>
+
+        {newlyUpdated.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-2xl font-black text-white mb-6">Apps Recientemente Actualizadas</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+               {newlyUpdated.map(app => (
+                 <div key={app.id} onClick={() => onAppClick?.(app)} className="glass-panel p-5 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-all hover:scale-[1.02]">
+                    <img src={app.icon} className="w-12 h-12 rounded-[1rem] object-cover" />
+                    <div>
+                      <h4 className="font-bold text-white text-lg">{app.name}</h4>
+                      <p className="text-nexus-cyan font-bold text-xs uppercase tracking-wider">Nueva v{app.version}</p>
+                      <p className="text-gray-400 text-xs mt-1 truncate max-w-[150px]">{app.changelog}</p>
+                    </div>
+                 </div>
+               ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -291,58 +404,192 @@ export function AchievementsView() {
   );
 }
 
-export function SearchView({ apps }: { apps: AppItem[] }) {
-  const [query, setQuery] = useState('');
-  const filtered = apps.filter(a => a.name.toLowerCase().includes(query.toLowerCase()) || a.developer.toLowerCase().includes(query.toLowerCase()) || a.category.toLowerCase().includes(query.toLowerCase()));
+export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void, onBack?: () => void, initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [results, setResults] = useState<AppItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    async function searchSupabase() {
+      if (!debouncedQuery.trim()) {
+        setResults([]);
+        setHasSearched(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      setHasSearched(true);
+      
+      const searchTerm = `%${debouncedQuery}%`;
+      console.log(`[Buscador NexusPlay] Iniciando búsqueda con término original: "${debouncedQuery}"`);
+      console.log(`[Buscador NexusPlay] Consulta construida (ilike): ${searchTerm}`);
+      console.log(`[Buscador NexusPlay] Columnas a buscar: app_name, company_name, category, description`);
+
+      const { data, error } = await supabase
+        .from('apps')
+        .select('*')
+        .eq('status', 'published')
+        .or(`app_name.ilike.${searchTerm},company_name.ilike.${searchTerm},category.ilike.${searchTerm},description.ilike.${searchTerm}`);
+
+      if (error) {
+         console.error(`[Buscador NexusPlay] ERROR EXACTO de Supabase:`, error);
+      } else if (data) {
+         console.log(`[Buscador NexusPlay] Resultados encontrados: ${data.length}`);
+         const mapped = data.map(d => ({
+            id: d.id,
+            name: d.app_name,
+            developer: d.company_name,
+            developerId: d.developer_id,
+            description: d.description,
+            shortDescription: d.shortDescription,
+            category: d.category,
+            size: d.size,
+            version: d.version,
+            icon: d.icon_url,
+            screenshots: d.screenshots,
+            downloadUrl: d.download_url,
+            status: d.status,
+            rating: typeof d.rating === 'string' ? parseFloat(d.rating) : d.rating || 5.0,
+            downloads: d.downloads,
+            price: d.price,
+            date: d.created_at
+         }));
+         setResults(mapped);
+      }
+      setIsLoading(false);
+    }
+
+    searchSupabase();
+  }, [debouncedQuery]);
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="pt-24 px-6 max-w-7xl mx-auto pb-24"
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="fixed inset-0 z-[100] bg-nexus-bg flex flex-col"
     >
-      <div className="max-w-3xl mx-auto mb-12">
-        <h1 className="text-4xl font-black mb-6 flex items-center justify-center gap-3 tracking-tight"><Search className="w-8 h-8 text-cyan-500" /> Búsqueda Avanzada</h1>
-        <div className="relative group">
+      {/* Top Bar with Search Input */}
+      <div className="flex items-center gap-3 p-4 border-b border-white/5 bg-nexus-bg/90 backdrop-blur-xl shrink-0 pt-8 sm:pt-4">
+        <button 
+          onClick={onBack}
+          className="p-2 -ml-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div className="flex-1 relative">
           <input 
             type="text" 
             value={query} 
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Juegos, aplicaciones, desarrolladores..." 
-            className="w-full h-16 bg-[#050B14] border border-white/10 rounded-2xl pl-14 pr-6 text-xl text-white focus:outline-none focus:border-cyan-500 focus:bg-white/5 transition-all shadow-xl group-hover:border-white/20"
+            placeholder="Buscar apps y juegos" 
+            className="w-full bg-transparent border-none text-white text-lg font-medium focus:outline-none focus:ring-0 placeholder-gray-500"
             autoFocus
           />
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-cyan-500 transition-colors" />
-          {query && (
-            <button onClick={() => setQuery('')} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-1 transition-colors">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
+        </div>
+        {query && (
+           <button 
+             onClick={() => { setQuery(''); setDebouncedQuery(''); setResults([]); setHasSearched(false); }} 
+             className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+           >
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+           </button>
+        )}
+      </div>
+
+      {/* Main Search Area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-gradient-to-b from-white/[0.02] to-transparent relative">
+        {isLoading && (
+           <div className="absolute top-0 left-0 w-full h-[3px] overflow-hidden bg-white/5">
+             <div className="h-full bg-cyan-500 animate-[loading_1.5s_ease-in-out_infinite]" style={{ width: '30%' }}></div>
+           </div>
+        )}
+
+        <div className="max-w-3xl mx-auto p-4 pb-24">
+          
+          {/* Default State (No Query) */}
+          {!hasSearched && query.length === 0 && (
+             <div className="mt-8">
+               <h3 className="text-sm font-bold text-gray-400 px-2 py-4 mb-2 uppercase tracking-wider">Descubre</h3>
+               <div className="flex flex-wrap gap-2 px-2">
+                 {['Juegos de acción', 'Minecraft', 'Herramientas', 'Estilo de vida', 'Aventura'].map(tag => (
+                   <button 
+                     key={tag}
+                     onClick={() => setQuery(tag)}
+                     className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-full text-sm font-semibold text-gray-300 transition-all"
+                   >
+                     {tag}
+                   </button>
+                 ))}
+               </div>
+             </div>
+          )}
+
+          {/* Results State */}
+          {!isLoading && hasSearched && results.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="px-2 pb-4 text-sm font-bold text-gray-400">
+                Resultados para "{debouncedQuery}"
+              </div>
+              {results.map(app => (
+                <div 
+                   key={app.id} 
+                   onClick={() => onAppClick?.(app)} 
+                   className="flex items-center gap-4 bg-transparent hover:bg-white/5 rounded-2xl p-3 cursor-pointer transition-colors group"
+                >
+                  <img src={app.icon} className="w-12 h-12 sm:w-14 sm:h-14 rounded-[1rem] object-cover shadow-sm border border-white/5 group-hover:scale-105 transition-transform" />
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h3 className="text-base sm:text-lg font-bold text-white leading-tight truncate mb-0.5">{app.name}</h3>
+                    <p className="text-xs sm:text-sm text-gray-400 truncate mb-1">
+                      {app.developer}
+                    </p>
+                    <div className="flex items-center gap-3">
+                       <div className="flex items-center gap-1">
+                          <span className="font-bold text-gray-300 text-[10px] sm:text-xs">{app.rating}</span>
+                          <Star className="w-3 h-3 text-gray-400 fill-gray-400 group-hover:text-yellow-500 group-hover:fill-yellow-500 transition-colors" />
+                       </div>
+                       <span className="text-[10px] text-gray-500 px-1.5 py-0.5 rounded border border-white/10">{app.category}</span>
+                       <span className="text-[10px] text-gray-500">{app.size}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Results State */}
+          {!isLoading && hasSearched && results.length === 0 && (
+            <div className="text-center py-20 px-6">
+              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                 <Search className="w-10 h-10 text-gray-600" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">No encontramos resultados</h2>
+              <p className="text-gray-400 text-sm">Intenta otro nombre o revisa la ortografía</p>
+            </div>
           )}
         </div>
       </div>
-
-      {query && (
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-gray-400 font-medium">Resultados para <span className="text-white">"{query}"</span></p>
-          <span className="text-sm font-bold bg-white/5 px-3 py-1 rounded-full text-cyan-400 border border-white/10">{filtered.length} encontrados</span>
-        </div>
-      )}
-
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-6">
-          {filtered.map(app => (
-            <AppCard key={app.id} app={app} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 bg-[#050B14] rounded-3xl border border-white/5">
-          <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Sin resultados</h2>
-          <p className="text-gray-400">No hemos encontrado nada que coincida con "{query}". Intenta con otros términos.</p>
-        </div>
-      )}
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+      `}} />
     </motion.div>
   );
 }
+
 

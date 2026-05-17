@@ -8,8 +8,14 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteFromCloudinary, deleteFolderFromCloudinary } from '../lib/cloudinary';
-import { AppItem, DevRequest } from '../types';
+import { AppItem, DevRequest, UserItem } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { 
+  AdminDashboard, AdminUsers 
+} from './admin/AdminViews1';
+import { 
+  AdminModeration, AdminAds, AdminSettings, AdminAI 
+} from './admin/AdminViews2';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -18,14 +24,16 @@ interface AdminPanelProps {
   setApps: (u: any) => void;
   devRequests: DevRequest[];
   setDevRequests: (reqs: DevRequest[]) => void;
+  aiConfig?: any;
 }
 
-export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequests, setDevRequests }: AdminPanelProps) {
+export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequests, setDevRequests, aiConfig }: AdminPanelProps) {
   const isAdmin = userProfile?.role === 'admin';
   const [activeTab, setActiveTab] = useState('dashboard');
   const [messages, setMessages] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [stats, setStats] = useState({ users: 0, pending: 0, approved: 0, msgs: 0 });
+  const [allReviews, setAllReviews] = useState<any[]>([]);
+  const [stats, setStats] = useState({ users: 0, pending: 0, approved: 0, msgs: 0, reviews: 0 });
   const [searchQuery, setSearchQuery] = useState('');
   
   const [maintenance, setMaintenance] = useState(() => localStorage.getItem('nexus_maintenance') === 'true');
@@ -50,6 +58,17 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
+  // Toast System
+  const [toasts, setToasts] = useState<any[]>([]);
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+    addLog('SISTEMA', 'Toast', message, type);
+  };
+
   // Custom Modal for Delete
   const [appToDelete, setAppToDelete] = useState<AppItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,9 +76,60 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   // AdSense y métricas reales
   const [adsConfig, setAdsConfig] = useState<any>({ publisherId: '', clientId: '', active: false });
+  const [siteSettings, setSiteSettings] = useState({
+    platform_name: 'NexusPlay',
+    logo_url: 'https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png',
+    maintenance_mode: false,
+    registrations_enabled: true
+  });
+
+  const fetchSiteSettings = async () => {
+    try {
+      const { data, error } = await supabase.from('site_settings').select('*').single();
+      if (!error && data) {
+        setSiteSettings(data);
+        setMaintenance(data.maintenance_mode);
+      }
+    } catch (e) {
+      console.warn("Could not fetch site settings from DB");
+    }
+  };
+
+  const updateSiteSettings = async (updates: Partial<typeof siteSettings>) => {
+    try {
+      // Guardar local antes
+      if (updates.maintenance_mode !== undefined) {
+        localStorage.setItem('nexus_maintenance', updates.maintenance_mode.toString());
+      }
+      if (updates.logo_url !== undefined) {
+        localStorage.setItem('nexus_web_logo', updates.logo_url);
+        window.dispatchEvent(new CustomEvent('nexusLogoUpdated', { detail: updates.logo_url }));
+      }
+
+      // Intentar actualizar la fila 1 (siendo el ID único de configuración)
+      const { error } = await supabase.from('site_settings').upsert({ id: 1, ...siteSettings, ...updates });
+      if (!error) {
+        setSiteSettings(prev => ({ ...prev, ...updates }));
+        addLog('SISTEMA', 'Configuración', 'Ajustes globales actualizados en Supabase', 'success');
+      } else {
+        throw error;
+      }
+    } catch (e: any) {
+      addLog('SISTEMA', 'Configuración', `Error al guardar en Supabase: ${e.message}. Se usará persistencia local.`, 'error');
+      setSiteSettings(prev => ({ ...prev, ...updates }));
+      if (updates.maintenance_mode !== undefined) {
+        localStorage.setItem('nexus_maintenance', updates.maintenance_mode.toString());
+      }
+      if (updates.logo_url !== undefined) {
+        localStorage.setItem('nexus_web_logo', updates.logo_url);
+        window.dispatchEvent(new CustomEvent('nexusLogoUpdated', { detail: updates.logo_url }));
+      }
+    }
+  };
 
   useEffect(() => {
     fetchAdsConfig();
+    fetchSiteSettings();
   }, []);
 
   const fetchAdsConfig = async () => {
@@ -118,12 +188,20 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     if (isAdmin) {
        fetchMessages();
        fetchUsers();
+       fetchAllReviews();
     }
   }, [isAdmin]);
 
+  const fetchAllReviews = async () => {
+    try {
+      const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+      if (data) setAllReviews(data);
+    } catch(e) {}
+  };
+
   useEffect(() => {
     calculateStats();
-  }, [apps, users, messages]);
+  }, [apps, users, messages, allReviews]);
 
   // Modo Mantenimiento
   useEffect(() => {
@@ -165,15 +243,16 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       users: users.length,
       pending: apps.filter(a => a.status === 'pending').length,
       approved: apps.filter(a => a.status === 'published').length,
-      msgs: messages.length
+      msgs: messages.length,
+      reviews: allReviews.length
     });
   };
 
   if (!isAdmin) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#050000] text-red-500 flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1a0000] to-[#050000]">
-        <div className="bg-black/50 p-12 rounded-3xl border border-red-900/30 backdrop-blur-md flex flex-col items-center text-center shadow-[0_0_50px_rgba(220,38,38,0.1)]">
-          <Shield className="w-20 h-20 mb-6 text-red-600 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
+      <div className="fixed inset-0 z-50 bg-slate-950 text-red-500 flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 to-slate-950">
+        <div className="bg-slate-900/50 p-12 rounded-3xl border border-red-500/20 backdrop-blur-md flex flex-col items-center text-center shadow-[0_0_50px_rgba(220,38,38,0.1)]">
+          <Shield className="w-20 h-20 mb-6 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
           <h1 className="text-4xl font-black mb-4 tracking-widest uppercase text-white">Acceso Denegado</h1>
           <p className="text-red-400 mb-8 max-w-md font-light text-lg">Área clasificada. Se requiere nivel de autorización supremo para visualizar este contenido.</p>
           <button onClick={onBack} className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95">
@@ -323,6 +402,17 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     setDevRequests(devRequests.map(r => r.id === req.id ? { ...r, status } : r));
   };
 
+  const deleteAdminReview = async (reviewId: string) => {
+    if (!window.confirm("¿Eliminar esta reseña permanentemente?")) return;
+    try {
+      await supabase.from('reviews').delete().eq('id', reviewId);
+      setAllReviews(prev => prev.filter(r => r.id !== reviewId));
+      addLog('MODERACIÓN', reviewId, 'Reseña eliminada por Admin', 'success');
+    } catch(e: any) {
+      addLog('MODERACIÓN', reviewId, `Error al eliminar: ${e.message}`, 'error');
+    }
+  };
+
 
   // UI y Render
   const menu = [
@@ -330,6 +420,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     { id: 'apps', label: 'Aplicaciones', icon: Smartphone },
     { id: 'users', label: 'Usuarios', icon: Users },
     { id: 'devs', label: 'Peticiones Dev', icon: Code },
+    { id: 'reviews', label: 'Reseñas y Moderación', icon: Star },
     { id: 'monetization', label: 'Monetización', icon: DollarSign },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'infra', label: 'Infraestructura', icon: Activity },
@@ -348,18 +439,18 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       name: d.toLocaleDateString('es-ES', {weekday: 'short'}),
       dateStr,
       nuevos_usuarios: users.filter(u => u.created_at?.startsWith(dateStr)).length,
-      nuevas_apps: apps.filter(a => a.created_at?.startsWith(dateStr)).length,
+      nuevas_apps: apps.filter(a => a.date?.startsWith(dateStr)).length,
     };
   });
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#030000] flex text-red-50 font-sans selection:bg-red-900/50">
+    <div className="fixed inset-0 z-[100] bg-slate-950 flex text-slate-200 font-sans selection:bg-red-500/30">
       
       {/* Modal PURGAR */}
       {appToDelete && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isDeleting && setAppToDelete(null)} />
-          <div className="relative bg-[#0a0000] border border-red-900/50 p-8 rounded-3xl max-w-lg w-full shadow-[0_0_50px_rgba(220,38,38,0.3)] animate-fade-in">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => !isDeleting && setAppToDelete(null)} />
+          <div className="relative bg-slate-900 border border-red-500/30 p-8 rounded-3xl max-w-lg w-full shadow-[0_0_50px_rgba(220,38,38,0.2)] animate-fade-in">
              <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 bg-red-950/40 rounded-full flex items-center justify-center border border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.4)]">
                    <AlertTriangle className="w-8 h-8 text-red-500" />
@@ -395,10 +486,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       )}
 
       {/* Mobile Top Header */}
-      <div className="md:hidden absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#050000] to-transparent z-40 flex items-center px-4 justify-between pointer-events-none">
+      <div className="md:hidden absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-slate-950 to-transparent z-40 flex items-center px-4 justify-between pointer-events-none">
         <button 
           onClick={() => setIsMobileMenuOpen(true)} 
-          className="pointer-events-auto p-2 bg-red-950/40 border border-red-900/40 rounded-xl text-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)] active:scale-95 transition-transform"
+          className="pointer-events-auto p-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 hover:bg-red-500/20 shadow-[0_0_15px_rgba(220,38,38,0.2)] active:scale-95 transition-all"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -407,24 +498,24 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="md:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[105] transition-opacity"
+          className="md:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[105] transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar Oscuro */}
-      <aside className={`fixed inset-y-0 left-0 z-[110] transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} w-72 md:w-80 border-r border-red-900/20 bg-gradient-to-b from-[#050000] to-[#020000] flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.5)] shrink-0`}>
-        <div className="p-6 md:p-8 border-b border-red-900/20 bg-gradient-to-b from-red-950/20 to-transparent flex items-center justify-between gap-4">
+      <aside className={`fixed inset-y-0 left-0 z-[110] transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} w-72 md:w-80 border-r border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900 flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.5)] shrink-0`}>
+        <div className="p-6 md:p-8 border-b border-slate-800 bg-gradient-to-b from-slate-800/30 to-transparent flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-red-950/40 border border-red-900/40 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.2)]">
               <Shield className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-black text-red-600 tracking-tighter shadow-red-500/20 drop-shadow-md">NEXUS<span className="text-white">ADMIN</span></h2>
-              <span className="text-[9px] md:text-[10px] text-red-400 uppercase tracking-[0.2em] font-black block">Acceso Nivel 5</span>
+              <h2 className="text-xl md:text-2xl font-black text-red-500 tracking-tighter drop-shadow-sm">NEXUS<span className="text-white">ADMIN</span></h2>
+              <span className="text-[9px] md:text-[10px] text-red-400/80 uppercase tracking-[0.2em] font-black block">Acceso Nivel 5</span>
             </div>
           </div>
-          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-2 text-gray-500 hover:text-white rounded-lg transition-colors">
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-lg transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -434,67 +525,43 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                key={m.id}
                onClick={() => { setActiveTab(m.id); setSearchQuery(''); setIsMobileMenuOpen(false); }}
                className={`w-full flex items-center gap-3 md:gap-4 px-4 py-3 md:px-5 md:py-4 rounded-xl md:rounded-2xl font-bold transition-all text-sm md:text-sm ${
-                 activeTab === m.id ? 'bg-gradient-to-r from-red-900/40 to-transparent text-red-400 border border-red-900/40 shadow-inner' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                 activeTab === m.id ? 'bg-gradient-to-r from-red-500/10 to-transparent text-red-400 border border-red-500/20 shadow-inner' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
                }`}
              >
-               <m.icon className={`w-5 h-5 shrink-0 ${activeTab === m.id ? 'text-red-500' : 'text-gray-600'}`} /> 
+               <m.icon className={`w-5 h-5 shrink-0 ${activeTab === m.id ? 'text-red-500' : 'text-slate-500'}`} /> 
                {m.label}
              </button>
            ))}
         </div>
-        <div className="p-4 md:p-6 border-t border-red-900/20 bg-black/40">
-           <button onClick={onBack} className="w-full flex items-center justify-center gap-3 bg-red-950/30 hover:bg-red-900/50 border border-red-900/30 text-white font-black py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.15)] active:scale-95 group uppercase tracking-widest text-[10px] md:text-xs">
-             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retirarse
+        <div className="p-4 md:p-6 border-t border-slate-800 bg-slate-900/40">
+           <button onClick={onBack} className="w-full flex items-center justify-center gap-3 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 text-white font-black py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)] active:scale-95 group uppercase tracking-widest text-[10px] md:text-xs">
+             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform text-slate-400" /> Retirarse
            </button>
         </div>
       </aside>
 
-      {/* Área Principal */}
-      <main className="flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#130000] to-[#030000] p-4 pt-20 sm:p-6 md:p-12 custom-scrollbar relative w-full overflow-x-hidden">
+      {/* AREA DE TOASTS */}
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+        {toasts.map(t => (
+          <div key={t.id} className={`pointer-events-auto px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl animate-fade-in flex items-center gap-3 min-w-[300px] ${
+            t.type === 'success' ? 'bg-green-950/80 border-green-500/50 text-green-400' :
+            t.type === 'error' ? 'bg-red-950/80 border-red-500/50 text-red-400' :
+            'bg-blue-950/80 border-blue-500/50 text-blue-400'
+          }`}>
+            {t.type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
+             t.type === 'error' ? <XCircle className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
+            <span className="font-bold text-sm">{t.message}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* AREA PRINCIPAL */}
+      <main className="flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 to-slate-950 p-4 pt-20 sm:p-6 md:p-12 custom-scrollbar relative w-full overflow-x-hidden">
         <div className="max-w-6xl mx-auto space-y-8 md:space-y-10 pb-20 w-full">
            
            {/* DASHBOARD */}
            {activeTab === 'dashboard' && (
-             <div className="space-y-8 md:space-y-10 animate-fade-in">
-               <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white mb-2">Comando Central</h3>
-                  <p className="text-red-500/60 font-medium text-sm md:text-lg">Visión global de la infraestructura de NexusPlay.</p>
-               </header>
-               
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                 {[
-                   { t: 'Usuarios', v: stats.users, i: Users, c: 'text-blue-500', bc: 'border-blue-900/20', h: 'hover:border-blue-900/40' },
-                   { t: 'Publicadas', v: stats.approved, i: Smartphone, c: 'text-green-500', bc: 'border-green-900/20', h: 'hover:border-green-900/40' },
-                   { t: 'Peticiones', v: stats.pending, i: AlertTriangle, c: 'text-orange-500', bc: 'border-orange-900/20', h: 'hover:border-orange-900/40' },
-                   { t: 'Transmisiones', v: stats.msgs, i: Database, c: 'text-purple-500', bc: 'border-purple-900/20', h: 'hover:border-purple-900/40' },
-                 ].map((s, i) => (
-                   <div key={i} className={`bg-[#0a0000] border ${s.bc} p-4 md:p-6 rounded-2xl md:rounded-3xl relative overflow-hidden shadow-2xl group ${s.h} transition-colors`}>
-                     <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity"><s.i className="w-24 h-24 md:w-32 md:h-32 text-white" /></div>
-                     <p className={`text-[9px] md:text-[10px] font-black ${s.c} uppercase tracking-[0.2em] mb-2 md:mb-4 opacity-80 break-words`}>{s.t}</p>
-                     <p className="text-3xl md:text-5xl font-black text-white">{s.v}</p>
-                   </div>
-                 ))}
-               </div>
-
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                  <div className="bg-[#080000] border border-red-900/10 rounded-2xl md:rounded-3xl p-5 md:p-8">
-                     <h4 className="text-xl font-bold text-white mb-6 flex items-center gap-3"><Activity className="text-red-500" /> Actividad Reciente</h4>
-                     <div className="space-y-4">
-                        {logs.slice(0, 5).map((log, idx) => (
-                          <div key={idx} className="flex gap-4 items-start border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                             <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${log.status === 'error' ? 'bg-red-500' : log.status === 'success' ? 'bg-green-500' : 'bg-blue-500'}`} />
-                             <div>
-                               <p className="text-sm font-bold text-gray-200">{log.action}</p>
-                               <p className="text-xs text-gray-500 mt-0.5">{log.details}</p>
-                               <span className="text-[10px] text-gray-600 font-mono mt-1 block">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                             </div>
-                          </div>
-                        ))}
-                        {logs.length === 0 && <p className="text-gray-600 text-sm">Sin registros recientes.</p>}
-                     </div>
-                  </div>
-               </div>
-             </div>
+             <AdminDashboard apps={apps} users={users} />
            )}
 
            {/* APLICACIONES */}
@@ -515,18 +582,18 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   </div>
                 </header>
                 <div className="space-y-4 w-full">
-                  {apps.length === 0 && <p className="text-gray-500 bg-[#0a0000] p-10 rounded-3xl border border-red-900/20 text-center">Sin resultados.</p>}
+                  {apps.length === 0 && <p className="text-slate-400 bg-slate-900/40 p-10 rounded-3xl border border-red-500/10 text-center">Sin resultados.</p>}
                   {apps.filter(x => x.name.toLowerCase().includes(searchQuery.toLowerCase())).map(app => (
-                    <div key={app.id} className={`bg-[#080000] border ${app.featured ? 'border-amber-900/40' : 'border-red-900/20'} p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-red-900/50 transition-colors shadow-lg`}>
+                    <div key={app.id} className={`bg-slate-900/40 border ${app.featured ? 'border-amber-500/30' : 'border-red-500/10'} p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-red-500/30 transition-colors shadow-lg backdrop-blur-sm`}>
                        <div className="flex items-center gap-5">
-                         <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-2xl object-cover bg-black border border-white/5" />
+                         <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-2xl object-cover bg-slate-950 border border-white/5 shadow-md" />
                          <div>
                            <div className="flex items-center gap-2 mb-1">
                              <h4 className="font-bold text-white text-lg leading-tight">{app.name}</h4>
                              {app.featured && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
                            </div>
                            <p className="text-sm text-gray-400">{app.developer} <span className="mx-2 text-red-900/50">|</span> <span className={`font-bold ${app.status === 'pending' ? 'text-orange-500' : app.status === 'published' ? 'text-green-500' : 'text-red-500'}`}>{app.status.toUpperCase()}</span> <span className="mx-2 text-red-900/50">|</span> <Download className="w-3 h-3 inline mr-1" /> {app.downloads || 0}</p>
-                           <p className="text-xs text-gray-600 mt-1 font-mono">ID: {app.id} • Creada: {new Date(app.created_at).toLocaleDateString()}</p>
+                           <p className="text-xs text-gray-600 mt-1 font-mono">ID: {app.id} • Creada: {app.date ? new Date(app.date).toLocaleDateString() : 'Desconocida'}</p>
                          </div>
                        </div>
                        
@@ -571,7 +638,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   <p className="text-red-400 text-sm md:text-base">Gestión real de anuncios y configuración de red publicitaria.</p>
                 </header>
 
-                <div className="bg-[#080000] border border-red-900/20 rounded-3xl p-6 md:p-8">
+                <div className="bg-slate-900/40 border border-red-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm shadow-xl">
                    <h4 className="text-xl font-bold text-white mb-6">Estado de Configuración AdSense</h4>
                    
                    <div className="space-y-4 max-w-lg">
@@ -612,16 +679,55 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                    </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div className="bg-[#080000] border border-green-900/30 p-6 md:p-8 rounded-3xl shadow-xl">
-                      <p className="text-xs font-black text-green-500 uppercase tracking-widest mb-2">Publisher ID Guardado</p>
+                    <div className="bg-slate-900/40 border border-green-500/20 p-6 md:p-8 rounded-3xl shadow-xl backdrop-blur-sm">
+                      <p className="text-xs font-black text-green-400 uppercase tracking-widest mb-2">Publisher ID Guardado</p>
                       <p className="text-xl font-mono text-white">{adsConfig.publisherId || 'Pendiente'}</p>
                     </div>
-                    <div className="bg-[#080000] border border-blue-900/30 p-6 md:p-8 rounded-3xl shadow-xl">
-                      <p className="text-xs font-black text-blue-500 uppercase tracking-widest mb-2">Red de Anuncios</p>
+                    <div className="bg-slate-900/40 border border-blue-500/20 p-6 md:p-8 rounded-3xl shadow-xl backdrop-blur-sm">
+                      <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-2">Red de Anuncios</p>
                       <p className="text-xl font-black text-white">Google AdSense</p>
                     </div>
                   </div>
                 )}
+             </div>
+           )}
+
+           {/* ANALYTICS */}
+           {activeTab === 'reviews' && (
+             <div className="space-y-8 animate-fade-in w-full">
+                <header>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Central de Moderación</h3>
+                  <p className="text-red-400 text-sm md:text-base">Control de calidad y bloqueo de reseñas y comentarios.</p>
+                </header>
+                
+                <div className="space-y-4 md:space-y-6">
+                  {allReviews.length === 0 && <p className="text-slate-400 bg-slate-900/40 p-8 md:p-10 rounded-2xl md:rounded-3xl border border-red-500/10 text-center">No hay reseñas publicadas en la plataforma.</p>}
+                  {allReviews.map(rev => {
+                    // Match app name
+                    const relatedApp = apps.find(a => a.id === rev.app_id);
+                    return (
+                      <div key={rev.id} className="bg-slate-900/40 border border-red-500/10 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row gap-4 group hover:border-red-500/30 transition-colors backdrop-blur-sm">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                             <span className="text-sm font-bold text-white">{rev.user_name || 'Desconocido'}</span>
+                             <span className="text-[10px] text-gray-500 bg-white/5 py-0.5 px-2 rounded border border-white/10 uppercase tracking-widest">{relatedApp?.name || 'App Elimiada/Desconocida'}</span>
+                             <span className="text-xs text-gray-500 ml-auto">{new Date(rev.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-1 mb-3">
+                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                            <span className="text-sm text-yellow-500 font-bold">{rev.rating}.0</span>
+                          </div>
+                          <p className="text-gray-300 text-sm leading-relaxed">{rev.comment}</p>
+                        </div>
+                        <div className="shrink-0 flex items-center justify-end sm:flex-col sm:justify-start">
+                          <button onClick={() => deleteAdminReview(rev.id)} className="bg-red-950/30 border border-red-900/30 text-red-500 hover:bg-red-600 hover:text-white p-2 rounded-xl text-xs font-bold transition-all" title="Eliminar Reseña">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
              </div>
            )}
 
@@ -674,7 +780,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                 <div className="bg-[#080000] border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl">
                    <h4 className="text-xl font-bold text-white mb-6">Top Entidades Más Descargadas (Real)</h4>
                    <div className="space-y-4">
-                     {apps.filter(a => a.status === 'published' && (a.downloads || 0) > 0).sort((a,b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 3).map((app, i) => (
+                     {apps.filter(a => a.status === 'published' && parseInt(String(a.downloads || 0)) > 0).sort((a,b) => parseInt(String(b.downloads || 0)) - parseInt(String(a.downloads || 0))).slice(0, 3).map((app, i) => (
                        <div key={app.id} className="flex items-center justify-between p-4 bg-black/40 border border-white/5 rounded-2xl">
                           <div className="flex items-center gap-4">
                              <div className="text-2xl font-black text-red-900/50 w-8 text-center">{i + 1}</div>
@@ -690,7 +796,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                           </div>
                        </div>
                      ))}
-                     {apps.filter(a => a.status === 'published' && (a.downloads || 0) > 0).length === 0 && (
+                     {apps.filter(a => a.status === 'published' && parseInt(String(a.downloads || 0)) > 0).length === 0 && (
                        <p className="text-gray-500 text-sm text-center p-6 border border-white/5 rounded-2xl bg-black/30">Ninguna aplicación ha registrado descargas todavía.</p>
                      )}
                    </div>
@@ -712,8 +818,8 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* SUPABASE CARD */}
-                  <div className={`p-6 md:p-8 rounded-3xl border ${infraStats.isSupabaseUp ? 'bg-[#080000] border-green-900/30 shadow-[0_0_30px_rgba(34,197,94,0.1)]' : 'bg-red-950/30 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]'} relative overflow-hidden group`}>
+                   {/* SUPABASE CARD */}
+                  <div className={`p-6 md:p-8 rounded-3xl border ${infraStats.isSupabaseUp ? 'bg-slate-900/40 border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.1)]' : 'bg-red-500/10 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)]'} relative overflow-hidden group backdrop-blur-sm`}>
                      <div className="absolute top-6 right-6 flex items-center gap-2">
                         {infraStats.isSupabaseUp ? (
                           <span className="flex items-center gap-2 text-green-500 text-xs font-bold uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/> Online</span>
@@ -745,8 +851,8 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                      </div>
                   </div>
 
-                  {/* CLOUDINARY CARD */}
-                  <div className={`p-6 md:p-8 rounded-3xl border ${infraStats.isCloudinaryUp ? 'bg-[#080000] border-blue-900/30 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'bg-red-950/30 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]'} relative overflow-hidden group`}>
+                   {/* CLOUDINARY CARD */}
+                  <div className={`p-6 md:p-8 rounded-3xl border ${infraStats.isCloudinaryUp ? 'bg-slate-900/40 border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'bg-red-500/10 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)]'} relative overflow-hidden group backdrop-blur-sm`}>
                      <div className="absolute top-6 right-6 flex items-center gap-2">
                         {infraStats.isCloudinaryUp ? (
                           <span className="flex items-center gap-2 text-blue-500 text-xs font-bold uppercase tracking-widest"><div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"/> Online</span>
@@ -779,9 +885,9 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                      </div>
                   </div>
 
-                  {/* HOST SERVER CARD */}
+                   {/* HOST SERVER CARD */}
                   {nodeStats && (
-                  <div className={`p-6 md:p-8 rounded-3xl border bg-[#080000] border-purple-900/30 shadow-[0_0_30px_rgba(168,85,247,0.1)] relative overflow-hidden group col-span-1 md:col-span-2`}>
+                  <div className={`p-6 md:p-8 rounded-3xl border bg-slate-900/40 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] relative overflow-hidden group col-span-1 md:col-span-2 backdrop-blur-sm`}>
                      <Server className={`w-12 h-12 mb-4 text-purple-500/80`} />
                      <h4 className="text-2xl font-black text-white mb-2">Host Server (Vercel Node)</h4>
                      <p className="text-gray-400 text-sm max-w-sm mb-6">Métricas en tiempo real del entorno anfitrión y uso de recursos.</p>
@@ -835,52 +941,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
            {/* USUARIOS */}
            {activeTab === 'users' && (
-             <div className="space-y-8 animate-fade-in">
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 w-full lg:max-w-none">
-                  <div>
-                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Nodos de Usuario</h3>
-                    <p className="text-red-400 text-sm md:text-base">Control de entidades registradas en el clúster.</p>
-                  </div>
-                  <div className="relative w-full sm:max-w-sm">
-                    <input 
-                      type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Buscar por email..."
-                      className="w-full bg-black/50 border border-red-900/30 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-red-500 text-sm md:text-base"
-                    />
-                    <Search className="w-4 h-4 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" />
-                  </div>
-                </header>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-                  {users.filter(u => (u.email || '').toLowerCase().includes(searchQuery.toLowerCase())).map(u => (
-                    <div key={u.id} className="bg-[#080000] border border-red-900/20 p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-xl flex flex-col hover:border-red-900/40 transition-colors w-full">
-                       <div className="flex justify-between items-start mb-4">
-                          <div className="truncate pr-4">
-                            <h4 className="font-bold text-white truncate">{u.full_name || 'Agente Anónimo'}</h4>
-                            <p className="text-sm text-gray-400 mt-1 truncate">{u.email}</p>
-                          </div>
-                          <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-lg border ${u.role === 'admin' ? 'bg-red-950/40 text-red-400 border-red-900/50' : u.role === 'developer' ? 'bg-cyan-950/40 text-cyan-400 border-cyan-900/50' : u.role === 'banned' ? 'bg-orange-950/30 border-orange-900/50 text-orange-500' : 'bg-gray-900/40 text-gray-400 border-gray-700/50'}`}>
-                            {u.role || 'user'}
-                          </span>
-                       </div>
-                       
-                       <div className="mt-auto pt-4 border-t border-white/5 flex flex-wrap gap-2">
-                         {u.role !== 'admin' && (
-                           <>
-                             {u.role === 'banned' ? (
-                               <button onClick={() => setRole(u, 'user')} className="bg-white/5 hover:bg-white/10 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex-1 text-center">Restaurar</button>
-                             ) : (
-                               <button onClick={() => setRole(u, 'banned')} className="bg-orange-950/20 hover:bg-orange-900/40 border border-orange-900/30 text-orange-500 px-3 py-2 rounded-lg text-xs font-bold transition-all flex-1 text-center">Bloquear</button>
-                             )}
-                             <button onClick={() => deleteUser(u)} className="bg-red-950/20 hover:bg-red-900/40 border border-red-900/30 text-red-500 px-3 py-2 rounded-lg text-xs font-bold transition-all flex-none flex justify-center items-center gap-1 group">
-                               <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                             </button>
-                           </>
-                         )}
-                       </div>
-                    </div>
-                  ))}
-                </div>
-             </div>
+             <AdminUsers users={users} setUsers={setUsers} addToast={addToast} />
            )}
 
            {/* DESARROLLADORES */}
@@ -891,9 +952,9 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   <p className="text-red-400 text-sm md:text-base">Peticiones de acceso API y consola.</p>
                 </header>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                  {devRequests.filter(r => r.status === 'pending').length === 0 && <p className="text-gray-500 col-span-full">Sin peticiones nuevas.</p>}
+                   {devRequests.filter(r => r.status === 'pending').length === 0 && <p className="text-slate-400 col-span-full">Sin peticiones nuevas.</p>}
                   {devRequests.filter(r => r.status === 'pending').map(req => (
-                    <div key={req.id} className="bg-[#080000] border border-red-900/20 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col h-full hover:border-red-900/40 transition-colors">
+                    <div key={req.id} className="bg-slate-900/40 border border-red-500/10 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col h-full hover:border-red-500/30 transition-colors backdrop-blur-sm">
                        <div className="flex justify-between items-start mb-6">
                           <div>
                             <h4 className="font-bold text-white text-xl">{req.name}</h4>
@@ -926,10 +987,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   <p className="text-red-400 text-sm md:text-base">Buzón de comunicaciones y reportes.</p>
                 </header>
                 <div className="space-y-4 md:space-y-6">
-                  {messages.length === 0 && <p className="text-gray-500 bg-[#0a0000] p-8 md:p-10 rounded-2xl md:rounded-3xl border border-red-900/20 text-center">Bandeja cifrada vacía.</p>}
+                  {messages.length === 0 && <p className="text-slate-400 bg-slate-900/40 p-8 md:p-10 rounded-2xl md:rounded-3xl border border-red-500/10 text-center">Bandeja cifrada vacía.</p>}
                   {messages.map(msg => (
-                    <div key={msg.id} className="bg-[#080000] border border-red-900/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col sm:flex-row gap-4 md:gap-6 group hover:border-red-900/40 transition-colors">
-                       <div className="shrink-0 w-12 h-12 md:w-14 md:h-14 bg-red-950/30 rounded-xl md:rounded-2xl flex items-center justify-center border border-red-900/30 mt-1">
+                    <div key={msg.id} className="bg-slate-900/40 border border-red-500/10 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col sm:flex-row gap-4 md:gap-6 group hover:border-red-500/30 transition-colors backdrop-blur-sm">
+                       <div className="shrink-0 w-12 h-12 md:w-14 md:h-14 bg-red-500/10 rounded-xl md:rounded-2xl flex items-center justify-center border border-red-500/20 mt-1">
                           <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-red-500" />
                        </div>
                        <div className="flex-1 w-full overflow-hidden">
@@ -957,8 +1018,8 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   <button onClick={() => { localStorage.removeItem('nexus_admin_logs'); setLogs([]); }} className="bg-white/5 hover:bg-red-900/40 text-gray-400 hover:text-white px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent hover:border-red-900/30 flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
                     <Trash2 className="w-4 h-4"/> Limpiar Buffer
                   </button>
-                </header>
-                <div className="bg-[#080000] border border-red-900/20 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+                 </header>
+                <div className="bg-slate-900/40 border border-red-500/10 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl backdrop-blur-sm">
                    <div className="overflow-x-auto custom-scrollbar">
                      <table className="w-full text-left text-sm text-gray-400">
                         <thead className="bg-black/50 text-xs uppercase font-black tracking-widest text-red-600 border-b border-red-900/20">
@@ -994,158 +1055,45 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
            {/* SETTINGS */}
            {activeTab === 'settings' && (
-             <div className="space-y-8 animate-fade-in">
-                <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Configuración del Sistema</h3>
-                  <p className="text-red-400 text-sm md:text-base">Parámetros globales y recursos principales.</p>
-                </header>
-                
-                <div className="bg-[#080000] border border-red-900/20 rounded-2xl md:rounded-3xl p-6 md:p-12 shadow-2xl w-full">
-                   
-                   <div className="space-y-8">
-                     {/* Web Logo Upload */}
-                     <div className="border border-white/10 bg-black/40 p-6 md:p-8 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                       <div className="flex-1">
-                         <div className="flex items-center gap-3 mb-2">
-                           <UploadCloud className="w-5 h-5 text-blue-500"/>
-                           <h4 className="text-lg font-bold text-white tracking-tight">Icono / Logo de la Web</h4>
-                         </div>
-                         <p className="text-xs md:text-sm text-gray-400 max-w-md">Sube el logo principal. Se guardará en la carpeta "icono web" de Cloudinary y actualizará el Favicon de la plataforma en tiempo real.</p>
-                       </div>
-                       
-                       <div className="shrink-0 flex items-center gap-4">
-                         {localStorage.getItem('nexus_web_logo') && (
-                           <img src={localStorage.getItem('nexus_web_logo')!} alt="Web Logo" className="w-12 h-12 rounded-xl object-cover bg-black border border-white/10" />
-                         )}
-                         <label className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)] inline-flex items-center gap-2">
-                           Subir Icono
-                           <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
-                             const file = e.target.files?.[0];
-                             if(!file) return;
-                             try {
-                               // Simulate or actual upload
-                               addLog('SISTEMA', 'Web Logo', 'Iniciando subida a Cloudinary (carpeta: icono web)...', 'info');
-                               
-                               const formData = new FormData();
-                               formData.append('file', file);
-                               formData.append('upload_preset', 'Iconos y capturas');
-                               formData.append('folder', 'icono web'); // specifically requested folder
-                               
-                               const res = await fetch(`https://api.cloudinary.com/v1_1/dnpnmhmht/image/upload`, {
-                                 method: 'POST', body: formData
-                               });
-                               
-                               if(!res.ok) throw new Error("Fallo al subir a Cloudinary");
-                               const data = await res.json();
-                               
-                               localStorage.setItem('nexus_web_logo', data.secure_url);
-                               
-                               // Actualizar favicon en tiempo real
-                               let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
-                               if (!link) {
-                                 link = document.createElement('link');
-                                 link.rel = 'icon';
-                                 document.getElementsByTagName('head')[0].appendChild(link);
-                               }
-                               link.href = data.secure_url;
-                               
-                               addLog('SISTEMA', 'Web Logo', 'Icono actualizado con éxito', 'success');
-                               alert("Icono de la web actualizado correctamente.");
-                             } catch(err: any) {
-                               addLog('SISTEMA', 'Web Logo', `Error: ${err.message}`, 'error');
-                               alert("Error subiendo el logo: " + err.message);
-                             }
-                           }} />
-                         </label>
-                       </div>
-                     </div>
-
-                     <div className={`border p-6 md:p-8 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all ${maintenance ? 'bg-red-950/20 border-red-500/50 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'bg-black/40 border-red-900/20'}`}>
-                       <div className="flex-1">
-                         <div className="flex items-center gap-3 mb-2">
-                           <Shield className={`w-5 h-5 md:w-6 md:h-6 ${maintenance ? 'text-red-500' : 'text-gray-500'}`}/>
-                           <h4 className="text-lg md:text-xl font-bold text-white tracking-tight">Bloqueo General (Mantenimiento)</h4>
-                         </div>
-                         <p className="text-xs md:text-sm text-gray-400 max-w-md">Bloquea el acceso a todos los módulos y muestra un banner global de emergencia ineludible.</p>
-                       </div>
-                       
-                       <label className="relative inline-flex items-center cursor-pointer shrink-0 self-start sm:self-auto">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={maintenance}
-                            onChange={(e) => {
-                              const val = e.target.checked;
-                              setMaintenance(val);
-                              localStorage.setItem('nexus_maintenance', val.toString());
-                              addLog('MANTENIMIENTO', 'Sistema Global', `Status actualizado a: ${val}`, 'info');
-                            }}
-                          />
-                          <div className="w-16 h-8 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600 outline-none border border-red-900/40"></div>
-                        </label>
-                     </div>
-                   </div>
-                      
-                </div>
-             </div>
+             <AdminSettings 
+                settings={{ 
+                  storeName: siteSettings.platform_name, 
+                  slogan: 'NexusPlay Gaming Network', 
+                  maintenanceMode: siteSettings.maintenance_mode,
+                  registrationsEnabled: siteSettings.registrations_enabled,
+                  logoUrl: siteSettings.logo_url
+                }} 
+                setSettings={async (newSetts: any) => {
+                  await updateSiteSettings({
+                    platform_name: newSetts.storeName,
+                    maintenance_mode: newSetts.maintenanceMode,
+                    registrations_enabled: newSetts.registrationsEnabled,
+                    logo_url: newSetts.logoUrl
+                  });
+                }} 
+                addToast={addToast} 
+             />
            )}
 
            {/* AI ADMIN */}
            {activeTab === 'ai' && (
-             <div className="space-y-8 animate-fade-in flex flex-col h-[calc(100vh-12rem)]">
-                <header className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-white flex items-center gap-2 md:gap-3"><BrainCircuit className="text-red-500 w-6 h-6 md:w-8 md:h-8" /> NEXUS AI Admin</h3>
-                    <p className="text-red-400 text-sm md:text-base mt-1 md:mt-0">Terminal de sobreescritura neuronal directa.</p>
-                  </div>
-                  <div className="flex self-start sm:self-auto items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-green-500 bg-green-500/10 px-3 md:px-4 py-1.5 md:py-2 rounded-xl border border-green-500/20">
-                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse" /> En Línea
-                  </div>
-                </header>
-
-                <div className="flex gap-2 flex-wrap shrink-0">
-                   <button onClick={() => { setAiCmd('Analizar rendimiento global'); setAiOutput(prev => [...prev, '> Analizar rendimiento global', `[NEXUS AI]: Rendimiento actual. Latencia DB: ${infraStats.supabasePing}ms. CDN Cloudinary: ${infraStats.cloudinaryPing}ms.`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><Zap className="w-3 h-3" /> Analizar Rendimiento</button>
-                   <button onClick={() => { setAiCmd('Detectar anomalías o errores'); setAiOutput(prev => [...prev, '> Detectar anomalías o errores', `[NEXUS AI]: Escaneando logs... Errores recientes encontrados: ${logs.filter(l => l.status === 'error').length}. ${!infraStats.isSupabaseUp ? 'ALERTA: Supabase Offline' : ''}`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><Activity className="w-3 h-3" /> Detectar Errores</button>
-                   <button onClick={() => { setAiCmd('Revisar estado de red monetaria'); setAiOutput(prev => [...prev, '> Revisar estado de red monetaria', `[NEXUS AI]: AdSense ${adsConfig.active ? 'ACTIVO' : 'PAUSADO'}. Publisher ID: ${adsConfig.publisherId || 'Mínimo/Vacío'}`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><TrendingUp className="w-3 h-3" /> Revisar Red de Ads</button>
-                   <button onClick={() => { setAiCmd('Estado general'); setAiOutput(prev => [...prev, '> Estado general', `[NEXUS AI]: Total usuarios: ${users.length}. Apps totales: ${apps.length}. Pendientes revisión: ${apps.filter(x => x.status === 'pending').length}`]); }} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono transition-colors flex items-center gap-2"><BrainCircuit className="w-3 h-3" /> Estado General</button>
-                </div>
-
-                <div className="flex-1 min-h-[400px] bg-[#050000] rounded-2xl md:rounded-3xl border border-red-900/30 overflow-hidden flex flex-col font-mono shadow-2xl relative w-full">
-                   <div className="h-10 bg-black border-b border-red-900/30 flex items-center px-4 gap-2 shrink-0">
-                      <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                      <div className="w-3 h-3 rounded-full bg-orange-500/50" />
-                      <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                      <span className="text-[10px] text-gray-500 ml-4">root@nexus-ai:~#</span>
-                   </div>
-                   
-                   <div className="flex-1 p-6 overflow-y-auto space-y-2 text-sm text-gray-300">
-                     {aiOutput.map((l, i) => (
-                       <div key={i} className={l.startsWith('>') ? 'text-cyan-400' : l.includes('ERROR') ? 'text-red-500' : 'text-green-500/80'}>{l}</div>
-                     ))}
-                   </div>
-                   
-                   <form 
-                     onSubmit={(e) => {
-                       e.preventDefault();
-                       if(!aiCmd.trim()) return;
-                       setAiOutput(p => [...p, `> ${aiCmd}`, 'Ejecutando directiva restrictiva en Sandbox C...', 'Acceso de red simulado...', 'NEXUS AI respeta los protocolos actuales. Nada que hacer.']);
-                       addLog('NEXUS AI COMANDO', 'Terminal', aiCmd, 'info');
-                       setAiCmd('');
-                     }} 
-                     className="p-4 bg-black/60 border-t border-red-900/30 flex gap-4 shrink-0"
-                   >
-                      <Terminal className="text-red-500 w-5 h-5 shrink-0 mt-0.5" />
-                      <input 
-                        type="text" 
-                        value={aiCmd} 
-                        onChange={e => setAiCmd(e.target.value)}
-                        placeholder="Ingresar comando directo..."
-                        className="flex-1 bg-transparent border-none outline-none text-white font-mono"
-                        autoFocus
-                      />
-                   </form>
-                </div>
-             </div>
+             <AdminAI 
+               apps={apps} 
+               setApps={setApps} 
+               users={users} 
+               setUsers={setUsers} 
+               requests={devRequests} 
+               setRequests={setDevRequests} 
+               config={{
+                  enabled: true,
+                  apiKey: aiConfig?.apiKey || localStorage.getItem('nexus_ai_key') || import.meta.env.VITE_GEMINI_API_KEY || '',
+                  model: aiConfig?.model || 'gemini-2.0-flash'
+               }}
+               setConfig={(newConf: any) => {
+                  localStorage.setItem('nexus_ai_key', newConf.apiKey);
+               }}
+               addToast={addToast} 
+             />
            )}
 
         </div>

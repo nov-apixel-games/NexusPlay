@@ -1,6 +1,6 @@
 import { 
   Home, Compass, Trophy, PlusSquare, Zap, Gamepad2, 
-  User, Download, Heart, Code, Shield, LogOut, X, BrainCircuit 
+  User, Download, Heart, Code, Shield, LogOut, X, BrainCircuit, Settings 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -27,6 +27,7 @@ const getMenuItems = (isAdmin: boolean) => [
     { label: 'Mi Perfil', icon: User, id: 'profile' },
     { label: 'Mis Descargas', icon: Download, id: 'downloads' },
     { label: 'Favoritos', icon: Heart, id: 'favorites' },
+    { label: 'Configuración', icon: Settings, id: 'settings' },
     ...(isAdmin ? [{ label: 'Panel Admin', icon: Shield, id: 'admin-panel' }] : []),
   ]}
 ];

@@ -1,4 +1,4 @@
-import { Search, Bell, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { Search, Bell, LogIn, LogOut, User as UserIcon, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
@@ -9,9 +9,21 @@ interface NavbarProps {
   session?: any;
   onLoginClick?: () => void;
   onLogoutClick?: () => void;
+  onSearchClick?: () => void;
+  platformName?: string;
+  webLogo?: string;
 }
 
-export default function Navbar({ onMenuClick, userProfile, session, onLoginClick, onLogoutClick }: NavbarProps) {
+export default function Navbar({ 
+  onMenuClick, 
+  userProfile, 
+  session, 
+  onLoginClick, 
+  onLogoutClick, 
+  onSearchClick,
+  platformName = 'NexusPlay',
+  webLogo
+}: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -19,6 +31,7 @@ export default function Navbar({ onMenuClick, userProfile, session, onLoginClick
   // Usar session como fallback secundario si userProfile aún no carga
   const isAuth = !!session || !!userProfile;
   const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
+  const displayLogo = webLogo || localStorage.getItem('nexus_web_logo');
 
   useEffect(() => {
     if (!userProfile) {
@@ -77,27 +90,56 @@ export default function Navbar({ onMenuClick, userProfile, session, onLoginClick
           onClick={onMenuClick}
           className="group flex items-center gap-3 transition-transform hover:scale-105 active:scale-95"
         >
-          <img 
-            src={localStorage.getItem('nexus_web_logo') || "/logo.png"}
-            alt="NexusPlay Logo" 
-            className="w-10 h-10 object-cover rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.2)] group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all" 
-          />
-          <span className="font-black tracking-tighter text-white hidden sm:block text-2xl">
-            Nexus<span className="text-cyan-400">Play</span>
+          {displayLogo ? (
+            <img 
+              src={displayLogo}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.parentElement?.querySelector('.logo-fallback');
+                if (fallback) fallback.classList.remove('hidden');
+              }}
+              alt={`${platformName} Logo`} 
+              className="w-10 h-10 object-cover rounded-xl shadow-[0_0_15px_rgba(0,229,255,0.2)] group-hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all" 
+              referrerPolicy="no-referrer"
+            />
+          ) : null}
+          <div className={`w-10 h-10 bg-nexus-cyan rounded-xl items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.2)] logo-fallback ${displayLogo ? 'hidden' : 'flex'}`}>
+            <Gamepad2 className="w-6 h-6 text-black" />
+          </div>
+          <span className="font-black tracking-tighter text-white hidden sm:block text-2xl drop-shadow-sm">
+            {platformName}
           </span>
         </button>
       </div>
 
-      <div className="flex-1 max-w-md mx-8 relative hidden md:block">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-        <input 
-          type="text" 
-          placeholder="Buscar apps y juegos..." 
-          className="w-full h-11 bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 text-white placeholder-gray-500 transition-all"
-        />
+      <div 
+        className="flex-1 max-w-2xl mx-4 sm:mx-8 relative hidden md:block group cursor-pointer" 
+        onClick={onSearchClick}
+      >
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur opacity-0 group-hover:opacity-30 transition duration-500"></div>
+        <div className="relative flex items-center bg-white/5 border border-white/10 group-hover:border-cyan-500/50 rounded-full pr-4 transition-all duration-300">
+          <div className="pl-4 pr-3 py-2.5">
+             <Search className="w-5 h-5 text-gray-400 group-hover:text-cyan-400 transition-colors" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Buscar en NexusPlay..." 
+            readOnly
+            className="w-full bg-transparent text-sm text-white placeholder-gray-500 focus:outline-none cursor-pointer py-2.5"
+          />
+          <div className="bg-white/10 text-[10px] uppercase font-bold text-gray-400 px-2 py-1 rounded-md tracking-wider">
+            Buscar
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-4 relative">
+        <button 
+          onClick={onSearchClick}
+          className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+        >
+          <Search className="w-5 h-5" />
+        </button>
         {isAuth ? (
           <>
               <div className="relative" ref={notifRef}>

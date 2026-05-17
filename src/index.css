@@ -3,31 +3,76 @@
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   
-  --color-nexus-bg: #030712;
-  --color-nexus-card: #0f172a;
-  --color-nexus-cyan: #00f2ff;
-  --color-nexus-green: #00ff88;
-  --color-nexus-purple: #8b5cf6;
-  --color-nexus-pink: #ec4899;
+  --color-nexus-bg: #030711;
+  --color-nexus-card: #0a0f1d;
+  --color-nexus-cyan: #00e5ff;
+  --color-nexus-blue: #2563eb;
+  --color-nexus-green: #10b981;
+  --color-nexus-purple: #7c3aed;
+  --color-nexus-pink: #db2777;
 }
 
 @layer base {
+  html, body {
+    @apply max-w-[100vw] overflow-x-hidden bg-nexus-bg text-slate-100 antialiased selection:bg-nexus-cyan/30 flex flex-col min-h-screen;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  body.light-theme {
+    --color-nexus-bg: #f8fafc;
+    --color-nexus-card: #ffffff;
+    @apply text-slate-900;
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(0, 229, 255, 0.05) 0%, transparent 50%);
+  }
+
+  body.light-theme .glass-panel {
+    @apply bg-white border-slate-200 shadow-lg shadow-slate-200/50;
+  }
+
+  body.light-theme .text-gray-400 {
+    @apply text-slate-500;
+  }
+
+  body.light-theme .text-white {
+    @apply text-slate-900;
+  }
+
+  body.light-theme .bg-white\/5 {
+    @apply bg-slate-100;
+  }
+
+  body.light-theme .bg-white\/10 {
+    @apply bg-slate-200;
+  }
+
+  body.light-theme .border-white\/5,
+  body.light-theme .border-white\/10 {
+    @apply border-slate-200;
+  }
   body {
-    @apply bg-nexus-bg text-white antialiased selection:bg-nexus-cyan/30;
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(0, 229, 255, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-nexus-card/50 backdrop-blur-md border border-white/5;
+    @apply bg-nexus-card/60 backdrop-blur-xl border border-white/5 shadow-xl;
   }
   
   .neon-text-gradient {
-    @apply bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-nexus-cyan via-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-sm;
   }
 
   .neon-border {
-    @apply border border-cyan-500/30 shadow-[0_0_10px_-3px_rgba(0,242,255,0.2)];
+    @apply border border-nexus-cyan/30 shadow-[0_0_20px_-5px_rgba(0,229,255,0.25)];
+  }
+
+  .premium-card {
+    @apply bg-gradient-to-br from-slate-900/60 to-slate-900/40 backdrop-blur-md border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-300;
   }
 
   /* Custom Scrollbar */

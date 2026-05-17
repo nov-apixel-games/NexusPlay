@@ -4,13 +4,14 @@ import { motion } from 'motion/react';
 import { DEMO_APPS } from '../data';
 import { AppItem } from '../types';
 
-export const AppCard = React.memo(({ app }: { app: AppItem }) => {
+export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: () => void }) => {
   return (
     <motion.div 
-      whileHover={{ y: -4 }}
-      className="flex flex-col gap-3 group"
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="flex flex-col gap-2 group cursor-pointer"
+      onClick={onClick}
     >
-      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-nexus-cyan/40 transition-all duration-300">
+      <div className="relative aspect-square w-full rounded-[1.25rem] overflow-hidden bg-white/5 border border-white/5 shadow-md group-hover:shadow-lg group-hover:shadow-cyan-500/20 group-hover:border-cyan-500/30 transition-all duration-300">
         <img 
           src={app.icon} 
           alt={app.name} 
@@ -23,27 +24,21 @@ export const AppCard = React.memo(({ app }: { app: AppItem }) => {
           }}
         />
         {app.id === 'minecraft' && (
-          <div className="absolute top-2 right-2 bg-nexus-green text-nexus-bg text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter shadow-sm">
+          <div className="absolute top-2 right-2 bg-nexus-green text-black text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm z-20">
             Top
           </div>
         )}
       </div>
 
-      <div className="flex flex-col gap-0.5 px-1">
-        <h3 className="font-semibold text-sm text-white truncate leading-tight">{app.name}</h3>
-        <p className="text-[11px] text-gray-500 font-medium truncate">{app.developer}</p>
-      </div>
-
-      <div className="flex items-center justify-between px-1 mt-auto">
-        <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-semibold">
-          <div className="flex items-center gap-0.5">
-            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-            <span>{app.rating}</span>
-          </div>
+      <div className="flex flex-col px-0.5">
+        <h3 className="font-bold text-[13px] text-white truncate leading-tight mb-0.5">{app.name}</h3>
+        <p className="text-[11px] text-gray-400 font-medium truncate mb-1">{app.developer}</p>
+        <div className="flex items-center gap-1 text-[10px] text-gray-400 font-semibold">
+          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+          <span className="text-gray-300">{app.rating}</span>
+          <span className="text-gray-600 mx-0.5">•</span>
+          <span>{app.downloads}</span>
         </div>
-        <button className="px-3 py-1 bg-white/10 hover:bg-nexus-green text-white hover:text-nexus-bg rounded-lg font-bold text-[11px] transition-colors">
-          Obtener
-        </button>
       </div>
     </motion.div>
   );
@@ -51,7 +46,7 @@ export const AppCard = React.memo(({ app }: { app: AppItem }) => {
 
 AppCard.displayName = 'AppCard';
 
-export default function AppGrid({ apps = DEMO_APPS }: { apps?: AppItem[] }) {
+export default function AppGrid({ apps = DEMO_APPS, onAppClick }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void }) {
   return (
     <section className="px-6 pb-20">
       <div className="flex items-center justify-between mb-6">
@@ -75,10 +70,10 @@ export default function AppGrid({ apps = DEMO_APPS }: { apps?: AppItem[] }) {
           </p>
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory no-scrollbar w-full relative">
+        <div className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory no-scrollbar w-full relative flex-nowrap">
           {apps.map((app) => (
-            <div key={app.id} className="snap-start shrink-0 w-36 sm:w-40 md:w-48">
-              <AppCard app={app} />
+            <div key={app.id} className="snap-start shrink-0 w-28 sm:w-32 md:w-40 lg:w-48">
+              <AppCard app={app} onClick={() => onAppClick?.(app)} />
             </div>
           ))}
         </div>

@@ -61,6 +61,11 @@ ALTER TABLE public.apps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dev_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.apps 
+ADD COLUMN IF NOT EXISTS version_code TEXT,
+ADD COLUMN IF NOT EXISTS changelog TEXT,
+ADD COLUMN IF NOT EXISTS previous_versions JSONB DEFAULT '[]'::jsonb;
+
 -- Set up RLS Policies
 
 -- PROFILES
@@ -112,3 +117,36 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- CREATE TRIGGER on_auth_user_created
 --   AFTER INSERT ON auth.users
 --   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- Create reviews table
+CREATE TABLE IF NOT EXISTS public.reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    app_id UUID REFERENCES public.apps(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_name TEXT,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    helpful_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for reviews
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+-- Reviews RLS Policies
+CREATE POLICY "Reviews are viewable by everyone." 
+ON public.reviews FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own reviews." 
+ON public.reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own reviews." 
+ON public.reviews FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own reviews." 
+ON public.reviews FOR DELETE USING (auth.uid() = user_id);
+
+-- Permitir a los usuarios actualizar los votos útiles (esto es un poco relajado para permitir likes)
+CREATE POLICY "Users can update helpful_count." 
+ON public.reviews FOR UPDATE USING (auth.uid() IS NOT NULL);

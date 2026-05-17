@@ -21,6 +21,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import Footer from './components/Footer';
 import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditionsView, CookiePolicyView, AboutView } from './components/views/LegalViews';
 import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
+import { AppDetailView } from './components/views/AppDetailView';
+import { SettingsView } from './components/views/SettingsView';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 
@@ -33,15 +35,39 @@ export const DEFAULT_SETTINGS = {
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('home');
+  const [viewHistory, setViewHistory] = useState<string[]>(['home']);
   const [showDevPanel, setShowDevPanel] = useState(false);
   
   // Supabase Auth and User
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Data fetching state
   const [apps, setApps] = useState<AppItem[]>([]);
+  const [platformName, setPlatformName] = useState('NexusPlay');
+  const [webLogo, setWebLogo] = useState('https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  // Fetch Site Settings from Supabase
+  const fetchSiteSettings = async () => {
+    try {
+      const { data, error } = await supabase.from('site_settings').select('*').single();
+      if (!error && data) {
+        if (data.platform_name) setPlatformName(data.platform_name);
+        if (data.logo_url) setWebLogo(data.logo_url);
+        if (data.maintenance_mode !== undefined) setMaintenanceMode(data.maintenance_mode);
+      } else {
+        const localLogo = localStorage.getItem('nexus_web_logo');
+        if (localLogo) setWebLogo(localLogo);
+        const localMaintenance = localStorage.getItem('nexus_maintenance_mode') === 'true';
+        if (localMaintenance) setMaintenanceMode(localMaintenance);
+      }
+    } catch (e) {
+      console.warn("Settings fetch failed");
+    }
+  };
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -62,8 +88,8 @@ export default function App() {
 
   const DEFAULT_AI_CONFIG: AIConfig = {
     enabled: false,
-    apiKey: '',
-    model: 'gemini-2.5-flash',
+    apiKey: localStorage.getItem('nexus_ai_key') || import.meta.env.VITE_GEMINI_API_KEY || '',
+    model: 'gemini-2.0-flash',
     endpoint: 'https://generativelanguage.googleapis.com'
   };
   const [aiConfig, setAiConfig] = useState<AIConfig>(DEFAULT_AI_CONFIG);
@@ -109,8 +135,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Aplicar logo web si existe
-    const webLogo = localStorage.getItem('nexus_web_logo');
+    fetchSiteSettings();
+  }, []);
+
+  useEffect(() => {
+    // Aplicar logo web y favicon
     if (webLogo) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
       if (!link) {
@@ -121,9 +150,14 @@ export default function App() {
       link.href = webLogo;
     }
 
+    const handleLogoUpdate = (e: any) => {
+      if (e.detail) setWebLogo(e.detail);
+    };
+    window.addEventListener('nexusLogoUpdated', handleLogoUpdate);
+
     if (!isSupabaseConfigured) {
       addToast('Faltan configurar variables de entorno de Supabase.', 'error');
-      return;
+      return () => window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
     }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -164,8 +198,9 @@ export default function App() {
     return () => {
       subscription.unsubscribe();
       supabase.removeChannel(appsSubscription);
+      window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
     };
-  }, []);
+  }, [webLogo]);
 
   const fetchUserProfile = async (userId: string, email?: string) => {
     try {
@@ -230,6 +265,9 @@ export default function App() {
     category: d.category,
     size: d.size,
     version: d.version,
+    version_code: d.version_code,
+    changelog: d.changelog,
+    previous_versions: d.previous_versions || [],
     icon: d.icon_url,
     iconPublicId: d.icon_public_id,
     screenshots: d.screenshots,
@@ -321,9 +359,9 @@ export default function App() {
     if (id === 'admin-panel') {
       if (!isAdmin) {
         addToast('Acceso restringido. Requiere permisos de administrador.', 'error');
-        setActiveView('home');
         return;
       }
+      setViewHistory(prev => [...prev, id]);
       setActiveView(id);
     } else if (id === 'dev-panel') {
       if (!session) {
@@ -333,7 +371,26 @@ export default function App() {
         setShowDevPanel(true);
       }
     } else {
+      setViewHistory(prev => [...prev, id]);
       setActiveView(id);
+    }
+  };
+
+  const handleAppClick = (app: AppItem) => {
+    const nextView = `app/${app.id}`;
+    setViewHistory(prev => [...prev, nextView]);
+    setActiveView(nextView);
+  };
+
+  const handleBack = () => {
+    if (viewHistory.length > 1) {
+      const newHistory = [...viewHistory];
+      newHistory.pop(); // Remove current view
+      const prevView = newHistory[newHistory.length - 1];
+      setViewHistory(newHistory);
+      setActiveView(prevView);
+    } else {
+      setActiveView('home');
     }
   };
 
@@ -432,23 +489,55 @@ export default function App() {
   const publishedApps = apps.filter(a => a.status === 'published');
 
   const ActiveViewContent = () => {
+    if (activeView.startsWith('app/')) {
+      const appId = activeView.split('/')[1];
+      const app = apps.find(a => a.id === appId);
+      if (app) {
+         // Derive back label from history
+         let backLabel = "Volver";
+         if (viewHistory.length > 1) {
+           const prev = viewHistory[viewHistory.length - 2];
+           if (prev === 'search') backLabel = "Volver a Búsqueda";
+           else if (prev === 'games') backLabel = "Volver a Juegos";
+           else if (prev === 'explore') backLabel = "Volver a Explorar";
+           else if (prev === 'downloads') backLabel = "Volver a Descargas";
+           else if (prev === 'home') backLabel = "Volver al Inicio";
+         }
+         return <AppDetailView app={app} apps={publishedApps} onBack={handleBack} onAppClick={handleAppClick} backLabel={backLabel} />;
+      }
+    }
+
     switch (activeView) {
       case 'home':
         return (
           <>
-            <Hero storeName={settings.storeName} slogan={settings.slogan} />
-            <CategorySection />
-            <AppGrid apps={publishedApps} />
+            <Hero storeName={settings.storeName} slogan={settings.slogan} onAction={(action) => setActiveView(action)} />
+            <CategorySection 
+               onCategoryClick={(cat) => {
+                 setSearchQuery(cat);
+                 setActiveView('search');
+               }} 
+               onSeeAll={() => setActiveView('games')} 
+            />
+            <div className="max-w-7xl mx-auto px-6 w-full mb-16">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-black flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+                  Apps Destacadas
+                </h2>
+              </div>
+              <AppGrid apps={publishedApps.length > 0 ? (publishedApps.filter(a => a.featured).length > 0 ? publishedApps.filter(a => a.featured) : publishedApps.sort((a,b) => b.rating - a.rating).slice(0, 10)) : []} onAppClick={handleAppClick} />
+            </div>
           </>
         );
       case 'games':
-        return <GamesView apps={publishedApps} />;
+        return <GamesView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'explore':
-        return <ExploreView apps={publishedApps} />;
+        return <ExploreView apps={publishedApps} onAppClick={handleAppClick} onAction={(action) => setActiveView(action)} />;
       case 'ranking':
-        return <RankingView apps={publishedApps} />;
+        return <RankingView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'search':
-        return <SearchView apps={publishedApps} />;
+        return <SearchView apps={publishedApps} onAppClick={handleAppClick} onBack={() => setActiveView('home')} initialQuery={searchQuery} />;
       case 'admin-panel':
         return (
            <AdminPanel 
@@ -458,10 +547,11 @@ export default function App() {
              setApps={setApps} 
              devRequests={devRequests}
              setDevRequests={setDevRequests}
+             aiConfig={aiConfig}
            />
         );
       case 'nexus-ai':
-        return <NexusAIChat apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} />;
+        return <NexusAIChat apps={publishedApps} apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} onAppClick={handleAppClick} />;
       case 'profile':
         return (
           <ProfileView 
@@ -478,21 +568,23 @@ export default function App() {
             }}
           />
         );
+      case 'settings':
+        return <SettingsView onBack={() => setActiveView('home')} userProfile={userProfile} />;
       case 'favorites':
         return (
           <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 min-h-[60vh]">
             <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500" /> Mis Favoritos</h1>
-            <AppGrid apps={publishedApps.slice(0,2)} />
+            <AppGrid apps={publishedApps.filter((_:any, i:number) => i % 4 === 0).slice(0, 4)} onAppClick={handleAppClick} />
           </div>
         );
       case 'downloads':
-        return <DownloadsView apps={publishedApps} />;
+        return <DownloadsView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'events':
-        return <EventsView />;
+        return <EventsView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'achievements':
         return <AchievementsView />;
       case 'collections':
-        return <CollectionsView />;
+        return <CollectionsView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'contact':
         return <ContactView onBack={() => setActiveView('home')} />;
       case 'help':
@@ -522,10 +614,10 @@ export default function App() {
     }
   };
 
-  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel';
+  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search';
 
   return (
-    <div className="min-h-screen bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col">
+    <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
       <GoogleAdSense />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showAuthModal && (
@@ -570,6 +662,9 @@ export default function App() {
           session={session}
           onLoginClick={() => setShowAuthModal(true)} 
           onLogoutClick={handleLogout} 
+          onSearchClick={() => setActiveView('search')}
+          platformName={platformName}
+          webLogo={webLogo}
         />
       )}
       
@@ -603,7 +698,7 @@ export default function App() {
         </main>
       )}
 
-      {!isFullScreenView && (
+      {!isFullScreenView && !activeView.startsWith('app/') && (
         <Footer onNavigate={handleAction} />
       )}
 
