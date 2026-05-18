@@ -13,10 +13,13 @@ export interface AppItem {
   isHighlighted?: boolean;
   description?: string;
   shortDescription?: string;
+  full_description?: string;
   compatibility?: string;
+  min_android?: string;
   whatsNew?: string;
-  version_code?: number;
   changelog?: string;
+  tags?: string[];
+  version_code?: number;
   previous_versions?: any[];
   size?: string;
   version?: string;

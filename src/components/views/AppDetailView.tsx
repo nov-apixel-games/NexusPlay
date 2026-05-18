@@ -234,7 +234,7 @@ export function AppDetailView({
                       <div className={`absolute -inset-1 ${isUpdateAvailable ? 'bg-green-500' : 'bg-nexus-cyan'} rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500`}></div>
                       <button className={`relative w-full sm:w-64 flex items-center justify-center gap-3 py-4 ${isUpdateAvailable ? 'bg-green-500 hover:bg-green-400' : 'bg-nexus-cyan hover:bg-cyan-400'} text-black rounded-2xl font-black text-lg transition-all active:scale-95 shadow-xl`}>
                         <Download className="w-6 h-6" />
-                        {isUpdateAvailable ? 'ACTUALIZAR' : 'DESCARGAR'}
+                        {isUpdateAvailable ? 'ACTUALIZAR' : 'INSTALAR'}
                       </button>
                     </a>
                   ) : (
@@ -294,7 +294,7 @@ export function AppDetailView({
                 )}
                 <div className={`relative transition-all duration-500 overflow-hidden ${showFullDesc ? '' : 'max-h-40'}`}>
                   <p className="text-slate-400 leading-relaxed whitespace-pre-wrap text-lg">
-                    {app.description || 'Sin descripción detallada.'}
+                    {app.full_description || app.description || 'Sin descripción detallada.'}
                   </p>
                   {!showFullDesc && (
                     <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-slate-900 to-transparent"></div>
@@ -309,6 +309,33 @@ export function AppDetailView({
                   </button>
                 )}
               </div>
+
+              {/* Whats New Section */}
+              {(app.changelog || app.whatsNew) && (
+                <div className="pt-8 border-t border-white/5 space-y-4">
+                  <h3 className="text-xl font-black text-white flex items-center gap-3">
+                    <History className="w-6 h-6 text-nexus-cyan" />
+                    Novedades
+                  </h3>
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                    <p className="text-nexus-cyan font-bold mb-2">Versión {app.version}</p>
+                    <p className="text-slate-400 leading-relaxed">
+                      {app.changelog || app.whatsNew}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Tags Section */}
+              {app.tags && app.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-4">
+                  {app.tags.map((tag: string) => (
+                    <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-bold text-slate-500 uppercase">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Specs Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-white/5">

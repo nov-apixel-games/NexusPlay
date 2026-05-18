@@ -1,110 +1,63 @@
-export async function uploadToCloudinary(file: File, subFolder: string = ''): Promise<{ url: string, public_id: string }> {
-  const cloudName = 'dnpnmhmht';
-  const uploadPreset = 'Iconos y capturas';
-  
-  // Limpiamos el nombre de la carpeta para evitar problemas
-  const sanitizedFolder = subFolder.replace(/[^a-zA-Z0-9_/]/g, '_');
-  const folderPath = sanitizedFolder ? `nexus_app/${sanitizedFolder}` : 'nexus_app';
 
-  console.log(`[Cloudinary] Subiendo a: ${cloudName} | Folder: "${folderPath}"`);
+export const uploadToCloudinary = async (file: File, folder: string) => {
+  // 1. Get signature from server
+  const sigResponse = await fetch(`/api/cloudinary-signature?folder=${encodeURIComponent(folder)}`);
+  if (!sigResponse.ok) throw new Error("No se pudo obtener la firma de Cloudinary");
+  const { signature, timestamp, cloud_name, api_key } = await sigResponse.json();
 
+  // 2. Upload directly to Cloudinary
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', uploadPreset);
-  formData.append('folder', folderPath);
+  formData.append('signature', signature);
+  formData.append('timestamp', timestamp.toString());
+  formData.append('api_key', api_key);
+  formData.append('folder', folder);
 
-  try {
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
+  const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`, {
+    method: 'POST',
+    body: formData
+  });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const msg = errorData.error?.message || '';
-      console.error("Error Detallado:", errorData);
-      
-      if (msg.includes('cloud_name') || response.status === 404) {
-        throw new Error(`⚠️ NUBE NO VÁLIDA: El Cloud Name "dnpnmhmht" no parece correcto.`);
-      }
-
-      if (msg.includes('preset') || response.status === 400) {
-        throw new Error(`⚠️ PRESET NO VÁLIDO: Cloudinary no encuentra "${uploadPreset}". 
-          \nAsegúrate de que se llame exactamente así y sea 'UNSIGNED'.`);
-      }
-      
-      throw new Error(msg || "Error en la subida a Cloudinary");
-    }
-
-    const data = await response.json();
-    return { 
-      url: data.secure_url, 
-      public_id: data.public_id 
-    };
-  } catch (error: any) {
-    console.error("Fallo en la subida directa:", error);
-    throw error;
-  }
-}
-
-export async function deleteFolderFromCloudinary(folderName: string): Promise<boolean> {
-  if (!folderName) return true;
-
-  console.log(`[Cloudinary] Solicitando eliminación de la carpeta: ${folderName}`);
-  
-  try {
-    const sanitizedFolder = folderName.replace(/[^a-zA-Z0-9_/]/g, '_');
-    const folderPath = `nexus_app/${sanitizedFolder}`;
-
-    const response = await fetch('/api/delete-folder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder: folderPath }),
+  if (!uploadResponse.ok) {
+    const errData = await uploadResponse.json();
+    const errorMsg = errData.error?.message || "Error al subir a Cloudinary";
+    console.error("Cloudinary Upload Error Details:", {
+      status: uploadResponse.status,
+      error: errData.error,
+      cloud_name
     });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      console.error("[Cloudinary] Fallo al eliminar carpeta desde backend:", data);
-      return false;
-    }
-
-    console.log(`[Cloudinary] Resultado exitoso para carpeta ${folderPath}:`, data);
-    return data.success;
-  } catch (error) {
-    console.error(`[Cloudinary] Error de red al intentar eliminar carpeta ${folderName}:`, error);
-    return false;
-  }
-}
-export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
-  if (!publicId) {
-    console.warn("[Cloudinary] No public_id provided for deletion, skipping.");
-    return true;
+    throw new Error(errorMsg);
   }
 
-  console.log(`[Cloudinary] Solicitando eliminación de: ${publicId}`);
-  
+  return await uploadResponse.json();
+};
+
+export const deleteFromCloudinary = async (publicId: string) => {
   try {
     const response = await fetch('/api/delete-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ public_id: publicId }),
+      body: JSON.stringify({ public_id: publicId })
     });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      console.error("[Cloudinary] Fallo al eliminar desde backend:", data);
-      return false;
-    }
-
-    console.log(`[Cloudinary] Resultado exitoso para ${publicId}:`, data);
-    return data.success;
+    const result = await response.json();
+    return result.success;
   } catch (error) {
-    console.error(`[Cloudinary] Error de red al intentar eliminar ${publicId}:`, error);
+    console.error("Error deleting from Cloudinary:", error);
     return false;
   }
-}
+};
+
+export const deleteFolderFromCloudinary = async (folder: string) => {
+  try {
+    const response = await fetch('/api/delete-folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder })
+    });
+    const result = await response.json();
+    return result.success;
+  } catch (error) {
+    console.error("Error deleting folder from Cloudinary:", error);
+    return false;
+  }
+};

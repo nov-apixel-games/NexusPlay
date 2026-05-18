@@ -704,23 +704,11 @@ export default function App() {
 
       {showDevPanel && session && (
         <DeveloperPanel 
-          userEmail={session.user.email}
           userId={session.user.id}
           userProfile={userProfile}
-          isApproved={isDeveloper}
-          devRequests={devRequests}
-          setDevRequests={setDevRequests}
           onAddApp={handleAddApp} 
           onClose={() => setShowDevPanel(false)}
           publishedApps={apps.filter(a => a.developerId === session.user.id || a.developer === userProfile?.username)} 
-          initialTab={devPanelInitialTab}
-          onRoleChange={(newRole) => {
-            setUserProfile((prev: any) => prev ? { ...prev, role: newRole } : prev);
-            addToast(`¡Bienvenido! Ahora eres ${newRole === 'developer' ? 'desarrollador' : newRole}.`, 'success');
-          }}
-          onUpdateApp={(updatedApp) => {
-             // Let Supabase realtime handle local state update
-          }}
         />
       )}
 
