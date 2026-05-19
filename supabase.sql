@@ -1,3 +1,48 @@
+-- Admin helper function
+CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = user_id AND role = 'admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Create site_settings table
+CREATE TABLE IF NOT EXISTS public.site_settings (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    platform_name TEXT DEFAULT 'NexusPlay',
+    logo_url TEXT DEFAULT 'https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png',
+    slogan TEXT,
+    maintenance_mode BOOLEAN DEFAULT false,
+    registrations_enabled BOOLEAN DEFAULT true,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read site settings" ON public.site_settings;
+CREATE POLICY "Anyone can read site settings" ON public.site_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can update site settings" ON public.site_settings;
+CREATE POLICY "Admins can update site settings" ON public.site_settings FOR UPDATE USING (public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Admins can insert site settings" ON public.site_settings;
+CREATE POLICY "Admins can insert site settings" ON public.site_settings FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
+
+-- Create settings table for general key-value pairs
+CREATE TABLE IF NOT EXISTS public.settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read settings" ON public.settings;
+CREATE POLICY "Anyone can read settings" ON public.settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can update settings" ON public.settings;
+CREATE POLICY "Admins can update settings" ON public.settings FOR UPDATE USING (public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Admins can insert settings" ON public.settings;
+CREATE POLICY "Admins can insert settings" ON public.settings FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
+
+-- Insert initial site_settings
+INSERT INTO public.site_settings (id, platform_name, logo_url, maintenance_mode, registrations_enabled) 
+VALUES (1, 'NexusPlay', 'https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png', false, true)
+ON CONFLICT (id) DO NOTHING;
+
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -69,36 +114,50 @@ ADD COLUMN IF NOT EXISTS previous_versions JSONB DEFAULT '[]'::jsonb;
 -- Set up RLS Policies
 
 -- PROFILES
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles;
 CREATE POLICY "Public profiles are viewable by everyone." 
 ON public.profiles FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert their own profile." ON public.profiles;
 CREATE POLICY "Users can insert their own profile." 
 ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile." ON public.profiles;
 CREATE POLICY "Users can update own profile." 
 ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- APPS
+DROP POLICY IF EXISTS "Published apps are viewable by everyone." ON public.apps;
 CREATE POLICY "Published apps are viewable by everyone." 
-ON public.apps FOR SELECT USING (status = 'published' OR auth.uid() = developer_id);
+ON public.apps FOR SELECT USING (status = 'published' OR auth.uid() = developer_id OR public.is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Developers can insert their own apps." ON public.apps;
 CREATE POLICY "Developers can insert their own apps." 
 ON public.apps FOR INSERT WITH CHECK (auth.uid() = developer_id);
 
+DROP POLICY IF EXISTS "Developers can update own apps." ON public.apps;
 CREATE POLICY "Developers can update own apps." 
-ON public.apps FOR UPDATE USING (auth.uid() = developer_id);
+ON public.apps FOR UPDATE USING (auth.uid() = developer_id OR public.is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins or developers can delete apps." ON public.apps;
+CREATE POLICY "Admins or developers can delete apps." 
+ON public.apps FOR DELETE USING (auth.uid() = developer_id OR public.is_admin(auth.uid()));
 
 -- DEV REQUESTS
+DROP POLICY IF EXISTS "Users can view own dev requests." ON public.dev_requests;
 CREATE POLICY "Users can view own dev requests." 
-ON public.dev_requests FOR SELECT USING (auth.uid() = user_id);
+ON public.dev_requests FOR SELECT USING (auth.uid() = user_id OR public.is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert own dev requests." ON public.dev_requests;
 CREATE POLICY "Users can insert own dev requests." 
 ON public.dev_requests FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- NOTIFICATIONS
+DROP POLICY IF EXISTS "Users can view own notifications." ON public.notifications;
 CREATE POLICY "Users can view own notifications." 
 ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own notifications." ON public.notifications;
 CREATE POLICY "Users can update own notifications." 
 ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 
@@ -111,12 +170,6 @@ BEGIN
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to create profile automatically (optional, depends on how your app inserts it, we handle it on frontend but good practice)
--- DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
--- CREATE TRIGGER on_auth_user_created
---   AFTER INSERT ON auth.users
---   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- Create reviews table
 CREATE TABLE IF NOT EXISTS public.reviews (
@@ -135,18 +188,147 @@ CREATE TABLE IF NOT EXISTS public.reviews (
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
 -- Reviews RLS Policies
+DROP POLICY IF EXISTS "Reviews are viewable by everyone." ON public.reviews;
 CREATE POLICY "Reviews are viewable by everyone." 
 ON public.reviews FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert their own reviews." ON public.reviews;
 CREATE POLICY "Users can insert their own reviews." 
 ON public.reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own reviews." ON public.reviews;
 CREATE POLICY "Users can update their own reviews." 
 ON public.reviews FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own reviews." ON public.reviews;
 CREATE POLICY "Users can delete their own reviews." 
-ON public.reviews FOR DELETE USING (auth.uid() = user_id);
+ON public.reviews FOR DELETE USING (auth.uid() = user_id OR public.is_admin(auth.uid()));
 
--- Permitir a los usuarios actualizar los votos útiles (esto es un poco relajado para permitir likes)
+-- Permitir a los usuarios actualizar los votos útiles
+DROP POLICY IF EXISTS "Users can update helpful_count." ON public.reviews;
 CREATE POLICY "Users can update helpful_count." 
 ON public.reviews FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- ==========================================
+-- NEXUS HUB TABLES (Social Features)
+-- ==========================================
+
+DROP TABLE IF EXISTS public.community_messages CASCADE;
+DROP TABLE IF EXISTS public.communities CASCADE;
+DROP TABLE IF EXISTS public.messages CASCADE;
+DROP TABLE IF EXISTS public.message_reactions CASCADE;
+DROP TABLE IF EXISTS public.community_members CASCADE;
+DROP TABLE IF EXISTS public.reports CASCADE;
+
+-- 1. Create communities table
+CREATE TABLE IF NOT EXISTS public.communities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    category TEXT,
+    image_url TEXT,
+    creator_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. Create community_members table
+CREATE TABLE IF NOT EXISTS public.community_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID REFERENCES public.communities(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(community_id, user_id)
+);
+
+-- 3. Create community messages table
+CREATE TABLE IF NOT EXISTS public.messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID REFERENCES public.communities(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    content TEXT,
+    is_pinned BOOLEAN DEFAULT false,
+    deleted BOOLEAN DEFAULT false,
+    deleted_by_admin BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 4. Create reactions table
+CREATE TABLE IF NOT EXISTS public.message_reactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID REFERENCES public.messages(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reaction TEXT NOT NULL,
+    UNIQUE(message_id, user_id, reaction)
+);
+
+-- 5. Create reports table
+CREATE TABLE IF NOT EXISTS public.reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID REFERENCES public.messages(id) ON DELETE CASCADE,
+    reporter_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
+-- POLICIES
+-- ==========================================
+
+ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Authenticated users can read communities" ON public.communities;
+CREATE POLICY "Authenticated users can read communities" ON public.communities FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Authenticated users can insert communities" ON public.communities;
+CREATE POLICY "Authenticated users can insert communities" ON public.communities FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Creator or admin can update" ON public.communities;
+CREATE POLICY "Creator or admin can update" ON public.communities FOR UPDATE USING (auth.uid() = creator_id OR public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Creator or admin can delete" ON public.communities;
+CREATE POLICY "Creator or admin can delete" ON public.communities FOR DELETE USING (auth.uid() = creator_id OR public.is_admin(auth.uid()));
+
+
+ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Members can read members" ON public.community_members;
+CREATE POLICY "Members can read members" ON public.community_members FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Users can join" ON public.community_members;
+CREATE POLICY "Users can join" ON public.community_members FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can leave" ON public.community_members;
+CREATE POLICY "Users can leave" ON public.community_members FOR DELETE USING (auth.uid() = user_id OR public.is_admin(auth.uid()));
+
+
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Community members can read messages" ON public.messages;
+CREATE POLICY "Community members can read messages" ON public.messages FOR SELECT USING (
+  EXISTS(SELECT 1 FROM public.community_members WHERE community_id = messages.community_id AND user_id = auth.uid()) OR public.is_admin(auth.uid())
+);
+DROP POLICY IF EXISTS "Members can insert messages" ON public.messages;
+CREATE POLICY "Members can insert messages" ON public.messages FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS(SELECT 1 FROM public.community_members WHERE community_id = messages.community_id AND user_id = auth.uid()));
+DROP POLICY IF EXISTS "Author or admin can delete messages" ON public.messages;
+CREATE POLICY "Author or admin can delete messages" ON public.messages FOR DELETE USING (
+  auth.uid() = user_id 
+  OR public.is_admin(auth.uid()) 
+  OR EXISTS(SELECT 1 FROM public.communities WHERE id = messages.community_id AND creator_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Author or admin can update messages" ON public.messages;
+CREATE POLICY "Author or admin can update messages" ON public.messages FOR UPDATE USING (
+  auth.uid() = user_id 
+  OR public.is_admin(auth.uid())
+  OR EXISTS(SELECT 1 FROM public.communities WHERE id = messages.community_id AND creator_id = auth.uid())
+);
+
+
+ALTER TABLE public.message_reactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read reactions" ON public.message_reactions;
+CREATE POLICY "Anyone can read reactions" ON public.message_reactions FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Users can insert own reactions" ON public.message_reactions;
+CREATE POLICY "Users can insert own reactions" ON public.message_reactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own reactions" ON public.message_reactions;
+CREATE POLICY "Users can delete own reactions" ON public.message_reactions FOR DELETE USING (auth.uid() = user_id OR public.is_admin(auth.uid()));
+
+
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can read reports" ON public.reports;
+CREATE POLICY "Admins can read reports" ON public.reports FOR SELECT USING (public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Users can create reports" ON public.reports;
+CREATE POLICY "Users can create reports" ON public.reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
+
+-- Notify PostgREST to reload schema cache
+NOTIFY pgrst, 'reload schema';

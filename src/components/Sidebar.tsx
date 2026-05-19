@@ -1,6 +1,6 @@
 import { 
   Home, Compass, Trophy, PlusSquare, Zap, Gamepad2, 
-  User, Download, Heart, Code, Shield, LogOut, X, BrainCircuit, Settings 
+  User, Users, Download, Heart, Code, Shield, LogOut, X, BrainCircuit, Settings 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -18,6 +18,7 @@ const getMenuItems = (isAdmin: boolean) => [
     { label: 'Inicio', icon: Home, id: 'home', active: true },
     { label: 'Modo Explorar', icon: Compass, id: 'explore' },
     { label: 'Ranking Global', icon: Trophy, id: 'ranking' },
+    { label: 'Nexus Hub', icon: Users, id: 'nexus-hub' },
     { label: 'Colecciones', icon: PlusSquare, id: 'collections' },
     { label: 'Eventos & Logros', icon: Zap, id: 'events' },
     { label: 'Juegos', icon: Gamepad2, id: 'games' },

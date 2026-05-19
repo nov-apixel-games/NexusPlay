@@ -34,7 +34,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
     whats_new: '',
     tags: [] as string[],
     min_android: 'Android 8.0+',
-    permissions: [] as string[]
+    permissions: [] as string[],
+    apk_url: ''
   });
 
   const [files, setFiles] = useState<{
@@ -100,7 +101,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
   };
 
   const uploadScreenshot = async (file: File) => {
-    if (files.screenshots.length >= 5) return;
+    if (files.screenshots.length >= 4) return;
     setUiError(null);
     
     const tempId = Math.random().toString(36).substring(7);
@@ -150,8 +151,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
   const handlePublish = async () => {
     setUiError(null);
-    if (!files.apk) {
-      setUiError("Falta el archivo APK.");
+    if (!formData.apk_url || !formData.apk_url.startsWith('http')) {
+      setUiError("Falta un enlace de descarga APK válido.");
       return;
     }
     if (!files.iconUrl) {
@@ -168,82 +169,9 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
     setStatus('Iniciando publicación...');
 
     try {
-      // 1. Get Presigned URL for Cloudflare R2
-      setStatus('Preparando subida del APK...');
-      setPublishProgress(10);
-      const actualContentType = files.apk?.type || 'application/octet-stream';
-      const presignedRes = await fetch('/api/upload-apk-presigned', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          app_name: formData.app_name,
-          version: formData.version,
-          contentType: actualContentType
-        })
-      });
-
-      if (!presignedRes.ok) {
-        const errText = await presignedRes.text();
-        let errMsg = "Error obteniendo URL de subida";
-        try { errMsg = JSON.parse(errText).error || errMsg; } catch(e) {}
-        throw new Error(errMsg);
-      }
-
-      const presignedData = await presignedRes.json();
-      if (!presignedData.success) {
-        throw new Error(presignedData.error || "Error al obtener presigned URL");
-      }
-
-      const uploadUrl = presignedData.presigned_url;
-      const apkDownloadUrl = presignedData.public_url;
-
-      setStatus('Subiendo APK a Cloudflare R2...');
-      setPublishProgress(20);
-
-      // 2. Upload APK directly to R2 using Presigned URL
-      console.log("Uploading to:", uploadUrl.substring(0, 50) + "...");
-      
-      const uploadResOk = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', uploadUrl, true);
-        xhr.setRequestHeader('Content-Type', actualContentType);
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const percent = (e.loaded / e.total) * 40;
-            setPublishProgress(20 + percent); // Goes from 20 to 60
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(true);
-          } else {
-            console.error("XHR failed with status", xhr.status, xhr.responseText);
-            if (xhr.status === 403) {
-              reject(new Error("Error de Permisos (CORS o Token). 1. Revisa que tu Token de API de R2 tenga permisos de Escritura (Admin o Edit). 2. Asegúrate de haber guardado bien la política CORS en Cloudflare."));
-            } else {
-              reject(new Error(`Error subiendo el APK a R2. (Status: ${xhr.status}).`));
-            }
-          }
-        };
-
-        xhr.onerror = () => {
-          console.error("XHR onerror triggered. Status:", xhr.status);
-          reject(new Error("No se pudo conectar a Cloudflare R2 (Error de Red o CORS). Si el CORS ya está configurado, verifica que tu token de R2 tiene permisos de Escritura."));
-        };
-
-        xhr.send(files.apk);
-      });
-
-      if (!uploadResOk) {
-        throw new Error("La subida del APK falló de forma inesperada.");
-      }
-
-      if (!apkDownloadUrl) throw new Error("No se pudo obtener la URL de descarga de R2");
       setPublishProgress(60);
 
-      // 2. Register in Supabase
+      // Register in Supabase
       setStatus('Finalizando y publicando en NexusPlay...');
       const registerRes = await fetch('/api/upload-app', {
         method: 'POST',
@@ -259,8 +187,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
           icon_public_id: files.iconPublicId,
           screenshots: files.screenshots.map(s => s.url),
           screenshots_public_ids: files.screenshots.map(s => s.publicId),
-          download_url: apkDownloadUrl,
-          size: apkInfo?.size,
+          download_url: formData.apk_url,
+          size: 'Variable',
           developer_id: developerId,
           whats_new: formData.whats_new,
           min_android: formData.min_android,
@@ -490,9 +418,9 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                     <div className="md:col-span-2 space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xl font-black text-cyan-400 uppercase">Capturas de Pantalla</h3>
-                        <span className="text-[10px] font-black text-gray-500">{files.screenshots.length}/5</span>
+                        <span className="text-[10px] font-black text-gray-500">{files.screenshots.length}/4</span>
                       </div>
-                      <p className="text-gray-500 text-xs mb-4">Sube entre 1 y 5 capturas que muestren la interfaz o gameplay real.</p>
+                      <p className="text-gray-500 text-xs mb-4">Sube entre 1 y 4 capturas que muestren la interfaz o gameplay real.</p>
                       
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {files.screenshots.map((ss) => (
@@ -514,7 +442,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                           </div>
                         ))}
                         
-                        {files.screenshots.length < 5 && (
+                        {files.screenshots.length < 4 && (
                           <label className="aspect-[9/16] border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-cyan-500/50 transition-all text-gray-500">
                             <Plus className="w-8 h-8 mb-2" />
                             <span className="text-[10px] font-black uppercase">Añadir</span>
@@ -534,50 +462,26 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
               {currentStep === 'apk' && (
                 <div className="space-y-6">
-                  <h3 className="text-lg lg:text-xl font-black text-cyan-400 uppercase">Archivo de Instalación</h3>
+                  <h3 className="text-lg lg:text-xl font-black text-cyan-400 uppercase">Enlace de Descarga APK</h3>
                   
-                  <div className="p-8 lg:p-12 border-2 border-dashed border-white/10 rounded-2xl lg:rounded-[3rem] bg-white/[0.02] flex flex-col items-center justify-center text-center gap-4 lg:gap-6 group hover:border-cyan-500/30 hover:bg-cyan-500/[0.02] transition-all">
-                    {!files.apk ? (
-                      <>
-                        <div className="w-16 h-16 lg:w-24 lg:h-24 bg-white/5 rounded-full flex items-center justify-center text-gray-500 group-hover:text-cyan-400 group-hover:scale-110 transition-all">
-                          <Upload className="w-8 h-8 lg:w-12 lg:h-12" />
-                        </div>
-                        <div>
-                          <p className="text-lg lg:text-xl font-black text-white uppercase tracking-tight">Archivo APK</p>
-                          <p className="text-gray-500 text-[10px] lg:text-sm mt-1">Sube el ejecutable de tu aplicación</p>
-                        </div>
-                        <label className="w-full sm:w-auto px-8 py-3 lg:py-4 bg-white text-black font-black uppercase rounded-xl lg:rounded-2xl cursor-pointer hover:bg-cyan-400 transition-colors text-xs">
-                          SUBIR APK
-                          <input type="file" className="hidden" accept=".apk,application/vnd.android.package-archive" onChange={e => {
-                            if(e.target.files?.[0]) {
-                              handleApkSelect(e.target.files[0]);
-                              e.target.value = '';
-                            }
-                          }} />
-                        </label>
-                      </>
-                    ) : (
-                      <div className="w-full flex items-center gap-4 lg:gap-6 p-4 lg:p-6 bg-white/5 rounded-2xl lg:rounded-[2rem] border border-white/10 animate-in fade-in zoom-in duration-300">
-                        <div className="w-12 h-12 lg:w-20 lg:h-20 bg-orange-500/20 rounded-xl lg:rounded-2xl flex items-center justify-center text-orange-500 shrink-0">
-                          <Package className="w-6 h-6 lg:w-10 lg:h-10" />
-                        </div>
-                        <div className="flex-1 text-left min-w-0">
-                          <h4 className="text-sm lg:text-xl font-black text-white truncate uppercase">{files.apk.name}</h4>
-                          <div className="flex flex-wrap items-center gap-2 lg:gap-4 mt-1 lg:mt-2">
-                             <span className="text-[10px] lg:text-xs font-bold text-gray-500">{apkInfo?.size}</span>
-                             <span className="text-[10px] lg:text-xs font-bold text-green-500 uppercase flex items-center gap-1">
-                               <ShieldCheck className="w-3 h-3" /> OK
-                             </span>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => setFiles(prev => ({ ...prev, apk: null }))}
-                          className="p-3 lg:p-4 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-xl lg:rounded-2xl transition-all"
-                        >
-                          <Trash2 className="w-5 h-5 lg:w-6 lg:h-6" />
-                        </button>
-                      </div>
-                    )}
+                  <div className="p-8 lg:p-12 border-2 border-dashed border-white/10 rounded-2xl lg:rounded-[3rem] bg-white/[0.02] flex flex-col items-center justify-center text-center gap-4 lg:gap-6">
+                    <div className="w-16 h-16 lg:w-24 lg:h-24 bg-white/5 rounded-full flex items-center justify-center text-gray-500">
+                      <Globe className="w-8 h-8 lg:w-12 lg:h-12" />
+                    </div>
+                    <div>
+                      <p className="text-lg lg:text-xl font-black text-white uppercase tracking-tight mb-2">NexusPlay actualmente no almacena APKs directamente.</p>
+                      <p className="text-gray-500 text-[10px] lg:text-sm max-w-lg mx-auto">Debes subir tu APK a un servicio externo (como MediaFire, Mega, Dropbox o Google Drive) y pegar aquí el enlace público de descarga.</p>
+                    </div>
+                    
+                    <div className="w-full max-w-xl mt-4">
+                      <input 
+                        type="url" 
+                        placeholder="https://mega.nz/file/... o https://mediafire.com/..."
+                        className="w-full bg-white/5 border border-white/10 p-4 lg:p-5 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all text-sm lg:text-base text-center"
+                        value={formData.apk_url}
+                        onChange={e => setFormData({...formData, apk_url: e.target.value})}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -586,17 +490,17 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         <Globe className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white uppercase mb-1 tracking-wider">Alojamiento Escalable</p>
-                        <p className="text-[10px] text-gray-500 font-medium">Usamos GitHub Releases para que tus descargas sean rápidas y sin límites en todo el mundo.</p>
+                        <p className="text-xs font-black text-white uppercase mb-1 tracking-wider">Alojamiento Externo</p>
+                        <p className="text-[10px] text-gray-500 font-medium">Recomendamos usar hosting confiable sin límite de descargas para que tu app siempre esté disponible.</p>
                       </div>
                     </div>
                     <div className="p-4 bg-purple-500/5 border border-purple-500/20 rounded-2xl flex gap-4">
                       <div className="shrink-0 w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400">
-                        <Sparkles className="w-5 h-5" />
+                        <ShieldCheck className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white uppercase mb-1 tracking-wider">Análisis Inteligente</p>
-                        <p className="text-[10px] text-gray-500 font-medium">Nuestro backend procesa el APK en fragmentos seguros de 20MB para garantizar una subida robusta.</p>
+                        <p className="text-xs font-black text-white uppercase mb-1 tracking-wider">Verificación de URL</p>
+                        <p className="text-[10px] text-gray-500 font-medium">Asegúrate de que el enlace proporcionado sea público y no requiera cuenta para descargar.</p>
                       </div>
                     </div>
                   </div>
@@ -706,8 +610,10 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                                  <p className="text-[10px] lg:text-sm font-black text-white leading-none tracking-tight">{formData.version}</p>
                                </div>
                                <div className="px-3 lg:px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase mb-0.5">Size</p>
-                                 <p className="text-[10px] lg:text-sm font-black text-white leading-none tracking-tight">{apkInfo?.size || '0 MB'}</p>
+                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase mb-0.5">Link</p>
+                                 <p className="text-[10px] lg:text-sm font-black text-cyan-400 leading-none tracking-tight flex items-center gap-1">
+                                   <Globe className="w-3 h-3" /> Externo
+                                 </p>
                                </div>
                                <div className="px-3 lg:px-4 py-2 bg-white/5 rounded-xl border border-white/5">
                                  <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase mb-0.5">Min</p>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Download, ShieldCheck, Share2, Info, CheckCircle2, AlertTriangle, MonitorPlay, Heart, History, User, Send, ThumbsUp, X } from 'lucide-react';
+import { ArrowLeft, Star, Download, ShieldCheck, Share2, Info, CheckCircle2, AlertTriangle, MonitorPlay, Heart, History, User, Send, ThumbsUp, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppItem } from '../../types';
 import AppGrid from '../AppGrid';
@@ -349,7 +349,7 @@ export function AppDetailView({
                 </div>
                 <div className="space-y-1">
                   <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Req. Min</span>
-                  <p className="text-white font-bold text-lg">{app.compatibility || 'Android 8.0'}</p>
+                  <p className="text-white font-bold text-lg">{app.min_android || 'Android 8.0'}</p>
                 </div>
                 <div className="space-y-1">
                   <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Contenido</span>
@@ -392,6 +392,38 @@ export function AppDetailView({
             {/* Public Review */}
             <div className="premium-card p-8 space-y-6">
               <h3 className="text-xl font-black text-white italic">Opiniones Reales</h3>
+              
+              {userId && !hasReviewed && (
+                <div className="space-y-4 p-5 bg-black/40 rounded-2xl border border-white/5 mb-6">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-bold text-slate-300">Deja tu reseña:</p>
+                    <div className="flex gap-1 cursor-pointer">
+                      {[1,2,3,4,5].map(s => (
+                        <Star 
+                          key={s} 
+                          onClick={() => setNewRating(s)}
+                          className={`w-5 h-5 transition-transform hover:scale-110 ${newRating >= s ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <textarea 
+                    value={newReview}
+                    onChange={(e) => setNewReview(e.target.value)}
+                    placeholder="¿Qué te pareció esta app?"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-nexus-cyan transition-colors resize-none"
+                    rows={2}
+                  />
+                  <button 
+                    onClick={submitReview}
+                    disabled={!newReview.trim()}
+                    className="w-full py-2.5 bg-nexus-cyan text-black font-black text-xs uppercase rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" /> Enviar Opinión
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
                 {reviews.map(rev => (
                   <div key={rev.id} className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
@@ -402,10 +434,17 @@ export function AppDetailView({
                         </div>
                         <span className="font-bold text-sm text-white">{rev.user_name}</span>
                       </div>
-                      <div className="flex gap-0.5">
-                        {[1,2,3,4,5].map(s => (
-                          <Star key={s} className={`w-3 h-3 ${rev.rating >= s ? 'text-yellow-400 fill-yellow-400' : 'text-slate-700'}`} />
-                        ))}
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-0.5">
+                          {[1,2,3,4,5].map(s => (
+                            <Star key={s} className={`w-3 h-3 ${rev.rating >= s ? 'text-yellow-400 fill-yellow-400' : 'text-slate-700'}`} />
+                          ))}
+                        </div>
+                        {userId === rev.user_id && (
+                          <button onClick={() => deleteReview(rev.id)} className="text-slate-500 hover:text-red-500">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                     <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">{rev.comment}</p>

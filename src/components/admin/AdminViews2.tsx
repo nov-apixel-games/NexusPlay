@@ -147,8 +147,9 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
     try {
       const publicId = `logos/nexus_logo_${Date.now()}`;
       const result = await uploadToCloudinary(file, publicId);
-      if (result && result.url) {
-        const newSettings = { ...localSettings, logoUrl: result.url };
+      if (result && (result.secure_url || result.url)) {
+        const urlToUse = result.secure_url || result.url;
+        const newSettings = { ...localSettings, logoUrl: urlToUse };
         setLocalSettings(newSettings);
         setSettings(newSettings); // Auto save the image to affect global state
         addToast('Logo actualizado correctamente', 'success');

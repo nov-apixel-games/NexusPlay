@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Package, Upload, Users, Settings, LogOut, 
-  ChevronRight, ArrowRight, Star, Download, Sparkles, ShieldCheck,
+  ChevronRight, ArrowRight, ArrowLeft, Star, Download, Sparkles, ShieldCheck,
   AlertCircle, MessageSquare, Activity, Plus, Smartphone, Globe,
   RefreshCw, Trash2, Edit, ExternalLink, Search, Filter, Check, Menu, X as CloseIcon
 } from 'lucide-react';
@@ -177,8 +177,14 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
          ) : (
            <>
               {/* Top Bar */}
-              <div className="h-20 shrink-0 border-b border-white/5 flex items-center justify-between px-6 lg:px-12 bg-black/20">
-                <div className="flex items-center gap-4">
+              <div className="h-20 shrink-0 border-b border-white/5 flex items-center justify-between px-4 lg:px-12 bg-black/20">
+                <div className="flex items-center gap-3 lg:gap-4">
+                  <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl hidden lg:flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                     <ArrowLeft className="w-6 h-6" />
+                  </button>
+                  <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl lg:hidden flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                     <ArrowLeft className="w-6 h-6" />
+                  </button>
                   <button onClick={() => setIsSidebarOpen(true)} className="p-2 lg:hidden hover:bg-white/5 rounded-xl">
                     <Menu className="w-6 h-6 text-white" />
                   </button>

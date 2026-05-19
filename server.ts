@@ -7,31 +7,11 @@ import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 import multer from "multer";
 import { createClient } from "@supabase/supabase-js";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 
-// Cloudflare R2 Configuration
-const R2_ACCOUNT_ID = (process.env.CLOUDFLARE_ACCOUNT_ID || '39ab12ebf72be930b4a0d6c7440c8054').trim();
-const R2_ACCESS_KEY_ID = (process.env.R2_ACCESS_KEY_ID || '').trim();
-const R2_SECRET_ACCESS_KEY = (process.env.R2_SECRET_ACCESS_KEY || '').trim();
-const R2_BUCKET_NAME = (process.env.R2_BUCKET_NAME || '').trim();
-const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || 'https://pub-6be90dd8331c48729d89adc7052f0229.r2.dev').trim();
-
-let s3Client: S3Client | null = null;
-if (R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY) {
-  s3Client = new S3Client({
-    region: "auto",
-    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: R2_ACCESS_KEY_ID,
-      secretAccessKey: R2_SECRET_ACCESS_KEY,
-    },
-    forcePathStyle: true,
-  });
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Supabase Configuration Helper
 let supabaseClient: any = null;
@@ -106,15 +86,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit for APKs
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 } // 2GB limit for APKs
 });
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json({ limit: '500mb' }));
-  app.use(express.urlencoded({ limit: '500mb', extended: true }));
+  app.use(express.json({ limit: '2000mb' }));
+  app.use(express.urlencoded({ limit: '2000mb', extended: true }));
 
   // Helper for Cloudinary Signature
   app.get("/api/cloudinary-signature", (req, res) => {
@@ -149,104 +129,7 @@ async function startServer() {
     }
   });
 
-  // NEW: HANDLE CLOUDFLARE R2 ASSET UPLOAD via PRESIGNED URL
-  app.post("/api/upload-apk-presigned", async (req, res) => {
-    try {
-      const { app_name, version, contentType = "application/octet-stream" } = req.body;
-
-      if (!s3Client || !R2_BUCKET_NAME) {
-        return res.status(500).json({ success: false, error: "Cloudflare R2 no está configurado en el servidor" });
-      }
-
-      console.log(`[Backend] Generating presigned URL para: ${app_name} v${version} con type: ${contentType}`);
-
-      const cleanAppName = (app_name || 'app').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const finalFileName = `${cleanAppName}_v${version}_${Date.now()}.apk`;
-      
-      const command = new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: finalFileName,
-        ContentType: contentType,
-      });
-
-      const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-
-      
-      // Generate Public URL for when it's done
-      const publicUrl = R2_PUBLIC_URL 
-        ? `${R2_PUBLIC_URL.replace(/\/$/, '')}/${finalFileName}`
-        : `https://${R2_BUCKET_NAME}.${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${finalFileName}`;
-
-      return res.json({
-        success: true,
-        presigned_url: presignedUrl,
-        public_url: publicUrl,
-        file_name: finalFileName
-      });
-    } catch (error: any) {
-      console.error("[Backend] Error generando presigned URL:", error);
-      res.status(500).json({ success: false, error: error.message || "Error interno" });
-    }
-  });
-
-  // OLD: HANDLE CLOUDFLARE R2 ASSET UPLOAD (direct passing)
-  app.post("/api/upload-apk-r2", upload.single('apk'), async (req, res) => {
-    try {
-      const { app_name, version } = req.body;
-      const file = req.file;
-
-      if (!file) {
-        return res.status(400).json({ success: false, error: "No se recibió el archivo APK" });
-      }
-
-      if (!s3Client || !R2_BUCKET_NAME) {
-        return res.status(500).json({ success: false, error: "Cloudflare R2 no está configurado en el servidor" });
-      }
-
-      console.log(`[Backend] APK recibido (${file.size} bytes). Subiendo a Cloudflare R2...`);
-
-      const cleanAppName = app_name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const finalFileName = `${cleanAppName}_v${version}_${Date.now()}.apk`;
-      
-      const fileStream = fs.createReadStream(file.path);
-
-      const command = new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: finalFileName,
-        Body: fileStream,
-        ContentType: "application/vnd.android.package-archive",
-      });
-
-      await s3Client.send(command);
-
-      // Cleanup
-      try {
-        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      } catch (e) {
-        console.error("[Backend] Warning: could not delete temp file", e);
-      }
-
-      // Generate Public URL
-      const publicUrl = R2_PUBLIC_URL 
-        ? `${R2_PUBLIC_URL.replace(/\/$/, '')}/${finalFileName}`
-        : `https://${R2_BUCKET_NAME}.${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${finalFileName}`;
-
-      console.log(`[Backend] Subida a R2 completada: ${publicUrl}`);
-      return res.json({
-        success: true,
-        apk_url: publicUrl,
-      });
-    } catch (error: any) {
-      if (req.file && fs.existsSync(req.file.path)) {
-        try { fs.unlinkSync(req.file.path); } catch(e){}
-      }
-      console.error("[Backend] Error subiendo APK a R2:", error);
-      res.status(500).json({ success: false, error: error.message || "Error interno subiendo el APK a R2" });
-    }
-  });
-
   console.log("[Backend] Verificando variables de entorno...");
-  console.log(`[Backend] R2_ACCOUNT_ID: ${R2_ACCOUNT_ID ? 'Configurado' : 'No configurado'}`);
   console.log(`[Backend] SUPABASE_URL: ${(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) ? 'Configurado' : 'No configurado'}`);
   console.log(`[Backend] CLOUDINARY_API_KEY: ${process.env.CLOUDINARY_API_KEY ? 'Configurado' : 'No configurado'}`);
 
@@ -294,7 +177,6 @@ async function startServer() {
           app_name,
           company_name,
           description,
-          full_description,
           developer_id,
           icon_url,
           icon_public_id,
@@ -304,10 +186,7 @@ async function startServer() {
           size: size || "Desconocido",
           version,
           category,
-          status: 'published',
-          changelog: whats_new,
-          compatibility: min_android,
-          tags: tags || []
+          status: 'pending'
         }])
         .select()
         .single();
@@ -320,6 +199,47 @@ async function startServer() {
     } catch (error: any) {
       console.error("[Backend] Error en registro final:", error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API Route: Nexus AI Chat Assistant
+  app.post("/api/nexus-ai", async (req, res) => {
+    try {
+      const { prompt, history, catalogue } = req.body;
+      
+      const systemInstruction = `Eres Nexus AI, el asistente inteligente y experto de la tienda de aplicaciones "NexusPlay".
+Tu objetivo es recomendar aplicaciones reales del catálogo actual (provisto abajo), crear "packs" temáticos de apps, dar consejos para optimizar celulares (Android) y proponer retos o "misiones" que los usuarios puedan hacer usando apps.
+
+IMPORTANTE: 
+1. Responde SIEMPRE con formato natural, amigable, usando Markdown, emojis y estilo moderno. No suenes robótico.
+2. NUNCA recomiendes apps que no estén en el catálogo provisto.
+3. Si el usuario te da detalles de su dispositivo (ej: "tengo 2GB RAM"), tenlo en cuenta para recomendar apps ligeras.
+4. Responde a lo que pide: si pide un pack, presenta el "Pack", apps incluidas, por qué elegidas. Si pide misión, dale pasos claros.
+5. AL FINAL de tu respuesta, SIEMPRE DEBES incluir un bloque de código JSON, envuelto con \`\`\`json y \`\`\`, que contenga únicamente un array de stings con los IDs exactos de las aplicaciones que recomendaste a lo largo del mensaje. Ejemplo: \`\`\`json\n["app-id-1", "app-id-2"]\n\`\`\` (si no recomiendas ninguna, devuelve \`\`\`json\n[]\n\`\`\`).
+
+Catálogo actual de aplicaciones disponibles en NexusPlay:
+${JSON.stringify(catalogue, null, 2)}
+`;
+
+      const contents = (history || []).map((h: any) => ({
+        role: h.role, // 'user' or 'model'
+        parts: [{ text: h.text }]
+      }));
+      contents.push({ role: 'user', parts: [{ text: prompt }] });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.7
+        }
+      });
+      
+      res.json({ success: true, text: response.text });
+    } catch (error: any) {
+      console.error("[Nexus AI Error]", error);
+      res.status(500).json({ error: error.message || "Error al procesar la recomendación de IA" });
     }
   });
 

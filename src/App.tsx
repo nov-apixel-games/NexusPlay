@@ -23,6 +23,7 @@ import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditions
 import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
 import { AppDetailView } from './components/views/AppDetailView';
 import { SettingsView } from './components/views/SettingsView';
+import NexusHub from './components/NexusHub';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 
@@ -394,92 +395,9 @@ export default function App() {
     }
   };
 
-  const handleAddApp = async (newApp: AppItem) => {
-    if (!session?.user) {
-      addToast('Debes iniciar sesión para publicar.', 'error');
-      return;
-    }
-    
-    try {
-      console.log("Intentando publicar app:", newApp.name);
-      
-      // ASEGURAR PERFIL ANTES DE PUBLICAR (SOLUCIÓN DEFINITIVA 23503)
-      try {
-        const uId = session.user.id;
-        const uEmail = session.user.email || '';
-        
-        console.log("Verificando integridad de perfil en DB para:", uId);
-        
-        const suffix = uId.substring(0, 4);
-        const base = (uEmail.split('@')[0] || 'User').substring(0, 15);
-        const finalRole = (uEmail === 'elmenorjn@gmail.com') ? 'admin' : (userProfile?.role || 'developer');
-
-        // Intentar asegurar el perfil con reintento simple
-        const { error: syncErr } = await supabase.from('profiles').upsert({
-          id: uId,
-          username: `${base}_${suffix}`,
-          email: uEmail,
-          role: finalRole
-        }, { onConflict: 'id' });
-        
-        if (syncErr) {
-          console.error("Fallo crítico de registro de perfil:", syncErr);
-          
-          if (syncErr.code === '42501') {
-            addToast("⚠️ ERROR DE PRIVACIDAD: Supabase bloquea el registro. SOLUCIÓN: Ve a SQL Editor y ejecuta: ALTER TABLE profiles DISABLE ROW LEVEL SECURITY; ALTER TABLE apps DISABLE ROW LEVEL SECURITY; ALTER TABLE stats DISABLE ROW LEVEL SECURITY;", "error");
-          } else {
-            addToast(`Error de Vínculo (${syncErr.code}): ${syncErr.message}`, "error");
-          }
-        }
-        
-        console.log("Perfil asegurado correctamente con rol:", finalRole);
-      } catch (err) {
-        console.warn("Error no controlado en orquestación de perfil:", err);
-      }
-
-      const appData: any = {
-        developer_id: session.user.id,
-        app_name: newApp.name,
-        company_name: newApp.developer || userProfile?.username || 'Indie Dev',
-        description: newApp.description || '',
-        category: newApp.category || 'Juegos',
-        size: newApp.size || 'Desconocido',
-        version: newApp.version || '1.0.0',
-        icon_url: newApp.icon,
-        icon_public_id: newApp.iconPublicId,
-        screenshots: newApp.screenshots || [],
-        screenshots_public_ids: newApp.screenshotsPublicIds || [],
-        download_url: newApp.downloadUrl || '',
-        status: 'published',
-        rating: 5.0,
-        downloads: '0',
-        price: 'Gratis',
-        featured: false
-      };
-
-      console.log("Datos a insertar en apps:", appData);
-      const { data, error } = await supabase.from('apps').insert([appData]).select();
-
-      if (error) {
-        console.error("Error Detallado Supabase (apps insert):", error);
-        let msg = `Error (${error.code}): ${error.message}`;
-        
-        if (error.code === '42501') {
-          msg = 'Error de Seguridad: No tienes permisos de escritura (RLS).';
-        } else if (error.code === '23503') {
-          msg = 'Error de Referencia: Tu cuenta no está vinculada correctamente. Intenta cerrar sesión y volver a entrar.';
-        }
-        
-        addToast(msg, 'error');
-      } else {
-        console.log("App publicada con éxito:", data);
-        addToast('¡Aplicación lanzada con éxito!', 'success');
-        fetchApps(); // Refrescar lista
-      }
-    } catch (err: any) {
-      console.error("Error inesperado en handleAddApp:", err);
-      addToast('Error inesperado: ' + err.message, 'error');
-    }
+  const handleAddApp = async () => {
+    addToast('¡Aplicación lanzada con éxito y en espera de revisión!', 'success');
+    fetchApps();
   };
 
   useEffect(() => {
@@ -538,6 +456,8 @@ export default function App() {
         return <RankingView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'search':
         return <SearchView apps={publishedApps} onAppClick={handleAppClick} onBack={() => setActiveView('home')} initialQuery={searchQuery} />;
+      case 'nexus-hub':
+        return <NexusHub session={session} userProfile={userProfile} onBack={() => setActiveView('home')} />;
       case 'admin-panel':
         return (
            <AdminPanel 
@@ -614,7 +534,7 @@ export default function App() {
     }
   };
 
-  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search';
+  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search' || activeView === 'nexus-hub';
 
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
@@ -712,7 +632,7 @@ export default function App() {
         />
       )}
 
-      {!showAuthModal && activeView !== 'nexus-ai' && activeView !== 'admin-panel' && (
+      {!showAuthModal && activeView !== 'nexus-ai' && activeView !== 'admin-panel' && activeView !== 'nexus-hub' && (
         <BottomNav activeView={activeView} onNavigate={handleAction} />
       )}
     </div>

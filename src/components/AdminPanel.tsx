@@ -97,7 +97,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   const updateSiteSettings = async (updates: Partial<typeof siteSettings>) => {
     try {
-      // Guardar local antes
+      // Guardar local antes para visualización reactiva
       if (updates.maintenance_mode !== undefined) {
         localStorage.setItem('nexus_maintenance', updates.maintenance_mode.toString());
       }
@@ -106,24 +106,19 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
         window.dispatchEvent(new CustomEvent('nexusLogoUpdated', { detail: updates.logo_url }));
       }
 
-      // Intentar actualizar la fila 1 (siendo el ID único de configuración)
+      // Intentar actualizar la fila 1 en Supabase
       const { error } = await supabase.from('site_settings').upsert({ id: 1, ...siteSettings, ...updates });
       if (!error) {
         setSiteSettings(prev => ({ ...prev, ...updates }));
-        addLog('SISTEMA', 'Configuración', 'Ajustes globales actualizados en Supabase', 'success');
+        addLog('SISTEMA', 'Configuración', 'Ajustes globales actualizados permanentemente en DB', 'success');
+        addToast('Configuración guardada en Base de Datos correctamente', 'success');
       } else {
         throw error;
       }
     } catch (e: any) {
-      addLog('SISTEMA', 'Configuración', `Error al guardar en Supabase: ${e.message}. Se usará persistencia local.`, 'error');
+      addLog('SISTEMA', 'Configuración', `Error DB al guardar settings: ${e.message}`, 'error');
+      addToast(`Error DB: La configuración solo se guardó localmente. Por favor revisa la base de datos: ${e.message}`, 'error');
       setSiteSettings(prev => ({ ...prev, ...updates }));
-      if (updates.maintenance_mode !== undefined) {
-        localStorage.setItem('nexus_maintenance', updates.maintenance_mode.toString());
-      }
-      if (updates.logo_url !== undefined) {
-        localStorage.setItem('nexus_web_logo', updates.logo_url);
-        window.dispatchEvent(new CustomEvent('nexusLogoUpdated', { detail: updates.logo_url }));
-      }
     }
   };
 
