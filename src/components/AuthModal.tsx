@@ -39,6 +39,63 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
     setShowConfirmPassword(false);
   }, [isLogin]);
 
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      console.log("[Google Auth] Iniciando signInWithOAuth...");
+      // Forzar popup-based OAuth si estamos en iframe
+      const redirectUrl = `${window.location.origin}/`;
+      const { data, error: oauthErr } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true // Nos da la URL para manejar popup de forma segura
+        }
+      });
+
+      if (oauthErr) throw oauthErr;
+      if (!data?.url) throw new Error("No se pudo obtener la URL de autenticación de Google de Supabase.");
+
+      console.log("[Google Auth] URL obtenida:", data.url);
+      
+      // Abrir en popup para evitar problemas de compatibilidad en iframes (ej: X-Frame-Options: SAMEORIGIN)
+      const popupWidth = 600;
+      const popupHeight = 700;
+      const left = window.screen.width / 2 - popupWidth / 2;
+      const top = window.screen.height / 2 - popupHeight / 2;
+      
+      const popup = window.open(
+        data.url, 
+        'nexus_google_oauth', 
+        `width=${popupWidth},height=${popupHeight},top=${top},left=${left},scrollbars=yes,resizable=yes`
+      );
+
+      if (!popup) {
+        throw new Error("El navegador bloqueó la ventana emergente de inicio de sesión de Google. Por favor, habilita las ventanas de emergentes en tu navegador.");
+      }
+      
+      // Mostrar mensaje de que se abrió la ventana
+      setSuccessMsg("Se ha abierto una ventana emergente para iniciar sesión con tu cuenta de Google.");
+      
+      // Monitorear si se cerró sin completar
+      const checkPopupClosed = setInterval(() => {
+        if (!popup || popup.closed) {
+          clearInterval(checkPopupClosed);
+          setLoading(false);
+          // El listener de message en App.tsx cerrará la sesión de carga si el login es exitoso
+        }
+      }, 1000);
+
+    } catch (err: any) {
+      console.error("Google Auth Exception:", err);
+      console.error("Formato completo del error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      setError(`Error al iniciar sesión con Google: ${err.message || err.error_description || 'Ocurrió un error inesperado.'}`);
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLogin && !termsAccepted) {
@@ -325,6 +382,28 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Entrar a Nexus' : 'Completar Registro')}
             </button>
           </form>
+
+          {/* Botón de Google Oauth */}
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/5"></div>
+            </div>
+            <span className="relative bg-[#090b14] px-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+              O CONTINUAR CON
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full h-12 bg-white hover:bg-neutral-100 text-[#090b14] font-extrabold uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_-5px_rgba(255,255,255,0.25)] border border-white/10 active:scale-[0.98]"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.24 10.285V14.4h6.887C18.2 16.56 15.645 18 12.24 18 8.445 18 5.385 15.3 5.385 12c0-3.3 3.06-6 6.855-6 1.8 0 3.465.72 4.68 1.89l3.24-3.24C18.24 2.835 15.42 1.8 12.24 1.8 6.57 1.8 1.8 6.57 1.8 12.24s4.77 10.44 10.44 10.44c6.3 0 10.71-4.275 10.71-10.44 0-.765-.09-1.35-.225-1.95H12.24z"/>
+            </svg>
+            Continuar con Google
+          </button>
 
           <div className="mt-8 pt-6 border-t border-white/5 text-center">
             <button 

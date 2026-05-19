@@ -129,6 +129,22 @@ async function startServer() {
     }
   });
 
+  // End point para obtener la configuración de Supabase real de forma dinámica
+  app.get("/api/supabase-config", (req, res) => {
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://qs5r4evrhseujp5dxofq.supabase.co';
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_hiLuwfxZawX0zhzWwutviw_RXecYoNL';
+      console.log(`[Backend API] Serviendo supabaseUrl=${supabaseUrl.slice(0, 30)}...`);
+      res.json({
+        supabaseUrl,
+        supabaseAnonKey
+      });
+    } catch (error: any) {
+      console.error("[Backend API Error] No se pudo leer configuración de Supabase", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   console.log("[Backend] Verificando variables de entorno...");
   console.log(`[Backend] SUPABASE_URL: ${(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) ? 'Configurado' : 'No configurado'}`);
   console.log(`[Backend] CLOUDINARY_API_KEY: ${process.env.CLOUDINARY_API_KEY ? 'Configurado' : 'No configurado'}`);

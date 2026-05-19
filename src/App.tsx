@@ -24,7 +24,7 @@ import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, Events
 import { AppDetailView } from './components/views/AppDetailView';
 import { SettingsView } from './components/views/SettingsView';
 import NexusHub from './components/NexusHub';
-import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { supabase, isSupabaseConfigured, initializeClientDynamic } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 
 export const DEFAULT_SETTINGS = {
@@ -34,6 +34,7 @@ export const DEFAULT_SETTINGS = {
 };
 
 export default function App() {
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('home');
   const [viewHistory, setViewHistory] = useState<string[]>(['home']);
@@ -56,10 +57,14 @@ export default function App() {
     try {
       const { data, error } = await supabase.from('site_settings').select('*').single();
       if (!error && data) {
-        if (data.platform_name) setPlatformName(data.platform_name);
+        if (data.platform_name) {
+          setPlatformName(data.platform_name);
+          document.title = data.platform_name;
+        }
         if (data.logo_url) setWebLogo(data.logo_url);
         if (data.maintenance_mode !== undefined) setMaintenanceMode(data.maintenance_mode);
       } else {
+        document.title = 'NexusPlay';
         const localLogo = localStorage.getItem('nexus_web_logo');
         if (localLogo) setWebLogo(localLogo);
         const localMaintenance = localStorage.getItem('nexus_maintenance_mode') === 'true';
@@ -67,6 +72,7 @@ export default function App() {
       }
     } catch (e) {
       console.warn("Settings fetch failed");
+      document.title = 'NexusPlay';
     }
   };
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
@@ -136,10 +142,37 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchSiteSettings();
+    // Si somos el popup de callback de Google OAuth
+    if (window.opener && (window.location.hash.includes('access_token') || window.location.hash.includes('error') || window.location.search.includes('code'))) {
+      console.log("[OAuth Callback Popup] Detectado token en la URL, avisando a la ventana principal...");
+      try {
+        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+        setTimeout(() => {
+          window.close();
+        }, 800);
+      } catch (err) {
+        console.error("Error al notificar al opener:", err);
+      }
+    }
   }, []);
 
   useEffect(() => {
+    const runInit = async () => {
+      try {
+        await initializeClientDynamic();
+        await fetchSiteSettings();
+      } catch (err) {
+        console.error("Initialization error:", err);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+    runInit();
+  }, []);
+
+  useEffect(() => {
+    if (isInitializing) return;
+
     // Aplicar logo web y favicon
     if (webLogo) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
@@ -156,9 +189,31 @@ export default function App() {
     };
     window.addEventListener('nexusLogoUpdated', handleLogoUpdate);
 
+    // Escuchador de eventos de postMessage para recibir el éxito de Google Login (OAuth) desde el popup
+    const handleOAuthSuccess = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.endsWith('.vercel.app')) {
+        return;
+      }
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        console.log("[App.tsx] Google OAuth éxito notificado desde popup!");
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setSession(session);
+          if (session?.user) {
+            fetchUserProfile(session.user.id, session.user.email);
+            addToast('¡Inicio de sesión con Google exitoso!', 'success');
+          }
+        });
+      }
+    };
+    window.addEventListener('message', handleOAuthSuccess);
+
     if (!isSupabaseConfigured) {
       addToast('Faltan configurar variables de entorno de Supabase.', 'error');
-      return () => window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
+      return () => {
+        window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
+        window.removeEventListener('message', handleOAuthSuccess);
+      };
     }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -200,8 +255,9 @@ export default function App() {
       subscription.unsubscribe();
       supabase.removeChannel(appsSubscription);
       window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
+      window.removeEventListener('message', handleOAuthSuccess);
     };
-  }, [webLogo]);
+  }, [webLogo, isInitializing]);
 
   const fetchUserProfile = async (userId: string, email?: string) => {
     try {
@@ -221,15 +277,23 @@ export default function App() {
         console.log("Perfil no existe en DB. Creando...");
         const role = finalEmail === 'elmenorjn@gmail.com' ? 'admin' : 'user';
         const uniqueSuffix = userId.substring(0, 4);
+        
+        // Obtener metadatos de Google u otros si están disponibles
+        const userMetadata = session?.user?.user_metadata || {};
+        const metaName = userMetadata?.full_name || userMetadata?.name || '';
+        const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture || null;
+
         // Truncar username para evitar errores de longitud (máx 20 caracteres por seguridad)
-        const baseName = (finalEmail.split('@')[0] || 'User').substring(0, 15);
+        const baseName = (metaName || finalEmail.split('@')[0] || 'User').replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
         const username = `${baseName}_${uniqueSuffix}`;
         
         const { data: created, error: insErr } = await supabase.from('profiles').insert({
           id: userId,
           email: finalEmail,
           role,
-          username
+          username,
+          real_name: metaName || null,
+          avatar_url: metaAvatar || null
         }).select().single();
 
         if (!insErr && created) {
@@ -237,7 +301,7 @@ export default function App() {
         } else {
           console.error("No se pudo persistir el perfil:", insErr);
           // Fallback local
-          setUserProfile({ id: userId, email: finalEmail, role, username });
+          setUserProfile({ id: userId, email: finalEmail, role, username, real_name: metaName || null, avatar_url: metaAvatar || null });
         }
       } else {
         // Asegurar admin por email si es necesario
@@ -245,7 +309,28 @@ export default function App() {
           const { data: updated } = await supabase.from('profiles').update({ role: 'admin' }).eq('id', userId).select().single();
           setUserProfile(updated || { ...data, role: 'admin' });
         } else {
-          setUserProfile(data);
+          // Si tiene datos nuevos de Google y no están seteados, actualizarlos opcionalmente
+          const userMetadata = session?.user?.user_metadata || {};
+          const metaName = userMetadata?.full_name || userMetadata?.name;
+          const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture;
+          
+          let needsUpdate = false;
+          const updates: any = {};
+          if (metaName && !data.real_name) {
+            updates.real_name = metaName;
+            needsUpdate = true;
+          }
+          if (metaAvatar && !data.avatar_url) {
+            updates.avatar_url = metaAvatar;
+            needsUpdate = true;
+          }
+
+          if (needsUpdate) {
+            const { data: updated } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
+            setUserProfile(updated || { ...data, ...updates });
+          } else {
+            setUserProfile(data);
+          }
         }
         
         if (data.role === 'admin' || data.email === 'elmenorjn@gmail.com') {
