@@ -653,7 +653,12 @@ export default function App() {
           </div>
           <h1 className="text-2xl font-black mb-2 uppercase tracking-tight text-white">Supabase no configurado</h1>
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-            La aplicación no se ha podido conectar a Supabase. Configura <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_URL</code> y <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_ANON_KEY</code> con credenciales válidas en tu panel.
+            La aplicación no se ha podido conectar a Supabase. 
+            <br/><br/>
+            Si estás en <strong>Vercel</strong>, debes ir a la configuración de tu proyecto: <br/>
+            <span className="text-white">Settings &gt; Environment Variables</span><br/>
+            y añadir <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_URL</code> y <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_ANON_KEY</code>.
+            Luego, vuelve a hacer un deploy (Redeploy).
           </p>
         </div>
       </div>
