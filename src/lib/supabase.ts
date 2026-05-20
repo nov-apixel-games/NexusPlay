@@ -1,39 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Usar de manera segura todas las posibles fuentes de variables
-const envUrl = 
-  import.meta.env.VITE_SUPABASE_URL || 
-  (typeof process !== 'undefined' ? (process.env as any)?.VITE_SUPABASE_URL : undefined) ||
-  (typeof process !== 'undefined' ? (process.env as any)?.NEXT_PUBLIC_SUPABASE_URL : undefined);
+// Get from Vite env vars at build time
+const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-const envKey = 
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  (typeof process !== 'undefined' ? (process.env as any)?.VITE_SUPABASE_ANON_KEY : undefined) ||
-  (typeof process !== 'undefined' ? (process.env as any)?.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined);
+const dummyUrl = 'https://unconfigured-placeholder.supabase.co';
+const dummyKey = 'unconfigured-placeholder-anon-key';
 
-const fallbackUrl = 'https://qs5r4evrhseujp5dxofq.supabase.co';
-const fallbackKey = 'sb_publishable_hiLuwfxZawX0zhzWwutviw_RXecYoNL';
+let supabaseUrl = envUrl || dummyUrl;
+let supabaseAnonKey = envKey || dummyKey;
 
-let supabaseUrl = envUrl || fallbackUrl;
-let supabaseAnonKey = envKey || fallbackKey;
-
-// Limpiar placeholders del tipo 'your_...'
-if (supabaseUrl && supabaseUrl.includes('your_')) {
-  supabaseUrl = fallbackUrl;
-}
-if (supabaseAnonKey && supabaseAnonKey.includes('your_')) {
-  supabaseAnonKey = fallbackKey;
-}
+// Check if valid URL (no fallbacks or placeholders)
+export const isSupabaseConfigured = Boolean(
+  envUrl && 
+  envUrl.trim() !== '' &&
+  envUrl !== dummyUrl && 
+  !envUrl.includes('your_') && 
+  !envUrl.includes('qs5r4evrhseujp5dxofq.supabase.co') &&
+  envKey && 
+  envKey.trim() !== '' &&
+  envKey !== dummyKey && 
+  !envKey.includes('your_')
+);
 
 console.log("=== SUPABASE INIT AUDIT ===");
-console.log("VITE_SUPABASE_URL:", envUrl ? "PRESENT" : "MISSING (using fallback/default)");
-console.log("Final URL used for init:", supabaseUrl);
+console.log("VITE_SUPABASE_URL present:", Boolean(envUrl && envUrl.trim() !== ''));
+console.log("URL:", isSupabaseConfigured ? supabaseUrl : 'INVALID/MISSING');
+console.log("Is Configured:", isSupabaseConfigured);
 console.log("===========================");
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
-
-// Definimos como let para poder re-inicializar dinámicamente si falta en el bundle del cliente
-export let supabase = createClient(
+export const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
   {
@@ -49,54 +45,4 @@ export let supabase = createClient(
     }
   }
 );
-
-// Función para inicializar dinámicamente con los valores reales del backend en producción
-export async function initializeClientDynamic() {
-  try {
-    console.log("[Supabase dynamic] Intentando leer la configuración real del servidor...");
-    const res = await fetch('/api/supabase-config');
-    if (res.ok) {
-      const data = await res.json();
-      if (data.supabaseUrl && data.supabaseAnonKey) {
-        // Ignorar placeholders
-        const cleanUrl = data.supabaseUrl;
-        const cleanKey = data.supabaseAnonKey;
-        
-        if (cleanUrl && !cleanUrl.includes('your_') && cleanKey && !cleanKey.includes('your_')) {
-          if (cleanUrl !== supabaseUrl || cleanKey !== supabaseAnonKey) {
-            console.log("[Supabase dynamic] Re-inicializando cliente de Supabase con los secretos de servidores:", cleanUrl);
-            supabaseUrl = cleanUrl;
-            supabaseAnonKey = cleanKey;
-            
-            supabase = createClient(
-              supabaseUrl,
-              supabaseAnonKey,
-              {
-                auth: {
-                  persistSession: true,
-                  autoRefreshToken: true,
-                  detectSessionInUrl: true,
-                },
-                global: {
-                  headers: {
-                    'x-client-info': 'nexus-hub-audit-dynamic'
-                  }
-                }
-              }
-            );
-          } else {
-            console.log("[Supabase dynamic] La configuración actual ya coincide con la del servidor.");
-          }
-        }
-      }
-    } else {
-      console.warn("[Supabase dynamic] El endpoint /api/supabase-config devolvió un error:", res.status);
-    }
-  } catch (err: any) {
-    console.error("[Supabase dynamic] Error crítico al autodetectar configuración de producción:", err);
-    console.error("Detalle del error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-  }
-}
-
-console.log("supabase initialized");
 

@@ -24,7 +24,7 @@ import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, Events
 import { AppDetailView } from './components/views/AppDetailView';
 import { SettingsView } from './components/views/SettingsView';
 import NexusHub from './components/NexusHub';
-import { supabase, isSupabaseConfigured, initializeClientDynamic } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 
 export const DEFAULT_SETTINGS = {
@@ -159,8 +159,11 @@ export default function App() {
   useEffect(() => {
     const runInit = async () => {
       try {
-        await initializeClientDynamic();
-        await fetchSiteSettings();
+        if (isSupabaseConfigured) {
+          await fetchSiteSettings();
+        } else {
+          document.title = 'NexusPlay';
+        }
       } catch (err) {
         console.error("Initialization error:", err);
       } finally {
@@ -168,7 +171,7 @@ export default function App() {
       }
     };
     runInit();
-  }, []);
+  }, [isSupabaseConfigured]);
 
   useEffect(() => {
     if (isInitializing) return;
@@ -192,7 +195,7 @@ export default function App() {
     // Escuchador de eventos de postMessage para recibir el éxito de Google Login (OAuth) desde el popup
     const handleOAuthSuccess = (event: MessageEvent) => {
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.endsWith('.vercel.app')) {
+      if (origin !== window.location.origin) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
@@ -201,6 +204,7 @@ export default function App() {
           setSession(session);
           if (session?.user) {
             fetchUserProfile(session.user.id, session.user.email);
+            setShowAuthModal(false);
             addToast('¡Inicio de sesión con Google exitoso!', 'success');
           }
         });
@@ -261,7 +265,9 @@ export default function App() {
 
   const fetchUserProfile = async (userId: string, email?: string) => {
     try {
-      const finalEmail = email || session?.user?.email || '';
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      const currentSession = freshSession || session;
+      const finalEmail = email || currentSession?.user?.email || '';
       console.log("Intentando cargar perfil:", userId);
 
       // 1. Intentar obtener perfil existente
@@ -273,19 +279,20 @@ export default function App() {
         return;
       }
 
+      const userMetadata = currentSession?.user?.user_metadata || {};
+      const metaName = userMetadata?.full_name || userMetadata?.name || '';
+      const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture || null;
+
       if (!data) {
         console.log("Perfil no existe en DB. Creando...");
         const role = finalEmail === 'elmenorjn@gmail.com' ? 'admin' : 'user';
         const uniqueSuffix = userId.substring(0, 4);
-        
-        // Obtener metadatos de Google u otros si están disponibles
-        const userMetadata = session?.user?.user_metadata || {};
-        const metaName = userMetadata?.full_name || userMetadata?.name || '';
-        const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture || null;
 
         // Truncar username para evitar errores de longitud (máx 20 caracteres por seguridad)
-        const baseName = (metaName || finalEmail.split('@')[0] || 'User').replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
-        const username = `${baseName}_${uniqueSuffix}`;
+        const baseName = (metaName || finalEmail.split('@')[0] || 'User')
+          .replace(/[^a-zA-Z0-9]/g, '')
+          .substring(0, 15);
+        const username = `${baseName || 'User'}_${uniqueSuffix}`;
         
         const { data: created, error: insErr } = await supabase.from('profiles').insert({
           id: userId,
@@ -310,10 +317,6 @@ export default function App() {
           setUserProfile(updated || { ...data, role: 'admin' });
         } else {
           // Si tiene datos nuevos de Google y no están seteados, actualizarlos opcionalmente
-          const userMetadata = session?.user?.user_metadata || {};
-          const metaName = userMetadata?.full_name || userMetadata?.name;
-          const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture;
-          
           let needsUpdate = false;
           const updates: any = {};
           if (metaName && !data.real_name) {
@@ -620,6 +623,42 @@ export default function App() {
   };
 
   const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search' || activeView === 'nexus-hub';
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-[#090b14] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center">
+          {/* Pulsing and spinning neon loader */}
+          <div className="relative w-20 h-20 mb-6">
+            <div className="absolute inset-0 border-4 border-cyan-500/10 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+            <div className="absolute top-2 left-2 right-2 bottom-2 border-4 border-emerald-500/10 rounded-full"></div>
+            <div className="absolute top-2 left-2 right-2 bottom-2 border-4 border-b-emerald-400 border-t-transparent border-r-transparent border-l-transparent rounded-full animate-spin [animation-direction:reverse] [animation-duration:1.5s]"></div>
+          </div>
+          <h2 className="text-sm font-bold tracking-widest text-cyan-400/85 animate-pulse uppercase">Cargando NexusPlay</h2>
+          <p className="text-[10px] text-gray-500 mt-2 font-mono uppercase tracking-widest">Sincronizando servicios</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen bg-[#090b14] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md bg-white/5 border border-white/10 p-8 rounded-2xl shadow-2xl backdrop-blur-md">
+          <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20 animate-bounce">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black mb-2 uppercase tracking-tight text-white">Supabase no configurado</h1>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            La aplicación no se ha podido conectar a Supabase. Configura <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_URL</code> y <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_ANON_KEY</code> con credenciales válidas en tu panel.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">

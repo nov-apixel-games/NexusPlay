@@ -17,11 +17,11 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 let supabaseClient: any = null;
 function getSupabase() {
   if (!supabaseClient) {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://qs5r4evrhseujp5dxofq.supabase.co';
-    let supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_hiLuwfxZawX0zhzWwutviw_RXecYoNL';
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+    let supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
     
     if (supabaseServiceKey.includes('your_')) {
-      supabaseServiceKey = 'sb_publishable_hiLuwfxZawX0zhzWwutviw_RXecYoNL';
+      supabaseServiceKey = '';
     }
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -132,9 +132,9 @@ async function startServer() {
   // End point para obtener la configuración de Supabase real de forma dinámica
   app.get("/api/supabase-config", (req, res) => {
     try {
-      const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://qs5r4evrhseujp5dxofq.supabase.co';
-      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_hiLuwfxZawX0zhzWwutviw_RXecYoNL';
-      console.log(`[Backend API] Serviendo supabaseUrl=${supabaseUrl.slice(0, 30)}...`);
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+      console.log(`[Backend API] Serviendo supabaseUrl=${supabaseUrl ? supabaseUrl.slice(0, 30) + "..." : "VACIO"}`);
       res.json({
         supabaseUrl,
         supabaseAnonKey
