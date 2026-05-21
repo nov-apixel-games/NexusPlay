@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageSquare, Users, Plus, Hash, Settings, MoreVertical, 
   Trash2, X, Send, Pin, Shield, AlertTriangle, UserMinus, Search, Menu, ChevronLeft, Image as ImageIcon,
-  Activity, Clock, Smile, Volume2, Lock
+  Activity, Clock, Smile, Volume2, Lock, Bot
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
@@ -590,6 +590,27 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
       } else if (data && data.length > 0) {
         const realMsg = data[0];
         setMessages(prev => prev.map(m => m.id === tempId ? { ...realMsg, profiles: userProfile } : m));
+        
+        // AI Integration
+        if (textContent.startsWith('!ia ')) {
+           setTimeout(async () => {
+              const aiResponses = [
+                 "¡Hola! Soy Nexus AI. Estoy aquí para ayudarte a descubrir contenido, recomendar apps y moderar la comunidad.",
+                 "Esa es una gran pregunta. ¿Sabías que puedes crear tus propias apps usando nuestra plataforma?",
+                 "¡Excelente tema de conversación! Te sugiero visitar el canal #media para compartir capturas.",
+                 "NexusPlay está evolucionando. Mantente atento para más novedades sobre juegos y herramientas.",
+                 "He detectado que te gusta este tema. ¡Prueba algunas de las nuevas web apps disponibles!"
+              ];
+              const randomRes = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+              const aiMessage = `[NEXUS AI] ${randomRes}`;
+              
+              await supabase.from('messages').insert([{
+                 community_id: community.id,
+                 user_id: session.user.id, // we use the same user, but format [NEXUS AI] will render it as bot
+                 content: serializeMessageContent(aiMessage, activeChannel, null),
+              }]);
+           }, 1500);
+        }
       }
     } catch (err: any) {
       console.error("Error INSERT message:", err);
@@ -965,7 +986,13 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
              {filteredMessages.map((msg, index) => {
                 const parsed = parseMessageContent(msg.content);
                 const isOwn = msg.user_id === session.user.id;
-                const showAvatar = index === 0 || filteredMessages[index-1].user_id !== msg.user_id;
+                const isAI = parsed.text?.startsWith('[NEXUS AI]');
+                const displayText = isAI ? parsed.text.replace('[NEXUS AI]', '').trim() : parsed.text;
+                
+                // Si es un mensaje falso de IA, fingimos que no es propio para que salga a la izquierda, salvo que estemos enviando un debug real
+                const renderAsOwn = isOwn && !isAI; 
+                
+                const showAvatar = index === 0 || filteredMessages[index-1].user_id !== msg.user_id || isAI !== (parseMessageContent(filteredMessages[index-1].content).text?.startsWith('[NEXUS AI]'));
                 const msgReactions = getRenderReactions(msg.id);
 
                 return (
@@ -974,23 +1001,30 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
                     key={msg.id} 
-                    className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-full group`}
+                    className={`flex flex-col ${renderAsOwn ? 'items-end' : 'items-start'} max-w-full group`}
                   >
-                     <div className={`flex items-end gap-3 max-w-[85%] sm:max-w-[75%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                     <div className={`flex items-end gap-3 max-w-[85%] sm:max-w-[75%] ${renderAsOwn ? 'flex-row-reverse' : 'flex-row'}`}>
                         
                         {/* Beautiful Square Avatar */}
-                        <div className={`w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-xs font-black shadow-lg select-none ${isOwn ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-white'} ${showAvatar ? 'visible scale-100' : 'invisible scale-0'} transition-transform duration-250`} style={{ overflow: 'hidden' }}>
-                          {msg.profiles?.avatar_url ? (
+                        <div className={`w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-xs font-black shadow-lg select-none transition-transform duration-250
+                          ${isAI ? 'bg-gradient-to-tr from-[#9c27b0] to-[#E040FB] text-white shadow-[0_0_15px_rgba(224,64,251,0.4)]' : (renderAsOwn ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-white')} 
+                          ${showAvatar ? 'visible scale-100' : 'invisible scale-0'}`} style={{ overflow: 'hidden' }}>
+                          {isAI ? (
+                            <Bot className="w-5 h-5" />
+                          ) : msg.profiles?.avatar_url ? (
                             <img src={msg.profiles.avatar_url} className="w-full h-full object-cover" />
                           ) : (msg.profiles?.username?.[0]?.toUpperCase() || '?')}
                         </div>
                         
-                        <div className="flex flex-col relative w-full items-start">
+                        <div className={`flex flex-col relative w-full ${renderAsOwn ? 'items-end' : 'items-start'}`}>
                            {/* Author detail info */}
-                           {showAvatar && !isOwn && (
+                           {showAvatar && !renderAsOwn && (
                              <span className="text-[11px] font-bold text-gray-400 ml-1 mb-1 tracking-wide flex items-center gap-1.5">
-                               {msg.profiles?.username}
-                               {msg.profiles?.role === 'admin' && (
+                               {isAI ? 'Nexus AI' : msg.profiles?.username}
+                               {isAI && (
+                                 <span className="px-1.5 py-0.5 bg-[#E040FB]/10 border border-[#E040FB]/30 text-[#E040FB] rounded text-[8px] font-black tracking-widest uppercase">BOT</span>
+                               )}
+                               {!isAI && msg.profiles?.role === 'admin' && (
                                  <span className="px-1.5 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[8px] font-black tracking-widest uppercase">ADMIN</span>
                                )}
                              </span>
@@ -999,10 +1033,12 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                            {/* Inline bubble block */}
                            <div className="relative">
                               <div className={`
-                                px-4 py-3 rounded-2xl text-[14px] leading-relaxed break-words whitespace-pre-wrap min-w-[50px] shadow-lg
-                                ${isOwn 
-                                  ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-br-sm shadow-blue-900/10' 
-                                  : 'bg-[#121422] text-gray-200 border border-white/5 rounded-bl-sm'}
+                                px-4 py-3 rounded-2xl text-[14px] leading-relaxed break-words whitespace-pre-wrap min-w-[50px] shadow-lg transition-all
+                                ${isAI 
+                                  ? 'bg-gradient-to-br from-[#1c0d24] to-[#2c1338] text-gray-100 border border-[#E040FB]/30 rounded-bl-sm shadow-[0_4px_20px_rgba(224,64,251,0.1)]' 
+                                  : (renderAsOwn 
+                                     ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-br-sm shadow-blue-900/10' 
+                                     : 'bg-[#121422] text-gray-200 border border-white/5 rounded-bl-sm')}
                                 ${msg.temp_id ? 'opacity-55 animate-pulse' : 'opacity-100'}
                               `}>
                                  {msg.deleted ? (
@@ -1024,7 +1060,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                                          </div>
                                        )}
                                        {/* Text paragraph */}
-                                       {parsed.text && <p className="text-sm font-medium tracking-wide">{parsed.text}</p>}
+                                       {displayText && <p className="text-sm font-medium tracking-wide">{displayText}</p>}
                                     </div>
                                  )}
                               </div>
@@ -1032,7 +1068,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                               {/* Hover Options Menu with React emoji buttons */}
                               {!msg.deleted && (
                                 <div className={`
-                                  absolute top-1/2 -translate-y-1/2 ${isOwn ? 'right-full mr-2' : 'left-full ml-2'} 
+                                  absolute top-1/2 -translate-y-1/2 ${renderAsOwn ? 'right-full mr-2' : 'left-full ml-2'} 
                                   opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-[#151822] shadow-2xl rounded-full border border-white/10 p-1 z-30 gap-1
                                 `}>
                                    {/* Quick Reactions Shortcuts */}

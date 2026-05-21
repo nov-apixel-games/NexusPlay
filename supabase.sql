@@ -342,17 +342,18 @@ CREATE POLICY "Users can leave" ON public.community_members FOR DELETE USING (au
 
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Community members can read messages" ON public.messages;
-CREATE POLICY "Community members can read messages" ON public.messages FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.community_members WHERE community_id = messages.community_id AND user_id = auth.uid()) OR public.is_admin(auth.uid())
-);
+CREATE POLICY "Community members can read messages" ON public.messages FOR SELECT USING (true);
+
 DROP POLICY IF EXISTS "Members can insert messages" ON public.messages;
-CREATE POLICY "Members can insert messages" ON public.messages FOR INSERT WITH CHECK (auth.uid() = user_id AND EXISTS(SELECT 1 FROM public.community_members WHERE community_id = messages.community_id AND user_id = auth.uid()));
+CREATE POLICY "Members can insert messages" ON public.messages FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Author or admin can delete messages" ON public.messages;
 CREATE POLICY "Author or admin can delete messages" ON public.messages FOR DELETE USING (
   auth.uid() = user_id 
   OR public.is_admin(auth.uid()) 
   OR EXISTS(SELECT 1 FROM public.communities WHERE id = messages.community_id AND creator_id = auth.uid())
 );
+
 DROP POLICY IF EXISTS "Author or admin can update messages" ON public.messages;
 CREATE POLICY "Author or admin can update messages" ON public.messages FOR UPDATE USING (
   auth.uid() = user_id 
