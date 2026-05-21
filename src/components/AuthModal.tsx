@@ -46,20 +46,56 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
     try {
       console.log("[Google Auth] Iniciando signInWithOAuth...");
       
-      // Dominio principal real (Vercel) para Google OAuth
+      // Forzar popup-based OAuth si estamos en iframe o Vercel
       const redirectUrl = `https://nexus-play-uy.vercel.app/`;
       
-      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
+      const { data, error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true // Nos da la URL para manejar popup de forma segura
         }
       });
 
       if (oauthErr) throw oauthErr;
+      if (!data?.url) throw new Error("No se pudo obtener la URL de autenticación de Google de Supabase.");
+
+      console.log("[Google Auth] URL obtenida:", data.url);
       
-      // Mostrar mensaje mientras redirige el navegador a Google
-      setSuccessMsg("Redirigiendo a Google para iniciar sesión...");
+      // Abrir en popup para evitar problemas de compatibilidad (ej: X-Frame-Options o redirecciones 403)
+      const popupWidth = 600;
+      const popupHeight = 700;
+      const left = window.screen.width / 2 - popupWidth / 2;
+      const top = window.screen.height / 2 - popupHeight / 2;
+      
+      const popup = window.open(
+        data.url, 
+        'nexus_google_oauth', 
+        `width=${popupWidth},height=${popupHeight},top=${top},left=${left},scrollbars=yes,resizable=yes`
+      );
+
+      if (!popup) {
+        throw new Error("El navegador bloqueó la ventana emergente de inicio de sesión de Google. Por favor, habilita las ventanas emergentes en tu navegador.");
+      }
+      
+      // Mostrar mensaje de que se abrió la ventana
+      setSuccessMsg("Se ha abierto una ventana emergente para iniciar sesión con tu cuenta de Google.");
+      
+      // Monitorear si se cerró sin completar o si se completó
+      const checkPopupClosed = setInterval(async () => {
+        if (!popup || popup.closed) {
+          clearInterval(checkPopupClosed);
+          setLoading(false);
+          // Verificar si al cerrarse dejó una sesión
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+             setSuccessMsg("Autenticación completada con éxito.");
+             setTimeout(() => {
+                window.location.reload();
+             }, 500);
+          }
+        }
+      }, 1000);
 
     } catch (err: any) {
       console.error("Google Auth Exception:", err);
