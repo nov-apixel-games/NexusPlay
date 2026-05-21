@@ -20,7 +20,8 @@ const getMenuItems = (isAdmin: boolean) => [
     { label: 'Ranking Global', icon: Trophy, id: 'ranking' },
     { label: 'Nexus Hub', icon: Users, id: 'nexus-hub' },
     { label: 'Colecciones', icon: PlusSquare, id: 'collections' },
-    { label: 'Eventos & Logros', icon: Zap, id: 'events' },
+    { label: 'Misiones & XP', icon: Zap, id: 'achievements' },
+    { label: 'Novedades', icon: Compass, id: 'events' },
     { label: 'Juegos', icon: Gamepad2, id: 'games' },
   ]},
   { label: 'Cuenta', items: [

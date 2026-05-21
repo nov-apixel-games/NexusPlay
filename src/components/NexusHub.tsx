@@ -457,7 +457,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
         const msg = payload.new as any;
         
         if (payload.eventType === 'INSERT') {
-          supabase.from('messages').select('*, profiles:user_id(*)').eq('id', msg.id).single()
+          supabase.from('messages').select('*, profiles(*)').eq('id', msg.id).single()
             .then(({ data }) => {
               if (data && mounted) {
                 setMessages(prev => {
@@ -523,7 +523,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
-      .select('*, profiles:user_id(*)')
+      .select('*, profiles(*)')
       .eq('community_id', community.id)
       .order('created_at', { ascending: true })
       .limit(150);
