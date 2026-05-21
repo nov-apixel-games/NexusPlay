@@ -132,6 +132,21 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   onLoginClick?: () => void,
   onDeveloperAction?: (action: 'activate' | 'open') => void 
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [username, setUsername] = useState('');
+  const [realName, setRealName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (userProfile) {
+      setUsername(userProfile.username || session?.user?.email?.split('@')[0] || 'Usuario');
+      setRealName(userProfile.real_name || '');
+      setAvatarUrl(userProfile.avatar_url || '');
+    }
+  }, [userProfile, session]);
+
   if (!session) {
     return (
       <div className="pt-24 px-6 max-w-3xl mx-auto pb-16 flex flex-col items-center text-center space-y-6">
@@ -150,32 +165,109 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
     );
   }
 
-  const username = userProfile?.username || session.user?.email?.split('@')[0] || 'Usuario';
   const email = session.user?.email || '';
   const isAdmin = userProfile?.role === 'admin';
   const isDeveloper = userProfile?.role === 'developer' || isAdmin;
   const initial = username.charAt(0).toUpperCase();
 
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      // Validar username
+      if (username.length < 3) throw new Error("El nombre de usuario debe tener al menos 3 caracteres");
+      
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update({
+           username: username.replace(/[^a-zA-Z0-9_]/g, ''),
+           real_name: realName,
+           avatar_url: avatarUrl
+        })
+        .eq('id', session.user.id);
+        
+      if (updateErr) {
+        if (updateErr.code === '23505') throw new Error("Este nombre de usuario ya está en uso. Escribe otro distinto.");
+        throw updateErr;
+      }
+      
+      setIsEditing(false);
+      window.location.reload();
+    } catch(err: any) {
+      setError(err.message || 'Error al guardar el perfil.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="pt-24 px-6 max-w-3xl mx-auto pb-16 space-y-8">
       <div className="glass-panel p-8 rounded-3xl border-white/5 flex flex-col sm:flex-row items-center gap-6">
-        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 p-1">
-          <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-3xl font-black">{initial}</div>
-        </div>
-        <div className="text-center sm:text-left flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-            <h1 className="text-2xl font-black">{username}</h1>
-            <div className="flex gap-2">
-              <div className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-bold border border-green-500/20 uppercase">Verificado</div>
-              {isAdmin && (
-                <div className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold border border-amber-500/20 uppercase">Admin</div>
-              )}
-              {isDeveloper && !isAdmin && (
-                <div className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20 uppercase">Dev</div>
-              )}
-            </div>
+        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 p-1 flex-shrink-0">
+          <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-3xl font-black overflow-hidden relative group">
+             {avatarUrl ? (
+               <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+             ) : (
+               <span>{initial}</span>
+             )}
           </div>
-          <p className="text-gray-400 text-sm mb-4">{email}</p>
+        </div>
+        
+        <div className="text-center sm:text-left flex-1 min-w-0">
+          {!isEditing ? (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                <h1 className="text-2xl font-black truncate">{username}</h1>
+                <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+                  <div className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-bold border border-green-500/20 uppercase">Verificado</div>
+                  {isAdmin && (
+                    <div className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold border border-amber-500/20 uppercase">Admin</div>
+                  )}
+                  {isDeveloper && !isAdmin && (
+                    <div className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20 uppercase">Dev</div>
+                  )}
+                </div>
+              </div>
+              {realName && <p className="text-gray-300 font-medium mb-1 truncate">{realName}</p>}
+              <p className="text-gray-400 text-sm mb-4 truncate">{email}</p>
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors inline-block"
+              >
+                Editar Perfil
+              </button>
+            </>
+          ) : (
+            <div className="space-y-4 w-full">
+               {error && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm font-medium">{error}</div>}
+               <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre de Usuario (Único)</label>
+                  <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-cyan-500" placeholder="usuario_123" />
+               </div>
+               <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre Visible</label>
+                  <input type="text" value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-cyan-500" placeholder="Tu Nombre Real" />
+               </div>
+               <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">URL de Avatar (Opcional)</label>
+                  <input type="url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-cyan-500" placeholder="https://..." />
+               </div>
+               <div className="flex gap-2 pt-2">
+                  <button onClick={handleSaveProfile} disabled={saving} className="px-5 py-2 bg-cyan-500 text-black font-bold rounded-xl hover:bg-cyan-400 disabled:opacity-50 transition-colors">
+                    {saving ? 'Guardando...' : 'Guardar Cambios'}
+                  </button>
+                  <button onClick={() => {
+                    setIsEditing(false);
+                    setError(null);
+                    setUsername(userProfile?.username || '');
+                    setRealName(userProfile?.real_name || '');
+                    setAvatarUrl(userProfile?.avatar_url || '');
+                  }} disabled={saving} className="px-5 py-2 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors">
+                    Cancelar
+                  </button>
+               </div>
+            </div>
+          )}
         </div>
       </div>
 

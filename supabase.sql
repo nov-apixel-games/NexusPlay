@@ -164,12 +164,58 @@ ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 -- To allow our auth to insert a new profile when user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS trigger AS $$
+DECLARE
+  base_username TEXT;
+  new_username TEXT;
 BEGIN
-  INSERT INTO public.profiles (id, username, real_name, email, role)
-  VALUES (new.id, new.raw_user_meta_data->>'username', new.raw_user_meta_data->>'real_name', new.email, 'user');
+  -- 1. Intentar obtener el 'username' desde la metadata
+  base_username := COALESCE(
+    new.raw_user_meta_data->>'username', 
+    new.raw_user_meta_data->>'preferred_username',
+    split_part(new.email, '@', 1)
+  );
+
+  -- 2. Si sigue vacío, poner 'user'
+  IF base_username IS NULL OR base_username = '' THEN
+    base_username := 'user';
+  END IF;
+
+  -- 3. Limpiar caracteres especiales para evitar errores
+  base_username := regexp_replace(lower(base_username), '[^a-z0-9_]', '', 'g');
+
+  -- 4. Agregar sufijo aleatorio para asegurar que sea único
+  new_username := base_username || '_' || substr(md5(random()::text), 1, 5);
+
+  -- 5. Insertar el perfil
+  BEGIN
+    INSERT INTO public.profiles (id, username, real_name, email, role, avatar_url)
+    VALUES (
+      new.id, 
+      new_username, 
+      COALESCE(
+        new.raw_user_meta_data->>'real_name', 
+        new.raw_user_meta_data->>'full_name', 
+        new.raw_user_meta_data->>'name', 
+        ''
+      ), 
+      new.email, 
+      'user',
+      new.raw_user_meta_data->>'avatar_url'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    -- Ignorar error para permitir que el registro de auth continúe
+    RAISE LOG 'Error saving profile %: %', new.id, SQLERRM;
+  END;
+  
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger execution
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- Create reviews table
 CREATE TABLE IF NOT EXISTS public.reviews (

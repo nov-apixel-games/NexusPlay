@@ -91,7 +91,14 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
     } catch (err: any) {
       console.error("Google Auth Exception:", err);
       console.error("Formato completo del error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-      setError(`Error al iniciar sesión con Google: ${err.message || err.error_description || 'Ocurrió un error inesperado.'}`);
+      
+      let errorMsg = `Error al iniciar sesión con Google: ${err.message || err.error_description || 'Ocurrió un error inesperado.'}`;
+      
+      if (err.message?.includes('provider is not enabled') || err.message?.includes('not supported')) {
+        errorMsg = "Google Auth no está configurado en Supabase (Authentication > Providers > Google). Actívalo con tu Client ID y Client Secret.";
+      }
+      
+      setError(errorMsg);
       setLoading(false);
     }
   };
@@ -122,37 +129,25 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
         const { data, error: signUpError } = await supabase.auth.signUp({ 
           email, 
           password,
+          options: {
+            data: {
+              username: username,
+              real_name: realName,
+              // role no se pasa por seguridad, el trigger asume 'user'
+            }
+          }
         });
 
         if (signUpError) {
           if (signUpError.message.includes('User already registered')) {
             throw new Error('Este correo ya está registrado.');
           }
+          if (signUpError.message.includes('Database error saving new user')) {
+            throw new Error("Error en la Base de Datos. Por favor, ve al panel de Supabase > SQL Editor y ejecuta el contenido del archivo 'supabase.sql' que acabo de actualizar. Esto reparará la tabla profiles y el trigger para nuevos registros.");
+          }
           throw signUpError;
         }
 
-        if (data.user) {
-          // Crear perfil automáticamente
-          const roleVal = email === 'elmenorjn@gmail.com' ? 'admin' : 'user';
-          const newProfile = {
-            id: data.user.id,
-            email: email,
-            username: username,
-            real_name: realName,
-            role: roleVal,
-            created_at: new Date().toISOString()
-          };
-
-          const { error: profileError } = await supabase.from('profiles').insert([newProfile]);
-          if (profileError) {
-            if (profileError.code === '23505') { // unique violation
-               console.warn("Username probably taken, but auth account created.");
-            } else {
-               console.error("Error al crear perfil:", profileError);
-            }
-          }
-        }
-        
         setSuccessMsg('Cuenta creada correctamente.');
         
         // Simular inicio de sesión exitoso si el email no requiere confirmación
