@@ -45,48 +45,21 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
     setSuccessMsg(null);
     try {
       console.log("[Google Auth] Iniciando signInWithOAuth...");
-      // Forzar popup-based OAuth si estamos en iframe
-      const redirectUrl = `${window.location.origin}/`;
-      const { data, error: oauthErr } = await supabase.auth.signInWithOAuth({
+      
+      // Dominio principal real (Vercel) para Google OAuth
+      const redirectUrl = `https://nexus-play-uy.vercel.app/`;
+      
+      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true // Nos da la URL para manejar popup de forma segura
+          redirectTo: redirectUrl
         }
       });
 
       if (oauthErr) throw oauthErr;
-      if (!data?.url) throw new Error("No se pudo obtener la URL de autenticación de Google de Supabase.");
-
-      console.log("[Google Auth] URL obtenida:", data.url);
       
-      // Abrir en popup para evitar problemas de compatibilidad en iframes (ej: X-Frame-Options: SAMEORIGIN)
-      const popupWidth = 600;
-      const popupHeight = 700;
-      const left = window.screen.width / 2 - popupWidth / 2;
-      const top = window.screen.height / 2 - popupHeight / 2;
-      
-      const popup = window.open(
-        data.url, 
-        'nexus_google_oauth', 
-        `width=${popupWidth},height=${popupHeight},top=${top},left=${left},scrollbars=yes,resizable=yes`
-      );
-
-      if (!popup) {
-        throw new Error("El navegador bloqueó la ventana emergente de inicio de sesión de Google. Por favor, habilita las ventanas de emergentes en tu navegador.");
-      }
-      
-      // Mostrar mensaje de que se abrió la ventana
-      setSuccessMsg("Se ha abierto una ventana emergente para iniciar sesión con tu cuenta de Google.");
-      
-      // Monitorear si se cerró sin completar
-      const checkPopupClosed = setInterval(() => {
-        if (!popup || popup.closed) {
-          clearInterval(checkPopupClosed);
-          setLoading(false);
-          // El listener de message en App.tsx cerrará la sesión de carga si el login es exitoso
-        }
-      }, 1000);
+      // Mostrar mensaje mientras redirige el navegador a Google
+      setSuccessMsg("Redirigiendo a Google para iniciar sesión...");
 
     } catch (err: any) {
       console.error("Google Auth Exception:", err);
