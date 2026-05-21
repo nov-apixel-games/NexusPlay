@@ -144,21 +144,6 @@ export default function App() {
 
 
   useEffect(() => {
-    // Si somos el popup de callback de Google OAuth
-    if (window.opener && (window.location.hash.includes('access_token') || window.location.hash.includes('error') || window.location.search.includes('code'))) {
-      console.log("[OAuth Callback Popup] Detectado token en la URL, avisando a la ventana principal...");
-      try {
-        window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
-        setTimeout(() => {
-          window.close();
-        }, 800);
-      } catch (err) {
-        console.error("Error al notificar al opener:", err);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
     const runInit = async () => {
       try {
         if (isSupabaseConfigured) {
@@ -194,33 +179,10 @@ export default function App() {
     };
     window.addEventListener('nexusLogoUpdated', handleLogoUpdate);
 
-    // Escuchador de eventos de postMessage para recibir el éxito de Google Login (OAuth) desde el popup
-    const handleOAuthSuccess = (event: MessageEvent) => {
-      const origin = event.origin;
-      if (origin !== window.location.origin) {
-        if (!origin.includes('vercel.app')) {
-           return;
-        }
-      }
-      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        console.log("[App.tsx] Google OAuth éxito notificado desde popup!");
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          setSession(session);
-          if (session?.user) {
-            fetchUserProfile(session.user.id, session.user.email);
-            setShowAuthModal(false);
-            addToast('¡Inicio de sesión con Google exitoso!', 'success');
-          }
-        });
-      }
-    };
-    window.addEventListener('message', handleOAuthSuccess);
-
     if (!isSupabaseConfigured) {
       addToast('Faltan configurar variables de entorno de Supabase.', 'error');
       return () => {
         window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
-        window.removeEventListener('message', handleOAuthSuccess);
       };
     }
     
