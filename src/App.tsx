@@ -263,14 +263,15 @@ export default function App() {
           .substring(0, 15);
         const username = `${baseName || 'User'}_${uniqueSuffix}`;
         
-        const { data: created, error: insErr } = await supabase.from('profiles').insert({
+        const { data: created, error: insErr } = await supabase.from('profiles').upsert({
           id: userId,
           email: finalEmail,
           role,
           username,
           real_name: metaName || null,
-          avatar_url: metaAvatar || null
-        }).select().single();
+          avatar_url: metaAvatar || null,
+          created_at: new Date().toISOString()
+        }, { onConflict: 'id' }).select().single();
 
         if (!insErr && created) {
           setUserProfile(created);
