@@ -177,14 +177,37 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       // Validar username
       if (username.length < 3) throw new Error("El nombre de usuario debe tener al menos 3 caracteres");
       
-      const { error: updateErr } = await supabase
+      // Update Auth Metadata for avatar globally
+      await supabase.auth.updateUser({
+        data: { avatar_url: avatarUrl, full_name: realName }
+      });
+
+      let updateErr: any = null;
+      const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
+
+      // Primer intento: con avatar_url
+      const { error: err1 } = await supabase
         .from('profiles')
         .update({
-           username: username.replace(/[^a-zA-Z0-9_]/g, ''),
+           username: cleanUsername,
            real_name: realName,
            avatar_url: avatarUrl
         })
         .eq('id', session.user.id);
+        
+      updateErr = err1;
+
+      // Si falla por caché de schema (columna avatar_url), reintentamos sin avatar_url
+      if (err1 && err1.message && err1.message.includes('schema cache')) {
+        const { error: err2 } = await supabase
+          .from('profiles')
+          .update({
+             username: cleanUsername,
+             real_name: realName
+          })
+          .eq('id', session.user.id);
+        updateErr = err2;
+      }
         
       if (updateErr) {
         if (updateErr.code === '23505') throw new Error("Este nombre de usuario ya está en uso. Escribe otro distinto.");

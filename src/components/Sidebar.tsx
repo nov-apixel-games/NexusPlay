@@ -35,6 +35,8 @@ const getMenuItems = (isAdmin: boolean) => [
 
 export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, onLogout }: SidebarProps) {
   const MENU_ITEMS = getMenuItems(isAdmin);
+  const displayLogo = localStorage.getItem('nexus_web_logo');
+  const platformName = localStorage.getItem('nexus_platform_name') || 'NexusPlay';
 
   return (
     <AnimatePresence>
@@ -57,10 +59,16 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, o
             <div className="p-6 flex flex-col gap-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
-                  <span className="text-gray-200 font-black tracking-wider text-xl uppercase">NexusPlay</span>
+                  {displayLogo ? (
+                     <img src={displayLogo} alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
+                  ) : (
+                     <div className="w-8 h-8 rounded-lg bg-nexus-cyan flex flex-shrink-0 items-center justify-center">
+                        <Gamepad2 className="w-5 h-5 text-black" />
+                     </div>
+                  )}
+                  <span className="text-gray-200 font-black tracking-wider text-xl uppercase truncate">{platformName}</span>
                 </div>
-                <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-full">
+                <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-full shrink-0">
                   <X className="w-5 h-5" />
                 </button>
               </div>

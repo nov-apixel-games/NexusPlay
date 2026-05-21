@@ -171,90 +171,101 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
 
 function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick, isAdmin, onDelete, onBack }: any) {
   return (
-    <div className="flex flex-col h-full w-full relative z-10">
-      <header className="h-16 shrink-0 bg-[#0a0b14]/90 backdrop-blur-md border-b flex items-center justify-between px-4 sticky top-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+    <div className="flex flex-col h-[100dvh] w-full relative z-10 bg-[#06070a]">
+      {/* Background Orbs */}
+      <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] bg-cyan-900/30 rounded-full blur-[100px]" />
+        <div className="absolute top-[40%] -left-[10%] w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[120px]" />
+      </div>
+
+      <header className="h-[72px] shrink-0 bg-[#06070a]/90 backdrop-blur-xl border-b flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-colors shadow-lg">
-            <ChevronLeft className="w-5 h-5 text-gray-300" />
+          <button onClick={onBack} className="w-10 h-10 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-xl flex items-center justify-center transition-all shadow-lg">
+            <ChevronLeft className="w-6 h-6 text-gray-300" />
           </button>
           <div>
-            <h1 className="text-xl font-black text-white italic tracking-tight flex items-center gap-2">
-              <Users className="w-5 h-5 text-cyan-500" />
+            <h1 className="text-xl sm:text-2xl font-black text-white italic tracking-tighter flex items-center gap-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
+              <Users className="w-5 h-5 text-cyan-400" />
               NEXUS HUB
             </h1>
           </div>
         </div>
         <button 
           onClick={onCreateClick}
-          className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm rounded-xl flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(0,229,255,0.2)] active:scale-95"
+          className="px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm rounded-xl flex items-center gap-2 transition-transform shadow-[0_0_20px_rgba(8,145,178,0.3)] active:scale-95"
         >
-          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nueva Comunidad</span>
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Nueva Comunidad</span>
         </button>
       </header>
       
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-[#0a0b14] to-[#050505]">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Explora las Comunidades</h2>
-            <p className="text-gray-400">Únete a debates, comparte ideas y conecta con otros usuarios.</p>
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="mb-8 mt-2">
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tighter">Explorar Servidores</h2>
+            <p className="text-gray-400 font-medium text-sm sm:text-base">Únete a debates, comparte ideas y conecta con jugadores de todo el mundo.</p>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {[1,2,3,4,5,6].map(i => (
-                <div key={i} className="bg-white/5 border border-white/5 rounded-2xl h-48 animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[1,2,3,4,5,6,7,8].map(i => (
+                <div key={i} className="bg-[#121420]/50 border border-white/5 rounded-[28px] h-[320px] animate-pulse"></div>
               ))}
             </div>
           ) : communities.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-black/20 border border-white/5 rounded-3xl mt-12 bg-[url('/grid.svg')]">
-              <Users className="w-24 h-24 text-gray-800 mb-6" />
-              <h3 className="text-2xl font-bold text-white mb-2">Comunidades Vacías</h3>
-              <p className="text-gray-400 text-center max-w-sm mb-8">Nadie ha creado una comunidad todavía. Sé el primero en iniciar un nuevo debate.</p>
+            <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-[#121420]/80 to-[#0A0D14]/80 backdrop-blur-md border border-white/5 rounded-[32px] mt-12 shadow-2xl">
+              <div className="w-24 h-24 bg-cyan-900/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(34,211,238,0.2)]">
+                <Users className="w-12 h-12 text-cyan-400" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2">Comunidades Vacías</h3>
+              <p className="text-gray-400 text-center max-w-sm mb-8 font-medium">Nadie ha creado una comunidad todavía. Sé el primero en iniciar un nuevo debate.</p>
               <button 
                 onClick={onCreateClick}
-                className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 transition-transform"
+                className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 active:scale-95 transition-transform"
               >
                 Crear Mi Comunidad
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {communities.map((c: any) => (
-                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#0f111a] hover:bg-[#151822] cursor-pointer border border-white/5 hover:border-white/10 rounded-3xl overflow-hidden transition-all duration-300 flex flex-col h-[280px]">
+                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#0d0f18]/90 hover:bg-[#151822] backdrop-blur-sm cursor-pointer border border-white/5 hover:border-cyan-500/30 rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col h-[320px] shadow-lg hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] active:scale-[0.98]">
                   
-                  {/* Card Header (Image or pattern) */}
-                  <div className="h-28 w-full bg-gradient-to-br from-cyan-900/40 to-blue-900/20 relative border-b border-white/5 shrink-0 overflow-hidden">
+                  {/* Card Header */}
+                  <div className="h-[140px] w-full bg-gradient-to-b from-[#1a1c29] to-[#0d0f18] relative border-b border-white/5 shrink-0 overflow-hidden">
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.name} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+                      <>
+                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f18] via-[#0d0f18]/40 to-transparent" />
+                      </>
                     ) : (
-                      <div className="absolute inset-0 bg-red-900/30 flex items-center justify-center">
-                         <AlertTriangle className="w-8 h-8 text-red-500 opacity-50" />
+                      <div className="absolute inset-0 bg-red-900/20 flex items-center justify-center">
+                         <AlertTriangle className="w-10 h-10 text-red-500/50" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                       <span className={`w-2 h-2 rounded-full ${c.image_url ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                       <span className="text-[10px] font-bold text-white uppercase tracking-widest">{c.category}</span>
+                    <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
+                       <span className={`w-2 h-2 rounded-full ${c.image_url ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse' : 'bg-red-500'}`}></span>
+                       <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest">{c.category}</span>
                     </div>
                     {(isAdmin || !c.image_url) && (
-                      <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="absolute top-3 right-3 p-2 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-full transition-all border border-red-500/30 shadow-lg">
+                      <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-xl backdrop-blur-md transition-all border border-white/10 shadow-lg relative z-10">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
 
-                  {/* Card Icon Overlap */}
-                  <div className="absolute top-[84px] left-6">
-                    <div className="w-14 h-14 bg-[#0a0b14] border-4 border-[#0f111a] group-hover:border-[#151822] rounded-2xl flex items-center justify-center transition-colors">
+                  {/* Icon Overlap */}
+                  <div className="absolute top-[100px] left-6 z-10">
+                    <div className="w-20 h-20 bg-[#06070a] p-1.5 border border-white/10 group-hover:border-cyan-500/50 rounded-2xl flex items-center justify-center transition-colors shadow-2xl">
                       {c.image_url ? (
-                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover rounded-xl" />
+                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover rounded-[12px]" />
                       ) : (
-                        <AlertTriangle className="w-6 h-6 text-red-500" />
+                        <AlertTriangle className="w-8 h-8 text-red-500" />
                       )}
                     </div>
                   </div>
 
                   {/* Card Content */}
-                  <div className="p-6 pt-10 flex flex-col flex-1 relative">
+                  <div className="p-6 pt-14 flex flex-col flex-1 relative">
                     {!c.image_url ? (
                        <div className="absolute inset-0 bg-[#0f111a]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4 text-center">
                           <AlertTriangle className="w-8 h-8 text-red-500 mb-2" />
@@ -266,12 +277,16 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                        </div>
                     ) : null}
 
-                    <h3 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1">{c.name}</h3>
-                    <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed flex-1">{c.description}</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1 drop-shadow-sm">{c.name}</h3>
+                    <p className="text-[13px] sm:text-sm text-gray-400 line-clamp-2 leading-relaxed flex-1 font-medium">{c.description}</p>
                     
-                    <div className="mt-4 flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                       <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="w-full py-3 bg-white hover:bg-gray-100 text-black font-bold rounded-xl text-sm text-center shadow-lg transition-transform active:scale-95">
-                         Entrar al Chat
+                    <div className="mt-5 border-t border-white/5 pt-4 flex items-center justify-between w-full">
+                       <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400">
+                           <Activity className="w-4 h-4 text-cyan-500" />
+                           ACTIVA
+                       </div>
+                       <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="px-4 py-2 bg-white/10 rounded-xl text-xs sm:text-sm font-bold text-white hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all transform active:scale-95">
+                           Unirse
                        </button>
                     </div>
                     
@@ -435,7 +450,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
         const msg = payload.new as any;
         
         if (payload.eventType === 'INSERT') {
-          supabase.from('messages').select('*, profiles:user_id(username, avatar_url, role)').eq('id', msg.id).single()
+          supabase.from('messages').select('*, profiles:user_id(*)').eq('id', msg.id).single()
             .then(({ data }) => {
               if (data && mounted) {
                 setMessages(prev => {
@@ -501,7 +516,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
-      .select('*, profiles:user_id(username, avatar_url, role)')
+      .select('*, profiles:user_id(*)')
       .eq('community_id', community.id)
       .order('created_at', { ascending: true })
       .limit(150);
@@ -992,7 +1007,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                 // Si es un mensaje falso de IA, fingimos que no es propio para que salga a la izquierda, salvo que estemos enviando un debug real
                 const renderAsOwn = isOwn && !isAI; 
                 
-                const showAvatar = index === 0 || filteredMessages[index-1].user_id !== msg.user_id || isAI !== (parseMessageContent(filteredMessages[index-1].content).text?.startsWith('[NEXUS AI]'));
+                                const showAvatar = index === 0 || filteredMessages[index-1].user_id !== msg.user_id || isAI !== (parseMessageContent(filteredMessages[index-1].content).text?.startsWith('[NEXUS AI]')) || new Date(msg.created_at).getTime() - new Date(filteredMessages[index-1].created_at).getTime() > 5 * 60000;
                 const msgReactions = getRenderReactions(msg.id);
 
                 return (
@@ -1001,127 +1016,127 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
                     key={msg.id} 
-                    className={`flex flex-col ${renderAsOwn ? 'items-end' : 'items-start'} max-w-full group`}
+                    className={`flex flex-col group hover:bg-white/[0.02] -mx-4 px-4 py-1 transition-colors ${showAvatar ? 'mt-4' : 'mt-0.5'}`}
                   >
-                     <div className={`flex items-end gap-3 max-w-[85%] sm:max-w-[75%] ${renderAsOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                     <div className="flex items-start gap-4 max-w-full relative">
                         
-                        {/* Beautiful Square Avatar */}
-                        <div className={`w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-xs font-black shadow-lg select-none transition-transform duration-250
-                          ${isAI ? 'bg-gradient-to-tr from-[#9c27b0] to-[#E040FB] text-white shadow-[0_0_15px_rgba(224,64,251,0.4)]' : (renderAsOwn ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-white')} 
-                          ${showAvatar ? 'visible scale-100' : 'invisible scale-0'}`} style={{ overflow: 'hidden' }}>
-                          {isAI ? (
-                            <Bot className="w-5 h-5" />
-                          ) : msg.profiles?.avatar_url ? (
-                            <img src={msg.profiles.avatar_url} className="w-full h-full object-cover" />
-                          ) : (msg.profiles?.username?.[0]?.toUpperCase() || '?')}
+                        {/* Avatar Column */}
+                        <div className="w-10 flex-shrink-0 flex justify-center">
+                          {showAvatar ? (
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black shadow-lg select-none transition-transform duration-250 cursor-pointer hover:scale-105 active:scale-95
+                              ${isAI ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : (isOwn ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-white')} 
+                            `} style={{ overflow: 'hidden' }}>
+                              {isAI ? (
+                                <Bot className="w-6 h-6" />
+                              ) : msg.profiles?.avatar_url ? (
+                                <img src={msg.profiles.avatar_url} className="w-full h-full object-cover" />
+                              ) : (msg.profiles?.username?.[0]?.toUpperCase() || '?')}
+                            </div>
+                          ) : null}
                         </div>
                         
-                        <div className={`flex flex-col relative w-full ${renderAsOwn ? 'items-end' : 'items-start'}`}>
+                        {/* Message Content Column */}
+                        <div className="flex flex-col relative w-full pt-0.5 min-w-0">
                            {/* Author detail info */}
-                           {showAvatar && !renderAsOwn && (
-                             <span className="text-[11px] font-bold text-gray-400 ml-1 mb-1 tracking-wide flex items-center gap-1.5">
+                           {showAvatar && (
+                             <span className="text-[14px] font-black text-gray-100 flex items-baseline gap-2 mb-0.5">
                                {isAI ? 'Nexus AI' : msg.profiles?.username}
                                {isAI && (
-                                 <span className="px-1.5 py-0.5 bg-[#E040FB]/10 border border-[#E040FB]/30 text-[#E040FB] rounded text-[8px] font-black tracking-widest uppercase">BOT</span>
+                                 <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-[4px] text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
+                                    <Bot className="w-3 h-3" /> BOT
+                                 </span>
                                )}
                                {!isAI && msg.profiles?.role === 'admin' && (
-                                 <span className="px-1.5 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[8px] font-black tracking-widest uppercase">ADMIN</span>
+                                 <span className="px-1.5 py-0.5 bg-red-500/20 text-red-500 rounded-[4px] text-[10px] font-bold tracking-widest uppercase">ADMIN</span>
                                )}
+                               <span className="text-[11px] font-medium text-gray-500 tracking-wide ml-1">
+                                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                               </span>
                              </span>
                            )}
 
-                           {/* Inline bubble block */}
-                           <div className="relative">
-                              <div className={`
-                                px-4 py-3 rounded-2xl text-[14px] leading-relaxed break-words whitespace-pre-wrap min-w-[50px] shadow-lg transition-all
-                                ${isAI 
-                                  ? 'bg-gradient-to-br from-[#1c0d24] to-[#2c1338] text-gray-100 border border-[#E040FB]/30 rounded-bl-sm shadow-[0_4px_20px_rgba(224,64,251,0.1)]' 
-                                  : (renderAsOwn 
-                                     ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-br-sm shadow-blue-900/10' 
-                                     : 'bg-[#121422] text-gray-200 border border-white/5 rounded-bl-sm')}
-                                ${msg.temp_id ? 'opacity-55 animate-pulse' : 'opacity-100'}
-                              `}>
-                                 {msg.deleted ? (
-                                    <span className="italic text-gray-500 flex items-center gap-2 text-xs">
-                                      <AlertTriangle className="w-3.5 h-3.5 text-red-500" /> Mensaje eliminado por moderador
-                                    </span>
-                                 ) : (
-                                    <div className="space-y-2.5">
-                                       {/* Message bubble images rendered inline */}
-                                       {parsed.image_url && (
-                                         <div className="max-w-[280px] sm:max-w-md max-h-[240px] sm:max-h-[320px] rounded-xl overflow-hidden border border-white/10 shadow-inner bg-black cursor-pointer group/img">
-                                            <img 
-                                              src={parsed.image_url} 
-                                              alt="Adjunto" 
-                                              className="w-full h-full object-cover max-h-[320px] hover:scale-102 transition-transform duration-300" 
-                                              referrerPolicy="no-referrer"
-                                              onClick={() => window.open(parsed.image_url || '', '_blank')}
-                                            />
-                                         </div>
-                                       )}
-                                       {/* Text paragraph */}
-                                       {displayText && <p className="text-sm font-medium tracking-wide">{displayText}</p>}
-                                    </div>
-                                 )}
-                              </div>
+                           {/* Inline block */}
+                           <div className={`relative pr-12 lg:pr-20 ${msg.temp_id ? 'opacity-50 animate-pulse' : 'opacity-100'}`}>
+                               {msg.deleted ? (
+                                  <span className="italic text-gray-500 flex items-center gap-2 text-[13px] bg-red-900/10 w-max px-2 py-1 rounded-md">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-red-500" /> Mensaje eliminado por moderador
+                                  </span>
+                               ) : (
+                                  <div className="space-y-2">
+                                     {/* Text paragraph */}
+                                     {displayText && (
+                                        <div className="text-[15px] text-gray-300 leading-[1.6] whitespace-pre-wrap break-words font-normal">
+                                           {displayText}
+                                        </div>
+                                     )}
+                                     {/* Message attachment image */}
+                                     {parsed.image_url && (
+                                       <div className="max-w-[260px] sm:max-w-sm rounded-[16px] overflow-hidden border border-white/5 bg-[#0a0b14] cursor-pointer group/img transition-all hover:border-cyan-500/30 shadow-lg mt-2">
+                                          <img 
+                                            src={parsed.image_url} 
+                                            alt="Adjunto" 
+                                            className="w-full h-auto object-cover max-h-[350px]" 
+                                            referrerPolicy="no-referrer"
+                                            onClick={() => window.open(parsed.image_url || '', '_blank')}
+                                          />
+                                       </div>
+                                     )}
+                                  </div>
+                               )}
 
-                              {/* Hover Options Menu with React emoji buttons */}
-                              {!msg.deleted && (
-                                <div className={`
-                                  absolute top-1/2 -translate-y-1/2 ${renderAsOwn ? 'right-full mr-2' : 'left-full ml-2'} 
-                                  opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-[#151822] shadow-2xl rounded-full border border-white/10 p-1 z-30 gap-1
-                                `}>
-                                   {/* Quick Reactions Shortcuts */}
-                                   {['👍', '❤️', '🔥', '😂'].map(emoji => (
-                                      <button 
-                                        key={emoji}
-                                        onClick={() => handleToggleReaction(msg.id, emoji)}
-                                        className="w-7 h-7 flex items-center justify-center rounded-full text-base hover:bg-white/5 transition-all active:scale-110"
-                                      >
-                                         {emoji}
-                                      </button>
-                                   ))}
-                                   
-                                   {(isOwn || isAdmin) && (
-                                      <button 
-                                        onClick={() => deleteMessage(msg.id)} 
-                                        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-500/20 text-red-400 hover:text-red-500 transition-colors"
-                                        title="Eliminar mensaje"
-                                      >
-                                         <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                   )}
-                                </div>
-                              )}
+                               {/* Hover Options Menu with React emoji buttons */}
+                               {!msg.deleted && (
+                                 <div className={`
+                                   absolute -top-3 right-0
+                                   opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-[#151822] shadow-2xl rounded-lg border border-white/5 px-1 py-0.5 z-30 gap-0.5
+                                 `}>
+                                    {['👍', '❤️', '🔥', '😂'].map(emoji => (
+                                       <button 
+                                         key={emoji}
+                                         onClick={() => handleToggleReaction(msg.id, emoji)}
+                                         className="w-8 h-8 flex items-center justify-center rounded-md text-[15px] hover:bg-white/5 transition-all active:scale-95"
+                                       >
+                                          {emoji}
+                                       </button>
+                                    ))}
+                                    
+                                    {(isOwn || isAdmin) && (
+                                       <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
+                                    )}
+                                    {(isOwn || isAdmin) && (
+                                       <button 
+                                         onClick={() => deleteMessage(msg.id)} 
+                                         className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors"
+                                         title="Eliminar mensaje"
+                                       >
+                                          <Trash2 className="w-4 h-4" />
+                                       </button>
+                                    )}
+                                 </div>
+                               )}
                            </div>
 
                            {/* Rendered custom reactions below message */}
                            {msgReactions.length > 0 && (
-                             <div className="flex flex-wrap gap-1 mt-1.5">
+                             <div className="flex flex-wrap gap-1.5 mt-2">
                                 {msgReactions.map(([emoji, meta]: any) => (
                                    <button
                                      key={emoji}
                                      onClick={() => handleToggleReaction(msg.id, emoji)}
                                      className={`
-                                       px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95
+                                       px-2 py-1 rounded-[8px] text-[13px] font-bold flex items-center gap-1.5 transition-all active:scale-95 border
                                        ${meta.active 
-                                         ? 'bg-cyan-500/25 border border-cyan-500/50 text-cyan-300' 
-                                         : 'bg-[#151822]/75 border border-white/5 text-gray-400 hover:border-white/10 hover:text-white'}
+                                         ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300' 
+                                         : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-gray-200'}
                                      `}
                                    >
                                       <span>{emoji}</span>
-                                      <span className="text-[10px]">{meta.count}</span>
+                                      <span className="text-[11px] font-black">{meta.count}</span>
                                    </button>
                                 ))}
                              </div>
                            )}
-
-                           {/* Message timestamp info */}
-                           <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1.5 ml-1">
-                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                           </span>
                         </div>
-
                      </div>
                   </motion.div>
                 );
@@ -1130,23 +1145,24 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
           </main>
 
           {/* Message attachment & Send input form */}
-          <div className="p-3 sm:p-5 bg-[#0a0b14] border-t border-white/5 shrink-0 z-20 pb-safe">
-             <div className="max-w-4xl mx-auto">
+          <div className="p-3 sm:p-5 bg-transparent shrink-0 z-20 pb-safe relative">
+             <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/80 to-transparent pointer-events-none" />
+             <div className="max-w-4xl mx-auto relative z-10">
                 
                 {/* Visual Image Upload Draft Preview bar */}
                 {chatImagePreviewUrl && (
-                  <div className="px-4 py-3 bg-[#11121d] rounded-2xl flex items-center gap-3 border border-cyan-500/30 max-w-sm mb-3 shadow-xl">
-                     <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden shrink-0 bg-black">
+                  <div className="px-4 py-3 bg-[#121422] rounded-t-2xl flex items-center gap-3 border border-white/10 max-w-sm mb-0 shadow-2xl relative translate-y-2">
+                     <div className="w-12 h-12 rounded-[10px] border border-white/10 overflow-hidden shrink-0 bg-black">
                         <img src={chatImagePreviewUrl} alt="Preview" className="w-full h-full object-cover" />
                      </div>
                      <div className="flex-1 overflow-hidden">
-                        <p className="text-xs font-black text-gray-200 truncate">{chatImageFile?.name || "Adjunto"}</p>
+                        <p className="text-[13px] font-bold text-gray-200 truncate">{chatImageFile?.name || "Adjunto"}</p>
                         <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Listo para enviar</p>
                      </div>
                      <button 
                        type="button" 
                        onClick={() => { setChatImageFile(null); setChatImagePreviewUrl(null); }} 
-                       className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                       className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 flex items-center justify-center text-gray-400 hover:text-red-400 transition-colors"
                      >
                         <X className="w-4 h-4" />
                      </button>
@@ -1156,7 +1172,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                    
                    {/* Chat input fields and image sub-form togglers */}
-                   <div className="flex-1 relative flex items-center">
+                   <div className={`flex-1 relative flex items-center bg-[#151822] border-2 transition-all ${chatImagePreviewUrl ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-[24px]'} focus-within:border-cyan-500/50 border-white/5 shadow-2xl`}>
                       {/* Hidden image chooser input */}
                       <input 
                         type="file" 
@@ -1172,15 +1188,15 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                         type="button"
                         onClick={() => document.getElementById('chat-image-upload')?.click()}
                         disabled={isSending}
-                        className="absolute left-3 w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-all hover:scale-105 active:scale-95 disabled:scale-100"
+                        className="absolute left-2 w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-all active:scale-95 disabled:scale-100"
                         title="Adjuntar imagen (PNG, JPG, WEBP)"
                       >
-                         <ImageIcon className="w-5 h-5 text-cyan-400" />
+                         <Plus className="w-6 h-6" />
                       </button>
 
                       <input 
                         type="text"
-                        className="w-full bg-[#121422] border-2 border-white/5 focus:border-cyan-500/50 rounded-2xl h-[52px] pl-16 pr-6 text-white text-[15px] font-medium tracking-wide focus:outline-none transition-all shadow-inner placeholder:text-gray-600"
+                        className="w-full bg-transparent h-[52px] sm:h-[56px] pl-14 pr-6 text-white text-[15px] sm:text-[16px] font-medium tracking-wide focus:outline-none placeholder:text-gray-500"
                         placeholder={`Enviar mensaje a #${activeChannel}...`}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
@@ -1193,7 +1209,7 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                    <button 
                       type="submit"
                       disabled={(!newMessage.trim() && !chatImageFile) || isSending}
-                      className="w-[52px] h-[52px] shrink-0 bg-cyan-600 hover:bg-cyan-500 hover:scale-105 active:scale-95 disabled:scale-100 rounded-2xl flex items-center justify-center text-white disabled:opacity-30 disabled:bg-gray-800 transition-all shadow-[0_0_15px_rgba(0,229,255,0.25)]"
+                      className="w-[52px] h-[52px] sm:w-[56px] sm:h-[56px] shrink-0 bg-cyan-600 hover:bg-cyan-500 active:scale-95 disabled:scale-100 rounded-[24px] flex items-center justify-center text-white disabled:opacity-30 disabled:bg-[#151822] disabled:text-gray-500 transition-all shadow-[0_0_15px_rgba(34,211,238,0.2)] disabled:shadow-none"
                    >
                       {isSending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-1" />}
                    </button>

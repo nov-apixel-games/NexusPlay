@@ -263,20 +263,36 @@ export default function App() {
           .substring(0, 15);
         const username = `${baseName || 'User'}_${uniqueSuffix}`;
         
-        const { data: created, error: insErr } = await supabase.from('profiles').upsert({
-          id: userId,
-          email: finalEmail,
-          role,
-          username,
-          real_name: metaName || null,
-          avatar_url: metaAvatar || null,
-          created_at: new Date().toISOString()
-        }, { onConflict: 'id' }).select().single();
+        let createdProfile = null;
+        let finalErr = null;
+        
+        const tryUpsert = async (withAvatar: boolean) => {
+          const payload: any = {
+            id: userId,
+            email: finalEmail,
+            role,
+            username,
+            real_name: metaName || null
+          };
+          if (withAvatar) payload.avatar_url = metaAvatar || null;
+          
+          return await supabase.from('profiles').upsert(payload, { onConflict: 'id' }).select().single();
+        };
 
-        if (!insErr && created) {
-          setUserProfile(created);
+        const { data: created, error: insErr } = await tryUpsert(true);
+        createdProfile = created;
+        finalErr = insErr;
+
+        if (insErr && insErr.message && insErr.message.includes('schema cache')) {
+           const { data: retryCreated, error: retryErr } = await tryUpsert(false);
+           createdProfile = retryCreated;
+           finalErr = retryErr;
+        }
+
+        if (!finalErr && createdProfile) {
+          setUserProfile(createdProfile);
         } else {
-          console.error("No se pudo persistir el perfil:", insErr);
+          console.error("No se pudo persistir el perfil:", finalErr);
           // Fallback local
           setUserProfile({ id: userId, email: finalEmail, role, username, real_name: metaName || null, avatar_url: metaAvatar || null });
         }
@@ -299,8 +315,18 @@ export default function App() {
           }
 
           if (needsUpdate) {
-            const { data: updated } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
-            setUserProfile(updated || { ...data, ...updates });
+            const { error: updErr, data: updated } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
+            if (updErr && updErr.message && updErr.message.includes('schema cache') && updates.avatar_url) {
+               delete updates.avatar_url;
+               if (Object.keys(updates).length > 0) {
+                 const { data: retryUpdated } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
+                 setUserProfile(retryUpdated || { ...data, ...updates });
+               } else {
+                 setUserProfile(data);
+               }
+            } else {
+              setUserProfile(updated || { ...data, ...updates });
+            }
           } else {
             setUserProfile(data);
           }
