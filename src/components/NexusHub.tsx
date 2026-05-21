@@ -129,6 +129,8 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
       {activeCommunity ? (
         <ChatRoom 
           community={activeCommunity} 
+          communities={communities}
+          onSelectCommunity={(c: Community) => setActiveCommunity(c)}
           session={session} 
           userProfile={userProfile} 
           onBack={() => setActiveCommunity(null)} 
@@ -228,26 +230,27 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {communities.map((c: any) => (
-                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#0d0f18]/90 hover:bg-[#151822] backdrop-blur-sm cursor-pointer border border-white/5 hover:border-cyan-500/30 rounded-[28px] overflow-hidden transition-all duration-300 flex flex-col h-[320px] shadow-lg hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] active:scale-[0.98]">
+                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#090b12]/80 hover:bg-[#121422] backdrop-blur-xl cursor-pointer border border-white/5 hover:border-cyan-500/50 rounded-[32px] overflow-hidden transition-all duration-300 flex flex-col h-[340px] shadow-2xl hover:shadow-[0_0_40px_rgba(34,211,238,0.2)] active:scale-[0.98]">
                   
-                  {/* Card Header */}
-                  <div className="h-[140px] w-full bg-gradient-to-b from-[#1a1c29] to-[#0d0f18] relative border-b border-white/5 shrink-0 overflow-hidden">
+                  {/* Card Header Banner */}
+                  <div className="h-[140px] w-full bg-gradient-to-br from-[#151822] to-[#0d0f18] relative shrink-0 overflow-hidden">
                     {c.image_url ? (
                       <>
-                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f18] via-[#0d0f18]/40 to-transparent" />
+                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover opacity-50 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700 ease-out" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#090b12] via-transparent to-transparent" />
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] transition-opacity duration-500 pointer-events-none" />
                       </>
                     ) : (
-                      <div className="absolute inset-0 bg-red-900/20 flex items-center justify-center">
-                         <AlertTriangle className="w-10 h-10 text-red-500/50" />
+                      <div className="absolute inset-0 bg-red-900/10 flex items-center justify-center">
+                         <AlertTriangle className="w-10 h-10 text-red-500/30" />
                       </div>
                     )}
-                    <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
-                       <span className={`w-2 h-2 rounded-full ${c.image_url ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse' : 'bg-red-500'}`}></span>
-                       <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest">{c.category}</span>
+                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-[12px] border border-white/10 flex items-center gap-2 shadow-lg">
+                       <span className={`w-2 h-2 rounded-full ${c.image_url ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse' : 'bg-red-500'}`}></span>
+                       <span className="text-[10px] font-black text-white uppercase tracking-widest">{c.category}</span>
                     </div>
                     {(isAdmin || !c.image_url) && (
-                      <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-xl backdrop-blur-md transition-all border border-white/10 shadow-lg relative z-10">
+                      <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-xl backdrop-blur-md transition-all border border-white/10 shadow-lg relative z-10 opacity-0 group-hover:opacity-100 focus:opacity-100">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
@@ -255,9 +258,11 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
 
                   {/* Icon Overlap */}
                   <div className="absolute top-[100px] left-6 z-10">
-                    <div className="w-20 h-20 bg-[#06070a] p-1.5 border border-white/10 group-hover:border-cyan-500/50 rounded-2xl flex items-center justify-center transition-colors shadow-2xl">
+                    <div className="w-20 h-20 bg-[#090b12] p-1.5 border-2 border-white/10 group-hover:border-cyan-500/50 rounded-[20px] flex items-center justify-center transition-colors duration-300 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                       {c.image_url ? (
-                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover rounded-[12px]" />
+                        <div className="w-full h-full rounded-[14px] overflow-hidden relative">
+                           <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                        </div>
                       ) : (
                         <AlertTriangle className="w-8 h-8 text-red-500" />
                       )}
@@ -265,35 +270,37 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                   </div>
 
                   {/* Card Content */}
-                  <div className="p-6 pt-14 flex flex-col flex-1 relative">
+                  <div className="p-6 pt-14 flex flex-col flex-1 relative bg-gradient-to-b from-transparent to-[#030407]/40">
                     {!c.image_url ? (
-                       <div className="absolute inset-0 bg-[#0f111a]/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4 text-center">
-                          <AlertTriangle className="w-8 h-8 text-red-500 mb-2" />
-                          <p className="text-sm font-bold text-white uppercase mb-1">Comunidad Incompatible</p>
-                          <p className="text-xs text-gray-400 mb-4">Esta comunidad quedó incompatible tras una actualización.</p>
-                          <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-lg transition-colors">
-                             ELIMINAR Y RECREAR
+                       <div className="absolute inset-0 bg-[#0f111a]/95 backdrop-blur-md z-10 flex flex-col items-center justify-center p-4 text-center">
+                          <AlertTriangle className="w-10 h-10 text-red-500 mb-3" />
+                          <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Comunidad Incompatible</p>
+                          <p className="text-xs text-gray-400 mb-6 font-medium">Esta comunidad quedó incompatible tras una actualización.</p>
+                          <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                             Eliminar y Recrear
                           </button>
                        </div>
                     ) : null}
 
-                    <h3 className="text-xl sm:text-2xl font-black text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1 drop-shadow-sm">{c.name}</h3>
-                    <p className="text-[13px] sm:text-sm text-gray-400 line-clamp-2 leading-relaxed flex-1 font-medium">{c.description}</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1 drop-shadow-sm tracking-tighter">{c.name}</h3>
+                    <p className="text-[13px] sm:text-[14px] text-gray-400 line-clamp-2 leading-relaxed flex-1 font-medium">{c.description}</p>
                     
-                    <div className="mt-5 border-t border-white/5 pt-4 flex items-center justify-between w-full">
-                       <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400">
-                           <Activity className="w-4 h-4 text-cyan-500" />
-                           ACTIVA
+                    <div className="mt-5 pt-5 border-t border-white/5 flex items-center justify-between w-full relative">
+                       <div className="flex items-center gap-2 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                           <Users className="w-4 h-4 text-cyan-500 group-hover:animate-pulse" />
+                           Descubrir
                        </div>
-                       <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="px-4 py-2 bg-white/10 rounded-xl text-xs sm:text-sm font-bold text-white hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] transition-all transform active:scale-95">
-                           Unirse
-                       </button>
-                    </div>
-                    
-                    {/* Default footer info (hides on hover) */}
-                    <div className="mt-4 flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-widest group-hover:opacity-0 group-hover:absolute transition-opacity">
-                      <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> Activa</span>
-                      <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(c.created_at).toLocaleDateString()}</span>
+                       
+                       <div className="absolute right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
+                          <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-xs sm:text-sm font-black text-white hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform active:scale-95">
+                              Unirse →
+                          </button>
+                       </div>
+                       
+                       {/* Default footer info (hides on hover) */}
+                       <div className="absolute right-0 flex items-center gap-4 text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:opacity-0 transition-opacity duration-300 transform group-hover:-translate-y-2">
+                         <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(c.created_at).toLocaleDateString()}</span>
+                       </div>
                     </div>
                   </div>
                 </div>
@@ -366,7 +373,7 @@ function serializeMessageContent(text: string, channel: string, imageUrl?: strin
   });
 }
 
-function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
+function ChatRoom({ community, communities, onSelectCommunity, session, userProfile, onBack, isAdmin }: any) {
   const [currentCommunity, setCurrentCommunity] = useState(community);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -791,12 +798,66 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
          )}
        </AnimatePresence>
 
-       {/* Sidebar Container */}
+       {/* Sidebars Container (Servers + Channels) */}
        <aside className={`
-         fixed top-0 left-0 bottom-0 z-40 w-[280px] md:relative md:translate-x-0
-         bg-[#06070c] border-r border-white/5 flex flex-col h-full transform transition-transform duration-300 ease-out shrink-0
+         fixed top-0 left-0 bottom-0 z-40 md:relative flex h-full transform transition-transform duration-300 ease-out shrink-0
          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
        `}>
+          {/* Server Sidebar (Extreme Left) */}
+          <div className="w-[72px] bg-[#030407] border-r border-white/5 flex flex-col items-center py-3 gap-3 h-full shrink-0 overflow-y-auto overflow-x-hidden pt-safe pb-safe scrollbar-hide">
+             {/* Home / Discover Button */}
+             <div className="relative group flex items-center justify-center w-full">
+                <div className="absolute left-0 w-1 h-0 bg-cyan-400 rounded-r-full transition-all group-hover:h-5"></div>
+                <button 
+                  onClick={onBack}
+                  className="w-12 h-12 rounded-[24px] bg-[#121422] hover:bg-cyan-600 hover:rounded-[16px] flex items-center justify-center text-cyan-400 hover:text-white transition-all shadow-md group-hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+                >
+                  <Activity className="w-6 h-6" />
+                </button>
+             </div>
+
+             <div className="w-8 h-[2px] bg-white/5 rounded-full my-1"></div>
+
+             {/* Communities List */}
+             {communities?.map((c: any) => {
+               const isActive = c.id === currentCommunity.id;
+               return (
+                 <div key={c.id} className="relative group w-full flex items-center justify-center">
+                    <div className={`absolute left-0 w-1 bg-white rounded-r-full transition-all duration-300 ${isActive ? 'h-10 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-100'}`}></div>
+                    <button
+                      onClick={() => {
+                        onSelectCommunity(c);
+                        if(window.innerWidth < 768) setIsSidebarOpen(false);
+                      }}
+                      className={`w-12 h-12 flex items-center justify-center overflow-hidden transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]
+                         ${isActive ? 'rounded-[16px] bg-cyan-600 shadow-[0_0_20px_rgba(34,211,238,0.5)]' : 'rounded-[24px] bg-[#121422] group-hover:rounded-[16px] group-hover:bg-cyan-600'}
+                      `}
+                    >
+                       {c.image_url ? (
+                         <img src={c.image_url} alt={c.name} className="w-full h-full object-cover" />
+                       ) : (
+                         <span className={`font-black text-lg ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{c.name[0].toUpperCase()}</span>
+                       )}
+                    </button>
+                 </div>
+               );
+             })}
+             
+             <div className="w-8 h-[2px] bg-white/5 rounded-full my-1"></div>
+             
+             {/* New Server Button */}
+             <div className="relative group flex items-center justify-center w-full mt-2">
+                <button 
+                  onClick={() => { onBack(); }}
+                  className="w-12 h-12 rounded-[24px] bg-[#121422] hover:bg-green-500 hover:rounded-[16px] flex items-center justify-center text-green-400 hover:text-white transition-all shadow-md group-hover:shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                >
+                  <Plus className="w-6 h-6" />
+                </button>
+             </div>
+          </div>
+
+          {/* Channel Sidebar */}
+          <div className="w-[260px] bg-[#090b12] border-r border-[#151822] flex flex-col h-full shrink-0">
           {/* Sidebar Header */}
           <div className="h-[68px] border-b border-white/5 px-4 flex items-center gap-3 shrink-0">
              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-sm font-black shadow-[0_0_15px_rgba(0,229,255,0.3)]">
@@ -913,32 +974,43 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                       <span className="text-xs font-semibold text-gray-200 truncate">{userProfile?.username || 'Tú'}</span>
                    </div>
                 </div>
-             </div>
-          </div>
-
-          <div className="p-4 border-t border-white/5 bg-[#06070c] flex items-center justify-between shrink-0">
+              </div>
+            </div>
+            <div className="p-4 border-t border-white/5 bg-[#06070c] flex items-center justify-between shrink-0">
              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-[#121420] border border-white/5 flex items-center justify-center font-bold text-xs">
+                <div className="w-9 h-9 rounded-full bg-[#121420] border border-white/5 flex items-center justify-center font-bold text-xs relative group cursor-pointer">
                   {userProfile?.avatar_url ? (
-                    <img src={userProfile.avatar_url} className="w-full h-full object-cover rounded-full" />
+                     <img src={userProfile.avatar_url} className="w-full h-full object-cover rounded-full" />
                   ) : (userProfile?.username?.[0]?.toUpperCase() || 'U')}
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-[#06070c]" />
+                  <div className="absolute inset-0 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_15px_rgba(0,229,255,0.3)] transition-all pointer-events-none" />
                 </div>
-                <div className="min-w-0">
-                   <p className="text-xs font-bold text-gray-200 truncate leading-tight">{userProfile?.username || 'Usuario'}</p>
-                   <p className="text-[10px] text-gray-500 uppercase tracking-wider truncate font-medium">{userProfile?.role || 'user'}</p>
+                <div className="min-w-0 cursor-pointer group">
+                   <p className="text-[13px] font-black text-gray-200 truncate leading-tight group-hover:text-white transition-colors">{userProfile?.username || 'Usuario'}</p>
+                   <p className="text-[11px] text-gray-500 font-medium truncate">{userProfile?.role || 'Online'}</p>
                 </div>
              </div>
-             {isAdmin && <Settings className="w-4 h-4 text-gray-500 hover:text-white cursor-pointer transition-colors" />}
+             
+             <div className="flex items-center gap-1">
+                <button className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                   <Volume2 className="w-4 h-4" />
+                </button>
+                {isAdmin && (
+                  <button className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                     <Settings className="w-4 h-4" />
+                  </button>
+                )}
+             </div>
+           </div>
           </div>
        </aside>
-
-       {/* ====================================================================
+            {/* ====================================================================
            CHAT CONTAINER
            ==================================================================== */}
-       <div className="flex-1 flex flex-col h-full bg-[#0a0b14] overflow-hidden relative">
+       <div className="flex-1 flex flex-col h-full bg-[#030407] overflow-hidden relative">
           
           {/* Chat Header */}
-          <header className="h-[68px] shrink-0 bg-[#0a0b14]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-3 sm:px-6 shadow-sm z-20">
+          <header className="h-[68px] shrink-0 bg-[#06070c]/90 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-3 sm:px-6 shadow-2xl z-20">
              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                 {/* Burger Trigger to open channels */}
                 <button 
@@ -948,30 +1020,41 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                    <Menu className="w-6 h-6" />
                 </button>
 
-                <div className="flex items-center gap-1 text-white shrink-0">
-                   <Hash className="w-6 h-6 text-gray-500" />
-                   <span className="text-base sm:text-lg font-black tracking-tight text-white uppercase italic">{activeChannel}</span>
+                <div className="flex items-center gap-2 text-white shrink-0 group">
+                   <Hash className="w-6 h-6 text-cyan-500/50 group-hover:text-cyan-400 transition-colors" />
+                   <span className="text-base sm:text-xl font-black tracking-tighter text-white uppercase">{activeChannel}</span>
                 </div>
 
-                <span className="text-gray-700 hidden sm:inline">|</span>
+                <div className="h-4 w-[2px] bg-white/10 hidden sm:block mx-1"></div>
 
                 <div className="flex-1 min-w-0 hidden sm:block">
-                   <p className="text-xs text-gray-400 truncate font-medium">
-                      Conectado a #{activeChannel} en {currentCommunity.name}
+                   <p className="text-[13px] text-gray-400 truncate font-medium flex items-center gap-1.5">
+                      <span className="text-gray-500">en</span>
+                      <span className="text-gray-300 font-bold">{currentCommunity.name}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-cyan-500/10 text-cyan-400 font-black uppercase tracking-widest border border-cyan-500/20">{currentCommunity.category}</span>
                    </p>
                 </div>
              </div>
              
              {/* Action icons */}
-             <div className="flex items-center gap-2.5">
-                <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 select-none animate-pulse">
-                   <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                   <span>{onlineCount} ONLINE</span>
+             <div className="flex items-center gap-3">
+                {/* Online members indicator modern */}
+                <div className="px-3 py-1.5 bg-[#121422] border border-white/5 text-gray-300 text-[11px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 select-none shadow-inner">
+                   <div className="relative flex items-center justify-center w-2 h-2">
+                     <span className="absolute w-full h-full rounded-full bg-green-500 animate-ping opacity-75" />
+                     <span className="relative w-1.5 h-1.5 rounded-full bg-green-400" />
+                   </div>
+                   <span>{onlineCount} Online</span>
                 </div>
-                
-                <button onClick={onBack} className="px-4 py-1.5 bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 hover:text-white rounded-lg transition-colors shadow">
-                   Explorar otras
-                </button>
+
+                <div className="hidden sm:flex items-center gap-1 border-l border-white/5 pl-3">
+                   <button className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors" title="Buscar">
+                     <Search className="w-4 h-4" />
+                   </button>
+                   <button className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors" title="Miembros">
+                     <Users className="w-4 h-4" />
+                   </button>
+                </div>
              </div>
           </header>
 
@@ -1016,40 +1099,40 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
                     key={msg.id} 
-                    className={`flex flex-col group hover:bg-white/[0.02] -mx-4 px-4 py-1 transition-colors ${showAvatar ? 'mt-4' : 'mt-0.5'}`}
+                    className={`flex flex-col group hover:bg-[#121422]/60 -mx-4 px-4 py-1.5 transition-colors ${showAvatar ? 'mt-5' : 'mt-0.5'}`}
                   >
                      <div className="flex items-start gap-4 max-w-full relative">
                         
                         {/* Avatar Column */}
-                        <div className="w-10 flex-shrink-0 flex justify-center">
+                        <div className="w-12 flex-shrink-0 flex justify-center mt-1">
                           {showAvatar ? (
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black shadow-lg select-none transition-transform duration-250 cursor-pointer hover:scale-105 active:scale-95
-                              ${isAI ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : (isOwn ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-white')} 
+                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg select-none transition-transform duration-300 cursor-pointer hover:scale-105 active:scale-95 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]
+                              ${isAI ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : (isOwn ? 'bg-cyan-600 text-white' : 'bg-[#151822] border border-white/5 text-white')} 
                             `} style={{ overflow: 'hidden' }}>
                               {isAI ? (
-                                <Bot className="w-6 h-6" />
+                                <Bot className="w-6 h-6 drop-shadow-md" />
                               ) : msg.profiles?.avatar_url ? (
-                                <img src={msg.profiles.avatar_url} className="w-full h-full object-cover" />
+                                <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-2xl" />
                               ) : (msg.profiles?.username?.[0]?.toUpperCase() || '?')}
                             </div>
                           ) : null}
                         </div>
                         
                         {/* Message Content Column */}
-                        <div className="flex flex-col relative w-full pt-0.5 min-w-0">
+                        <div className="flex flex-col relative w-full pt-1.5 min-w-0">
                            {/* Author detail info */}
                            {showAvatar && (
-                             <span className="text-[14px] font-black text-gray-100 flex items-baseline gap-2 mb-0.5">
-                               {isAI ? 'Nexus AI' : msg.profiles?.username}
+                             <span className="text-[15px] font-black tracking-tight text-gray-100 flex items-baseline gap-2 mb-1">
+                               <span className="hover:underline cursor-pointer decoration-white/30 underline-offset-2">{isAI ? 'Nexus AI' : msg.profiles?.username}</span>
                                {isAI && (
-                                 <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-[4px] text-[10px] font-bold tracking-widest uppercase flex items-center gap-1">
+                                 <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-[6px] text-[9px] font-black tracking-widest uppercase flex items-center gap-1 shadow-sm">
                                     <Bot className="w-3 h-3" /> BOT
                                  </span>
                                )}
                                {!isAI && msg.profiles?.role === 'admin' && (
-                                 <span className="px-1.5 py-0.5 bg-red-500/20 text-red-500 rounded-[4px] text-[10px] font-bold tracking-widest uppercase">ADMIN</span>
+                                 <span className="px-1.5 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-[6px] text-[9px] font-black tracking-widest uppercase shadow-sm">ADMIN</span>
                                )}
-                               <span className="text-[11px] font-medium text-gray-500 tracking-wide ml-1">
+                               <span className="text-[11px] font-bold text-gray-500 tracking-wider ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                   {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                </span>
                              </span>
@@ -1058,27 +1141,28 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                            {/* Inline block */}
                            <div className={`relative pr-12 lg:pr-20 ${msg.temp_id ? 'opacity-50 animate-pulse' : 'opacity-100'}`}>
                                {msg.deleted ? (
-                                  <span className="italic text-gray-500 flex items-center gap-2 text-[13px] bg-red-900/10 w-max px-2 py-1 rounded-md">
-                                    <AlertTriangle className="w-3.5 h-3.5 text-red-500" /> Mensaje eliminado por moderador
+                                  <span className="italic text-gray-500 flex items-center gap-2 text-[13px] bg-red-900/10 border border-red-900/20 w-max px-3 py-1.5 rounded-xl font-medium">
+                                    <AlertTriangle className="w-4 h-4 text-red-500" /> Mensaje oculto
                                   </span>
                                ) : (
-                                  <div className="space-y-2">
+                                  <div className="space-y-3 mt-0.5">
                                      {/* Text paragraph */}
                                      {displayText && (
-                                        <div className="text-[15px] text-gray-300 leading-[1.6] whitespace-pre-wrap break-words font-normal">
+                                        <div className={`text-[15px] ${isAI ? 'text-indigo-100 font-medium' : 'text-gray-300'} leading-[1.65] whitespace-pre-wrap break-words font-normal tracking-wide`}>
                                            {displayText}
                                         </div>
                                      )}
                                      {/* Message attachment image */}
                                      {parsed.image_url && (
-                                       <div className="max-w-[260px] sm:max-w-sm rounded-[16px] overflow-hidden border border-white/5 bg-[#0a0b14] cursor-pointer group/img transition-all hover:border-cyan-500/30 shadow-lg mt-2">
+                                       <div className="max-w-[280px] sm:max-w-md rounded-[20px] overflow-hidden border-2 border-white/5 bg-[#0a0b14] cursor-zoom-in group/img transition-all hover:border-cyan-500/40 shadow-xl relative">
                                           <img 
                                             src={parsed.image_url} 
                                             alt="Adjunto" 
-                                            className="w-full h-auto object-cover max-h-[350px]" 
+                                            className="w-full h-auto object-cover max-h-[400px] transform group-hover/img:scale-[1.02] transition-transform duration-500" 
                                             referrerPolicy="no-referrer"
                                             onClick={() => window.open(parsed.image_url || '', '_blank')}
                                           />
+                                          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors pointer-events-none" />
                                        </div>
                                      )}
                                   </div>
@@ -1087,26 +1171,27 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                                {/* Hover Options Menu with React emoji buttons */}
                                {!msg.deleted && (
                                  <div className={`
-                                   absolute -top-3 right-0
-                                   opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-[#151822] shadow-2xl rounded-lg border border-white/5 px-1 py-0.5 z-30 gap-0.5
+                                   absolute -top-5 right-0
+                                   opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0
+                                   flex items-center bg-[#0d0f18]/90 backdrop-blur-md shadow-[0_4_20px_rgba(0,0,0,0.5)] rounded-[12px] border border-white/10 px-1.5 py-1 z-30 gap-0.5
                                  `}>
-                                    {['👍', '❤️', '🔥', '😂'].map(emoji => (
+                                    {['👍', '❤️', '🔥', '😂', '💯'].map(emoji => (
                                        <button 
                                          key={emoji}
                                          onClick={() => handleToggleReaction(msg.id, emoji)}
-                                         className="w-8 h-8 flex items-center justify-center rounded-md text-[15px] hover:bg-white/5 transition-all active:scale-95"
+                                         className="w-8 h-8 flex items-center justify-center rounded-[8px] text-[16px] hover:bg-[#1a1d2d] hover:scale-110 transition-all active:scale-95"
                                        >
-                                          {emoji}
+                                          <span className="drop-shadow-sm">{emoji}</span>
                                        </button>
                                     ))}
                                     
                                     {(isOwn || isAdmin) && (
-                                       <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
+                                       <div className="w-[1px] h-5 bg-white/10 mx-1.5"></div>
                                     )}
                                     {(isOwn || isAdmin) && (
                                        <button 
                                          onClick={() => deleteMessage(msg.id)} 
-                                         className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors"
+                                         className="w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-red-500/15 text-red-400 hover:text-red-500 hover:shadow-[0_0_10px_rgba(239,68,68,0.2)] transition-all active:scale-95"
                                          title="Eliminar mensaje"
                                        >
                                           <Trash2 className="w-4 h-4" />
@@ -1118,19 +1203,19 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
 
                            {/* Rendered custom reactions below message */}
                            {msgReactions.length > 0 && (
-                             <div className="flex flex-wrap gap-1.5 mt-2">
+                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                                 {msgReactions.map(([emoji, meta]: any) => (
                                    <button
                                      key={emoji}
                                      onClick={() => handleToggleReaction(msg.id, emoji)}
                                      className={`
-                                       px-2 py-1 rounded-[8px] text-[13px] font-bold flex items-center gap-1.5 transition-all active:scale-95 border
+                                       px-2.5 py-1 rounded-[10px] text-[13px] font-bold flex items-center gap-1.5 transition-all active:scale-95 border
                                        ${meta.active 
-                                         ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300' 
-                                         : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10 hover:text-gray-200'}
+                                         ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.15)]' 
+                                         : 'bg-[#151822]/80 border-white/5 text-gray-400 hover:bg-[#1a1d2d] hover:text-gray-200 hover:border-white/10'}
                                      `}
                                    >
-                                      <span>{emoji}</span>
+                                      <span className="drop-shadow-sm">{emoji}</span>
                                       <span className="text-[11px] font-black">{meta.count}</span>
                                    </button>
                                 ))}
@@ -1141,23 +1226,25 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                   </motion.div>
                 );
              })}
-             <div ref={messagesEndRef} className="h-2" />
+             <div ref={messagesEndRef} className="h-4" />
           </main>
 
           {/* Message attachment & Send input form */}
           <div className="p-3 sm:p-5 bg-transparent shrink-0 z-20 pb-safe relative">
-             <div className="absolute inset-0 bg-gradient-to-t from-[#06070c] via-[#06070c]/80 to-transparent pointer-events-none" />
+             <div className="absolute inset-0 bg-gradient-to-t from-[#030407] via-[#030407]/90 to-transparent pointer-events-none" />
              <div className="max-w-4xl mx-auto relative z-10">
                 
                 {/* Visual Image Upload Draft Preview bar */}
                 {chatImagePreviewUrl && (
-                  <div className="px-4 py-3 bg-[#121422] rounded-t-2xl flex items-center gap-3 border border-white/10 max-w-sm mb-0 shadow-2xl relative translate-y-2">
-                     <div className="w-12 h-12 rounded-[10px] border border-white/10 overflow-hidden shrink-0 bg-black">
+                  <div className="px-4 py-3 bg-[#0d0f18]/90 backdrop-blur-xl rounded-t-[20px] flex items-center gap-3 border border-white/10 border-b-0 max-w-sm mb-0 shadow-2xl relative translate-y-3">
+                     <div className="w-12 h-12 rounded-[12px] border border-white/10 overflow-hidden shrink-0 bg-black shadow-inner">
                         <img src={chatImagePreviewUrl} alt="Preview" className="w-full h-full object-cover" />
                      </div>
                      <div className="flex-1 overflow-hidden">
-                        <p className="text-[13px] font-bold text-gray-200 truncate">{chatImageFile?.name || "Adjunto"}</p>
-                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Listo para enviar</p>
+                        <p className="text-[13px] font-black text-gray-200 truncate">{chatImageFile?.name || "Adjunto"}</p>
+                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Listo para enviar
+                        </p>
                      </div>
                      <button 
                        type="button" 
@@ -1169,10 +1256,10 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                   </div>
                 )}
 
-                <form onSubmit={handleSendMessage} className="flex gap-2">
+                <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3">
                    
                    {/* Chat input fields and image sub-form togglers */}
-                   <div className={`flex-1 relative flex items-center bg-[#151822] border-2 transition-all ${chatImagePreviewUrl ? 'rounded-b-2xl rounded-tr-2xl' : 'rounded-[24px]'} focus-within:border-cyan-500/50 border-white/5 shadow-2xl`}>
+                   <div className={`flex-1 relative flex items-center bg-[#0d0f18]/90 backdrop-blur-md border border-white/10 transition-all ${chatImagePreviewUrl ? 'rounded-b-[20px] rounded-tr-[20px]' : 'rounded-[20px]'} focus-within:border-cyan-500/70 focus-within:bg-[#121422] shadow-[0_0_20px_rgba(0,0,0,0.5)] focus-within:shadow-[0_0_30px_rgba(34,211,238,0.15)]`}>
                       {/* Hidden image chooser input */}
                       <input 
                         type="file" 
@@ -1188,30 +1275,36 @@ function ChatRoom({ community, session, userProfile, onBack, isAdmin }: any) {
                         type="button"
                         onClick={() => document.getElementById('chat-image-upload')?.click()}
                         disabled={isSending}
-                        className="absolute left-2 w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-all active:scale-95 disabled:scale-100"
-                        title="Adjuntar imagen (PNG, JPG, WEBP)"
+                        className="absolute left-2 w-10 h-10 rounded-xl hover:bg-cyan-500/20 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all active:scale-95 disabled:scale-100 group"
+                        title="Adjuntar"
                       >
-                         <Plus className="w-6 h-6" />
+                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                       </button>
 
                       <input 
                         type="text"
-                        className="w-full bg-transparent h-[52px] sm:h-[56px] pl-14 pr-6 text-white text-[15px] sm:text-[16px] font-medium tracking-wide focus:outline-none placeholder:text-gray-500"
-                        placeholder={`Enviar mensaje a #${activeChannel}...`}
+                        className="w-full bg-transparent h-[56px] sm:h-[60px] pl-14 pr-16 text-white text-[15px] sm:text-[16px] font-medium tracking-wide focus:outline-none placeholder:text-gray-600"
+                        placeholder={`Enviar mensaje en #${activeChannel}...`}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         disabled={isSending}
                         autoComplete="off"
                       />
+
+                      {/* Right edge emoji button (visual only) */}
+                      <div className="absolute right-3 opacity-50 hover:opacity-100 transition-opacity cursor-pointer text-gray-400 hover:text-white">
+                         <Smile className="w-5 h-5" />
+                      </div>
                    </div>
 
                    {/* Send Button */}
                    <button 
                       type="submit"
                       disabled={(!newMessage.trim() && !chatImageFile) || isSending}
-                      className="w-[52px] h-[52px] sm:w-[56px] sm:h-[56px] shrink-0 bg-cyan-600 hover:bg-cyan-500 active:scale-95 disabled:scale-100 rounded-[24px] flex items-center justify-center text-white disabled:opacity-30 disabled:bg-[#151822] disabled:text-gray-500 transition-all shadow-[0_0_15px_rgba(34,211,238,0.2)] disabled:shadow-none"
+                      className="w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] shrink-0 bg-gradient-to-tr from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-[#151822] disabled:to-[#151822] active:scale-95 disabled:scale-100 rounded-[20px] flex items-center justify-center text-white disabled:opacity-50 disabled:text-gray-600 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] disabled:shadow-none relative group overflow-hidden"
                    >
-                      {isSending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-1" />}
+                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden" />
+                      {isSending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-1 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
                    </button>
                 </form>
              </div>
