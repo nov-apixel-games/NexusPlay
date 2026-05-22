@@ -228,7 +228,6 @@ export default function App() {
       subscription.unsubscribe();
       supabase.removeChannel(appsSubscription);
       window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
-      window.removeEventListener('message', handleOAuthSuccess);
     };
   }, [webLogo, isInitializing]);
 

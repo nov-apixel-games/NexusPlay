@@ -180,23 +180,25 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
         <div className="absolute top-[40%] -left-[10%] w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[120px]" />
       </div>
 
-      <header className="h-[72px] shrink-0 bg-[#06070a]/90 backdrop-blur-xl border-b flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="w-10 h-10 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-xl flex items-center justify-center transition-all shadow-lg">
+      <header className="h-[80px] shrink-0 bg-[#06070a]/80 backdrop-blur-3xl border-b flex items-center justify-between px-6 sm:px-10 sticky top-0 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.5)]" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="w-12 h-12 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-[16px] flex items-center justify-center transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
             <ChevronLeft className="w-6 h-6 text-gray-300" />
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white italic tracking-tighter flex items-center gap-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
-              <Users className="w-5 h-5 text-cyan-400" />
+            <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter flex items-center gap-3 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+                 <Users className="w-5 h-5 text-white drop-shadow-md" />
+              </div>
               NEXUS HUB
             </h1>
           </div>
         </div>
         <button 
           onClick={onCreateClick}
-          className="px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm rounded-xl flex items-center gap-2 transition-transform shadow-[0_0_20px_rgba(8,145,178,0.3)] active:scale-95"
+          className="px-5 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-[13px] uppercase tracking-widest rounded-[16px] flex items-center gap-2 transition-transform shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:shadow-[0_0_30px_rgba(8,145,178,0.6)] active:scale-95"
         >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden sm:inline">Nueva Comunidad</span>
+          <Plus className="w-5 h-5" /> <span className="hidden sm:inline">Nueva Comunidad</span>
         </button>
       </header>
       
@@ -230,21 +232,24 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {communities.map((c: any) => (
-                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#090b12]/80 hover:bg-[#121422] backdrop-blur-xl cursor-pointer border border-white/5 hover:border-cyan-500/50 rounded-[32px] overflow-hidden transition-all duration-300 flex flex-col h-[340px] shadow-2xl hover:shadow-[0_0_40px_rgba(34,211,238,0.2)] active:scale-[0.98]">
+                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#090b12]/60 hover:bg-[#0c0e18]/80 backdrop-blur-3xl cursor-pointer border border-white/5 hover:border-cyan-500/50 rounded-[32px] overflow-hidden transition-all duration-300 flex flex-col h-[340px] shadow-2xl hover:shadow-[0_20px_50px_rgba(34,211,238,0.2)] hover:-translate-y-2">
                   
                   {/* Card Header Banner */}
                   <div className="h-[140px] w-full bg-gradient-to-br from-[#151822] to-[#0d0f18] relative shrink-0 overflow-hidden">
                     {c.image_url ? (
                       <>
-                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover opacity-50 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700 ease-out" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#090b12] via-transparent to-transparent" />
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] transition-opacity duration-500 pointer-events-none" />
+                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transform scale-105 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#090b12] to-transparent opacity-80" />
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:16px_16px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                       </>
                     ) : (
                       <div className="absolute inset-0 bg-red-900/10 flex items-center justify-center">
                          <AlertTriangle className="w-10 h-10 text-red-500/30" />
                       </div>
                     )}
+                    
+                    {/* Glowing effect line at top edge */}
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-[12px] border border-white/10 flex items-center gap-2 shadow-lg">
                        <span className={`w-2 h-2 rounded-full ${c.image_url ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse' : 'bg-red-500'}`}></span>
                        <span className="text-[10px] font-black text-white uppercase tracking-widest">{c.category}</span>
@@ -282,17 +287,17 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                        </div>
                     ) : null}
 
-                    <h3 className="text-xl sm:text-2xl font-black text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1 drop-shadow-sm tracking-tighter">{c.name}</h3>
-                    <p className="text-[13px] sm:text-[14px] text-gray-400 line-clamp-2 leading-relaxed flex-1 font-medium">{c.description}</p>
+                    <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1 drop-shadow-sm tracking-tighter">{c.name}</h3>
+                    <p className="text-[14px] sm:text-[15px] text-gray-400 line-clamp-2 leading-relaxed flex-1 font-medium">{c.description}</p>
                     
                     <div className="mt-5 pt-5 border-t border-white/5 flex items-center justify-between w-full relative">
-                       <div className="flex items-center gap-2 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                           <Users className="w-4 h-4 text-cyan-500 group-hover:animate-pulse" />
+                       <div className="flex items-center gap-2 text-[12px] font-black text-gray-400 uppercase tracking-widest group-hover:text-cyan-400 transition-colors">
+                           <Users className="w-[18px] h-[18px] text-cyan-500 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] transition-all" />
                            Descubrir
                        </div>
                        
-                       <div className="absolute right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
-                          <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-xs sm:text-sm font-black text-white hover:from-cyan-500 hover:to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform active:scale-95">
+                       <div className="absolute right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                          <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 rounded-[14px] text-[13px] font-black text-[#030407] hover:text-black shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.8)] transition-all border border-cyan-300 transform hover:scale-105 active:scale-95 uppercase tracking-widest">
                               Unirse →
                           </button>
                        </div>
@@ -804,15 +809,15 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
        `}>
           {/* Server Sidebar (Extreme Left) */}
-          <div className="w-[72px] bg-[#030407] border-r border-white/5 flex flex-col items-center py-3 gap-3 h-full shrink-0 overflow-y-auto overflow-x-hidden pt-safe pb-safe scrollbar-hide">
+          <div className="w-[80px] bg-gradient-to-b from-[#030407] to-[#06070a] border-r border-white/5 flex flex-col items-center py-4 gap-4 h-full shrink-0 overflow-y-auto overflow-x-hidden pt-safe pb-safe scrollbar-hide relative z-10 shadow-[5px_0_30px_rgba(0,0,0,0.5)]">
              {/* Home / Discover Button */}
              <div className="relative group flex items-center justify-center w-full">
-                <div className="absolute left-0 w-1 h-0 bg-cyan-400 rounded-r-full transition-all group-hover:h-5"></div>
+                <div className="absolute left-0 w-[4px] h-0 bg-cyan-400 rounded-r-full transition-all duration-300 ease-out group-hover:h-8 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>
                 <button 
                   onClick={onBack}
-                  className="w-12 h-12 rounded-[24px] bg-[#121422] hover:bg-cyan-600 hover:rounded-[16px] flex items-center justify-center text-cyan-400 hover:text-white transition-all shadow-md group-hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+                  className="w-[52px] h-[52px] rounded-[24px] bg-gradient-to-br from-[#121422] to-[#0a0c14] border border-white/10 hover:border-cyan-500/50 hover:bg-gradient-to-tr hover:from-cyan-600 hover:to-blue-600 hover:rounded-[18px] flex items-center justify-center text-cyan-400 hover:text-white transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] relative overflow-hidden"
                 >
-                  <Activity className="w-6 h-6" />
+                  <Activity className="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform" />
                 </button>
              </div>
 
@@ -823,20 +828,21 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                const isActive = c.id === currentCommunity.id;
                return (
                  <div key={c.id} className="relative group w-full flex items-center justify-center">
-                    <div className={`absolute left-0 w-1 bg-white rounded-r-full transition-all duration-300 ${isActive ? 'h-10 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-100'}`}></div>
+                    <div className={`absolute left-0 w-[4px] bg-white rounded-r-full transition-all duration-300 ease-out ${isActive ? 'h-10 opacity-100 shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'h-0 opacity-0 group-hover:h-6 group-hover:opacity-100'}`}></div>
                     <button
                       onClick={() => {
                         onSelectCommunity(c);
                         if(window.innerWidth < 768) setIsSidebarOpen(false);
                       }}
-                      className={`w-12 h-12 flex items-center justify-center overflow-hidden transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]
-                         ${isActive ? 'rounded-[16px] bg-cyan-600 shadow-[0_0_20px_rgba(34,211,238,0.5)]' : 'rounded-[24px] bg-[#121422] group-hover:rounded-[16px] group-hover:bg-cyan-600'}
+                      className={`w-[52px] h-[52px] flex items-center justify-center overflow-hidden transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] relative border border-transparent
+                         ${isActive ? 'rounded-[18px] border-cyan-500/50 shadow-[0_0_30px_rgba(34,211,238,0.4)] ring-2 ring-cyan-500/20' : 'rounded-[26px] bg-[#121422] group-hover:rounded-[18px] group-hover:border-cyan-500/50 hover:ring-2 hover:ring-cyan-500/10 border-white/5'}
                       `}
                     >
+                       {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-cyan-600/80 to-blue-600/80 pointer-events-none" />}
                        {c.image_url ? (
-                         <img src={c.image_url} alt={c.name} className="w-full h-full object-cover" />
+                         <img src={c.image_url} alt={c.name} className={`w-full h-full object-cover relative z-10 transition-transform duration-500 ${isActive ? 'opacity-90 scale-110' : 'opacity-70 group-hover:opacity-100 group-hover:scale-105'}`} />
                        ) : (
-                         <span className={`font-black text-lg ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{c.name[0].toUpperCase()}</span>
+                         <span className={`font-black text-lg relative z-10 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{c.name[0].toUpperCase()}</span>
                        )}
                     </button>
                  </div>
@@ -849,30 +855,33 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
              <div className="relative group flex items-center justify-center w-full mt-2">
                 <button 
                   onClick={() => { onBack(); }}
-                  className="w-12 h-12 rounded-[24px] bg-[#121422] hover:bg-green-500 hover:rounded-[16px] flex items-center justify-center text-green-400 hover:text-white transition-all shadow-md group-hover:shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                  className="w-[52px] h-[52px] rounded-[24px] bg-[#121422] border border-white/5 hover:border-green-500/50 hover:bg-green-500/10 hover:rounded-[18px] flex items-center justify-center text-green-400 hover:text-green-300 transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
                 >
-                  <Plus className="w-6 h-6" />
+                  <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 </button>
              </div>
           </div>
 
           {/* Channel Sidebar */}
-          <div className="w-[260px] bg-[#090b12] border-r border-[#151822] flex flex-col h-full shrink-0">
+          <div className="w-[280px] bg-gradient-to-b from-[#090b12] to-[#0a0c16] border-r border-white/5 flex flex-col h-full shrink-0 relative z-20">
           {/* Sidebar Header */}
-          <div className="h-[68px] border-b border-white/5 px-4 flex items-center gap-3 shrink-0">
-             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-sm font-black shadow-[0_0_15px_rgba(0,229,255,0.3)]">
+          <div className="h-[76px] border-b border-white/5 px-5 flex items-center gap-4 shrink-0 bg-gradient-to-r from-transparent to-white/[0.02] shadow-[0_10px_20px_rgba(0,0,0,0.2)]">
+             <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-base font-black shadow-[0_0_20px_rgba(0,229,255,0.4)] border border-cyan-400/30 overflow-hidden relative">
                 {currentCommunity.image_url ? (
-                  <img src={currentCommunity.image_url} alt={currentCommunity.name} className="w-full h-full object-cover rounded-xl" />
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/50 to-transparent mix-blend-overlay z-10 pointer-events-none" />
+                    <img src={currentCommunity.image_url} alt={currentCommunity.name} className="w-full h-full object-cover" />
+                  </>
                 ) : (
                   currentCommunity.name[0].toUpperCase()
                 )}
              </div>
              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider truncate leading-tight">{currentCommunity.name}</h3>
-                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">{currentCommunity.category}</p>
+                <h3 className="text-[15px] font-black text-white uppercase tracking-wider truncate leading-tight drop-shadow-sm">{currentCommunity.name}</h3>
+                <p className="text-[10px] text-cyan-400 font-black uppercase tracking-widest bg-cyan-900/30 px-1.5 py-0.5 rounded-md inline-block mt-0.5 border border-cyan-500/20">{currentCommunity.category}</p>
              </div>
-             <button onClick={onBack} className="w-7 h-7 hover:bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all shrink-0">
-                <ChevronLeft className="w-4 h-4" />
+             <button onClick={onBack} className="w-8 h-8 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-all shrink-0">
+                <ChevronLeft className="w-5 h-5" />
              </button>
           </div>
 
@@ -927,8 +936,8 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                           className={`
                             group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all
                             ${isActive 
-                              ? 'bg-gradient-to-r from-cyan-600/20 to-blue-600/5 text-white shadow-inner font-bold border-l-4 border-cyan-500 pl-2' 
-                              : 'text-gray-400 hover:bg-[#121420] hover:text-gray-200'}
+                              ? 'bg-gradient-to-r from-cyan-900/40 text-white font-bold border-l-[3px] border-cyan-400 shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]' 
+                              : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 border-l-[3px] border-transparent font-medium'}
                           `}
                           onClick={() => {
                             setActiveChannel(chanName);
@@ -936,7 +945,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                           }}
                         >
                            <div className="flex items-center gap-2 truncate">
-                              <Hash className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-gray-600 group-hover:text-gray-400'}`} />
+                              <Hash className={`w-4 h-4 ${isActive ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]' : 'text-gray-600 group-hover:text-gray-400'}`} />
                               <span className="truncate">{chanName}</span>
                            </div>
                            
@@ -976,18 +985,18 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-white/5 bg-[#06070c] flex items-center justify-between shrink-0">
+           <div className="p-4 border-t border-white/5 bg-[#06070c] flex items-center justify-between shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30">
              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-[#121420] border border-white/5 flex items-center justify-center font-bold text-xs relative group cursor-pointer">
+                <div className="w-10 h-10 rounded-[12px] bg-[#121420] border border-white/10 flex items-center justify-center font-bold text-xs relative group cursor-pointer overflow-hidden shadow-inner">
                   {userProfile?.avatar_url ? (
-                     <img src={userProfile.avatar_url} className="w-full h-full object-cover rounded-full" />
+                     <img src={userProfile.avatar_url} className="w-full h-full object-cover" />
                   ) : (userProfile?.username?.[0]?.toUpperCase() || 'U')}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-[#06070c]" />
-                  <div className="absolute inset-0 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_15px_rgba(0,229,255,0.3)] transition-all pointer-events-none" />
+                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-[#06070c] shadow-[0_0_5px_rgba(34,197,94,0.8)]" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
-                <div className="min-w-0 cursor-pointer group">
-                   <p className="text-[13px] font-black text-gray-200 truncate leading-tight group-hover:text-white transition-colors">{userProfile?.username || 'Usuario'}</p>
-                   <p className="text-[11px] text-gray-500 font-medium truncate">{userProfile?.role || 'Online'}</p>
+                <div className="min-w-0 flex-1 cursor-pointer group">
+                   <p className="text-[13px] font-black text-gray-200 truncate leading-tight group-hover:text-cyan-400 transition-colors drop-shadow-sm">{userProfile?.username || 'Usuario'}</p>
+                   <p className="text-[11px] text-gray-500 font-black uppercase tracking-widest truncate">{userProfile?.role || 'Online'}</p>
                 </div>
              </div>
              
@@ -1010,8 +1019,9 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
        <div className="flex-1 flex flex-col h-full bg-[#030407] overflow-hidden relative">
           
           {/* Chat Header */}
-          <header className="h-[68px] shrink-0 bg-[#06070c]/90 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-3 sm:px-6 shadow-2xl z-20">
-             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          <header className="h-[76px] shrink-0 bg-[#06070c]/80 backdrop-blur-3xl border-b border-white/5 flex items-center justify-between px-4 sm:px-8 shadow-2xl z-20 relative">
+             <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 to-transparent pointer-events-none" />
+             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 relative z-10">
                 {/* Burger Trigger to open channels */}
                 <button 
                   onClick={() => setIsSidebarOpen(true)} 
@@ -1021,37 +1031,37 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                 </button>
 
                 <div className="flex items-center gap-2 text-white shrink-0 group">
-                   <Hash className="w-6 h-6 text-cyan-500/50 group-hover:text-cyan-400 transition-colors" />
-                   <span className="text-base sm:text-xl font-black tracking-tighter text-white uppercase">{activeChannel}</span>
+                   <Hash className="w-7 h-7 text-cyan-500 group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_10px_rgba(34,211,238,0.5)] transform group-hover:scale-110" />
+                   <span className="text-lg sm:text-2xl font-black tracking-tighter text-white uppercase drop-shadow-md">{activeChannel}</span>
                 </div>
 
-                <div className="h-4 w-[2px] bg-white/10 hidden sm:block mx-1"></div>
+                <div className="h-6 w-[2px] bg-white/10 hidden sm:block mx-2"></div>
 
                 <div className="flex-1 min-w-0 hidden sm:block">
-                   <p className="text-[13px] text-gray-400 truncate font-medium flex items-center gap-1.5">
-                      <span className="text-gray-500">en</span>
-                      <span className="text-gray-300 font-bold">{currentCommunity.name}</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-cyan-500/10 text-cyan-400 font-black uppercase tracking-widest border border-cyan-500/20">{currentCommunity.category}</span>
+                   <p className="text-[14px] text-gray-400 truncate flex items-center gap-2">
+                      <span className="text-gray-500 font-medium">en</span>
+                      <span className="text-gray-200 font-bold hover:text-white cursor-pointer transition-colors">{currentCommunity.name}</span>
+                      <span className="px-2 py-0.5 rounded-[8px] text-[10px] bg-cyan-900/30 text-cyan-400 font-black uppercase tracking-widest border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]">{currentCommunity.category}</span>
                    </p>
                 </div>
              </div>
              
              {/* Action icons */}
-             <div className="flex items-center gap-3">
+             <div className="flex items-center gap-3 relative z-10">
                 {/* Online members indicator modern */}
-                <div className="px-3 py-1.5 bg-[#121422] border border-white/5 text-gray-300 text-[11px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 select-none shadow-inner">
-                   <div className="relative flex items-center justify-center w-2 h-2">
-                     <span className="absolute w-full h-full rounded-full bg-green-500 animate-ping opacity-75" />
-                     <span className="relative w-1.5 h-1.5 rounded-full bg-green-400" />
+                <div className="px-4 py-2 bg-[#0d0f18] border border-white/10 text-gray-200 text-[11px] font-black uppercase tracking-widest rounded-[12px] flex items-center gap-2 sm:gap-3 select-none shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] transition-all hover:bg-[#121420]">
+                   <div className="relative flex items-center justify-center w-2.5 h-2.5">
+                     <span className="absolute w-full h-full rounded-full bg-green-500 animate-ping opacity-60" />
+                     <span className="relative w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
                    </div>
                    <span>{onlineCount} Online</span>
                 </div>
 
-                <div className="hidden sm:flex items-center gap-1 border-l border-white/5 pl-3">
-                   <button className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors" title="Buscar">
+                <div className="hidden sm:flex items-center gap-2 border-l border-white/10 pl-3">
+                   <button className="w-10 h-10 rounded-[12px] bg-[#121420] border border-white/5 hover:border-cyan-500/30 hover:bg-[#1a1d2d] flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]" title="Buscar">
                      <Search className="w-4 h-4" />
                    </button>
-                   <button className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors" title="Miembros">
+                   <button className="w-10 h-10 rounded-[12px] bg-[#121420] border border-white/5 hover:border-cyan-500/30 hover:bg-[#1a1d2d] flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]" title="Miembros">
                      <Users className="w-4 h-4" />
                    </button>
                 </div>
@@ -1094,26 +1104,30 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                 const msgReactions = getRenderReactions(msg.id);
 
                 return (
-                  <motion.div 
+                    <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
                     key={msg.id} 
-                    className={`flex flex-col group hover:bg-[#121422]/60 -mx-4 px-4 py-1.5 transition-colors ${showAvatar ? 'mt-5' : 'mt-0.5'}`}
+                    className={`flex flex-col group hover:bg-white/[0.02] -mx-4 px-4 py-2 transition-colors ${showAvatar ? 'mt-6' : 'mt-1'}`}
                   >
                      <div className="flex items-start gap-4 max-w-full relative">
                         
                         {/* Avatar Column */}
                         <div className="w-12 flex-shrink-0 flex justify-center mt-1">
                           {showAvatar ? (
-                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg select-none transition-transform duration-300 cursor-pointer hover:scale-105 active:scale-95 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]
-                              ${isAI ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : (isOwn ? 'bg-cyan-600 text-white' : 'bg-[#151822] border border-white/5 text-white')} 
-                            `} style={{ overflow: 'hidden' }}>
+                            <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center text-sm font-black shadow-lg select-none transition-transform duration-300 cursor-pointer hover:scale-110 active:scale-95 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] relative overflow-hidden
+                              ${isAI ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : (isOwn ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white' : 'bg-[#151822] border border-white/10 text-white')} 
+                            `}>
+                              <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent pointer-events-none" />
                               {isAI ? (
-                                <Bot className="w-6 h-6 drop-shadow-md" />
+                                <Bot className="w-6 h-6 drop-shadow-md relative z-10" />
                               ) : msg.profiles?.avatar_url ? (
-                                <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-2xl" />
-                              ) : (msg.profiles?.username?.[0]?.toUpperCase() || '?')}
+                                <img src={msg.profiles.avatar_url} className="w-full h-full object-cover relative z-10" />
+                              ) : (<span className="relative z-10">{msg.profiles?.username?.[0]?.toUpperCase() || '?'}</span>)}
+                              
+                              {/* Online indicator */}
+                              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#090b12] rounded-full z-20"></span>
                             </div>
                           ) : null}
                         </div>
@@ -1122,20 +1136,20 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                         <div className="flex flex-col relative w-full pt-1.5 min-w-0">
                            {/* Author detail info */}
                            {showAvatar && (
-                             <span className="text-[15px] font-black tracking-tight text-gray-100 flex items-baseline gap-2 mb-1">
-                               <span className="hover:underline cursor-pointer decoration-white/30 underline-offset-2">{isAI ? 'Nexus AI' : msg.profiles?.username}</span>
+                             <div className="flex items-baseline flex-wrap gap-2 mb-1.5">
+                               <span className="text-[15px] font-bold tracking-wide text-gray-100 hover:underline cursor-pointer decoration-white/30 underline-offset-4">{isAI ? 'Nexus AI' : msg.profiles?.username}</span>
                                {isAI && (
-                                 <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-[6px] text-[9px] font-black tracking-widest uppercase flex items-center gap-1 shadow-sm">
+                                 <span className="px-1.5 py-0.5 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-400 border border-indigo-500/30 rounded-[6px] text-[9px] font-black tracking-widest uppercase flex items-center gap-1 shadow-sm">
                                     <Bot className="w-3 h-3" /> BOT
                                  </span>
                                )}
                                {!isAI && msg.profiles?.role === 'admin' && (
-                                 <span className="px-1.5 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-[6px] text-[9px] font-black tracking-widest uppercase shadow-sm">ADMIN</span>
+                                 <span className="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/30 rounded-[6px] text-[9px] font-black tracking-widest uppercase shadow-sm">ADMIN</span>
                                )}
-                               <span className="text-[11px] font-bold text-gray-500 tracking-wider ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <span className="text-[11px] font-medium text-gray-500 tracking-wider transition-opacity opacity-70">
                                   {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                </span>
-                             </span>
+                             </div>
                            )}
 
                            {/* Inline block */}
@@ -1148,13 +1162,13 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                                   <div className="space-y-3 mt-0.5">
                                      {/* Text paragraph */}
                                      {displayText && (
-                                        <div className={`text-[15px] ${isAI ? 'text-indigo-100 font-medium' : 'text-gray-300'} leading-[1.65] whitespace-pre-wrap break-words font-normal tracking-wide`}>
+                                        <div className={`text-[15px] ${isAI ? 'text-indigo-200' : 'text-gray-300'} leading-[1.6] whitespace-pre-wrap break-words`}>
                                            {displayText}
                                         </div>
                                      )}
                                      {/* Message attachment image */}
                                      {parsed.image_url && (
-                                       <div className="max-w-[280px] sm:max-w-md rounded-[20px] overflow-hidden border-2 border-white/5 bg-[#0a0b14] cursor-zoom-in group/img transition-all hover:border-cyan-500/40 shadow-xl relative">
+                                       <div className="max-w-[280px] sm:max-w-md rounded-[16px] overflow-hidden border border-white/10 bg-[#0a0b14] cursor-zoom-in group/img transition-all hover:border-cyan-500/50 shadow-lg relative mt-2">
                                           <img 
                                             src={parsed.image_url} 
                                             alt="Adjunto" 
@@ -1259,7 +1273,8 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                 <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3">
                    
                    {/* Chat input fields and image sub-form togglers */}
-                   <div className={`flex-1 relative flex items-center bg-[#0d0f18]/90 backdrop-blur-md border border-white/10 transition-all ${chatImagePreviewUrl ? 'rounded-b-[20px] rounded-tr-[20px]' : 'rounded-[20px]'} focus-within:border-cyan-500/70 focus-within:bg-[#121422] shadow-[0_0_20px_rgba(0,0,0,0.5)] focus-within:shadow-[0_0_30px_rgba(34,211,238,0.15)]`}>
+                   <div className={`flex-1 relative flex items-center bg-[#090b12]/80 backdrop-blur-3xl border border-white/10 transition-all duration-300 ${chatImagePreviewUrl ? 'rounded-b-[24px] rounded-tr-[24px]' : 'rounded-[24px]'} focus-within:border-cyan-500/50 focus-within:bg-[#0c0e18]/90 shadow-[0_10px_40px_rgba(0,0,0,0.5)] focus-within:shadow-[0_0_40px_rgba(34,211,238,0.15)] group/input`}>
+                      <div className="absolute inset-0 rounded-[24px] bg-gradient-to-r from-cyan-900/10 to-blue-900/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
                       {/* Hidden image chooser input */}
                       <input 
                         type="file" 
@@ -1275,15 +1290,15 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                         type="button"
                         onClick={() => document.getElementById('chat-image-upload')?.click()}
                         disabled={isSending}
-                        className="absolute left-2 w-10 h-10 rounded-xl hover:bg-cyan-500/20 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all active:scale-95 disabled:scale-100 group"
+                        className="absolute left-2 w-11 h-11 rounded-[16px] hover:bg-cyan-500/20 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all active:scale-95 disabled:scale-100 group relative z-10"
                         title="Adjuntar"
                       >
-                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                         <Plus className="w-[22px] h-[22px] group-hover:rotate-90 transition-transform duration-300" />
                       </button>
 
                       <input 
                         type="text"
-                        className="w-full bg-transparent h-[56px] sm:h-[60px] pl-14 pr-16 text-white text-[15px] sm:text-[16px] font-medium tracking-wide focus:outline-none placeholder:text-gray-600"
+                        className="w-full bg-transparent h-[60px] sm:h-[64px] pl-16 pr-16 text-white text-[15px] sm:text-[16px] font-medium tracking-wide focus:outline-none placeholder:text-gray-600 relative z-10"
                         placeholder={`Enviar mensaje en #${activeChannel}...`}
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
@@ -1292,8 +1307,8 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                       />
 
                       {/* Right edge emoji button (visual only) */}
-                      <div className="absolute right-3 opacity-50 hover:opacity-100 transition-opacity cursor-pointer text-gray-400 hover:text-white">
-                         <Smile className="w-5 h-5" />
+                      <div className="absolute right-3 w-10 h-10 rounded-[14px] flex items-center justify-center hover:bg-white/5 opacity-60 hover:opacity-100 transition-all cursor-pointer text-gray-400 hover:text-white relative z-10">
+                         <Smile className="w-[22px] h-[22px]" />
                       </div>
                    </div>
 
@@ -1301,7 +1316,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                    <button 
                       type="submit"
                       disabled={(!newMessage.trim() && !chatImageFile) || isSending}
-                      className="w-[56px] h-[56px] sm:w-[60px] sm:h-[60px] shrink-0 bg-gradient-to-tr from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-[#151822] disabled:to-[#151822] active:scale-95 disabled:scale-100 rounded-[20px] flex items-center justify-center text-white disabled:opacity-50 disabled:text-gray-600 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] disabled:shadow-none relative group overflow-hidden"
+                      className="w-[60px] h-[60px] sm:w-[64px] sm:h-[64px] shrink-0 bg-gradient-to-tr from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-[#151822] disabled:to-[#151822] active:scale-95 disabled:scale-100 rounded-[24px] flex items-center justify-center text-white disabled:opacity-50 disabled:text-gray-600 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] disabled:shadow-none relative group overflow-hidden border border-cyan-400/20 disabled:border-white/5"
                    >
                       <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden" />
                       {isSending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-1 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
