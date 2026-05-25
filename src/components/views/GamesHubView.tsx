@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, Share2, MessageSquare, ExternalLink, Zap } from 'lucide-react';
+import { Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, Share2, MessageSquare, ExternalLink, Zap, Crosshair } from 'lucide-react';
 import { GameStudioEditor } from './GameStudioEditor';
+import { GameStudioEditor3D } from './GameStudioEditor3D';
 
 interface GamesHubViewProps {
   onBack: () => void;
@@ -10,6 +11,10 @@ interface GamesHubViewProps {
 export function GamesHubView({ onBack }: GamesHubViewProps) {
   const [activeTab, setActiveTab] = useState('explore');
   const [editorTemplate, setEditorTemplate] = useState<string | null>(null);
+
+  if (editorTemplate?.includes('3D')) {
+    return <GameStudioEditor3D initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />;
+  }
 
   if (editorTemplate) {
     return <GameStudioEditor initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />;
@@ -152,10 +157,12 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                {[
+                 { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10' },
+                 { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10' },
+                 { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
                  { title: 'Platformer', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
                  { title: 'Arcade Shooter', icon: ExternalLink, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
                  { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                 { title: 'Blank Canvas', icon: Plus, color: 'text-gray-400', bg: 'bg-white/5' },
                ].map((t, i) => (
                  <button key={i} onClick={() => setEditorTemplate(t.title)} className="p-6 rounded-2xl bg-[#1a1c24] border border-white/5 hover:border-cyan-500/30 text-left transition-all hover:bg-[#1f212a] group">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${t.bg} mb-4`}>

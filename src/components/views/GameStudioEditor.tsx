@@ -9,14 +9,22 @@ interface GameStudioEditorProps {
 
 interface GameObject {
   id: string;
-  type: 'player' | 'platform' | 'enemy' | 'coin';
+  type: 'player' | 'platform' | 'enemy' | 'coin' | 'bullet';
   x: number;
   y: number;
   width: number;
   height: number;
   color: string;
   isStatic?: boolean;
+  velocityX?: number;
+  velocityY?: number;
+  hp?: number;
+  owner?: 'player' | 'enemy';
+  spriteUrl?: string;
 }
+
+// Simple global cache for loaded images
+const imageCache: Record<string, HTMLImageElement> = {};
 
 export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,8 +45,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
     playerVelY: 0,
     playerVelX: 0,
     score: 0,
+    lives: 3,
     gameOver: false,
-    keys: {} as Record<string, boolean>
+    keys: {} as Record<string, boolean>,
+    lastShot: 0
   });
 
   // Editor interaction state
@@ -72,6 +82,13 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
     } else if (initialTemplate === 'Clicker / Idle') {
       setObjects([
         { id: 'coin_mega', type: 'coin', x: 300, y: 200, width: 150, height: 150, color: '#eab308' }
+      ]);
+    } else if (initialTemplate === 'Arcade Shooter') {
+      setObjects([
+        { id: 'p1', type: 'player', x: 400, y: 400, width: 40, height: 40, color: '#22d3ee', isStatic: false, hp: 3 },
+        { id: 'enemy1', type: 'enemy', x: 100, y: 100, width: 30, height: 30, color: '#ef4444', hp: 1 },
+        { id: 'enemy2', type: 'enemy', x: 700, y: 100, width: 30, height: 30, color: '#ef4444', hp: 1 },
+        { id: 'enemy3', type: 'enemy', x: 400, y: 50, width: 30, height: 30, color: '#ef4444', hp: 1 },
       ]);
     }
   }, [initialTemplate]);
@@ -112,16 +129,42 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
             else if (state.keys['ArrowLeft'] || state.keys['a']) state.playerVelX = -200;
             else state.playerVelX = 0;
 
-            if ((state.keys['ArrowUp'] || state.keys['w']) && state.playerVelY === 0) {
-              state.playerVelY = -400; // Jump
+            if (initialTemplate === 'Arcade Shooter') {
+               if (state.keys['ArrowUp'] || state.keys['w']) state.playerVelY = -200;
+               else if (state.keys['ArrowDown'] || state.keys['s']) state.playerVelY = 200;
+               else state.playerVelY = 0;
+
+               // Shooting logic with cooldown
+               if ((state.keys[' '] || state.keys['Spacebar']) && time - state.lastShot > 250) {
+                 state.objects.push({
+                   id: 'b_' + Math.random(),
+                   type: 'bullet',
+                   x: player.x + player.width/2 - 4,
+                   y: player.y - 10,
+                   width: 8,
+                   height: 16,
+                   color: '#facc15',
+                   velocityY: -500,
+                   velocityX: 0,
+                   owner: 'player'
+                 });
+                 state.lastShot = time;
+               }
+
+               // Apply vel
+               player.x += state.playerVelX * dt;
+               player.y += state.playerVelY * dt;
+            } else {
+               if ((state.keys['ArrowUp'] || state.keys['w']) && state.playerVelY === 0) {
+                 state.playerVelY = -400; // Jump
+               }
+               // Gravity
+               state.playerVelY += 1000 * dt;
+
+               // Apply vel
+               player.x += state.playerVelX * dt;
+               player.y += state.playerVelY * dt;
             }
-
-            // Gravity
-            state.playerVelY += 1000 * dt;
-
-            // Apply vel
-            player.x += state.playerVelX * dt;
-            player.y += state.playerVelY * dt;
 
             // Floor boundary collision (canvas bounds)
             if (player.y + player.height > canvas.height) {
@@ -130,13 +173,70 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
             }
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.y < 0) player.y = 0;
 
-            // Check AABB Collisions
+            // Handle Bullet update
+            for (let i = state.objects.length - 1; i >= 0; i--) {
+               let o = state.objects[i];
+               if (o.type === 'bullet') {
+                  if (o.velocityY) o.y += o.velocityY * dt;
+                  if (o.velocityX) o.x += o.velocityX * dt;
+                  
+                  // Delete bullet if out of bounds
+                  if (o.y < -50 || o.y > canvas.height + 50 || o.x < -50 || o.x > canvas.width + 50) {
+                     state.objects.splice(i, 1);
+                     continue;
+                  }
+
+                  // Bullet - Enemy Collision
+                  if (o.owner === 'player') {
+                     for (let j = state.objects.length - 1; j >= 0; j--) {
+                        let enemy = state.objects[j];
+                        if (enemy.type === 'enemy') {
+                           if (o.x < enemy.x + enemy.width && o.x + o.width > enemy.x && o.y < enemy.y + enemy.height && o.y + o.height > enemy.y) {
+                              state.score += 50;
+                              setGameScore(state.score);
+                              state.objects.splice(j, 1);
+                              // Splice bullet if we didn't shift index
+                              const bIdx = state.objects.indexOf(o);
+                              if (bIdx !== -1) state.objects.splice(bIdx, 1);
+                              break;
+                           }
+                        }
+                     }
+                  }
+               } else if (o.type === 'enemy' && initialTemplate === 'Arcade Shooter') {
+                  // Enemy rudimentary AI: move towards player
+                  if (o.x < player.x) o.x += 50 * dt;
+                  if (o.x > player.x) o.x -= 50 * dt;
+                  if (o.y < canvas.height - 100) o.y += 10 * dt; // enemies move down slowly
+               }
+            }
+
+            // Spawn enemies randomly in Arcade Shooter
+            if (initialTemplate === 'Arcade Shooter') {
+               if (Math.random() < 0.01) {
+                  state.objects.push({
+                     id: 'e_' + Math.random(),
+                     type: 'enemy',
+                     x: Math.random() * (canvas.width - 30),
+                     y: -30,
+                     width: 30,
+                     height: 30,
+                     color: '#ef4444',
+                     hp: 1
+                  });
+               }
+            }
+
+            // Check Player vs Other Collisions
             let isGrounded = false;
             for (let i = 0; i < state.objects.length; i++) {
               if (i === playerIdx) continue;
               const o = state.objects[i];
               
+              if (o.type === 'bullet') continue; // Handled
+
               const isColliding = (
                 player.x < o.x + o.width && 
                 player.x + player.width > o.x && 
@@ -158,7 +258,14 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                   state.objects.splice(i, 1);
                   i--;
                 } else if (o.type === 'enemy') {
-                  state.gameOver = true;
+                  state.lives -= 1;
+                  if (state.lives <= 0) {
+                     state.gameOver = true;
+                  } else {
+                     // knockback
+                     player.y += 50;
+                     if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
+                  }
                 }
               }
             }
@@ -167,21 +274,79 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
         
         // Draw play state
         state.objects.forEach(obj => {
-          ctx.fillStyle = obj.color;
-          if (obj.type === 'coin') {
-            ctx.beginPath();
-            ctx.arc(obj.x + obj.width/2, obj.y + obj.height/2, obj.width/2, 0, Math.PI * 2);
-            ctx.fill();
-          } else {
-            ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+          if (obj.spriteUrl) {
+             if (!imageCache[obj.spriteUrl]) {
+                const img = new Image();
+                img.src = obj.spriteUrl;
+                imageCache[obj.spriteUrl] = img;
+             }
+             const img = imageCache[obj.spriteUrl];
+             if (img.complete) {
+                ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
+                // early return for this obj drawing
+             }
+          }
+
+          if (!obj.spriteUrl || !imageCache[obj.spriteUrl]?.complete) {
+              ctx.fillStyle = obj.color;
+              if (obj.type === 'coin') {
+                ctx.beginPath();
+                ctx.arc(obj.x + obj.width/2, obj.y + obj.height/2, obj.width/2, 0, Math.PI * 2);
+                ctx.fill();
+              } else if (obj.type === 'bullet') {
+                 ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                 // render trail
+                 ctx.fillStyle = 'rgba(250, 204, 21, 0.5)';
+                 ctx.fillRect(obj.x + 1, obj.y + obj.height, obj.width - 2, 8);
+              } else if (obj.type === 'player' && initialTemplate === 'Arcade Shooter') {
+                 // Draw simple spaceship
+                 ctx.beginPath();
+                 ctx.moveTo(obj.x + obj.width/2, obj.y);
+                 ctx.lineTo(obj.x + obj.width, obj.y + obj.height);
+                 ctx.lineTo(obj.x + obj.width/2, obj.y + obj.height - 10);
+                 ctx.lineTo(obj.x, obj.y + obj.height);
+                 ctx.closePath();
+                 ctx.fill();
+                 
+                 // engine glow
+                 if (state.keys['ArrowUp'] || state.keys['w']) {
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x + obj.width/2 - 5, obj.y + obj.height - 5);
+                    ctx.lineTo(obj.x + obj.width/2 + 5, obj.y + obj.height - 5);
+                    ctx.lineTo(obj.x + obj.width/2, obj.y + obj.height + 15);
+                    ctx.closePath();
+                    ctx.fill();
+                 }
+              } else if (obj.type === 'enemy' && initialTemplate === 'Arcade Shooter') {
+                 // Draw simple alien/enemy ship
+                 ctx.fillRect(obj.x, obj.y + 10, obj.width, obj.height - 20);
+                 ctx.fillRect(obj.x + 5, obj.y, obj.width - 10, obj.height);
+                 ctx.fillStyle = 'white';
+                 ctx.fillRect(obj.x + 5, obj.y + 10, 5, 5); // eye
+                 ctx.fillRect(obj.x + obj.width - 10, obj.y + 10, 5, 5); // eye
+              } else {
+                ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+              }
           }
         });
+
+        // Draw Player Lives HUD
+        if (initialTemplate === 'Arcade Shooter') {
+          ctx.fillStyle = '#ef4444';
+          for (let i = 0; i < state.lives; i++) {
+            ctx.fillRect(20 + i * 25, 20, 15, 15);
+          }
+        }
 
         if (state.gameOver) {
           ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
           ctx.font = 'bold 36px Inter';
           ctx.textAlign = 'center';
           ctx.fillText('Game Over', canvas.width/2, canvas.height/2);
+          ctx.font = 'bold 18px Inter';
+          ctx.fillStyle = 'white';
+          ctx.fillText('Haz clic para intentar de nuevo', canvas.width/2, canvas.height/2 + 40);
         }
       } else {
         // Draw edit state
@@ -227,8 +392,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
       playerVelY: 0,
       playerVelX: 0,
       score: 0,
+      lives: 3,
       gameOver: false,
-      keys: {}
+      keys: {},
+      lastShot: 0
     };
     setGameScore(0);
     setMode('play');
@@ -241,6 +408,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
 
   const handleCanvasPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (mode === 'play') {
+      if (playState.current.gameOver) {
+         startPlayMode();
+         return;
+      }
       if (initialTemplate === 'Clicker / Idle' && playState.current) {
         const rect = canvasRef.current!.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -397,21 +568,53 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
 
             {/* Mobile overlay for Play Mode (Controls) */}
             {mode === 'play' && initialTemplate !== 'Clicker / Idle' && (
-               <div className="absolute bottom-10 left-0 w-full px-8 flex justify-between md:hidden pointer-events-none">
-                 <div className="flex gap-4">
-                   <button className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full pointer-events-auto border border-white/10 flex items-center justify-center active:bg-white/30"
-                     onTouchStart={() => { playState.current.keys['a'] = true; }}
-                     onTouchEnd={() => { playState.current.keys['a'] = false; }}
-                   ><ChevronLeft className="w-8 h-8 text-white" /></button>
-                   <button className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full pointer-events-auto border border-white/10 flex items-center justify-center active:bg-white/30"
-                     onTouchStart={() => { playState.current.keys['d'] = true; }}
-                     onTouchEnd={() => { playState.current.keys['d'] = false; }}
-                   ><ChevronLeft className="w-8 h-8 text-white rotate-180" /></button>
+               <div className="absolute bottom-6 left-0 w-full px-6 flex justify-between items-end md:hidden pointer-events-none">
+                 {initialTemplate === 'Arcade Shooter' ? (
+                   <div className="grid grid-cols-3 gap-2 pointer-events-auto">
+                     <div /> {/* Top Left */}
+                     <button className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-white/30"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['w'] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['w'] = false; }}
+                     ><ChevronLeft className="w-6 h-6 text-white rotate-90" /></button>
+                     <div /> {/* Top Right */}
+                     <button className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-white/30"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['a'] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['a'] = false; }}
+                     ><ChevronLeft className="w-6 h-6 text-white" /></button>
+                     <button className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-white/30"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['s'] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['s'] = false; }}
+                     ><ChevronLeft className="w-6 h-6 text-white -rotate-90" /></button>
+                     <button className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-white/30"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['d'] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['d'] = false; }}
+                     ><ChevronLeft className="w-6 h-6 text-white rotate-180" /></button>
+                   </div>
+                 ) : (
+                   <div className="flex gap-4 pointer-events-auto">
+                     <button className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center active:bg-white/30"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['a'] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['a'] = false; }}
+                     ><ChevronLeft className="w-8 h-8 text-white" /></button>
+                     <button className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center active:bg-white/30"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['d'] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['d'] = false; }}
+                     ><ChevronLeft className="w-8 h-8 text-white rotate-180" /></button>
+                   </div>
+                 )}
+
+                 <div className="flex gap-4 pointer-events-auto">
+                   {initialTemplate === 'Arcade Shooter' && (
+                     <button className="w-16 h-16 bg-yellow-500/40 backdrop-blur-md rounded-full border border-yellow-400/50 flex items-center justify-center active:bg-yellow-500/60 shadow-[0_0_15px_rgba(250,204,21,0.5)]"
+                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys[' '] = true; }}
+                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys[' '] = false; }}
+                     ><Globe className="w-8 h-8 text-white" /></button>
+                   )}
+                   <button className="w-16 h-16 bg-cyan-500/40 backdrop-blur-md rounded-full border border-cyan-400/50 flex items-center justify-center active:bg-cyan-500/60 shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+                     onTouchStart={(e) => { e.preventDefault(); playState.current.keys['w'] = true; }}
+                     onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['w'] = false; }}
+                   ><PlusCircle className="w-8 h-8 text-white" /></button>
                  </div>
-                 <button className="w-16 h-16 bg-cyan-500/40 backdrop-blur-md rounded-full pointer-events-auto border border-cyan-400/50 flex items-center justify-center active:bg-cyan-500/60 shadow-[0_0_15px_rgba(34,211,238,0.5)]"
-                   onTouchStart={() => { playState.current.keys['w'] = true; }}
-                   onTouchEnd={() => { playState.current.keys['w'] = false; }}
-                 ><PlusCircle className="w-8 h-8 text-white" /></button>
                </div>
             )}
         </div>
@@ -449,6 +652,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                      <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 block">Alto</label>
                      <input type="number" value={obj.height} onChange={e => setObjects(prev => prev.map(o => o.id === obj.id ? {...o, height: Number(e.target.value)} : o))} className="w-full bg-black/40 border border-white/10 px-3 py-2 rounded-lg text-white text-sm focus:border-cyan-500 outline-none" />
                    </div>
+                 </div>
+                 <div>
+                   <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 block">Sprite URL (PNG/GIF)</label>
+                   <input type="text" placeholder="https://..." value={obj.spriteUrl || ''} onChange={e => setObjects(prev => prev.map(o => o.id === obj.id ? {...o, spriteUrl: e.target.value} : o))} className="w-full bg-black/40 border border-white/10 px-3 py-2 rounded-lg text-white text-sm focus:border-cyan-500 outline-none" />
                  </div>
                  <button 
                    onClick={() => {
