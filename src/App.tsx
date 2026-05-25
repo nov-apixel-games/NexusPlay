@@ -804,6 +804,8 @@ export default function App() {
         isAdmin={isAdmin}
         session={session}
         onLogout={handleLogout}
+        webLogo={webLogo}
+        platformName={platformName}
       />
 
       {isFullScreenView ? (

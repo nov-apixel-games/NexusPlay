@@ -34,10 +34,21 @@ const getMenuItems = (isAdmin: boolean) => [
   ]}
 ];
 
-export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, onLogout }: SidebarProps) {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAction: (action: string) => void;
+  isAdmin: boolean;
+  session: any;
+  onLogout?: () => void;
+  webLogo?: string;
+  platformName?: string;
+}
+
+export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, onLogout, webLogo, platformName: propPlatformName = 'NexusPlay' }: SidebarProps) {
   const MENU_ITEMS = getMenuItems(isAdmin);
-  const displayLogo = localStorage.getItem('nexus_web_logo');
-  const platformName = localStorage.getItem('nexus_platform_name') || 'NexusPlay';
+  const displayLogo = webLogo || localStorage.getItem('nexus_web_logo');
+  const platformName = propPlatformName || localStorage.getItem('nexus_platform_name') || 'NexusPlay';
 
   return (
     <AnimatePresence>
@@ -51,26 +62,30 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, o
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
           />
           <motion.div 
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 h-full w-72 bg-[#0a0b14] z-[70] border-r border-white/5 overflow-y-auto"
+            initial={{ x: '-100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200, mass: 0.8 }}
+            className="fixed top-0 left-0 h-full w-[280px] sm:w-80 bg-[#06070d]/95 backdrop-blur-2xl z-[70] border-r border-white/5 overflow-y-auto"
           >
-            <div className="p-6 flex flex-col gap-8">
+            <div className="p-6 pt-8 flex flex-col gap-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 sm:gap-4 group">
                   {displayLogo ? (
-                     <img src={displayLogo} alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
-                  ) : (
-                     <div className="w-8 h-8 rounded-lg bg-nexus-cyan flex flex-shrink-0 items-center justify-center">
-                        <Gamepad2 className="w-5 h-5 text-black" />
+                     <div className="relative">
+                       <div className="absolute inset-0 bg-purple-500 rounded-xl blur-[12px] opacity-40 group-hover:opacity-70 group-hover:blur-[16px] transition-all duration-300"></div>
+                       <img 
+                         src={displayLogo} 
+                         alt={`${platformName} Logo`}
+                         className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-[16px] object-cover relative z-10 shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-transform duration-300 group-hover:scale-105"
+                         referrerPolicy="no-referrer"
+                       />
                      </div>
-                  )}
-                  <span className="text-gray-200 font-black tracking-wider text-xl uppercase truncate">{platformName}</span>
+                  ) : null}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 font-black tracking-tighter text-2xl sm:text-3xl drop-shadow-sm">{platformName}</span>
                 </div>
-                <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-full shrink-0">
-                  <X className="w-5 h-5" />
+                <button onClick={onClose} className="p-2 -mr-2 hover:bg-white/10 rounded-full shrink-0 text-gray-400 hover:text-white transition-colors">
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 

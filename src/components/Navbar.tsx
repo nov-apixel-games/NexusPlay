@@ -93,21 +93,16 @@ export default function Navbar({
           className="group flex items-center gap-3 sm:gap-4 transition-transform hover:scale-105 active:scale-95"
         >
           {displayLogo ? (
-            <img 
-              src={displayLogo}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const fallback = e.currentTarget.parentElement?.querySelector('.logo-fallback');
-                if (fallback) fallback.classList.remove('hidden');
-              }}
-              alt={`${platformName} Logo`} 
-              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-xl sm:rounded-[16px] shadow-[0_0_20px_rgba(34,211,238,0.2)] group-hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition-all" 
-              referrerPolicy="no-referrer"
-            />
+            <div className="relative">
+              <div className="absolute inset-0 bg-purple-500 rounded-xl blur-[12px] opacity-40 group-hover:opacity-70 group-hover:blur-[16px] transition-all duration-300"></div>
+              <img 
+                src={displayLogo}
+                alt={`${platformName} Logo`} 
+                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-xl sm:rounded-[16px] shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-transform duration-300 relative z-10" 
+                referrerPolicy="no-referrer"
+              />
+            </div>
           ) : null}
-          <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl sm:rounded-[16px] items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.3)] logo-fallback ${displayLogo ? 'hidden' : 'flex'}`}>
-            <Gamepad2 className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-md" />
-          </div>
           <span className="font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 hidden sm:block text-2xl sm:text-3xl drop-shadow-sm">
             {platformName}
           </span>
