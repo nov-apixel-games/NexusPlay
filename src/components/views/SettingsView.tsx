@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, CreditCard, Wifi, RefreshCw, Trash2, Bell, Palette, Globe, ChevronLeft, Save } from 'lucide-react';
+import { User, Lock, CreditCard, Wifi, RefreshCw, Trash2, Bell, Palette, Globe, ChevronLeft, Save, Settings, Monitor } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface SettingsViewProps {
@@ -47,10 +47,22 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
 
   useEffect(() => {
     localStorage.setItem('nexus_theme', theme);
-    if (theme === 'light') {
-      document.body.classList.add('light-theme');
-    } else {
-      document.body.classList.remove('light-theme');
+    const applyTheme = (t: string) => {
+      const isDark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (!isDark) {
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+      }
+    };
+    
+    applyTheme(theme);
+    
+    if (theme === 'auto') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme('auto');
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
     }
   }, [theme]);
 
@@ -80,23 +92,26 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
     showToast('Historial de búsqueda eliminado.');
   };
 
-  const addPaymentMethod = () => {
-    showToast('Método de pago (simulado) registrado.');
-  };
-
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="fixed inset-0 z-50 bg-[#0a0b14]/95 backdrop-blur-xl overflow-y-auto">
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="fixed inset-0 z-[100] bg-[#0a0b14]/95 backdrop-blur-2xl overflow-y-auto">
       {toastMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-black px-6 py-3 rounded-full font-bold shadow-lg z-[60]">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-black px-6 py-3 rounded-full font-bold shadow-lg z-[110]">
           {toastMessage}
         </div>
       )}
-      <div className="max-w-4xl mx-auto p-6 pt-12">
-        <button onClick={onBack} className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-bold mb-8 transition-colors">
-          <ChevronLeft className="w-5 h-5" /> Volver al Perfil
+      
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-[#0a0b14]/90 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between shadow-lg">
+        <button onClick={onBack} className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-xl transition-all border border-transparent hover:border-cyan-500/30">
+          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Volver al Perfil
         </button>
-        <h1 className="text-3xl font-black mb-8 text-white">Configuración</h1>
+        <div className="flex items-center gap-3">
+          <Settings className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Configuración</h1>
+        </div>
+      </div>
 
+      <div className="max-w-4xl mx-auto p-6 pt-8">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-64 flex flex-col gap-2">
             <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={User} label="Gestión de Cuenta" />
@@ -154,13 +169,6 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                     </button>
                   </div>
                 </div>
-                <div className="h-px bg-white/10" />
-                <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-white"><CreditCard className="w-5 h-5 text-cyan-400" /> Métodos de Pago</h3>
-                  <button onClick={addPaymentMethod} className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-colors">
-                    <CreditCard className="w-5 h-5" /> Registrar tarjeta simulada
-                  </button>
-                </div>
               </div>
             )}
 
@@ -217,12 +225,16 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-white"><Palette className="w-5 h-5 text-cyan-400" /> Selector de Tema</h3>
                   <div className="flex items-center gap-4">
                     <button onClick={() => setTheme('dark')} className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-xl border-2 transition-all ${theme === 'dark' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'}`}>
-                      <div className="w-6 h-6 rounded-full bg-black border border-white/20"></div>
-                      <span className="font-bold">Oscuro</span>
+                      <div className="w-6 h-6 rounded-full bg-[#0a0c10] border border-white/20 shadow-inner"></div>
+                      <span className="font-bold text-sm">Oscuro Neón</span>
                     </button>
                     <button onClick={() => setTheme('light')} className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-xl border-2 transition-all ${theme === 'light' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'}`}>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-300"></div>
-                      <span className="font-bold">Claro</span>
+                      <div className="w-6 h-6 rounded-full bg-slate-100 border border-gray-300 shadow-sm"></div>
+                      <span className="font-bold text-sm">Claro Limpio</span>
+                    </button>
+                    <button onClick={() => setTheme('auto')} className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-xl border-2 transition-all ${theme === 'auto' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'}`}>
+                      <Monitor className="w-6 h-6" />
+                      <span className="font-bold text-sm">Sistema</span>
                     </button>
                   </div>
                 </div>

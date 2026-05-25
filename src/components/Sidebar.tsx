@@ -20,12 +20,12 @@ const getMenuItems = (isAdmin: boolean) => [
   { label: 'Plataforma', items: [
     { label: 'Inicio', icon: Home, id: 'home', active: true },
     { label: 'Modo Explorar', icon: Compass, id: 'explore' },
+    { label: 'Games Hub', icon: Gamepad2, id: 'games-hub' },
     { label: 'Ranking Global', icon: Trophy, id: 'ranking' },
     { label: 'Nexus Hub', icon: Users, id: 'nexus-hub' },
     { label: 'Colecciones', icon: PlusSquare, id: 'collections' },
     { label: 'Misiones & XP', icon: Zap, id: 'achievements' },
     { label: 'Novedades', icon: Compass, id: 'events' },
-    { label: 'Juegos', icon: Gamepad2, id: 'games' },
   ]},
   { label: 'Cuenta', items: [
     { label: 'Nexus AI', icon: BrainCircuit, id: 'nexus-ai' },

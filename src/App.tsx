@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import Footer from './components/Footer';
 import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditionsView, CookiePolicyView, AboutView } from './components/views/LegalViews';
 import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
+import { GamesHubView } from './components/views/GamesHubView';
 import { AppDetailView } from './components/views/AppDetailView';
 import { SettingsView } from './components/views/SettingsView';
 import NexusHub from './components/NexusHub';
@@ -151,6 +152,19 @@ export default function App() {
         } else {
           document.title = 'NexusPlay';
         }
+
+        // Apply global theme
+        const theme = localStorage.getItem('nexus_theme') || 'dark';
+        const applyTheme = (t: string) => {
+          const isDark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (!isDark) {
+            document.body.classList.add('light-theme');
+          } else {
+            document.body.classList.remove('light-theme');
+          }
+        };
+        applyTheme(theme);
+
       } catch (err) {
         console.error("Initialization error:", err);
       } finally {
@@ -618,6 +632,8 @@ export default function App() {
         );
       case 'games':
         return <GamesView apps={publishedApps} onAppClick={handleAppClick} />;
+      case 'games-hub':
+        return <GamesHubView onBack={() => setActiveView('home')} />;
       case 'explore':
         return <ExploreView apps={publishedApps} onAppClick={handleAppClick} onAction={(action) => setActiveView(action)} />;
       case 'ranking':
