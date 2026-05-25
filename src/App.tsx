@@ -803,6 +803,7 @@ export default function App() {
         onAction={handleAction}
         isAdmin={isAdmin}
         session={session}
+        userProfile={userProfile}
         onLogout={handleLogout}
         webLogo={webLogo}
         platformName={platformName}
