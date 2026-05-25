@@ -9,7 +9,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Hero from './components/Hero';
 import CategorySection from './components/CategorySection';
-import AppGrid from './components/AppGrid';
+import AppGrid, { AppCard } from './components/AppGrid';
 import BottomNav from './components/BottomNav';
 import DeveloperPanel from './components/DeveloperPanel';
 import { AppItem, UserItem, AIConfig, DevRequest } from './types';
@@ -513,6 +513,8 @@ export default function App() {
         return (
           <>
             <Hero storeName={settings.storeName} slogan={settings.slogan} onAction={(action) => setActiveView(action)} />
+            
+            {/* Categorías */}
             <CategorySection 
                onCategoryClick={(cat) => {
                  setSearchQuery(cat);
@@ -520,14 +522,97 @@ export default function App() {
                }} 
                onSeeAll={() => setActiveView('games')} 
             />
-            <div className="max-w-7xl mx-auto px-6 w-full mb-16">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-black flex items-center gap-3">
+            
+            {/* Destacados (Horizontal Scrolling Premium) */}
+            <div className="max-w-7xl mx-auto px-6 w-full mb-16 relative">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
                   <div className="w-1.5 h-8 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
-                  Apps Destacadas
+                  Destacados
                 </h2>
               </div>
               <AppGrid apps={publishedApps.length > 0 ? (publishedApps.filter(a => a.featured).length > 0 ? publishedApps.filter(a => a.featured) : publishedApps.sort((a,b) => b.rating - a.rating).slice(0, 10)) : []} onAppClick={handleAppClick} />
+            </div>
+
+            {/* Popular Grid Vertical -> Changed to Horizontal */}
+            <div className="max-w-7xl mx-auto px-6 w-full mb-16 relative">
+               <div className="absolute -top-40 right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+               <div className="flex items-center justify-between mb-6">
+                 <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
+                    <div className="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+                    Tendencias Globales
+                 </h2>
+                 <button onClick={() => setActiveView('games')} className="text-purple-400 text-[13px] font-black hover:text-purple-300 transition-colors uppercase tracking-widest hidden sm:block">
+                   Explorar Catálogo
+                 </button>
+               </div>
+               
+               <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-8 pt-4 snap-x snap-mandatory no-scrollbar w-full relative flex-nowrap pl-6 -ml-6 pr-6">
+                 {publishedApps.length > 0 ? publishedApps.sort((a,b) => parseInt(String(b.downloads).replace(/\D/g,'') || '0') - parseInt(String(a.downloads).replace(/\D/g,'') || '0')).slice(0, 8).map(app => (
+                    <div key={app.id} className="snap-start shrink-0">
+                      <div 
+                        onClick={() => handleAppClick(app)}
+                        className="flex flex-col overflow-hidden bg-[#0a0c16] border border-white/5 hover:border-purple-500/40 rounded-[24px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_15px_40px_rgba(168,85,247,0.15)] w-[260px] sm:w-[320px] group"
+                      >
+                         <div className="h-[140px] relative overflow-hidden bg-black/40">
+                           {app.screenshots && app.screenshots.length > 0 ? (
+                             <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
+                           ) : (
+                             <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" />
+                           )}
+                           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c16] to-transparent"></div>
+                           <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 flex items-center gap-1 shadow-lg">
+                             <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                             <span className="text-[10px] font-black text-white tracking-widest uppercase">Hot</span>
+                           </div>
+                         </div>
+                         <div className="p-4 sm:p-5 flex items-start gap-4 -mt-8 relative z-10">
+                           <img src={app.icon} className="w-14 h-14 rounded-2xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] border-2 border-[#0a0c16] bg-[#121422] shrink-0" />
+                           <div className="flex-1 min-w-0 pt-8">
+                             <h3 className="font-black text-white text-[16px] truncate group-hover:text-purple-400 transition-colors">{app.name}</h3>
+                             <p className="text-[12px] text-gray-400 font-medium truncate mt-0.5">{app.developer}</p>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                 )) : (
+                    <div className="py-10 text-center text-gray-500 font-medium w-full">Cargando tendencias...</div>
+                 )}
+               </div>
+            </div>
+            
+            {/* Nuevos Lanzamientos */}
+            <div className="max-w-7xl mx-auto px-6 w-full mb-24">
+               <div className="flex items-center justify-between mb-6">
+                 <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
+                    <div className="w-1.5 h-8 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                    Nuevos Lanzamientos
+                 </h2>
+               </div>
+               
+               <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-8 pt-4 snap-x snap-mandatory no-scrollbar w-full relative flex-nowrap pl-6 -ml-6 pr-6">
+                 {publishedApps.length > 0 ? publishedApps.slice(-8).reverse().map(app => (
+                    <div key={app.id} className="snap-start shrink-0">
+                      <div 
+                        onClick={() => handleAppClick(app)}
+                        className="flex flex-row items-center overflow-hidden bg-white/5 border border-white/10 hover:border-blue-500/40 rounded-[20px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)] group hover:bg-[#0d0f1a] p-4 w-[280px] sm:w-[340px]"
+                      >
+                         <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-black/40 group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" />
+                         <div className="ml-4 flex-1 min-w-0">
+                            <h4 className="text-[15px] font-black text-white truncate group-hover:text-blue-400 transition-colors">{app.name}</h4>
+                            <p className="text-[11px] font-bold tracking-widest uppercase text-blue-500/80 truncate mt-1">{app.category}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                               <div className="flex items-center gap-1.5 opacity-80">
+                                 <span className="text-[10px] text-gray-400 font-black tracking-widest">{app.rating}</span>
+                                 <span className="text-yellow-400 text-[10px]">★</span>
+                               </div>
+                               <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-md border border-blue-500/20">Nuevo</span>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                 )) : null}
+               </div>
             </div>
           </>
         );

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageSquare, Users, Plus, Hash, Settings, MoreVertical, 
   Trash2, X, Send, Pin, Shield, AlertTriangle, UserMinus, Search, Menu, ChevronLeft, Image as ImageIcon,
-  Activity, Clock, Smile, Volume2, Lock, Bot
+  Activity, Clock, Smile, Volume2, Lock, Bot, Compass, Flame, Star, Sparkles, Gamepad2, Zap
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
@@ -140,11 +140,13 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
         <CommunitiesDashboard 
           communities={communities} 
           isLoading={isLoading} 
-          onSelect={(c) => setActiveCommunity(c)} 
+          onSelect={(c: Community) => setActiveCommunity(c)} 
           onCreateClick={() => setShowCreateModal(true)}
           isAdmin={isAdmin}
           onDelete={deleteCommunity}
           onBack={onBack}
+          userProfile={userProfile}
+          session={session}
         />
       )}
 
@@ -171,7 +173,13 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
 // COMMUNITIES DASHBOARD
 // ============================================================================
 
-function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick, isAdmin, onDelete, onBack }: any) {
+function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick, isAdmin, onDelete, onBack, userProfile, session }: any) {
+  const [activeTab, setActiveTab] = useState<'home' | 'explore'>('home');
+  const validCommunities = communities.filter((c: any) => c.image_url);
+  const recommended = validCommunities.slice(0, 4);
+  const activeNow = validCommunities.slice().reverse().slice(0, 3);
+  const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Jugador';
+
   return (
     <div className="flex flex-col h-[100dvh] w-full relative z-10 bg-[#06070a]">
       {/* Background Orbs */}
@@ -180,34 +188,179 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
         <div className="absolute top-[40%] -left-[10%] w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[120px]" />
       </div>
 
-      <header className="h-[80px] shrink-0 bg-[#06070a]/80 backdrop-blur-3xl border-b flex items-center justify-between px-6 sm:px-10 sticky top-0 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.5)]" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="w-12 h-12 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-[16px] flex items-center justify-center transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-            <ChevronLeft className="w-6 h-6 text-gray-300" />
-          </button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter flex items-center gap-3 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-                 <Users className="w-5 h-5 text-white drop-shadow-md" />
-              </div>
-              NEXUS HUB
-            </h1>
-          </div>
+      <header className="shrink-0 bg-[#06070a]/80 backdrop-blur-3xl border-b flex flex-col justify-between px-6 sm:px-10 sticky top-0 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] pt-6" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+           <div className="flex items-center gap-4">
+             <button onClick={onBack} className="w-12 h-12 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-[16px] flex items-center justify-center transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+               <ChevronLeft className="w-6 h-6 text-gray-300" />
+             </button>
+             <div>
+               <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter flex items-center gap-3 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+                    <Users className="w-5 h-5 text-white drop-shadow-md" />
+                 </div>
+                 NEXUS HUB
+               </h1>
+             </div>
+           </div>
+           
+           <button 
+             onClick={onCreateClick}
+             className="px-5 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-[13px] uppercase tracking-widest rounded-[16px] flex items-center gap-2 transition-transform shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:shadow-[0_0_30px_rgba(8,145,178,0.6)] active:scale-95"
+           >
+             <Plus className="w-5 h-5" /> <span className="hidden sm:inline">Nueva Comunidad</span>
+           </button>
         </div>
-        <button 
-          onClick={onCreateClick}
-          className="px-5 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-[13px] uppercase tracking-widest rounded-[16px] flex items-center gap-2 transition-transform shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:shadow-[0_0_30px_rgba(8,145,178,0.6)] active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> <span className="hidden sm:inline">Nueva Comunidad</span>
-        </button>
+        
+        {/* Tabs */}
+        <div className="flex items-center gap-8 mt-6 overflow-x-auto scrollbar-hide">
+           <button 
+             onClick={() => setActiveTab('home')}
+             className={`pb-4 text-[13px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeTab === 'home' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-gray-500 hover:text-gray-300'}`}
+           >
+              <div className="flex items-center gap-2"><Sparkles className="w-4 h-4" /> Inicio</div>
+              {activeTab === 'home' && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-cyan-400 rounded-t-full shadow-[0_-2px_10px_rgba(34,211,238,0.8)]"></div>}
+           </button>
+           <button 
+             onClick={() => setActiveTab('explore')}
+             className={`pb-4 text-[13px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeTab === 'explore' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-gray-500 hover:text-gray-300'}`}
+           >
+              <div className="flex items-center gap-2"><Compass className="w-4 h-4" /> Explorar Servidores</div>
+              {activeTab === 'explore' && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-cyan-400 rounded-t-full shadow-[0_-2px_10px_rgba(34,211,238,0.8)]"></div>}
+           </button>
+        </div>
       </header>
       
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="mb-8 mt-2">
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tighter">Explorar Servidores</h2>
-            <p className="text-gray-400 font-medium text-sm sm:text-base">Únete a debates, comparte ideas y conecta con jugadores de todo el mundo.</p>
-          </div>
+      <main className="flex-1 overflow-y-auto bg-transparent">
+        {activeTab === 'home' ? (
+           <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-12 pb-24">
+              
+              {/* Home Welcome Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-[#0d0f18] to-transparent p-6 sm:p-8 rounded-[32px] border border-white/5 relative overflow-hidden shadow-2xl">
+                 <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-cyan-900/10 to-transparent pointer-events-none"></div>
+                 <div className="flex items-center gap-5 relative z-10">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[24px] bg-[#1a1d2d] border-2 border-cyan-500/30 flex items-center justify-center p-1 shadow-[0_0_20px_rgba(34,211,238,0.2)] overflow-hidden">
+                       {userProfile?.avatar_url ? (
+                         <img src={userProfile.avatar_url} className="w-full h-full object-cover rounded-[18px]" />
+                       ) : (
+                         <span className="text-2xl font-black text-white">{username[0].toUpperCase()}</span>
+                       )}
+                    </div>
+                    <div>
+                       <h2 className="text-xl sm:text-3xl font-black text-white tracking-tighter shadow-sm mb-1">Que bueno verte, <span className="text-cyan-400">{username}</span></h2>
+                       <p className="text-cyan-500 font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 opacity-80 mt-1"><Activity className="w-4 h-4" /> Sesión Iniciada en Nexus Hub</p>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Home Recommended Section */}
+              <section>
+                 <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+                      <Flame className="w-6 h-6 text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]" /> 
+                      Tendencias y Populares
+                    </h3>
+                 </div>
+                 
+                 {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                       {[1,2,3,4].map(i => <div key={i} className="bg-[#121420]/50 border border-white/5 rounded-[28px] h-[300px] animate-pulse"></div>)}
+                    </div>
+                 ) : recommended.length === 0 ? (
+                    <div className="p-8 bg-white/5 border border-white/10 rounded-[24px] text-center">
+                       <p className="text-gray-400 font-medium tracking-wide">No hay comunidades suficientes para mostrar tendencias.</p>
+                    </div>
+                 ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 hover-group">
+                       {recommended.map((c: any) => (
+                           <div key={c.id} onClick={() => onSelect(c)} className="group cursor-pointer bg-[#0a0c16] rounded-[28px] border border-white/5 hover:border-orange-500/40 overflow-hidden transition-all duration-300 hover:shadow-[0_15px_40px_rgba(249,115,22,0.15)] hover:-translate-y-1">
+                              <div className="h-[140px] relative overflow-hidden">
+                                 <img src={c.image_url} className="w-full h-full object-cover transform scale-105 opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out" />
+                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c16] to-transparent opacity-90"></div>
+                                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none"></div>
+                                 <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-[10px] flex items-center gap-1.5 border border-white/10 shadow-lg">
+                                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                    <span className="text-[10px] font-black text-white tracking-widest">TOP</span>
+                                 </div>
+                              </div>
+                              <div className="p-5 relative">
+                                 <div className="absolute -top-12 left-5 w-[68px] h-[68px] rounded-[20px] border-[3px] border-[#0a0c16] overflow-hidden bg-[#121422] shadow-[0_0_20px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
+                                    <img src={c.image_url} className="w-full h-full object-cover" />
+                                 </div>
+                                 <h4 className="text-[19px] font-black text-white mt-5 line-clamp-1 group-hover:text-orange-400 transition-colors drop-shadow-sm">{c.name}</h4>
+                                 <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-widest font-black bg-white/5 inline-block px-2 py-0.5 rounded-lg border border-white/5">{c.category}</p>
+                              </div>
+                           </div>
+                       ))}
+                    </div>
+                 )}
+              </section>
+
+              {/* Active Now / Hot */}
+              <section>
+                 <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+                      <Zap className="w-6 h-6 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" /> 
+                      Activas Ahora
+                    </h3>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {activeNow.map((c: any) => (
+                       <div key={c.id} onClick={() => onSelect(c)} className="flex items-center gap-4 bg-[#0d0f18]/80 hover:bg-[#121422] border border-white/5 hover:border-yellow-400/30 p-4 sm:p-5 rounded-[28px] cursor-pointer transition-all group shadow-lg hover:shadow-[0_10px_30px_rgba(250,204,21,0.1)] hover:-translate-y-1">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] overflow-hidden shrink-0 relative shadow-inner">
+                             <img src={c.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                             <div className="absolute inset-0 bg-gradient-to-tr from-black/50 to-transparent"></div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                             <h4 className="text-lg font-black text-white truncate group-hover:text-yellow-400 transition-colors">{c.name}</h4>
+                             <p className="text-[13px] text-gray-400 line-clamp-1 font-medium mt-0.5">{c.description}</p>
+                             <div className="flex items-center gap-2 mt-2.5">
+                                <span className="relative flex h-2.5 w-2.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">En Línea</span>
+                             </div>
+                          </div>
+                          <div className="w-10 h-10 rounded-[14px] bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-yellow-400/10 transition-colors">
+                             <ChevronLeft className="w-5 h-5 text-gray-500 group-hover:text-yellow-400 rotate-180 transition-colors" />
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              </section>
+
+              {/* Events Banner */}
+              <section className="bg-gradient-to-br from-indigo-900/60 to-[#06070a] border border-indigo-500/30 rounded-[32px] p-8 md:p-14 relative overflow-hidden group hover:border-indigo-500/50 shadow-[0_20px_50px_rgba(79,70,229,0.15)] transition-all">
+                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-screen group-hover:scale-105 transition-transform duration-1000 ease-out"></div>
+                 <div className="absolute inset-0 bg-gradient-to-r from-[#06070a] via-[#06070a]/90 to-transparent"></div>
+                 <div className="relative z-10 max-w-xl">
+                    <span className="px-3 py-1.5 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-black text-[11px] uppercase tracking-widest rounded-xl mb-6 inline-block shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                       <span className="flex items-center gap-2"><Gamepad2 className="w-4 h-4" /> EVENTO DESTACADO</span>
+                    </span>
+                    <h3 className="text-4xl md:text-5xl font-black text-white mb-5 tracking-tighter leading-tight drop-shadow-md">Nexus Play <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Festival</span></h3>
+                    <p className="text-gray-300 font-medium mb-8 text-base md:text-lg leading-relaxed shadow-sm">Únete a las mayores comunidades gaming, participa en torneos exclusivos y conecta con jugadores este fin de semana.</p>
+                    <button className="px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-widest text-[13px] rounded-2xl transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] flex items-center gap-2">
+                       Ver Detalles <ChevronLeft className="w-4 h-4 rotate-180" />
+                    </button>
+                 </div>
+              </section>
+
+           </div>
+        ) : (
+           <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10">
+              <div className="mb-10 mt-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tighter">Explorar Todas</h2>
+                  <p className="text-gray-400 font-medium text-[15px]">Únete a debates, comparte ideas y conecta con jugadores de todo el mundo.</p>
+                </div>
+                <div className="relative w-full md:w-auto">
+                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-500" />
+                   </div>
+                   <input type="text" placeholder="Buscar comunidad..." className="w-full md:w-[320px] bg-[#121422]/80 backdrop-blur-md border border-white/10 rounded-[20px] pl-12 pr-4 py-3.5 text-[15px] text-white font-medium focus:outline-none focus:border-cyan-500/50 focus:bg-[#151822] transition-colors shadow-inner" />
+                </div>
+              </div>
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -313,6 +466,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
             </div>
           )}
         </div>
+        )}
       </main>
     </div>
   );
