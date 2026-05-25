@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, Share2, MessageSquare, ExternalLink, Zap } from 'lucide-react';
+import { GameStudioEditor } from './GameStudioEditor';
 
 interface GamesHubViewProps {
   onBack: () => void;
@@ -8,6 +9,11 @@ interface GamesHubViewProps {
 
 export function GamesHubView({ onBack }: GamesHubViewProps) {
   const [activeTab, setActiveTab] = useState('explore');
+  const [editorTemplate, setEditorTemplate] = useState<string | null>(null);
+
+  if (editorTemplate) {
+    return <GameStudioEditor initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0c10] pb-24 md:pb-8">
@@ -151,7 +157,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                  { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
                  { title: 'Blank Canvas', icon: Plus, color: 'text-gray-400', bg: 'bg-white/5' },
                ].map((t, i) => (
-                 <button key={i} className="p-6 rounded-2xl bg-[#1a1c24] border border-white/5 hover:border-cyan-500/30 text-left transition-all hover:bg-[#1f212a] group">
+                 <button key={i} onClick={() => setEditorTemplate(t.title)} className="p-6 rounded-2xl bg-[#1a1c24] border border-white/5 hover:border-cyan-500/30 text-left transition-all hover:bg-[#1f212a] group">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${t.bg} mb-4`}>
                       <t.icon className={`w-6 h-6 ${t.color}`} />
                     </div>
