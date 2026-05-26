@@ -808,6 +808,7 @@ export default function App() {
           onLoginClick={() => setShowAuthModal(true)} 
           onLogoutClick={handleLogout} 
           onSearchClick={() => setActiveView('search')}
+          onProfileClick={() => setActiveView('profile')}
           platformName={platformName}
           webLogo={webLogo}
         />
