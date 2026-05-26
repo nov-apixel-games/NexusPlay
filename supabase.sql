@@ -161,55 +161,100 @@ DROP POLICY IF EXISTS "Users can update own notifications." ON public.notificati
 CREATE POLICY "Users can update own notifications." 
 ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 
--- To allow our auth to insert a new profile when user signs up
+-- To allow our auth to insert a new profile when user signs up de forma 100% segura
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS trigger AS $$
 DECLARE
   base_username TEXT;
   new_username TEXT;
+  email_name TEXT;
+  meta_username TEXT;
+  meta_real_name TEXT;
+  meta_avatar TEXT;
+  is_unique BOOLEAN := false;
+  loop_counter INTEGER := 0;
 BEGIN
-  -- 1. Intentar obtener el 'username' desde la metadata
-  base_username := COALESCE(
-    new.raw_user_meta_data->>'username', 
-    new.raw_user_meta_data->>'preferred_username',
-    split_part(new.email, '@', 1)
-  );
-
-  -- 2. Si sigue vacío, poner 'user'
-  IF base_username IS NULL OR base_username = '' THEN
-    base_username := 'user';
+  -- Extraer valores de metadata en forma segura
+  IF new.raw_user_meta_data IS NOT NULL THEN
+    meta_username := COALESCE(
+      new.raw_user_meta_data->>'username', 
+      new.raw_user_meta_data->>'preferred_username'
+    );
+    meta_real_name := COALESCE(
+      new.raw_user_meta_data->>'real_name', 
+      new.raw_user_meta_data->>'full_name', 
+      new.raw_user_meta_data->>'name'
+    );
+    meta_avatar := COALESCE(
+      new.raw_user_meta_data->>'avatar_url',
+      new.raw_user_meta_data->>'avatar',
+      new.raw_user_meta_data->>'picture'
+    );
   END IF;
 
-  -- 3. Limpiar caracteres especiales para evitar errores
+  -- Separar parte del correo
+  IF new.email IS NOT NULL THEN
+    email_name := split_part(new.email, '@', 1);
+  ELSE
+    email_name := 'user';
+  END IF;
+
+  -- 1. Determinar el nombre base
+  base_username := COALESCE(meta_username, email_name, 'user');
+  
+  -- 2. Limpiar caracteres especiales para evitar errores de sintaxis o formato
   base_username := regexp_replace(lower(base_username), '[^a-z0-9_]', '', 'g');
+  
+  -- 3. Si quedó vacío o muy corto
+  IF base_username IS NULL OR length(base_username) < 3 THEN
+    base_username := 'user_' || COALESCE(base_username, '');
+  END IF;
 
-  -- 4. Agregar sufijo aleatorio para asegurar que sea único
-  new_username := base_username || '_' || substr(md5(random()::text), 1, 5);
+  -- 4. Truncar longitud si es extremadamente largo
+  IF length(base_username) > 20 THEN
+    base_username := substr(base_username, 1, 20);
+  END IF;
 
-  -- 5. Insertar el perfil
+  -- 5. Ciclo de reintentos para asegurar que el Username sea único en la tabla profiles
+  WHILE NOT is_unique AND loop_counter < 10 LOOP
+    IF loop_counter = 0 THEN
+      new_username := base_username || '_' || substr(md5(random()::text), 1, 4);
+    ELSE
+      new_username := base_username || '_' || substr(md5(random()::text), 1, 6);
+    END IF;
+
+    SELECT NOT EXISTS (
+      SELECT 1 FROM public.profiles WHERE username = new_username
+    ) INTO is_unique;
+
+    loop_counter := loop_counter + 1;
+  END LOOP;
+
+  -- Fallback de seguridad extrema
+  IF NOT is_unique THEN
+    new_username := 'user_' || substr(md5(new.id::text || random()::text), 1, 10);
+  END IF;
+
+  -- 6. Insertar el perfil capturando cualquier posible excepción interna
   BEGIN
     INSERT INTO public.profiles (id, username, real_name, email, role, avatar_url)
     VALUES (
       new.id, 
       new_username, 
-      COALESCE(
-        new.raw_user_meta_data->>'real_name', 
-        new.raw_user_meta_data->>'full_name', 
-        new.raw_user_meta_data->>'name', 
-        ''
-      ), 
-      new.email, 
+      COALESCE(meta_real_name, ''), 
+      COALESCE(new.email, 'no-email@nexusplay.app'), 
       'user',
-      new.raw_user_meta_data->>'avatar_url'
+      COALESCE(meta_avatar, '')
     );
   EXCEPTION WHEN OTHERS THEN
-    -- Ignorar error para permitir que el registro de auth continúe
+    -- Ante cualquier fallo, se registra en el log del servidor pero JAMÁS detiene la transacción de auth
+    -- Esto garantiza al 100% que el flujo de registro en Supabase Auth continúe con éxito
     RAISE LOG 'Error saving profile %: %', new.id, SQLERRM;
   END;
   
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger execution
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

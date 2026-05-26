@@ -514,18 +514,6 @@ export default function Navbar({
                   </div>
                 </div>
 
-                {/* Custom Avatar URL Link Field */}
-                <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Ingresar Enlace de Foto</label>
-                  <input 
-                    type="url" 
-                    value={inputAvatar} 
-                    onChange={e => setInputAvatar(e.target.value)} 
-                    placeholder="https://ejemplo.com/mi-avatar.jpg"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all shadow-inner"
-                  />
-                </div>
-
                 {/* Username Input */}
                 <div>
                   <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Nombre de Usuario (Único)</label>
