@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart } from 'lucide-react';
-import { motion } from 'motion/react';
+import { useState, useEffect, useRef } from 'react';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Edit2, Camera, X, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import AppGrid, { AppCard } from '../AppGrid';
 import { AppItem, Category } from '../../types';
 import { CATEGORIES } from '../../data';
 import { supabase } from '../../lib/supabase';
+import { uploadToCloudinary } from '../../lib/cloudinary';
 
 export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
   const gameApps = apps.filter(a => a.category.toLowerCase() === 'juegos' || a.category.toLowerCase() === 'acción' || a.category.toLowerCase() === 'aventura' || a.category.toLowerCase() === 'estrategia');
@@ -231,6 +232,15 @@ export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?
   );
 }
 
+const PROFILE_AVATAR_PRESETS = [
+  { name: 'Onda Futura', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Brillo Cyber', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Orbe Halógeno', url: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Estrellas Cósmicas', url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Oculto Esmeralda', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Fiebre Volcánica', url: 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?auto=format&fit=crop&w=150&q=80' },
+];
+
 export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction }: { 
   session?: any, 
   userProfile?: any, 
@@ -244,6 +254,29 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      setError(null);
+      const res = await uploadToCloudinary(file, 'avatars');
+      if (res && res.secure_url) {
+        setAvatarUrl(res.secure_url);
+      } else {
+        throw new Error('No se recibió la dirección web de la imagen subida.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Error al subir la imagen.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Default values combining DB and metadata
   const metadata = session?.user?.user_metadata || {};
@@ -396,11 +429,68 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                 </button>
               </>
             ) : (
-              <div className="space-y-4 w-full bg-[#0a0c14]/50 p-6 rounded-2xl border border-white/5 backdrop-blur-md text-left">
+              <div className="space-y-6 w-full bg-[#0a0c14]/50 p-6 rounded-3xl border border-white/5 backdrop-blur-md text-left">
                  {error && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm font-medium">{error}</div>}
+                 
+                 {/* Drag & Drop/Click Native File Uploader and Preview */}
+                 <div className="flex flex-col items-center pb-4 border-b border-white/5">
+                   <div 
+                     onClick={() => !uploading && fileInputRef.current?.click()}
+                     className={`relative group ${uploading ? 'cursor-wait' : 'cursor-pointer'} w-24 h-24 rounded-full bg-white/5 border-2 border-dashed border-white/20 hover:border-cyan-400 flex flex-col items-center justify-center overflow-hidden shadow-inner transition-all hover:scale-105`}
+                   >
+                     {avatarUrl ? (
+                       <img src={avatarUrl} className="w-full h-full object-cover transition-transform duration-350 group-hover:scale-110" alt="Preview Avatar" />
+                     ) : (
+                       <User className="w-8 h-8 text-gray-400" />
+                     )}
+                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[10px] text-white font-black transition-opacity gap-1">
+                       <Camera className="w-4 h-4 text-cyan-400" />
+                       {uploading ? 'SUBIENDO...' : 'SUBIR FOTO'}
+                     </div>
+                     {uploading && (
+                       <div className="absolute inset-0 bg-black/75 flex items-center justify-center">
+                         <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                       </div>
+                     )}
+                   </div>
+                   <input 
+                     type="file" 
+                     ref={fileInputRef} 
+                     onChange={handleFileUpload} 
+                     className="hidden" 
+                     accept="image/*" 
+                   />
+                   <p className="text-[10px] text-gray-500 font-bold uppercase mt-2.5 tracking-wider text-center">Subir foto desde Galería/Cámara o selecciona un Preset abajo</p>
+                 </div>
+
+                 {/* Custom Avatar Presets selection */}
+                 <div>
+                   <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2.5">Avatar Especial de Jugador (Presets)</label>
+                   <div className="grid grid-cols-6 gap-2 bg-black/45 p-3 rounded-2xl border border-white/5">
+                     {PROFILE_AVATAR_PRESETS.map((preset, idx) => {
+                       const isSelected = avatarUrl === preset.url;
+                       return (
+                         <div 
+                           key={idx} 
+                           onClick={() => setAvatarUrl(preset.url)}
+                           className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-transparent hover:scale-105'}`}
+                           title={preset.name}
+                         >
+                           <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
+                           {isSelected && (
+                             <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
+                               <Check className="w-4 h-4 text-cyan-400 font-extrabold stroke-[3]" />
+                             </div>
+                           )}
+                         </div>
+                       );
+                     })}
+                   </div>
+                 </div>
+
                  <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nombre de Usuario (Único)</label>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium" placeholder="usuario_123" />
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium font-mono" placeholder="usuario_123" />
                  </div>
                  <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nombre Visible</label>
@@ -410,19 +500,28 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Biografía corta</label>
                     <input type="text" value={bio} onChange={e => setBio(e.target.value)} maxLength={100} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium" placeholder="Amo los juegos Indie..." />
                  </div>
-                 <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">URL de Avatar (Opcional)</label>
-                    <input type="url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium" placeholder="https://..." />
-                 </div>
-                 <div className="flex items-center gap-3 pt-4">
-                    <button onClick={handleSaveProfile} disabled={saving} className="flex-1 sm:flex-none px-6 py-2.5 bg-cyan-500 text-black font-black rounded-xl hover:bg-cyan-400 disabled:opacity-50 transition-colors">
-                      {saving ? 'Guardando...' : 'Guardar Cambios'}
+                 
+                 <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                    <button 
+                      onClick={handleSaveProfile} 
+                      disabled={saving || uploading} 
+                      className="flex-1 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
+                        </>
+                      ) : 'Guardar Cambios'}
                     </button>
-                    <button onClick={() => {
-                      setIsEditing(false); setError(null);
-                      setUsername(userProfile?.username || ''); setRealName(userProfile?.real_name || '');
-                      setAvatarUrl(userProfile?.avatar_url || ''); setBio(metadata.bio || '');
-                    }} disabled={saving} className="px-6 py-2.5 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">
+                    <button 
+                      onClick={() => {
+                        setIsEditing(false); setError(null);
+                        setUsername(userProfile?.username || ''); setRealName(userProfile?.real_name || '');
+                        setAvatarUrl(userProfile?.avatar_url || ''); setBio(metadata.bio || '');
+                      }} 
+                      disabled={saving || uploading} 
+                      className="px-6 py-2.5 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-colors"
+                    >
                       Cancelar
                     </button>
                  </div>

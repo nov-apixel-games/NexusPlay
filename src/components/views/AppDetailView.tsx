@@ -50,17 +50,40 @@ export function AppDetailView({
     try {
       const { data, error } = await supabase.from('reviews').select('*').eq('app_id', app.id).order('created_at', { ascending: false });
       if (!error && data) {
-        setReviews(data);
+        // En-memory join with public profiles to fetch real and updated user profile photos
+        const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+        let profilesMap: Record<string, { username: string; avatar_url: string; real_name?: string }> = {};
+
+        if (userIds.length > 0) {
+          const { data: pData } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, real_name')
+            .in('id', userIds);
+          
+          if (pData) {
+            pData.forEach(p => {
+              profilesMap[p.id] = {
+                username: p.username,
+                avatar_url: p.avatar_url || '',
+                real_name: p.real_name || ''
+              };
+            });
+          }
+        }
+
+        const reviewsWithProfiles = data.map(r => ({
+          ...r,
+          user_profile: profilesMap[r.user_id] || null
+        }));
+
+        setReviews(reviewsWithProfiles);
         
         let sum = 0;
         let dist: any = {1:0, 2:0, 3:0, 4:0, 5:0};
-        let userHasReviewed = false;
         
         data.forEach(r => {
            sum += r.rating;
            dist[r.rating] = (dist[r.rating] || 0) + 1;
-           // Check if current user has reviewed, but wait, `userId` might not be set yet if auth is slow. 
-           // We will handle it by re-checking when userId changes.
         });
         
         setReviewStats({
@@ -429,10 +452,14 @@ export function AppDetailView({
                   <div key={rev.id} className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-nexus-cyan flex items-center justify-center text-black font-black text-xs uppercase">
-                          {rev.user_name?.[0]}
+                        <div className="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center text-white font-black text-xs uppercase overflow-hidden relative">
+                          {rev.user_profile?.avatar_url ? (
+                            <img src={rev.user_profile.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                          ) : (
+                            <span>{(rev.user_profile?.real_name || rev.user_profile?.username || rev.user_name || '?')[0].toUpperCase()}</span>
+                          )}
                         </div>
-                        <span className="font-bold text-sm text-white">{rev.user_name}</span>
+                        <span className="font-bold text-sm text-white">{rev.user_profile?.real_name || rev.user_profile?.username || rev.user_name}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-0.5">
@@ -441,7 +468,7 @@ export function AppDetailView({
                           ))}
                         </div>
                         {userId === rev.user_id && (
-                          <button onClick={() => deleteReview(rev.id)} className="text-slate-500 hover:text-red-500">
+                          <button onClick={() => deleteReview(rev.id)} className="text-slate-500 hover:text-red-500 transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
