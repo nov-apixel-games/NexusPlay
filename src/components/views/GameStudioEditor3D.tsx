@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky, Text, Box, Sphere, Cylinder, OrbitControls, Grid } from '@react-three/drei';
 import * as THREE from 'three';
@@ -577,8 +578,8 @@ export function GameStudioEditor3D({ initialTemplate, onBack }: Editor3DProps) {
      lookTouchId.current = null;
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-[#0a0c10] flex flex-col">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-[#0a0c10] flex flex-col">
       {/* Header */}
       <div className="bg-[#12141c] border-b border-white/5 py-4 px-4 sm:px-6 flex items-center justify-between z-10 shrink-0 shadow-lg pt-8 sm:pt-4">
          <div className="flex items-center gap-4">
@@ -732,6 +733,7 @@ export function GameStudioEditor3D({ initialTemplate, onBack }: Editor3DProps) {
            </div>
          )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Play, Square, Save, Upload, RotateCcw, Check, Move, MousePointer2, PlusCircle, Settings, ChevronLeft, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -497,9 +498,9 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
     setSelectedObjectId(id);
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0c10] flex flex-col pt-[72px]">
-      <div className="bg-[#12141c] border-b border-white/5 py-4 px-6 flex items-center justify-between z-10 shrink-0 shadow-lg">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-[#0a0c10] flex flex-col">
+      <div className="bg-[#12141c] border-b border-white/5 py-4 pt-8 sm:pt-4 px-6 flex items-center justify-between z-10 shrink-0 shadow-lg">
          <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
               <ChevronLeft className="w-5 h-5" />
@@ -671,7 +672,8 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
           </motion.div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
