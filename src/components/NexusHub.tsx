@@ -462,11 +462,40 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
       })
       .subscribe();
 
+    // Realtime profiles update for avatars
+    const profilesSub = supabase.channel(`public:profiles_updates_${community.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles'
+      }, (payload) => {
+        const updatedProfile = payload.new;
+        if (mounted) {
+           setMessages(prev => prev.map(msg => {
+             if (msg.user_id === updatedProfile.id) {
+               return {
+                 ...msg,
+                 profiles: {
+                   ...msg.profiles,
+                   username: updatedProfile.username || msg.profiles?.username,
+                   avatar_url: updatedProfile.avatar_url,
+                   real_name: updatedProfile.real_name,
+                   role: updatedProfile.role || msg.profiles?.role
+                 }
+               };
+             }
+             return msg;
+           }));
+        }
+      })
+      .subscribe();
+
     return () => {
       mounted = false;
       supabase.removeChannel(channel);
       supabase.removeChannel(commSub);
       supabase.removeChannel(reactSub);
+      supabase.removeChannel(profilesSub);
     };
   }, [community.id]);
 

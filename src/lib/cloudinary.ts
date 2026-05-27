@@ -48,23 +48,18 @@ const compressImage = async (file: File): Promise<File> => {
 };
 
 export const uploadToCloudinary = async (file: File, folder: string) => {
-  // Compress image before upload logic
   const processedFile = await compressImage(file);
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dnpnmhmht';
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'nexus_unsigned';
   
-  // 1. Get signature from server
-  const sigResponse = await fetch(`/api/cloudinary-signature?folder=${encodeURIComponent(folder)}`);
-  if (!sigResponse.ok) throw new Error("No se pudo obtener la firma de Cloudinary");
-  const { signature, timestamp, cloud_name, api_key } = await sigResponse.json();
-
-  // 2. Upload directly to Cloudinary
   const formData = new FormData();
   formData.append('file', processedFile);
-  formData.append('signature', signature);
-  formData.append('timestamp', timestamp.toString());
-  formData.append('api_key', api_key);
-  formData.append('folder', folder);
+  formData.append('upload_preset', uploadPreset);
+  if (folder) {
+    formData.append('folder', folder);
+  }
 
-  const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`, {
+  const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: 'POST',
     body: formData
   });
@@ -72,11 +67,7 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   if (!uploadResponse.ok) {
     const errData = await uploadResponse.json();
     const errorMsg = errData.error?.message || "Error al subir a Cloudinary";
-    console.error("Cloudinary Upload Error Details:", {
-      status: uploadResponse.status,
-      error: errData.error,
-      cloud_name
-    });
+    console.error("Cloudinary Upload Error Details:", errData);
     throw new Error(errorMsg);
   }
 

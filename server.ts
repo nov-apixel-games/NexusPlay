@@ -89,6 +89,80 @@ const upload = multer({
   limits: { fileSize: 2 * 1024 * 1024 * 1024 } // 2GB limit for APKs
 });
 
+// Delete resources from Cloudinary
+async function deleteCloudinaryImage(url: string) {
+  try {
+    const parts = url.split('/');
+    if (parts.length < 2) return false;
+    const versionIndex = parts.findIndex(p => p.startsWith('v') && !isNaN(parseInt(p.substring(1))));
+    
+    // Extact everything after version index (or fallback if no version)
+    const afterVersion = versionIndex !== -1 ? parts.slice(versionIndex + 1).join('/') : parts.slice(-2).join('/');
+    
+    // Remove extension
+    const publicId = afterVersion.substring(0, afterVersion.lastIndexOf('.'));
+    if (!publicId) return false;
+
+    console.log(`[Cleanup] Eliminando imagen vieja de Cloudinary: ${publicId}`);
+    const res = await cloudinary.uploader.destroy(publicId);
+    return res.result === 'ok' || res.result === 'not found';
+  } catch (err: any) {
+    console.error(`[Cleanup] Error eliminando ${url}:`, err.message);
+    return false;
+  }
+}
+
+// Background Task: Image Cleanup (Every 12 hours)
+setInterval(async () => {
+    try {
+      const supabase = getSupabase();
+      if (!supabase) return;
+
+      console.log("[Cleanup] Ejecutando limpieza automática de imágenes expiradas (>7 días)...");
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: oldMessages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .lte('created_at', sevenDaysAgo.toISOString())
+        .like('content', '%"image_url":"https://%');
+
+      if (error || !oldMessages || oldMessages.length === 0) {
+        console.log("[Cleanup] No hay mensajes con imágenes para borrar.");
+        return;
+      }
+
+      for (const msg of oldMessages) {
+        try {
+          const parsed = JSON.parse(msg.content);
+          if (parsed.image_url) {
+            await deleteCloudinaryImage(parsed.image_url);
+            
+            // Edit message to remove image but keep text
+            const newContent = {
+              text: parsed.text || "Imagen expirada",
+              channel: parsed.channel,
+              image_url: null,
+              expired: true
+            };
+            
+            await supabase
+              .from('messages')
+              .update({ content: JSON.stringify(newContent) })
+              .eq('id', msg.id);
+              
+            console.log(`[Cleanup] Mensaje ${msg.id} limpiado correctamente.`);
+          }
+        } catch(e) {
+           console.error("[Cleanup] Falló parseo o borrado en msg", msg.id, e);
+        }
+      }
+    } catch(err) {
+       console.error("[Cleanup] Error general:", err);
+    }
+}, 12 * 60 * 60 * 1000); // 12 hours
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
