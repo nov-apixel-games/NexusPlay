@@ -386,7 +386,7 @@ function LevelEnvironment({ objects, mode, selectedId, setSelectedId }: any) {
 }
 
 export function GameStudioEditor3D({ initialTemplate, onBack }: Editor3DProps) {
-  const [mode, setMode] = useState<'edit' | 'play'>('edit');
+  const [mode, setMode] = useState<'edit' | 'play'>('play');
   const [isPublishing, setIsPublishing] = useState(false);
   const [objects, setObjects] = useState<GameObject3D[]>([]);
 
@@ -394,20 +394,18 @@ export function GameStudioEditor3D({ initialTemplate, onBack }: Editor3DProps) {
      if (initialTemplate === 'Zombie Survival 3D') {
         const obs: GameObject3D[] = [
            { id: 'spawn', type: 'spawn', position: [0, 0, 0], scale: [1, 1, 1], color: '#22d3ee' },
-           // Only a few walls
            { id: 'w1', type: 'wall', position: [-20, 2, -20], scale: [4, 4, 4], color: '#334155' },
            { id: 'w2', type: 'wall', position: [20, 2, 20], scale: [4, 4, 4], color: '#334155' }
         ];
-        // Lots of zombies
         for(let i=0; i<15; i++) {
            const angle = Math.random() * Math.PI * 2;
            const dist = 10 + Math.random() * 20;
            obs.push({
-              id: 'e_'+i,
+              id: 'z_'+i,
               type: 'enemy',
               position: [Math.cos(angle)*dist, 1, Math.sin(angle)*dist],
               scale: [1.2, 2, 1.2],
-              color: '#16a34a' // Green zombies
+              color: '#16a34a' 
            });
         }
         setObjects(obs);
@@ -418,17 +416,30 @@ export function GameStudioEditor3D({ initialTemplate, onBack }: Editor3DProps) {
            { id: 'track2', type: 'wall', position: [15, 0.5, -40], scale: [20, 1, 10], color: '#334155' },
         ]);
      } else {
-        // Default: Shooter 3D
+        // Default: Shooter 3D (BETA FUNCIONAL)
         setObjects([
-          { id: 'spawn', type: 'spawn', position: [0, 0, 5], scale: [1, 1, 1], color: '#22d3ee' },
-          { id: 'w1', type: 'wall', position: [0, 2, -5], scale: [20, 4, 1], color: '#334155' },
-          { id: 'w2', type: 'wall', position: [-10, 2, 5], scale: [1, 4, 20], color: '#334155' },
-          { id: 'w3', type: 'wall', position: [10, 2, 5], scale: [1, 4, 20], color: '#334155' },
-          { id: 'w4', type: 'wall', position: [0, 2, 15], scale: [20, 4, 1], color: '#334155' },
-          { id: 'w5', type: 'wall', position: [0, 2, 0], scale: [4, 4, 4], color: '#ef4444' }, // changed color slightly
+          { id: 'spawn', type: 'spawn', position: [0, 0, 15], scale: [1, 1, 1], color: '#22d3ee' },
+          // Muros principales
+          { id: 'w_n', type: 'wall', position: [0, 3, -20], scale: [40, 6, 1], color: '#1e293b' },
+          { id: 'w_s', type: 'wall', position: [0, 3, 20], scale: [40, 6, 1], color: '#1e293b' },
+          { id: 'w_e', type: 'wall', position: [20, 3, 0], scale: [1, 6, 40], color: '#1e293b' },
+          { id: 'w_w', type: 'wall', position: [-20, 3, 0], scale: [1, 6, 40], color: '#1e293b' },
+          
+          // Coberturas
+          { id: 'cover1', type: 'wall', position: [0, 1.5, 5], scale: [10, 3, 1], color: '#334155' },
+          { id: 'cover2', type: 'wall', position: [-8, 2, -5], scale: [4, 4, 4], color: '#475569' },
+          { id: 'cover3', type: 'wall', position: [8, 2, -5], scale: [4, 4, 4], color: '#475569' },
+          { id: 'cover4', type: 'wall', position: [0, 2, -12], scale: [6, 4, 2], color: '#334155' },
+          { id: 'cover5', type: 'wall', position: [-12, 1, 8], scale: [2, 2, 8], color: '#475569' },
+          { id: 'cover6', type: 'wall', position: [12, 1, 8], scale: [2, 2, 8], color: '#475569' },
+          
+          // Enemigos
           { id: 'e1', type: 'enemy', position: [-5, 1, -2], scale: [1.2, 2, 1.2], color: '#ef4444' },
-          { id: 'e2', type: 'enemy', position: [5, 1, 8], scale: [1.2, 2, 1.2], color: '#ef4444' },
-          { id: 'e3', type: 'enemy', position: [4, 1, -2], scale: [1.2, 2, 1.2], color: '#ef4444' }
+          { id: 'e2', type: 'enemy', position: [5, 1, -2], scale: [1.2, 2, 1.2], color: '#ef4444' },
+          { id: 'e3', type: 'enemy', position: [0, 1, -8], scale: [1.2, 2, 1.2], color: '#ef4444' },
+          { id: 'e4', type: 'enemy', position: [-12, 1, -12], scale: [1.2, 2, 1.2], color: '#f59e0b' },
+          { id: 'e5', type: 'enemy', position: [12, 1, -12], scale: [1.2, 2, 1.2], color: '#f59e0b' },
+          { id: 'e6', type: 'enemy', position: [0, 1, -16], scale: [2, 3, 2], color: '#b91c1c' } // Boss enemy
         ]);
      }
   }, [initialTemplate]);
@@ -579,9 +590,9 @@ export function GameStudioEditor3D({ initialTemplate, onBack }: Editor3DProps) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-[#0a0c10] flex flex-col">
+    <div className="fixed inset-0 z-[99999] bg-[#0a0c10] flex flex-col w-screen h-screen m-0 p-0 overflow-hidden left-0 top-0">
       {/* Header */}
-      <div className="bg-[#12141c] border-b border-white/5 py-4 px-4 sm:px-6 flex items-center justify-between z-10 shrink-0 shadow-lg pt-8 sm:pt-4">
+      <div className="bg-[#12141c] border-b border-white/5 py-4 px-4 sm:px-6 flex items-center justify-between z-[100] shrink-0 shadow-lg pt-8 sm:pt-4">
          <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
               <ChevronLeft className="w-5 h-5" />

@@ -90,7 +90,7 @@ function ProgressBar({ label, value, color }: any) {
   );
 }
 
-export function AdminUsers({ users, setUsers, addToast }: { users: UserItem[], setUsers: (u: UserItem[]) => void, addToast: any }) {
+export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUsers: (u: any[]) => void, addToast: any }) {
   const toggleStatus = (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
     setUsers(users.map(u => u.id === id ? { ...u, status: newStatus as any } : u));
@@ -119,23 +119,31 @@ export function AdminUsers({ users, setUsers, addToast }: { users: UserItem[], s
                 <th className="px-6 py-4">Usuario</th>
                 <th className="px-6 py-4">Email</th>
                 <th className="px-6 py-4">Rol</th>
-                <th className="px-6 py-4">Estado</th>
+                <th className="px-6 py-4">Registro / Estado</th>
                 <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-red-900/20">
-              {users.map(user => (
+              {users.map(user => {
+                const displayName = user.username || user.real_name || user.name || 'Desconocido';
+                return (
                 <tr key={user.id} className="hover:bg-red-900/10 transition-colors">
-                  <td className="px-6 py-4 font-bold text-white flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-rose-600 shadow-[0_0_10px_rgba(220,38,38,0.3)] flex items-center justify-center text-xs text-white">
-                      {user.name.charAt(0).toUpperCase()}
+                  <td className="px-6 py-4 font-bold text-white flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-rose-600 shadow-[0_0_10px_rgba(220,38,38,0.3)] flex items-center justify-center text-xs text-white overflow-hidden shrink-0">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                      ) : (
+                        displayName.charAt(0).toUpperCase()
+                      )}
                     </div>
-                    {user.name}
+                    <div className="flex flex-col">
+                      <span>{displayName} {user.real_name && user.real_name !== user.username ? <span className="text-gray-500 font-normal ml-1">({user.real_name})</span> : ''}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-400">{user.email}</td>
+                  <td className="px-6 py-4 text-gray-400">{user.email || 'Sin email'}</td>
                   <td className="px-6 py-4">
                     <select 
-                      value={user.role} 
+                      value={user.role || 'user'} 
                       onChange={(e) => changeRole(user.id, e.target.value)}
                       className="bg-black/40 border border-red-900/30 rounded-lg px-2 py-1 text-xs focus:border-red-500 outline-none hover:bg-red-900/20 text-red-100"
                     >
@@ -145,12 +153,17 @@ export function AdminUsers({ users, setUsers, addToast }: { users: UserItem[], s
                     </select>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      user.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 
-                      'bg-red-500/10 text-red-400 border border-red-500/20'
-                    }`}>
-                      {user.status || 'active'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-gray-400 text-xs">
+                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+                      </span>
+                      <span className={`px-2.5 py-0.5 w-max rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                        (user.status || 'active') === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 
+                        'bg-red-500/10 text-red-400 border border-red-500/20'
+                      }`}>
+                        {(user.status || 'active') === 'active' ? 'Activo' : 'Suspendido'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 
@@ -163,9 +176,15 @@ export function AdminUsers({ users, setUsers, addToast }: { users: UserItem[], s
                     </button>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
+          
+          {users.length === 0 && (
+            <div className="p-8 text-center text-gray-500 font-medium">
+               No hay usuarios registrados o cargando...
+            </div>
+          )}
         </div>
       </div>
     </div>

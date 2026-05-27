@@ -13,7 +13,9 @@ export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: 
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [sortBy, setSortBy] = useState<'downloads'|'rating'>('downloads');
 
-  const getDownloadsNum = (d: any) => {
+  const getDownloadsNum = (app: any) => {
+    if (typeof app.download_count === 'number') return app.download_count;
+    const d = app.downloads;
     if (typeof d === 'number') return d;
     if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
     return 0;
@@ -22,7 +24,7 @@ export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: 
   const filtered = gameApps
     .filter(a => activeCategory === 'Todos' || a.category.toLowerCase() === activeCategory.toLowerCase())
     .sort((a, b) => {
-      if(sortBy === 'downloads') return getDownloadsNum(b.downloads) - getDownloadsNum(a.downloads);
+      if(sortBy === 'downloads') return getDownloadsNum(b) - getDownloadsNum(a);
       return b.rating - a.rating;
     });
 
@@ -75,7 +77,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
     { id: '2', name: 'Low-End Android', desc: 'Juegos súper ligeros para celulares de gama baja (< 1GB RAM)', creator: 'GamerPro99', likes: 320, apps: apps.slice(1, 5), banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=2800' },
   ];
 
-  const trends = apps.slice().sort((a, b) => getDownloadsNum(b.downloads) - getDownloadsNum(a.downloads)).slice(0, 4);
+  const trends = apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 4);
 
   return (
     <div className="pt-24 px-4 sm:px-6 max-w-7xl mx-auto pb-16">
@@ -199,12 +201,14 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
 }
 
 export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
-  const getDownloadsNum = (d: any) => {
+  const getDownloadsNum = (app: any) => {
+    if (typeof app.download_count === 'number') return app.download_count;
+    const d = app.downloads;
     if (typeof d === 'number') return d;
     if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
     return 0;
   };
-  const sortedByDownloads = apps.slice().sort((a, b) => getDownloadsNum(b.downloads) - getDownloadsNum(a.downloads)).slice(0, 100);
+  const sortedByDownloads = apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 100);
   
   return (
     <div className="pt-24 px-6 max-w-4xl mx-auto pb-16">
@@ -223,7 +227,7 @@ export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?
             </div>
             <div className="hidden sm:flex flex-col items-end gap-1">
               <div className="flex items-center gap-1 text-sm font-bold text-white"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500"/> {app.rating}</div>
-              <div className="text-xs text-gray-500 font-medium">{app.downloads} descargas</div>
+              <div className="text-xs text-gray-500 font-medium">{app.download_count?.toString() || app.downloads || '0'} descargas</div>
             </div>
           </div>
         ))}
@@ -342,7 +346,6 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       }
         
       if (updateErr && updateErr.code !== '23505') {
-         // Silently ignore schema cache errors if Auth updated correctly
          console.warn("DB update issue", updateErr);
       }
       
@@ -355,12 +358,20 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
     }
   };
 
-  // Mock XP calculation
-  const xp = metadata.xp || 1240;
+  const xp = userProfile?.xp || metadata.xp || 0;
   const level = Math.floor(xp / 1000) + 1;
   const nextLevelXp = level * 1000;
   const currentLevelXp = xp % 1000;
   const progressPercent = (currentLevelXp / 1000) * 100;
+
+  const stats = {
+    favorites: userProfile?.favorites_count || 0,
+    quests: userProfile?.completed_quests || 0,
+    games: userProfile?.published_games || 0,
+    followers: userProfile?.followers || 0,
+    likes: userProfile?.likes || 0,
+    comments: userProfile?.comments || 0,
+  };
 
   return (
     <div className="pt-24 px-4 sm:px-6 max-w-4xl mx-auto pb-16 space-y-6 sm:space-y-8">
@@ -411,13 +422,18 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                 
                 <div className="flex items-center justify-center sm:justify-start gap-4 mb-4">
                    <div className="text-center">
-                     <div className="text-lg font-black text-white">0</div>
-                     <div className="text-[10px] text-gray-500 uppercase tracking-widest">Packs</div>
+                     <div className="text-lg font-black text-white">{stats.games}</div>
+                     <div className="text-[10px] text-gray-500 uppercase tracking-widest">Juegos</div>
                    </div>
                    <div className="w-[1px] h-6 bg-white/10" />
                    <div className="text-center">
-                     <div className="text-lg font-black text-white">12</div>
+                     <div className="text-lg font-black text-white">{stats.favorites}</div>
                      <div className="text-[10px] text-gray-500 uppercase tracking-widest">Favs</div>
+                   </div>
+                   <div className="w-[1px] h-6 bg-white/10" />
+                   <div className="text-center">
+                     <div className="text-lg font-black text-white">{stats.quests}</div>
+                     <div className="text-[10px] text-gray-500 uppercase tracking-widest">Misiones</div>
                    </div>
                 </div>
 
@@ -771,13 +787,25 @@ export function EventsView({ apps, onAppClick }: { apps?: AppItem[], onAppClick?
 }
 
 // ... existing code ...
-export function AchievementsView() {
+export function AchievementsView({ userProfile }: { userProfile?: any }) {
+  const xp = userProfile?.xp || 0;
+  const level = Math.floor(xp / 1000) + 1;
+  const nextLevelXp = level * 1000;
+  const currentLevelXp = xp % 1000;
+  const progressPercent = (currentLevelXp / 1000) * 100;
+
+  let titleBadge = 'EXPLORADOR';
+  if (level > 2) titleBadge = 'AVENTURERO';
+  if (level > 5) titleBadge = 'ENTUSIASTA';
+  if (level > 10) titleBadge = 'VETERANO';
+  if (level > 20) titleBadge = 'LEYENDA';
+
+  const reviewsDone = userProfile?.comments || 0;
+
   const missions = [
-    { id: 1, title: 'Descarga tu primera app', desc: 'Prueba algo nuevo del catálogo', xp: 100, progress: 100, completed: true },
-    { id: 2, title: 'Conviértete en Creador', desc: 'Usa el Panel Dev para subir un apk', xp: 500, progress: 0, completed: false },
-    { id: 3, title: 'Únete a la Comunidad', desc: 'Vincula una cuenta real de correo', xp: 200, progress: 200, completed: true },
-    { id: 4, title: 'Dale like a 5 Packs', desc: 'Apoya el contenido de otros usuarios', xp: 150, progress: 3, maxProgress: 5, completed: false },
-    { id: 5, title: 'Comentar en Foro Nexus', desc: 'Inicia o participa en un tema', xp: 300, progress: 0, completed: false },
+    { id: 1, title: 'Descarga apps', desc: 'Sigue instalando contenido del catálogo', xp: 50, progress: userProfile?.downloads || 0, maxProgress: 10, completed: false },
+    { id: 2, title: 'Conviértete en Creador', desc: 'Usa el Panel Dev para subir un apk', xp: 500, progress: userProfile?.published_games > 0 ? 1 : 0, maxProgress: 1, completed: userProfile?.published_games > 0 },
+    { id: 3, title: 'Comparte tu Opinión', desc: 'Deja una reseña en un juego o app', xp: 150, progress: reviewsDone, maxProgress: 1, completed: reviewsDone >= 1 },
   ];
 
   return (
@@ -787,15 +815,15 @@ export function AchievementsView() {
         <div className="w-28 h-28 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-yellow-500/20 group hover:scale-[1.02] transition-transform cursor-crosshair">
           <Trophy className="w-14 h-14 text-white drop-shadow-md group-hover:animate-bounce" />
         </div>
-        <h1 className="text-4xl font-black mb-2 text-white">Nivel 15</h1>
+        <h1 className="text-4xl font-black mb-2 text-white">Nivel {level}</h1>
         <p className="text-gray-300 font-medium mb-8 max-w-lg mx-auto">Completando misiones y usando NexusPlay ganarás XP para desbloquear insignias y rangos exclusivos.</p>
         
         <div className="w-full h-5 bg-[#080910] rounded-full overflow-hidden max-w-2xl mx-auto mb-3 border border-white/5 shadow-inner">
-           <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 w-[60%] relative">
+           <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 relative" style={{ width: `${progressPercent}%` }}>
              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 mix-blend-overlay" />
            </div>
         </div>
-        <p className="text-xs text-yellow-500 font-black uppercase tracking-widest">600 / 1000 XP — rango actual: EXPLORADOR</p>
+        <p className="text-xs text-yellow-500 font-black uppercase tracking-widest">{currentLevelXp} / 1000 XP — rango actual: {titleBadge}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

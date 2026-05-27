@@ -376,7 +376,11 @@ export default function App() {
     rating: typeof d.rating === 'string' ? parseFloat(d.rating) : d.rating || 5.0,
     downloads: d.downloads,
     price: d.price,
-    date: d.created_at
+    date: d.created_at,
+    download_count: d.download_count || 0,
+    view_count: d.view_count || 0,
+    favorites_count: d.favorites_count || 0,
+    likes_count: d.likes_count || 0,
   });
 
   const fetchApps = async () => {
@@ -686,7 +690,7 @@ export default function App() {
       case 'events':
         return <EventsView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'achievements':
-        return <AchievementsView />;
+        return <AchievementsView userProfile={userProfile} />;
       case 'collections':
         return <CollectionsView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'contact':
@@ -718,7 +722,7 @@ export default function App() {
     }
   };
 
-  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search' || activeView === 'nexus-hub';
+  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search' || activeView === 'nexus-hub' || activeView === 'games-hub';
 
   if (isInitializing) {
     return (

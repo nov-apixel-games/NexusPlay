@@ -30,6 +30,10 @@ export interface AppItem {
   iconPublicId?: string;
   screenshotsPublicIds?: string[];
   updated_at?: string;
+  download_count?: number;
+  view_count?: number;
+  favorites_count?: number;
+  likes_count?: number;
 }
 
 export interface Category {

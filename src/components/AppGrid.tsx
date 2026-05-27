@@ -46,7 +46,7 @@ export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: (
           <span className="text-gray-600">•</span>
           <div className="flex items-center gap-0.5 bg-white/5 px-1.5 py-0.5 rounded-md">
              <Download className="w-3 h-3" />
-             <span>{app.downloads}</span>
+             <span>{app.download_count?.toString() || app.downloads || '0'}</span>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
                 <Star className="w-3.5 h-3.5 fill-yellow-400" /> {app.rating}
              </div>
              <div className="flex items-center gap-1 bg-white/5 text-gray-300 px-2 py-1 rounded-[8px] text-[11px] font-black">
-                <Download className="w-3.5 h-3.5" /> {app.downloads}
+                <Download className="w-3.5 h-3.5" /> {app.download_count?.toString() || app.downloads || '0'}
              </div>
            </div>
            

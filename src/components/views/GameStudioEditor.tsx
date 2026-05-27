@@ -499,8 +499,8 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-[#0a0c10] flex flex-col">
-      <div className="bg-[#12141c] border-b border-white/5 py-4 pt-8 sm:pt-4 px-6 flex items-center justify-between z-10 shrink-0 shadow-lg">
+    <div className="fixed inset-0 z-[99999] bg-[#0a0c10] flex flex-col w-screen h-screen m-0 p-0 left-0 top-0 overflow-hidden">
+      <div className="bg-[#12141c] border-b border-white/5 py-4 pt-8 sm:pt-4 px-6 flex items-center justify-between z-[100] shrink-0 shadow-lg">
          <div className="flex items-center gap-4">
            <button onClick={onBack} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
               <ChevronLeft className="w-5 h-5" />

@@ -26,7 +26,7 @@ export function AppDetailView({
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
   
-  const [realDownloads, setRealDownloads] = useState<string>(app.downloads || '0');
+  const [realDownloads, setRealDownloads] = useState<string>(app.download_count?.toString() || app.downloads || '0');
   const [reviewStats, setReviewStats] = useState({ average: 0, total: 0, distribution: {1:0, 2:0, 3:0, 4:0, 5:0} });
   const [hasReviewed, setHasReviewed] = useState(false);
   
@@ -105,16 +105,20 @@ export function AppDetailView({
 
   const incrementDownloads = async () => {
     try {
-      let numericDownloads = 0;
-      if (typeof app.downloads === 'number') {
-         numericDownloads = app.downloads;
-      } else if (typeof app.downloads === 'string') {
-         numericDownloads = parseInt(app.downloads.replace(/[^0-9]/g, '')) || 0;
+      const currentCount = app.download_count || 0;
+      const newCount = currentCount + 1;
+      
+      let numericDownloadsStr = 0;
+      if (typeof app.downloads === 'string') {
+         numericDownloadsStr = parseInt(app.downloads.replace(/[^0-9]/g, '')) || 0;
       }
-      const newCount = numericDownloads + 1;
+      
       setRealDownloads(newCount.toString());
       
-      const { error } = await supabase.from('apps').update({ downloads: newCount.toString() }).eq('id', app.id);
+      const { error } = await supabase.from('apps').update({ 
+        downloads: (numericDownloadsStr + 1).toString(),
+        download_count: newCount 
+      }).eq('id', app.id);
       if (error) console.error("Error setting downloads:", error);
     } catch(err) {}
   };
@@ -132,6 +136,13 @@ export function AppDetailView({
       if (!error) {
         setNewReview('');
         fetchReviews();
+        // Give XP to the user
+        const { data: profileData } = await supabase.from('profiles').select('xp, comments').eq('id', userId).single();
+        if (profileData) {
+          const newXp = (profileData.xp || 0) + 50;
+          const newComments = (profileData.comments || 0) + 1;
+          await supabase.from('profiles').update({ xp: newXp, comments: newComments }).eq('id', userId);
+        }
       } else {
         alert("Error al enviar comentario. Asegúrate de tener la tabla 'reviews' creada.");
       }
@@ -388,7 +399,7 @@ export function AppDetailView({
               <h3 className="text-xl font-black text-white">Calificaciones</h3>
               <div className="flex items-center gap-6">
                 <div className="text-center space-y-1">
-                  <p className="text-5xl font-black text-white">{reviewStats.total > 0 ? reviewStats.average.toFixed(1) : safeRating}</p>
+                  <p className="text-5xl font-black text-white">{reviewStats.total > 0 ? reviewStats.average.toFixed(1) : '0.0'}</p>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{reviewStats.total} Reseñas</p>
                 </div>
                 <div className="flex-1 space-y-2">
@@ -448,7 +459,12 @@ export function AppDetailView({
               )}
 
               <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
-                {reviews.map(rev => (
+                 {reviews.length === 0 ? (
+                   <div className="text-center py-6 text-slate-500 italic text-sm">
+                     Sin reseñas todavía. ¡Sé el primero en opinar!
+                   </div>
+                 ) : (
+                   reviews.map(rev => (
                   <div key={rev.id} className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -476,10 +492,7 @@ export function AppDetailView({
                     </div>
                     <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">{rev.comment}</p>
                   </div>
-                ))}
-                {reviews.length === 0 && (
-                  <div className="text-center py-10 opacity-30">No hay reseñas para mostrar.</div>
-                )}
+                )))}
               </div>
             </div>
           </div>

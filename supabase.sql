@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     email TEXT NOT NULL,
     avatar_url TEXT,
     role TEXT DEFAULT 'user' CHECK (role IN ('user', 'developer', 'admin')),
+    xp INTEGER DEFAULT 0,
+    favorites_count INTEGER DEFAULT 0,
+    completed_quests INTEGER DEFAULT 0,
+    published_games INTEGER DEFAULT 0,
+    followers INTEGER DEFAULT 0,
+    likes INTEGER DEFAULT 0,
+    comments INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -72,6 +79,10 @@ CREATE TABLE IF NOT EXISTS public.apps (
     price TEXT DEFAULT 'Gratis',
     rating NUMERIC DEFAULT 5.0,
     downloads TEXT DEFAULT '0',
+    download_count INTEGER DEFAULT 0,
+    view_count INTEGER DEFAULT 0,
+    favorites_count INTEGER DEFAULT 0,
+    likes_count INTEGER DEFAULT 0,
     status TEXT DEFAULT 'published' CHECK (status IN ('pending', 'published', 'rejected')),
     featured BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
