@@ -183,6 +183,93 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
   const [gameLives, setGameLives] = useState(3);
   const [cameraX, setCameraX] = useState(0);
 
+  // Clicker game upgrade states
+  const [clickMult, setClickMult] = useState(1);
+  const [autoCPS, setAutoCPS] = useState(0);
+
+  // Load saved clicker progress
+  const loadClickerProgress = () => {
+    try {
+      const saved = localStorage.getItem('nexusplay_clicker_progress_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setClickMult(parsed.clickMultiplier || 1);
+        setAutoCPS(parsed.autoCPS || 0);
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('[Offline Clicker] Error loading stats progress:', e);
+    }
+    return null;
+  };
+
+  const saveClickerProgress = (score: number, mult: number, cps: number) => {
+    try {
+      localStorage.setItem('nexusplay_clicker_progress_v1', JSON.stringify({
+        score,
+        clickMultiplier: mult,
+        autoCPS: cps
+      }));
+    } catch (e) {
+      console.warn('[Offline Clicker] Error saving stats progress:', e);
+    }
+  };
+
+  const buyClickUpgrade = () => {
+    const cost = Math.round(15 * Math.pow(1.6, clickMult - 1));
+    if (gameScore >= cost) {
+      const newMult = clickMult + 1;
+      const newScore = gameScore - cost;
+      
+      playState.current.score = newScore;
+      playState.current.clickMultiplier = newMult;
+      
+      setGameScore(newScore);
+      setClickMult(newMult);
+      synth.playCoin();
+      saveClickerProgress(newScore, newMult, autoCPS);
+      
+      spawnParticles(canvasSize.width / 2, canvasSize.height / 2, '#fbbf24', 12, `+$${newMult}/Click!`);
+    } else {
+      synth.playHurt();
+    }
+  };
+
+  const buyAutoUpgrade = () => {
+    const cost = Math.round(50 * Math.pow(1.7, autoCPS / 2 + 1));
+    if (gameScore >= cost) {
+      const newCPS = autoCPS + 2;
+      const newScore = gameScore - cost;
+      
+      playState.current.score = newScore;
+      playState.current.autoCPS = newCPS;
+      
+      setGameScore(newScore);
+      setAutoCPS(newCPS);
+      synth.playCoin();
+      saveClickerProgress(newScore, clickMult, newCPS);
+      
+      spawnParticles(canvasSize.width / 2, canvasSize.height / 2, '#a855f7', 12, `+$${newCPS}/sec!`);
+    } else {
+      synth.playHurt();
+    }
+  };
+
+  const resetClickerProgress = () => {
+    try {
+      localStorage.removeItem('nexusplay_clicker_progress_v1');
+      playState.current.score = 0;
+      playState.current.clickMultiplier = 1;
+      playState.current.autoCPS = 0;
+      setGameScore(0);
+      setClickMult(1);
+      setAutoCPS(0);
+      synth.playExplosion();
+    } catch(err) {
+      console.warn(err);
+    }
+  };
+
   // Particle engine state
   const particles = useRef<Particle[]>([]);
 
@@ -223,7 +310,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
     runDistance: 0,
     spawnTimer: 0,
     cameraX: 0,
-    doubleJumpUsed: false
+    doubleJumpUsed: false,
+    clickMultiplier: 1,
+    autoCPS: 0,
+    autoTimer: 0
   });
 
   const editState = useRef({
@@ -370,6 +460,21 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
       // GAMEPLAY ACTIVE MODE
       if (mode === 'play') {
         const pState = playState.current;
+
+        // Clicker automatic accumulation
+        if (initialTemplate === 'Clicker / Idle') {
+          pState.autoTimer += dt;
+          if (pState.autoTimer >= 1.0) {
+            const earnAmt = (pState.autoCPS || 0);
+            if (earnAmt > 0) {
+              pState.score += earnAmt;
+              setGameScore(pState.score);
+              spawnParticles(canvas.width / 2 + (Math.random() * 80 - 40), canvas.height / 2 + (Math.random() * 80 - 40), '#fbbf24', 3);
+              saveClickerProgress(pState.score, pState.clickMultiplier, pState.autoCPS);
+            }
+            pState.autoTimer = 0;
+          }
+        }
 
         if (!pState.gameOver) {
           const pIdx = pState.objects.findIndex(o => o.type === 'player');
@@ -829,11 +934,17 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
     synth.init();
     synth.playClick();
     
+    // Load clicker stats if available
+    const saved = loadClickerProgress();
+    const initScore = saved ? saved.score : 0;
+    const initMult = saved ? saved.clickMultiplier : 1;
+    const initCPS = saved ? saved.autoCPS : 0;
+
     playState.current = {
       objects: JSON.parse(JSON.stringify(objects)),
       playerVelY: 0,
       playerVelX: 0,
-      score: 0,
+      score: initialTemplate === 'Clicker / Idle' ? initScore : 0,
       lives: initialTemplate === 'Arcade Shooter' ? 3 : 5,
       gameOver: false,
       keys: {},
@@ -841,10 +952,15 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
       runDistance: 0,
       spawnTimer: 0,
       cameraX: 0,
-      doubleJumpUsed: false
+      doubleJumpUsed: false,
+      clickMultiplier: initMult,
+      autoCPS: initCPS,
+      autoTimer: 0
     };
 
-    setGameScore(0);
+    setGameScore(initialTemplate === 'Clicker / Idle' ? initScore : 0);
+    setClickMult(initMult);
+    setAutoCPS(initCPS);
     setGameLives(playState.current.lives);
     setMode('play');
   };
@@ -874,9 +990,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
             const isInside = x >= obj.x && x <= obj.x + obj.width && y >= obj.y && y <= obj.y + obj.height;
             if (isInside) {
               synth.playClick();
-              playState.current.score += 1;
+              const earnAmt = playState.current.clickMultiplier || 1;
+              playState.current.score += earnAmt;
               setGameScore(playState.current.score);
-              spawnParticles(x, y, '#22d3ee', 5, '+$1 GOLD');
+              spawnParticles(x, y, '#fbbf24', 6, `+$${earnAmt} GOLD`);
 
               // Pop squish animation
               const origW = obj.width;
@@ -1046,7 +1163,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                  <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
                     <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 border border-white/10 rounded-xl">
                        <span className="text-rose-500 font-bold font-mono flex items-center gap-1">
-                         {'❤'.repeat(gameLives)}
+                         {initialTemplate === 'Clicker / Idle' ? `⚡ MULT: x${clickMult} | ⚙ CPS: +${autoCPS}/s` : '❤'.repeat(gameLives)}
                        </span>
                     </div>
                     
@@ -1073,6 +1190,53 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                   </div>
                )}
             </div>
+
+            {/* CLICKER UPGRADE CONTROL DECK CARD */}
+            {mode === 'play' && initialTemplate === 'Clicker / Idle' && (
+               <div className="bg-[#0b101c]/95 border border-white/5 backdrop-blur-md p-5 rounded-2xl w-full xl:w-72 flex flex-col gap-3.5 shadow-2xl shrink-0 pointer-events-auto">
+                 <div>
+                   <h3 className="text-white font-extrabold text-sm font-mono flex items-center gap-1 text-cyan-400 font-bold">⚡ CLICKER UPGRADES</h3>
+                   <p className="text-[10px] text-gray-400 font-medium font-sans">Adquiere mejoras para maximizar tu minería de oro.</p>
+                 </div>
+                 
+                 <div className="space-y-2.5">
+                    <button 
+                      onClick={buyClickUpgrade}
+                      className="w-full bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/25 p-3 rounded-xl flex items-center justify-between text-left transition-all active:scale-95 cursor-pointer"
+                    >
+                       <div>
+                          <div className="text-xs font-bold text-white font-mono">🔨 Martillo de Bronce</div>
+                          <div className="text-[10px] text-cyan-300 font-semibold font-mono">+$1 / click permanente</div>
+                       </div>
+                       <span className="text-xs bg-cyan-500/20 text-cyan-300 font-bold font-mono px-2.5 py-1 rounded-lg">
+                         ${Math.round(15 * Math.pow(1.6, clickMult - 1))}
+                       </span>
+                    </button>
+
+                    <button 
+                      onClick={buyAutoUpgrade}
+                      className="w-full bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/25 p-3 rounded-xl flex items-center justify-between text-left transition-all active:scale-95 cursor-pointer"
+                    >
+                       <div>
+                          <div className="text-xs font-bold text-white font-mono">⚙ Taladro Automatizado</div>
+                          <div className="text-[10px] text-purple-300 font-semibold font-mono">+$2 / segundo auto</div>
+                       </div>
+                       <span className="text-xs bg-purple-500/20 text-purple-300 font-bold font-mono px-2.5 py-1 rounded-lg">
+                         ${Math.round(50 * Math.pow(1.7, autoCPS / 2 + 1))}
+                       </span>
+                    </button>
+                 </div>
+
+                 <div className="border-t border-white/5 pt-3 flex gap-2">
+                    <button 
+                      onClick={resetClickerProgress}
+                      className="flex-1 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-[10px] font-bold font-mono py-2 rounded-lg text-center cursor-pointer transition-colors"
+                    >
+                      RESETEAR PROGRESO
+                    </button>
+                 </div>
+               </div>
+            )}
 
             {/* TOUCH CONTROLS OVERLAYS FOR MOBILE PHONES & APK WEBVIEWS */}
             {mode === 'play' && initialTemplate !== 'Clicker / Idle' && (

@@ -30,6 +30,7 @@ const COMMUNITY_GAMES: OfflineGame[] = [
 export function GamesHubView({ onBack }: GamesHubViewProps) {
   const [activeTab, setActiveTab] = useState('explore');
   const [editorTemplate, setEditorTemplate] = useState<string | null>(null);
+  const [editorDraftId, setEditorDraftId] = useState<string | null>(null);
   
   // Offline states
   const [favorites, setFavorites] = useState<OfflineGame[]>([]);
@@ -103,7 +104,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
   };
 
   if (editorTemplate?.includes('3D')) {
-    return <GameStudioEditor3D initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />;
+    return <GameStudioEditor3D initialTemplate={editorTemplate} draftId={editorDraftId} onBack={() => { setEditorTemplate(null); setEditorDraftId(null); }} />;
   }
 
   if (editorTemplate) {
@@ -353,7 +354,11 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                           <p className="text-gray-500 text-xs font-mono mb-4">Módulos: {draft.objects?.length || 0} • {new Date(draft.updatedAt).toLocaleDateString()}</p>
                         </div>
                         <button 
-                          onClick={() => setEditorTemplate(draft.title.split(' ')[0] || 'Platformer')}
+                          onClick={() => {
+                            setEditorDraftId(draft.id);
+                            const baseTemplate = draft.title.replace(' offline game', '');
+                            setEditorTemplate(baseTemplate);
+                          }}
                           className="w-full bg-[#1e293b] hover:bg-[#334155] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
                           <Play className="w-4 h-4" /> Editar Borrador
@@ -399,7 +404,8 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                  { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10', desc: 'Combate en arena cibernética WebGL con físicas y mira láser real.' },
                  { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10', desc: 'Sobrevive a peligrosos enemigos voxel en atmósfera 3D nocturna.' },
                  { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10', desc: 'Prueba la velocidad conduciendo un bólido neón con físicas de drift 3D.' },
-                 { title: 'Platformer', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10', desc: 'Salto 2D, recolección de monedas de oro, enemigos y gravedad.' },
+                 { title: 'Platformer 3D', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10', desc: 'Plataformas flotantes 3D en el cielo con saltos de gravedad, lava y checkpoints.' },
+                 { title: 'Sandbox 3D', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Entorno de físicas libres donde puedes colocar, empujar y lanzar figuras 3D en tiempo real.' },
                  { title: 'Endless Runner', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Obstáculos progresivos ultra rápidos y doble salto acrobático.' },
                  { title: 'Arcade Shooter', icon: ExternalLink, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: 'Disparo espacial clásico con hordas dinámicas infinitas.' },
                  { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10', desc: 'Producción masiva con física de rebote y bonus de cash flotantes.' },
@@ -414,7 +420,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                         objects: [],
                         updatedAt: new Date().toISOString()
                       };
-                      await saveGameDraft(newDraft);
+                      await saveGameDraft(newDraft); setEditorDraftId(newDraft.id);
                       setEditorTemplate(t.title);
                     }} 
                     className="p-6 rounded-2xl bg-[#1a1c24] border border-white/5 hover:border-cyan-500/30 text-left transition-all hover:bg-[#1f212a] group cursor-pointer"
