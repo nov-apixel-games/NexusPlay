@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Sky, Text, Box, Sphere, Cylinder, OrbitControls, Grid } from '@react-three/drei';
+import { Sky, Text, Box, Sphere, Cylinder, OrbitControls, Grid, TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { Play, Square, Save, Upload, RotateCcw, Check, Settings, ChevronLeft, Move, Crosshair, PlusCircle, Sparkles, Trash2, Copy, Sliders, MapPin, Eye, Compass, Shield, Zap, Plus, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,15 +9,19 @@ import { saveGameDraft, getGameDrafts, GameDraft } from '../../lib/offlineDb';
 
 interface GameObject3D {
   id: string;
-  type: 'wall' | 'enemy' | 'pickup' | 'spawn' | 'finish' | 'checkpoint';
+  type: 'wall' | 'enemy' | 'pickup' | 'spawn' | 'finish' | 'checkpoint' | 'nature' | 'npc' | 'trigger' | 'map_config';
   position: [number, number, number];
   scale: [number, number, number];
   color: string;
   rotation?: [number, number, number]; // [X, Y, Z] in radians
-  texture_style?: 'neon' | 'grid' | 'metal' | 'lava' | 'ruins';
-  enemy_type?: 'zombie' | 'cyborg' | 'boss';
+  texture_style?: 'neon' | 'grid' | 'metal' | 'lava' | 'ruins' | string;
+  enemy_type?: 'zombie' | 'cyborg' | 'boss' | string;
   shape?: 'cube' | 'sphere' | 'cylinder' | 'cone' | 'torus';
   category?: string;
+  nature_type?: 'tree' | 'rock' | 'bush' | 'crate' | string;
+  npc_name?: string;
+  npc_dialog?: string;
+  [key: string]: any; // Allow map_config values
 }
 
 interface Editor3DProps {
@@ -546,7 +550,7 @@ function NeonSportsCar({ position, rotationY }: { position: THREE.Vector3; rotat
 }
 
 // FP Shooter HUD and Weapon Display with interactive Muzzle Flash Sphere
-function PlayerWeapon() {
+function PlayerWeapon({ mapProps, template }: any) {
   const { camera } = useThree();
   const group = useRef<THREE.Group>(null);
   const RecoilRef = useRef({ current: 0, target: 0 });
@@ -672,7 +676,7 @@ function PlayerWeapon() {
 }
 
 // 3D Player / Camera Physical controller
-function PlayerController({ spawn, walls, template }: any) {
+function PlayerController({ spawn, walls, template, mapProps }: any) {
   const { camera } = useThree();
   const playerRef = useRef(new THREE.Vector3(...spawn));
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
@@ -687,7 +691,7 @@ function PlayerController({ spawn, walls, template }: any) {
   useFrame((state, delta) => {
     if (playState.gameOver || playState.won) return;
 
-    if (template === 'Racing 3D') {
+    if (((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D')) {
       // 3D CAR CHASE DRIVING SCHEMAS (Third Person Space)
       const maxCarSpeed = 48.0;
       let accelInput = 0;
@@ -757,7 +761,7 @@ function PlayerController({ spawn, walls, template }: any) {
       camera.position.copy(playState.carPosition).add(camOffset);
       camera.lookAt(playState.carPosition.clone().add(new THREE.Vector3(0, 1.2, 0)));
 
-    } else if (template === 'Platformer 3D') {
+    } else if (((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'platformer') || template === 'Platformer 3D')) {
       // 3D PLATFORMER PLAYER CONTROLS
       const moveSpeed = 9.8;
       let moveX = 0;
@@ -867,7 +871,7 @@ function PlayerController({ spawn, walls, template }: any) {
 
     } else {
       // 3D FIRST PERSON SHOOTER CONTROLLER
-      const moveSpeed = template === 'Zombie Survival 3D' ? 10.5 : 9.0;
+      const moveSpeed = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'fps') || template === 'Zombie Survival 3D') ? 10.5 : 9.0;
       let fwd = 0;
       let right = 0;
 
@@ -1099,7 +1103,7 @@ function BulletManager({ walls }: any) {
 }
 
 // 3D Zombie / Alien AI managers with multi enemy types support!
-function EnemiesManager({ enemiesData, template }: any) {
+function EnemiesManager({ enemiesData, template, mapProps }: any) {
   const { camera } = useThree();
   
   useEffect(() => {
@@ -1117,7 +1121,7 @@ function EnemiesManager({ enemiesData, template }: any) {
   useFrame((state, delta) => {
     if (playState.gameOver || playState.won) return;
 
-    const targetPos = template === 'Racing 3D' ? playState.carPosition : camera.position;
+    const targetPos = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D') ? playState.carPosition : camera.position;
 
     for (const e of playState.enemies) {
       if (e.dead) {
@@ -1134,7 +1138,7 @@ function EnemiesManager({ enemiesData, template }: any) {
       }
       
       // AI movement logic towards player
-      const activeSeekDist = template === 'Racing 3D' ? 30 : 35;
+      const activeSeekDist = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D') ? 30 : 35;
       if (dist < activeSeekDist && dist > 1.6) {
          const pathSpeed = e.enemy_type === 'cyborg' ? 5.2 : e.enemy_type === 'boss' ? 1.8 : 3.4;
          e.position.addScaledVector(dir, delta * pathSpeed);
@@ -1156,7 +1160,7 @@ function EnemiesManager({ enemiesData, template }: any) {
 
     // Wave progression logic for Shooter 3D and Zombie Survival 3D
     const allDead = playState.enemies.length > 0 && playState.enemies.every(e => e.dead || e.position.y <= -2);
-    if (allDead && (template === 'Shooter 3D' || template === 'Zombie Survival 3D')) {
+    if (allDead && (template === 'Shooter 3D' || ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'fps') || template === 'Zombie Survival 3D'))) {
       playState.wave += 1;
       audio3D.playScoreUp();
       
@@ -1205,10 +1209,10 @@ function EnemiesManager({ enemiesData, template }: any) {
 }
 
 // Float floating rotating coins/points pickups
-function FloatingPickups({ pickupsData, template }: any) {
+function FloatingPickups({ pickupsData, template, mapProps }: any) {
   useFrame((state, delta) => {
     if (playState.gameOver) return;
-    const playerPos = template === 'Racing 3D' ? playState.carPosition : state.camera.position;
+    const playerPos = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D') ? playState.carPosition : state.camera.position;
 
     for (let i = playState.pickups.length - 1; i >= 0; i--) {
        const pk = playState.pickups[i];
@@ -1262,7 +1266,7 @@ function FloatingPickups({ pickupsData, template }: any) {
          }
 
          // Check if racing LAP is complete
-         if (template === 'Racing 3D') {
+         if (((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D')) {
            playState.carCheckpointCount += 1;
            if (playState.carCheckpointCount >= 4) {
              playState.carCheckpointCount = 0;
@@ -1437,7 +1441,8 @@ function getProceduralTexture(type: string): THREE.Texture {
 }
 
 // Renders custom mesh geometries (Box, Sphere, Cylinder, Cone, Torus) with styled materials
-function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId }: any) {
+function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId, updateObject }: any) {
+  const meshRef = useRef<THREE.Mesh>(null);
   const shape = obj.shape || 'cube';
   const isLava = obj.texture_style === 'lava';
   const isNeon = obj.texture_style === 'neon';
@@ -1492,19 +1497,21 @@ function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId }: any) {
   }
 
   return (
-    <mesh 
-      position={obj.position} 
-      scale={obj.scale}
-      rotation={rot}
-      castShadow
-      receiveShadow
-      onClick={(e) => {
-        if (mode === 'edit') {
-          e.stopPropagation();
-          setSelectedId(obj.id);
-        }
-      }}
-    >
+    <>
+      <mesh 
+        ref={meshRef}
+        position={obj.position} 
+        scale={obj.scale}
+        rotation={rot}
+        castShadow
+        receiveShadow
+        onClick={(e) => {
+          if (mode === 'edit') {
+            e.stopPropagation();
+            setSelectedId(obj.id);
+          }
+        }}
+      >
       {geom}
       {material}
       {selectedId === obj.id && mode === 'edit' && (
@@ -1520,11 +1527,27 @@ function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId }: any) {
          </lineSegments>
       )}
     </mesh>
+    {selectedId === obj.id && mode === 'edit' && meshRef.current && (
+       <TransformControls 
+         object={meshRef.current} 
+         mode="translate" 
+         onMouseUp={() => {
+           if (updateObject && meshRef.current) {
+             updateObject(obj.id, {
+               position: [meshRef.current.position.x, meshRef.current.position.y, meshRef.current.position.z],
+               rotation: [meshRef.current.rotation.x, meshRef.current.rotation.y, meshRef.current.rotation.z],
+               scale: [meshRef.current.scale.x, meshRef.current.scale.y, meshRef.current.scale.z]
+             });
+           }
+         }} 
+       />
+    )}
+  </>
   );
 }
 
 // Emulates real-time lightweight gravity & bounce simulation for Sandbox shapes
-function GameplayPhysicsStep({ template }: any) {
+function GameplayPhysicsStep({ template, mapProps }: any) {
   useFrame((state, delta) => {
     if (playState.gameOver || playState.won) return;
 
@@ -1568,12 +1591,12 @@ function GameplayPhysicsStep({ template }: any) {
 }
 
 // Evaluates checkpoint coordinates saving and victory torus portal triggers
-function GameplayTriggers({ objects, template }: any) {
+function GameplayTriggers({ objects, template, mapProps }: any) {
   const { camera } = useThree();
   
   useFrame((state, delta) => {
     if (playState.gameOver || playState.won) return;
-    const playerPos = template === 'Platformer 3D' ? playState.playerPos : (template === 'Racing 3D' ? playState.carPosition : camera.position);
+    const playerPos = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'platformer') || template === 'Platformer 3D') ? playState.playerPos : (((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D') ? playState.carPosition : camera.position);
 
     for (const obj of objects) {
       if (obj.type === 'checkpoint') {
@@ -1601,7 +1624,12 @@ function GameplayTriggers({ objects, template }: any) {
   return null;
 }
 
-function LevelEnvironment({ objects, mode, selectedId, setSelectedId, template }: any) {
+function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId, template, mapProps }: any) { 
+  const updateObject = (id: string, newProps: any) => {
+    if(setObjects) {
+       setObjects((prev: any[]) => prev.map(o => o.id === id ? { ...o, ...newProps } : o));
+    }
+  };
   // Reset pickups container
   useEffect(() => {
     playState.pickups = objects
@@ -1616,15 +1644,53 @@ function LevelEnvironment({ objects, mode, selectedId, setSelectedId, template }
     playState.lap = 1;
   }, [objects]);
 
-  // Determine atmospheric styles based on template
-  const isSurvival = template === 'Zombie Survival 3D';
-  const isRacing = template === 'Racing 3D';
-  const isPlatformer = template === 'Platformer 3D';
+  // Determine atmospheric styles based on template or mapProps configurations
+  const isSurvival = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'fps') || template === 'Zombie Survival 3D');
+  const isRacing = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'racing') || template === 'Racing 3D');
+  const isPlatformer = ((typeof mapProps !== 'undefined' && mapProps?.cameraMode === 'platformer') || template === 'Platformer 3D');
+  const isAdventure = template === 'Adventure 3D';
 
-  const skySunPosition: [number, number, number] = isSurvival ? [15, 30, 15] : isRacing ? [25, 7, -20] : isPlatformer ? [10, 40, -10] : [30, 20, 20];
-  const ambianceColor = isSurvival ? '#dcfce7' : isRacing ? '#ffedd5' : isPlatformer ? '#e0f2fe' : '#1e1b4b';
+  const skyPreset = mapProps?.skyPreset || (isSurvival ? 'night' : isRacing ? 'sunset' : isPlatformer ? 'noon' : isAdventure ? 'forest' : 'noon');
+  const ambianceColor = mapProps?.ambientColor || (isSurvival ? '#065f46' : isRacing ? '#ffedd5' : isPlatformer ? '#e0f2fe' : isAdventure ? '#14532d' : '#1e1b4b');
+  const fogColor = mapProps?.fogColor || (isSurvival ? '#065f46' : isRacing ? '#ffedd5' : isPlatformer ? '#e0f2fe' : isAdventure ? '#14532d' : '#0f172a');
+  const fogDensity = mapProps?.fogDensity ?? (isSurvival ? 25 : isRacing ? 35 : isPlatformer ? 15 : isAdventure ? 18 : 20);
+  const waterLevel = mapProps?.waterLevel ?? (isAdventure ? -1.0 : -10);
 
-  const floorTextureType = isSurvival ? 'grass' : isRacing ? 'road' : isPlatformer ? 'grid' : 'grid';
+  let skySunPosition: [number, number, number] = [30, 20, 20];
+  let turbidity = 6;
+  let rayleigh = 2;
+  let inclination = 0.15;
+  let mieCoefficient = 0.005;
+
+  if (skyPreset === 'sunset') {
+    skySunPosition = [25, 3, -20];
+    turbidity = 15;
+    rayleigh = 5;
+    inclination = 0.45;
+  } else if (skyPreset === 'night') {
+    skySunPosition = [0, -100, 0];
+    turbidity = 2;
+    rayleigh = 0.1;
+    inclination = 0.02;
+  } else if (skyPreset === 'forest') {
+    skySunPosition = [15, 30, 15];
+    turbidity = 4;
+    rayleigh = 1.8;
+  } else if (skyPreset === 'desert') {
+    skySunPosition = [30, 35, -10];
+    turbidity = 20;
+    rayleigh = 4.5;
+  } else if (skyPreset === 'nuclear') {
+    skySunPosition = [10, 12, -10];
+    turbidity = 50;
+    rayleigh = 8;
+  } else if (skyPreset === 'void') {
+    skySunPosition = [0.01, 0.01, 0.01];
+    turbidity = 0.1;
+    rayleigh = 0.1;
+  }
+
+  const floorTextureType = isSurvival ? 'grass' : isRacing ? 'road' : isPlatformer ? 'grid' : isAdventure ? 'grass' : 'grid';
   const floorBaseTexture = getProceduralTexture(floorTextureType);
 
   const floorTexture = useMemo(() => {
@@ -1639,33 +1705,33 @@ function LevelEnvironment({ objects, mode, selectedId, setSelectedId, template }
   return (
     <>
       {/* Premium environmental atmospheric fog */}
-      <fog attach="fog" args={[ambianceColor, 15, 120]} />
+      <fog attach="fog" args={[fogColor, 15, Math.max(20, fogDensity * 4)]} />
 
       {/* Dynamic sky dome colors matching theme context */}
       <Sky 
         distance={450000} 
         sunPosition={skySunPosition} 
-        inclination={isRacing ? 0.45 : 0.15} 
+        inclination={inclination} 
         azimuth={0.25} 
-        turbidity={isRacing ? 12 : 6}
-        rayleigh={isRacing ? 4 : 2}
-        mieCoefficient={isRacing ? 0.05 : 0.005}
+        turbidity={turbidity}
+        rayleigh={rayleigh}
+        mieCoefficient={mieCoefficient}
         mieDirectionalG={0.8}
       />
 
       {/* Beautiful glowing hemisphere light for real natural color blending */}
       <hemisphereLight 
-        color={isSurvival ? '#ecfdf5' : isRacing ? '#ffedd5' : isPlatformer ? '#f0f9ff' : '#1e1b4b'} 
-        groundColor={isSurvival ? '#065f46' : isRacing ? '#1e293b' : isPlatformer ? '#1e3a8a' : '#1e1b4b'} 
-        intensity={isSurvival ? 0.75 : isRacing ? 0.8 : isPlatformer ? 0.85 : 0.6} 
+        color={skyPreset === 'sunset' ? '#ffedd5' : skyPreset === 'night' ? '#1e1b4b' : skyPreset === 'nuclear' ? '#4ade80' : '#f0f9ff'} 
+        groundColor={skyPreset === 'forest' ? '#15803d' : '#0f172a'} 
+        intensity={skyPreset === 'night' ? 0.25 : 0.8} 
       />
 
-      <ambientLight intensity={isSurvival ? 0.7 : isRacing ? 0.75 : isPlatformer ? 0.85 : 0.6} />
+      <ambientLight intensity={skyPreset === 'night' ? 0.2 : 0.75} />
 
       {/* Advanced Directional Sun Light configured for soft crisp shadows */}
       <directionalLight 
         position={[25, 45, 20]} 
-        intensity={isSurvival ? 1.6 : isRacing ? 1.9 : isPlatformer ? 1.7 : 1.4} 
+        intensity={skyPreset === 'night' ? 0.3 : 1.7} 
         castShadow 
         shadow-bias={-0.0001}
         shadow-mapSize-width={1024}
@@ -1703,22 +1769,38 @@ function LevelEnvironment({ objects, mode, selectedId, setSelectedId, template }
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial 
           map={floorTexture}
-          color={isSurvival ? '#4ade80' : isRacing ? '#475569' : isPlatformer ? '#0284c7' : '#0f172a'} 
-          roughness={isSurvival ? 0.9 : isRacing ? 0.8 : 0.4} 
-          metalness={isSurvival ? 0.05 : isRacing ? 0.2 : 0.6}
+          color={skyPreset === 'forest' ? '#15803d' : skyPreset === 'desert' ? '#eab308' : skyPreset === 'nuclear' ? '#052e16' : skyPreset === 'night' ? '#111827' : '#0284c7'} 
+          roughness={0.85} 
+          metalness={0.1}
         />
       </mesh>
       
+      {/* Interactive animated Water grid plane layer */}
+      {waterLevel > -8 && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, waterLevel, 0]}>
+          <planeGeometry args={[420, 420]} />
+          <meshStandardMaterial 
+            color="#0ea5e9" 
+            roughness={0.1} 
+            metalness={0.9} 
+            transparent 
+            opacity={0.6} 
+            emissive="#0284c7"
+            emissiveIntensity={0.2}
+          />
+        </mesh>
+      )}
+
       {/* Spatial coordinate guide grids */}
       <Grid 
         position={[0, 0.005, 0]} 
         args={[400, 400]} 
         cellSize={1.5} 
         cellThickness={0.8} 
-        cellColor={isSurvival ? '#4ade80' : isRacing ? '#fbbf24' : isPlatformer ? '#38bdf8' : '#a855f7'} 
+        cellColor={skyPreset === 'nuclear' ? '#22c55e' : skyPreset === 'sunset' ? '#f59e0b' : '#38bdf8'} 
         sectionSize={15} 
         sectionThickness={1.8} 
-        sectionColor={isSurvival ? '#15803d' : isRacing ? '#ea580c' : isPlatformer ? '#0284c7' : '#6b21a8'} 
+        sectionColor={skyPreset === 'nuclear' ? '#14532d' : skyPreset === 'sunset' ? '#ea580c' : '#0284c7'} 
         fadeDistance={120} 
         fadeStrength={1.2} 
       />
@@ -1752,7 +1834,8 @@ function LevelEnvironment({ objects, mode, selectedId, setSelectedId, template }
                   obj={obj} 
                   selectedId={selectedId} 
                   mode={mode} 
-                  setSelectedId={setSelectedId} 
+                  setSelectedId={setSelectedId}
+                  updateObject={updateObject} 
                 />
              );
            }
@@ -1795,7 +1878,120 @@ function LevelEnvironment({ objects, mode, selectedId, setSelectedId, template }
                 </mesh>
              );
            }
-           return null;
+            if (obj.type === 'nature') {
+              const natureType = obj.nature_type || 'tree';
+              const color = obj.color || (natureType === 'tree' ? '#15803d' : '#64748b');
+              return (
+                <group key={obj.id} position={obj.position} scale={obj.scale} onClick={(e) => {
+                  if (mode === 'edit') {
+                    e.stopPropagation();
+                    setSelectedId(obj.id);
+                  }
+                }}>
+                  {natureType === 'tree' ? (
+                    <group>
+                      <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
+                        <cylinderGeometry args={[0.18, 0.25, 1.2, 8]} />
+                        <meshStandardMaterial color="#78350f" roughness={0.9} />
+                      </mesh>
+                      <mesh position={[0, 1.8, 0]} castShadow>
+                        <coneGeometry args={[0.92, 1.8, 6]} />
+                        <meshStandardMaterial color={color} roughness={0.8} />
+                      </mesh>
+                      <mesh position={[0, 2.7, 0]} castShadow>
+                        <coneGeometry args={[0.65, 1.3, 6]} />
+                        <meshStandardMaterial color={color} roughness={0.8} />
+                      </mesh>
+                    </group>
+                  ) : natureType === 'rock' ? (
+                    <mesh castShadow receiveShadow>
+                      <dodecahedronGeometry args={[0.75, 1]} />
+                      <meshStandardMaterial color={color} roughness={0.8} metalness={0.2} flatShading />
+                    </mesh>
+                  ) : natureType === 'bush' ? (
+                    <group>
+                      <mesh position={[0, 0.3, 0]} castShadow>
+                        <sphereGeometry args={[0.55, 8, 8]} />
+                        <meshStandardMaterial color={color} roughness={0.9} />
+                      </mesh>
+                      <mesh position={[0.35, 0.25, 0.2]} castShadow>
+                        <sphereGeometry args={[0.42, 8, 8]} />
+                        <meshStandardMaterial color={color} roughness={0.9} />
+                      </mesh>
+                      <mesh position={[-0.3, 0.2, -0.3]} castShadow>
+                        <sphereGeometry args={[0.48, 8, 8]} />
+                        <meshStandardMaterial color={color} roughness={0.9} />
+                      </mesh>
+                    </group>
+                  ) : (
+                    <mesh castShadow receiveShadow>
+                      <boxGeometry args={[1.2, 1.2, 1.2]} />
+                      <meshStandardMaterial color={color} roughness={0.5} metalness={0.15} />
+                    </mesh>
+                  )}
+                  {selectedId === obj.id && mode === 'edit' && (
+                    <lineSegments>
+                      <edgesGeometry args={[new THREE.BoxGeometry(1.5, 2.5, 1.5)]} />
+                      <lineBasicMaterial color="#22d3ee" linewidth={4} />
+                    </lineSegments>
+                  )}
+                </group>
+              );
+            }
+            if (obj.type === 'npc') {
+              const color = obj.color || '#f43f5e';
+              const name = obj.npc_name || 'Droid';
+              return (
+                <group key={obj.id} position={obj.position} scale={obj.scale} onClick={(e) => {
+                  if (mode === 'edit') {
+                    e.stopPropagation();
+                    setSelectedId(obj.id);
+                  }
+                }}>
+                  <mesh position={[0, 0.9, 0]} castShadow>
+                    <capsuleGeometry args={[0.26, 0.5, 4, 8]} />
+                    <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.2} metalness={0.8} roughness={0.2} />
+                  </mesh>
+                  <mesh position={[0, 1.1, 0.18]}>
+                    <boxGeometry args={[0.35, 0.1, 0.1]} />
+                    <meshBasicMaterial color="#22d3ee" />
+                  </mesh>
+                  <mesh position={[0, 0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[0.5, 0.06, 6, 16]} />
+                    <meshStandardMaterial color="#475569" metalness={0.7} />
+                  </mesh>
+                  <Text position={[0, 1.7, 0]} fontSize={0.3} color="#ffffff" anchorX="center" anchorY="middle">
+                    {name}
+                  </Text>
+                  {selectedId === obj.id && mode === 'edit' && (
+                    <lineSegments>
+                      <edgesGeometry args={[new THREE.BoxGeometry(1.2, 1.8, 1.2)]} />
+                      <lineBasicMaterial color="#22d3ee" linewidth={4} />
+                    </lineSegments>
+                  )}
+                </group>
+              );
+            }
+            if (obj.type === 'trigger') {
+              return (
+                <mesh key={obj.id} position={obj.position} scale={obj.scale} onClick={(e) => {
+                  if (mode === 'edit') {
+                    e.stopPropagation();
+                    setSelectedId(obj.id);
+                  }
+                }}>
+                  <boxGeometry args={[1, 1, 1]} />
+                  <meshBasicMaterial color="#ec4899" transparent opacity={mode === 'edit' ? 0.35 : 0} wireframe={mode === 'edit'} />
+                  {selectedId === obj.id && mode === 'edit' && (
+                    <lineSegments>
+                      <edgesGeometry args={[new THREE.BoxGeometry(1.05, 1.05, 1.05)]} />
+                      <lineBasicMaterial color="#22d3ee" linewidth={4} />
+                    </lineSegments>
+                  )}
+                </mesh>
+              );
+            }
+            return null;
          })
       )}
     </>
@@ -1807,6 +2003,27 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
   const [isPublishing, setIsPublishing] = useState(false);
   const [objects, setObjects] = useState<GameObject3D[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // States for the Visual Game Studio Editor
+  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets'>('entidades');
+  const [npcDialogueText, setNpcDialogueText] = useState('¡Hola aventurero! Recoge la gema.');
+  const [npcNameText, setNpcNameText] = useState('Guía Nexus-7');
+  const [cloudinaryAssetUrl, setCloudinaryAssetUrl] = useState('');
+  
+  const [mapProps, setMapProps] = useState<any>({
+    skyPreset: initialTemplate === 'Zombie Survival 3D' ? 'night' : initialTemplate === 'Racing 3D' ? 'sunset' : initialTemplate === 'Platformer 3D' ? 'noon' : initialTemplate === 'Adventure 3D' ? 'forest' : 'noon',
+    ambientColor: initialTemplate === 'Zombie Survival 3D' ? '#090d16' : initialTemplate === 'Racing 3D' ? '#450a0a' : '#1e1b4b',
+    fogColor: initialTemplate === 'Zombie Survival 3D' ? '#090d16' : initialTemplate === 'Racing 3D' ? '#450a0a' : '#0f172a',
+    fogDensity: 18,
+    waterLevel: initialTemplate === 'Adventure 3D' ? -1.0 : -10,
+    gravity: initialTemplate === 'Platformer 3D' ? 18.0 : 22.0,
+    cameraMode: initialTemplate === 'Racing 3D' || initialTemplate === 'Platformer 3D' ? 'third' : 'first',
+    rules: [
+      { id: 'r1', trigger: 'player_touch_enemy', action: 'take_damage' },
+      { id: 'r2', trigger: 'collect_gem', action: 'add_score_200' },
+      { id: 'r3', trigger: 'shoot_weapon', action: 'laser_sound' }
+    ]
+  });
 
   // States mirroring playState for clean React HUD bindings
   const [uiScore, setUiScore] = useState(0);
@@ -1910,16 +2127,40 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
               { id: 'gem4', type: 'pickup', position: [0, 12.2, -18], scale: [1, 1, 1], color: '#fbbf24' },
            ]);
         } else if (initialTemplate === 'Sandbox 3D') {
-           setObjects([
-              { id: 'spawn', type: 'spawn', position: [0, 0, 15], scale: [1, 1, 1], color: '#22d3ee' },
-              { id: 's1_cube', type: 'wall', position: [-5, 4, 0], scale: [3, 3, 3], color: '#3b82f6', texture_style: 'neon', shape: 'cube' },
-              { id: 's2_sphere', type: 'wall', position: [0, 6, -5], scale: [2.5, 2.5, 2.5], color: '#10b981', texture_style: 'grid', shape: 'sphere' },
-              { id: 's3_cylinder', type: 'wall', position: [5, 5, 0], scale: [2, 4, 2], color: '#f59e0b', texture_style: 'metal', shape: 'cylinder' },
-              { id: 's4_cone', type: 'wall', position: [-8, 10, -8], scale: [3, 4, 3], color: '#ec4899', texture_style: 'lava', shape: 'cone' },
-              { id: 's5_torus', type: 'wall', position: [8, 8, -8], scale: [3.5, 1.5, 3.5], color: '#8b5cf6', texture_style: 'neon', shape: 'torus' },
-              { id: 'sb_token', type: 'pickup', position: [0, 2.2, 0], scale: [1, 1, 1], color: '#fbbf24' },
-           ]);
-        } else {
+            setObjects([
+               { id: 'spawn', type: 'spawn', position: [0, 0, 15], scale: [1, 1, 1], color: '#22d3ee' },
+               { id: 's1_cube', type: 'wall', position: [-5, 4, 0], scale: [3, 3, 3], color: '#3b82f6', texture_style: 'neon', shape: 'cube' },
+               { id: 's2_sphere', type: 'wall', position: [0, 6, -5], scale: [2.5, 2.5, 2.5], color: '#10b981', texture_style: 'grid', shape: 'sphere' },
+               { id: 's3_cylinder', type: 'wall', position: [5, 5, 0], scale: [2, 4, 2], color: '#f59e0b', texture_style: 'metal', shape: 'cylinder' },
+               { id: 's4_cone', type: 'wall', position: [-8, 10, -8], scale: [3, 4, 3], color: '#ec4899', texture_style: 'lava', shape: 'cone' },
+               { id: 's5_torus', type: 'wall', position: [8, 8, -8], scale: [3.5, 1.5, 3.5], color: '#8b5cf6', texture_style: 'neon', shape: 'torus' },
+               { id: 'sb_token', type: 'pickup', position: [0, 2.2, 0], scale: [1, 1, 1], color: '#fbbf24' },
+            ]);
+         } else if (initialTemplate === 'Adventure 3D') {
+            setObjects([
+               { id: 'spawn', type: 'spawn', position: [0, 0, 25], scale: [1, 1, 1], color: '#22d3ee' },
+               { id: 'pine1', type: 'nature', nature_type: 'tree', position: [-10, 0, -10], scale: [1.2, 1.2, 1.2], color: '#166534' },
+               { id: 'pine2', type: 'nature', nature_type: 'tree', position: [10, 0, -15], scale: [1.3, 1.3, 1.3], color: '#15803d' },
+               { id: 'pine3', type: 'nature', nature_type: 'tree', position: [-20, 0, 20], scale: [1.4, 1.4, 1.4], color: '#14532d' },
+               { id: 'rock1', type: 'nature', nature_type: 'rock', position: [-5, 0, -2], scale: [1.2, 1.2, 1.2], color: '#4b5563' },
+               { id: 'rock2', type: 'nature', nature_type: 'rock', position: [12, 0, 8], scale: [1.5, 1.5, 1.5], color: '#374151' },
+               { id: 'bush1', type: 'nature', nature_type: 'bush', position: [-3, 0, 4], scale: [1.0, 1.0, 1.0], color: '#10b981' },
+               { id: 'bush2', type: 'nature', nature_type: 'bush', position: [8, 0, -4], scale: [1.2, 1.2, 1.2], color: '#059669' },
+               { id: 'guide_robot', type: 'npc', npc_name: 'Guía Nexus-7', npc_dialog: '¡Bienvenido a Adventure 3D! Explora el bioma boscoso y cruza el portal.', position: [0, 0, 10], scale: [1, 1, 1], color: '#06b6d4' },
+               { id: 'ruin_pillar', type: 'wall', position: [0, 4, -20], scale: [3, 8, 3], color: '#451a03', texture_style: 'ruins', shape: 'cylinder' },
+               { id: 'ad_checkpoint', type: 'checkpoint', position: [0, 8.1, -20], scale: [1, 1, 1], color: '#10b981' },
+               { id: 'ad_finish', type: 'finish', position: [0, 1.5, -35], scale: [1.2, 1.2, 1.2], color: '#c084fc' },
+               { id: 'gem_ad1', type: 'pickup', position: [-12, 1.2, 12], scale: [1, 1, 1], color: '#fbbf24' },
+               { id: 'gem_ad2', type: 'pickup', position: [12, 1.2, -12], scale: [1, 1, 1], color: '#fbbf24' },
+            ]);
+         } else if (initialTemplate === 'Crear desde cero 3D' || initialTemplate === 'Crear desde cero') {
+            setObjects([
+               { id: 'spawn', type: 'spawn', position: [0, 0, 15], scale: [1, 1, 1], color: '#22d3ee' },
+               { id: 'guide_companion', type: 'npc', npc_name: 'Creador Compañero', npc_dialog: 'Haz click en "BIOMA" o "SCRIPTING" en el sidebar para empezar a dar vida visual a tu mapa desde cero.', position: [0, 0, 5], scale: [1, 1, 1], color: '#a21caf' },
+               { id: 'starter_wall', type: 'wall', position: [0, 2, -5], scale: [8, 4, 1], color: '#1e293b', texture_style: 'grid', shape: 'cube' },
+               { id: 'starter_checkpoint', type: 'checkpoint', position: [5, 0, -5], scale: [1, 1, 1], color: '#10b981' },
+            ]);
+         } else {
            // Default epic military/high-tech base for Shooter 3D!
            setObjects([
               { id: 'spawn', type: 'spawn', position: [0, 0, 20], scale: [1, 1, 1], color: '#22d3ee' },
@@ -1960,21 +2201,37 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
      loadAll();
   }, [initialTemplate, draftId]);
 
-  // Autosave objects when changed in edit mode!
+  // Autosave objects and visual map configurations when changed in edit mode!
   useEffect(() => {
     async function triggerAutosave() {
       if (draftId && objects.length > 0) {
         const drafts = await getGameDrafts();
         const found = drafts.find(d => d.id === draftId);
         if (found) {
-          found.objects = objects;
+          const cleanObjects = objects.filter(o => o.type !== "map_config");
+          cleanObjects.push({
+            id: "global_map_config",
+            type: "map_config",
+            position: [0, 0, 0],
+            scale: [1, 1, 1],
+            color: "#000000",
+            skyPreset: mapProps.skyPreset,
+            ambientColor: mapProps.ambientColor,
+            fogColor: mapProps.fogColor,
+            fogDensity: mapProps.fogDensity,
+            waterLevel: mapProps.waterLevel,
+            gravity: mapProps.gravity,
+            cameraMode: mapProps.cameraMode,
+            rules: mapProps.rules
+          });
+          found.objects = cleanObjects;
           found.updatedAt = new Date().toISOString();
           await saveGameDraft(found);
         }
       }
     }
     triggerAutosave();
-  }, [objects, draftId]);
+  }, [objects, mapProps, draftId]);
 
   // Sync state loops for React HUD rendering overlay
   useEffect(() => {
@@ -2223,16 +2480,19 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
             <color 
               attach="background" 
               args={[
-                initialTemplate === 'Zombie Survival 3D' ? '#dcfce7' : 
-                initialTemplate === 'Racing 3D' ? '#ffedd5' : 
-                initialTemplate === 'Platformer 3D' ? '#e0f2fe' : 
-                '#1e1b4b'
+                mapProps?.skyPreset === 'night' ? '#090d16' : 
+                mapProps?.skyPreset === 'sunset' ? '#ffedd5' : 
+                mapProps?.skyPreset === 'forest' ? '#c7d2fe' : 
+                mapProps?.skyPreset === 'nuclear' ? '#dcfce7' : 
+                mapProps?.skyPreset === 'desert' ? '#fef08a' : 
+                '#e0f2fe'
               ]} 
             />
             {mode === 'edit' && <OrbitControls makeDefault />}
             
             <LevelEnvironment 
               objects={objects} 
+              setObjects={setObjects}
               mode={mode} 
               selectedId={selectedId} 
               setSelectedId={setSelectedId} 
@@ -2242,12 +2502,13 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
             {mode === 'play' && (
               <>
                 <PlayerController 
-                  spawn={objects.find(o => o.type === 'spawn')?.position || [0,0,0]} 
-                  walls={objects.filter(o => o.type === 'wall')} 
+                  spawn={objects.find((o: any) => o.type === 'spawn')?.position || [0,0,0]} 
+                  walls={objects.filter((o: any) => o.type === 'wall')} 
                   template={initialTemplate}
+                  mapProps={mapProps}
                 />
                 
-                {!carModeVisual && <PlayerWeapon />}
+                {!carModeVisual && <PlayerWeapon mapProps={mapProps} template={initialTemplate} />}
                 {carModeVisual && <NeonSportsCar position={playState.carPosition} rotationY={playState.carRotationY} />}
 
                 <BulletManager walls={objects.filter(o => o.type === 'wall')} />
@@ -2387,34 +2648,220 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
             </div>
           )}
 
-          {/* REALTIME 3D SIDEBAR INSPECTOR */}
+          {/* REALTIME 3D PREMIUM SIDEBAR SYSTEM WITH TABS */}
           {mode === 'edit' && (
-            <div className="absolute right-4 top-4 bg-[#090d16]/95 backdrop-blur-md border border-white/5 p-5 rounded-2xl w-64 shadow-2xl flex flex-col gap-4 max-h-[80vh] overflow-y-auto z-10">
+            <div className="absolute right-4 top-4 bg-[#090d16]/96 backdrop-blur-md border border-cyan-500/20 p-5 rounded-3xl w-72 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto z-10 select-none shadow-[0_0_30px_rgba(0,0,0,0.6)] border-solid">
               <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                <h3 className="text-cyan-400 font-black font-mono text-xs tracking-wider flex items-center gap-1.5"><Settings className="w-4 h-4"/> ENTIDADES 3D</h3>
+                <h3 className="text-cyan-400 font-extrabold font-mono text-xs tracking-wider flex items-center gap-1.5"><Settings className="w-4 h-4"/> GAMES STUDIO 3D</h3>
                 <button 
                   onClick={() => setSnapToggle(!snapToggle)} 
-                  className={`text-[9px] px-2 py-0.5 rounded font-bold font-mono border transition-all ${snapToggle ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/35' : 'bg-slate-800 text-slate-500 border-white/5'}`}
+                  className={snapToggle ? "text-[9px] px-2 py-0.5 rounded font-bold font-mono border transition-all bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-[0_0_8px_rgba(34,211,238,0.2)]" : "text-[9px] px-2 py-0.5 rounded font-bold font-mono border transition-all bg-slate-800 text-slate-500 border-white/5"}
                 >
-                  SNAP: {snapToggle ? 'ON' : 'OFF'}
+                  SNAP: {snapToggle ? "ON" : "OFF"}
                 </button>
               </div>
-              
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                 <button onClick={() => setObjects([...objects, { id: 'w_'+Date.now(), type: 'wall', position: [0, 2, 0], scale: [4, 4, 4], color: '#334155', texture_style: 'neon' }])} className="bg-white/5 hover:bg-white/10 p-3 rounded-xl text-white text-[11px] font-mono flex flex-col items-center gap-1 cursor-pointer"><Move className="w-4 h-4 text-cyan-400"/> + Muro</button>
-                 <button onClick={() => setObjects([...objects, { id: 'e_'+Date.now(), type: 'enemy', position: [0, 1.2, 0], scale: [1.3, 2, 1.3], color: '#047857', enemy_type: 'zombie' }])} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 p-3 rounded-xl text-[11px] font-mono flex flex-col items-center gap-1 cursor-pointer"><PlusCircle className="w-4 h-4"/> + Zombie</button>
-              </div>
 
+              {/* Premium Tab Buttons */}
+              <div className="flex border-b border-white/10 pb-2 overflow-x-auto gap-2 no-scrollbar scroll-smooth">
+                {(["entidades", "bioma", "scripting", "assets"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setEditorTab(tab)}
+                    className={editorTab === tab ? "text-[9px] px-2.5 py-1.5 rounded-lg border font-black font-mono tracking-wide uppercase transition-all flex-shrink-0 cursor-pointer bg-cyan-500/20 text-cyan-300 border-cyan-400/40 shadow-[0_0_10px_rgba(34,211,238,0.2)]" : "text-[9px] px-2.5 py-1.5 rounded-lg border font-black font-mono tracking-wide uppercase transition-all flex-shrink-0 cursor-pointer bg-black/30 text-gray-500 border-transparent hover:text-white hover:bg-white/5"}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              
+              {/* TAB 1: ADD ENTITIY PAINTERS */}
+              {editorTab === "entidades" && (
+                <div className="flex flex-col gap-2.5">
+                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Estanteria de Elementos</div>
+                  <div className="grid grid-cols-2 gap-2">
+                     <button onClick={() => setObjects([...objects, { id: "w_"+Date.now(), type: "wall", position: [0, 2, 0], scale: [4, 4, 4], color: "#334155", texture_style: "neon" }])} className="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-white text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><Move className="w-3.5 h-3.5 text-cyan-400"/> + Muro</button>
+                     <button onClick={() => setObjects([...objects, { id: "e_"+Date.now(), type: "enemy", position: [0, 1.2, 0], scale: [1.3, 2, 1.3], color: "#047857", enemy_type: "zombie" }])} className="bg-emerald-500/5 hover:bg-emerald-500/15 text-emerald-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-emerald-500/10"><PlusCircle className="w-3.5 h-3.5"/> + Zombie</button>
+                     <button onClick={() => setObjects([...objects, { id: "n_"+Date.now(), type: "nature", nature_type: "tree", position: [0, 0, 0], scale: [1, 1, 1], color: "#15803d" }])} className="bg-green-500/5 hover:bg-green-500/15 text-green-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-green-500/10"><Sliders className="w-3.5 h-3.5"/> + Arbol Pino</button>
+                     <button onClick={() => setObjects([...objects, { id: "n_"+Date.now(), type: "nature", nature_type: "rock", position: [0, 0.5, 0], scale: [1, 1, 1], color: "#64748b" }])} className="bg-slate-500/5 hover:bg-slate-500/15 text-slate-300 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-slate-500/10"><Compass className="w-3.5 h-3.5"/> + Roca Voxel</button>
+                     <button onClick={() => setObjects([...objects, { id: "npc_"+Date.now(), type: "npc", npc_name: npcNameText, npc_dialog: npcDialogueText, position: [0, 0, 0], scale: [1, 1, 1], color: "#f43f5e" }])} className="bg-rose-500/5 hover:bg-rose-500/15 text-rose-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-rose-500/10"><PlusCircle className="w-3.5 h-3.5 text-rose-400"/> + Guia NPC</button>
+                     <button onClick={() => setObjects([...objects, { id: "trig_"+Date.now(), type: "trigger", position: [0, 0.5, 0], scale: [3, 3, 3], color: "#ec4899" }])} className="bg-pink-500/5 hover:bg-pink-500/15 text-pink-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-pink-500/10"><Sliders className="w-3.5 h-3.5 text-pink-400"/> + Zona Trigger</button>
+                     <button onClick={() => setObjects([...objects, { id: "c_"+Date.now(), type: "checkpoint", position: [0, 0, 0], scale: [1, 1, 1], color: "#10b981" }])} className="bg-teal-500/5 hover:bg-teal-500/15 text-teal-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-teal-500/10"><Sliders className="w-3.5 h-3.5"/> + Checkpoint</button>
+                     <button onClick={() => setObjects([...objects, { id: "f_"+Date.now(), type: "finish", position: [0, 0, 0], scale: [1, 1, 1], color: "#c084fc" }])} className="bg-purple-500/5 hover:bg-purple-500/15 text-purple-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-purple-500/10"><Compass className="w-3.5 h-3.5"/> + Portal Final</button>
+                     <button onClick={() => setObjects([...objects, { id: "gem_"+Date.now(), type: "pickup", position: [0, 1.2, 0], scale: [1, 1, 1], color: "#fbbf24" }])} className="col-span-2 bg-yellow-500/5 hover:bg-yellow-500/15 text-yellow-400 p-2 rounded-xl text-[10px] font-mono flex items-center justify-center gap-1.5 cursor-pointer border border-yellow-500/10"><PlusCircle className="w-4 h-4 text-yellow-400"/> + Gema De Puntos</button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: ATMOSPHERES, BIOME AND PHYSICS */}
+              {editorTab === "bioma" && (
+                <div className="flex flex-col gap-3 text-xs">
+                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Atmosfera, Clima y Gravedad</div>
+                  
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1">PRESET CIELO Y BIOMA</label>
+                    <select 
+                      value={mapProps.skyPreset} 
+                      onChange={(e) => setMapProps({ ...mapProps, skyPreset: e.target.value })}
+                      className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                    >
+                      <option value="noon">DIA NITIDO</option>
+                      <option value="sunset">ATARDECER CALIDO</option>
+                      <option value="night">NOCHE LUNAR OSCURA</option>
+                      <option value="forest">BIOMA BOSQUEDAL VERDE</option>
+                      <option value="nuclear">PARAMO NUCLEAR VERDECINO</option>
+                      <option value="desert">DESIERTO DE AZUFRE AMARILLENTO</option>
+                    </select>
+                  </div>
+
+                  <div>
+                     <label className="text-[10px] text-gray-500 font-bold block mb-1">DENSIDAD NIEBLA (PROG)</label>
+                     <input 
+                       type="range" 
+                       min={5} 
+                       max={40} 
+                       value={mapProps.fogDensity} 
+                       onChange={(e) => setMapProps({ ...mapProps, fogDensity: parseInt(e.target.value) })}
+                       className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+                     />
+                     <div className="text-[10px] text-slate-400 font-mono text-right">{mapProps.fogDensity + "m Visibilidad"}</div>
+                  </div>
+
+                  <div>
+                     <label className="text-[10px] text-gray-500 font-bold block mb-1">ALTURA AGUA INTERACTIVA</label>
+                     <input 
+                       type="range" 
+                       min={-12} 
+                       max={4} 
+                       step={0.5}
+                       value={mapProps.waterLevel} 
+                       onChange={(e) => setMapProps({ ...mapProps, waterLevel: parseFloat(e.target.value) })}
+                       className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+                     />
+                     <div className="text-[10px] text-slate-400 font-mono text-right">{mapProps.waterLevel <= -8 ? "DESACTIVADA" : mapProps.waterLevel + "m Altitud"}</div>
+                  </div>
+
+                  <div>
+                     <label className="text-[10px] text-gray-500 font-bold block mb-1">CONSTANTE DE GRAVEDAD</label>
+                     <input 
+                       type="range" 
+                       min={5} 
+                       max={40} 
+                       value={mapProps.gravity} 
+                       onChange={(e) => setMapProps({ ...mapProps, gravity: parseInt(e.target.value) })}
+                       className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
+                     />
+                     <div className="text-[10px] text-slate-400 font-mono text-right">{mapProps.gravity + " m/s²"}</div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1">CAMARA DE JUEGO (PERSPECTIVA)</label>
+                    <select 
+                      value={mapProps.cameraMode} 
+                      onChange={(e) => setMapProps({ ...mapProps, cameraMode: e.target.value })}
+                      className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                    >
+                      <option value="first">FPP (Cámara de Primera Persona)</option>
+                      <option value="third">TPP (Cámara Móvil Trasera de Tercera Persona)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: VISUAL SCRIPTING CONDITIONS */}
+              {editorTab === "scripting" && (
+                <div className="flex flex-col gap-3 text-xs">
+                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Scripting Tactil Inteligente</div>
+                  
+                  <div className="bg-cyan-500/5 border border-cyan-500/10 p-3 rounded-2xl text-[10.5px] leading-relaxed text-slate-300 font-mono">
+                     <span className="text-cyan-400 font-bold">REGLAS ACTIVAS:</span>
+                     <ul className="list-disc pl-4 space-y-1 mt-1.5 text-slate-400">
+                       <li>Contacto Monstruo → <span className="text-yellow-400">Resta Vida</span></li>
+                       <li>Capturar Gema → <span className="text-emerald-400">Añado 200 pts</span></li>
+                       <li>Disparar Arma → <span className="text-cyan-400">Sonido Rayo Laser</span></li>
+                     </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-[10px] text-gray-500 font-bold uppercase font-mono">Configuracion NARRATIVA Dialogo NPC</div>
+                    <div>
+                       <label className="text-[9px] text-gray-500 font-mono">Nombre del Guia NPC</label>
+                       <input 
+                         type="text" 
+                         value={npcNameText} 
+                         onChange={(e) => {
+                           setNpcNameText(e.target.value);
+                           setObjects(objects.map(o => o.type==="npc" ? {...o, npc_name: e.target.value} : o));
+                         }}
+                         className="w-full bg-slate-900 border border-white/10 text-white px-2.5 py-1.5 rounded-lg text-xs font-mono"
+                       />
+                    </div>
+                    <div>
+                       <label className="text-[9px] text-gray-500 font-mono">Lineas de Guion / Dialogo</label>
+                       <textarea 
+                         rows={2}
+                         value={npcDialogueText} 
+                         onChange={(e) => {
+                           setNpcDialogueText(e.target.value);
+                           setObjects(objects.map(o => o.type==="npc" ? {...o, npc_dialog: e.target.value} : o));
+                         }}
+                         className="w-full bg-slate-900 border border-white/10 text-white px-2.5 py-1.5 rounded-lg text-xs font-mono resize-none focus:outline-none"
+                       />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: EXTERNAL CLOUDINARY TEXTURES AND CDN STORES */}
+              {editorTab === "assets" && (
+                <div className="flex flex-col gap-3 text-xs">
+                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Importar Modelos y Texturas CDN</div>
+                  
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1 font-mono">SERVIDORES DE ASSETS DISPONIBLES</label>
+                    <select className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg font-mono focus:outline-none">
+                      <option>Cloudinary Asset Store API</option>
+                      <option>IndexedDB Cache Local de Assets</option>
+                    </select>
+                  </div>
+
+                  <div>
+                     <label className="text-[10px] text-gray-500 font-bold block mb-1 font-mono">ENLACE URL DE RECURSO (PNG/JPG)</label>
+                     <input 
+                       type="text" 
+                       placeholder="https://cloudinary.com/user/asset.png"
+                       value={cloudinaryAssetUrl} 
+                       onChange={(e) => setCloudinaryAssetUrl(e.target.value)}
+                       className="w-full bg-slate-900 border border-white/10 text-gray-400 px-3 py-1.5 rounded-lg text-[10px] font-mono focus:outline-none"
+                     />
+                     <div className="text-[9px] text-slate-500 font-mono mt-1 leading-relaxed">Puedes pegar URLs de Cloudinary externas para aplicar a texturas mapeadas.</div>
+                     <button
+                       onClick={() => {
+                         if (selectedId && cloudinaryAssetUrl) {
+                           setObjects(objects.map(o => o.id === selectedId ? {...o, texture_style: "custom_cdn", color: "#ffffff"} : o));
+                           alert("¡Textura vinculada con éxito!");
+                         } else {
+                           alert("Selecciona un objeto primero.");
+                         }
+                       }} 
+                       className="w-full mt-2 py-1.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-extrabold text-[10px] uppercase rounded-lg cursor-pointer font-mono"
+                     >
+                       Vincular Textura CDN
+                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* SELECTION INSPECTOR */}
               {selectedId && (
-                <div className="border-t border-white/5 pt-4 space-y-4">
+                <div className="border-t border-white/10 pt-4 space-y-4">
                    <div className="flex items-center justify-between">
-                     <h4 className="text-white font-bold text-xs">Propiedades Selección</h4>
-                     <button onClick={cloneSelection} className="text-[10px] px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 font-bold font-mono rounded">DUPLICAR</button>
+                     <h4 className="text-white font-black text-xs font-mono text-cyan-300">INSPECTOR</h4>
+                     <button onClick={cloneSelection} className="text-[9px] px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 font-extrabold font-mono rounded cursor-pointer">DUPLICAR</button>
                    </div>
                    {objects.filter(o => o.id === selectedId).map(obj => (
                       <div key={obj.id} className="space-y-3.5 text-xs">
                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold block mb-1">POSICIÓN X</label>
+                            <label className="text-[10px] text-gray-500 font-bold block mb-1">POSICION X</label>
                             <input 
                               type="number" 
                               step={snapToggle ? 1 : 0.1}
@@ -2428,7 +2875,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                             />
                          </div>
                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold block mb-1">POSICIÓN Z</label>
+                            <label className="text-[10px] text-gray-500 font-bold block mb-1">POSICION Z</label>
                             <input 
                               type="number" 
                               step={snapToggle ? 1 : 0.1}
@@ -2441,102 +2888,169 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                               className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
                             />
                          </div>
-                         {obj.type === 'wall' && (
-                             <>
-                             <div>
-                                <label className="text-[10px] text-gray-500 font-bold block mb-1">ANCHO (ESCALA X)</label>
-                                <input 
-                                  type="number" 
-                                  step={snapToggle ? 1 : 0.1}
-                                  value={obj.scale[0]} 
-                                  onChange={(e) => {
-                                    const val = parseFloat(e.target.value) || 1;
-                                    const snapVal = snapToggle ? Math.round(val) : val;
-                                    setObjects(objects.map(o => o.id===obj.id ? {...o, scale: [snapVal, o.scale[1], o.scale[2]]} : o))
-                                  }} 
-                                  className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
-                                />
-                             </div>
-                             <div>
-                                <label className="text-[10px] text-gray-500 font-bold block mb-1">PROG (ESCALA Z)</label>
-                                <input 
-                                  type="number" 
-                                  step={snapToggle ? 1 : 0.1}
-                                  value={obj.scale[2]} 
-                                  onChange={(e) => {
-                                    const val = parseFloat(e.target.value) || 1;
-                                    const snapVal = snapToggle ? Math.round(val) : val;
-                                    setObjects(objects.map(o => o.id===obj.id ? {...o, scale: [o.scale[0], o.scale[1], snapVal]} : o))
-                                  }} 
-                                  className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
-                                />
-                             </div>
-                             <div>
-                                <label className="text-[10px] text-gray-500 font-bold block mb-1">ROTACIÓN (GRADOS Y)</label>
-                                <input 
-                                  type="range" 
-                                  min={0}
-                                  max={360}
-                                  value={Math.round((obj.rotation?.[1] || 0) * (180 / Math.PI))} 
-                                  onChange={(e) => {
-                                    const degrees = parseInt(e.target.value);
-                                    const radians = degrees * (Math.PI / 180);
-                                    setObjects(objects.map(o => o.id===obj.id ? {...o, rotation: [0, radians, 0]} : o))
-                                  }} 
-                                  className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none" 
-                                />
-                                <span className="text-[10px] text-slate-400 font-mono mt-1 block text-right">{Math.round((obj.rotation?.[1] || 0) * (180 / Math.PI))}°</span>
-                             </div>
-                             <div>
-                                <label className="text-[10px] text-gray-500 font-bold block mb-1">ESTILO TEXTURA</label>
-                                <select 
-                                  value={obj.texture_style || 'neon'} 
-                                  onChange={(e: any) => setObjects(objects.map(o => o.id===obj.id ? {...o, texture_style: e.target.value} : o))}
-                                  className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                                >
-                                  <option value="neon">NEON SHIELD</option>
-                                  <option value="grid">VECTOR MATRIX</option>
-                                  <option value="metal">CHUNDER METAL</option>
-                                  <option value="lava">MOLTEN LAVA</option>
-                                  <option value="ruins">ANCIENT STONE</option>
-                                </select>
-                             </div>
-                             </>
-                         )}
-
-                         {obj.type === 'enemy' && (
-                             <div>
-                                <label className="text-[10px] text-gray-500 font-bold block mb-1">TIPO DE HOSTIL</label>
-                                <select 
-                                  value={obj.enemy_type || 'zombie'} 
-                                  onChange={(e: any) => {
-                                    const type = e.target.value;
-                                    setObjects(objects.map(o => o.id===obj.id ? {...o, enemy_type: type, color: type==='cyborg'?'#111827':type==='boss'?'#0f172a':'#047857'} : o))
-                                  }}
-                                  className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                                >
-                                  <option value="zombie">VOXEL ZOMBIE</option>
-                                  <option value="cyborg">Robo-Cyborg Spider</option>
-                                  <option value="boss">HEAVY GOLEM BOSS</option>
-                                </select>
-                             </div>
-                         )}
-                         
                          <div>
-                            <label className="text-[10px] text-gray-500 font-bold block mb-1.5">COLOR DE MALLA</label>
-                            <div className="flex gap-1.5 flex-wrap">
-                              {['#0f172a', '#1e1b4b', '#1e293b', '#047857', '#fbbf24', '#06b6d4', '#dc2626', '#a21caf'].map(c => (
-                                <button 
-                                  key={c} 
-                                  onClick={() => setObjects(objects.map(o => o.id===obj.id ? {...o, color: c} : o))}
-                                  className="w-5 h-5 rounded-full border border-white/10 cursor-pointer transition-all hover:scale-110" 
-                                  style={{ backgroundColor: c }}
-                                />
-                              ))}
-                            </div>
+                            <label className="text-[10px] text-gray-500 font-bold block mb-1">ALTURA (Y)</label>
+                            <input 
+                              type="number" 
+                              step={0.1}
+                              value={obj.position[1]} 
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                setObjects(objects.map(o => o.id===obj.id ? {...o, position: [o.position[0], val, o.position[2]]} : o))
+                              }} 
+                              className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
+                            />
                          </div>
+                         
+                         {(obj.type === "wall" || obj.type === "nature") && (
+                              <>
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">ANCHO (X)</label>
+                                 <input 
+                                   type="number" 
+                                   step={snapToggle ? 1 : 0.1}
+                                   value={obj.scale[0]} 
+                                   onChange={(e) => {
+                                     const val = parseFloat(e.target.value) || 1;
+                                     const snapVal = snapToggle ? Math.round(val) : val;
+                                     setObjects(objects.map(o => o.id===obj.id ? {...o, scale: [snapVal, o.scale[1], o.scale[2]]} : o))
+                                   }} 
+                                   className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">ALTO (Y)</label>
+                                 <input 
+                                   type="number" 
+                                   step={snapToggle ? 1 : 0.1}
+                                   value={obj.scale[1]} 
+                                   onChange={(e) => {
+                                     const val = parseFloat(e.target.value) || 1;
+                                     const snapVal = snapToggle ? Math.round(val) : val;
+                                     setObjects(objects.map(o => o.id===obj.id ? {...o, scale: [o.scale[0], snapVal, o.scale[2]]} : o))
+                                   }} 
+                                   className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">PROG (Z)</label>
+                                 <input 
+                                   type="number" 
+                                   step={snapToggle ? 1 : 0.1}
+                                   value={obj.scale[2]} 
+                                   onChange={(e) => {
+                                     const val = parseFloat(e.target.value) || 1;
+                                     const snapVal = snapToggle ? Math.round(val) : val;
+                                     setObjects(objects.map(o => o.id===obj.id ? {...o, scale: [o.scale[0], o.scale[1], snapVal]} : o))
+                                   }} 
+                                   className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono" 
+                                 />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">ROTACION (GRADOS Y)</label>
+                                 <input 
+                                   type="range" 
+                                   min={0}
+                                   max={360}
+                                   value={Math.round((obj.rotation?.[1] || 0) * (180 / Math.PI))} 
+                                   onChange={(e) => {
+                                     const degrees = parseInt(e.target.value);
+                                     const radians = degrees * (Math.PI / 180);
+                                     setObjects(objects.map(o => o.id===obj.id ? {...o, rotation: [0, radians, 0]} : o))
+                                   }} 
+                                   className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none" 
+                                 />
+                              </div>
+                              {obj.type === "wall" && (
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">TEXTURA</label>
+                                 <select 
+                                   value={obj.texture_style || "neon"} 
+                                   onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, texture_style: e.target.value} : o))}
+                                   className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500 select-none"
+                                 >
+                                   <option value="neon">NEON SHIELD</option>
+                                   <option value="grid">VECTOR MATRIX</option>
+                                   <option value="metal">CHUNDER METAL</option>
+                                   <option value="lava">MOLTEN LAVA</option>
+                                   <option value="ruins">ANCIENT STONE</option>
+                                 </select>
+                              </div>
+                              )}
+                              {obj.type === "nature" && (
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">BIOMA VEGETAL</label>
+                                 <select 
+                                   value={obj.nature_type || "tree"} 
+                                   onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, nature_type: e.target.value, color: e.target.value === "tree" ? "#15803d" : "#64748b"} : o))}
+                                   className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                                 >
+                                   <option value="tree">ARBOL PINO FRONDOSO</option>
+                                   <option value="rock">ROCA SOLIDA GRISACEA</option>
+                                   <option value="bush">ARBUSTO FRUTAL SILVESTRE</option>
+                                   <option value="crate">CAJA DE MADERA TACTICA</option>
+                                 </select>
+                              </div>
+                              )}
+                              </>
+                          )}
 
-                         <button onClick={() => { setObjects(objects.filter(o => o.id !== obj.id)); setSelectedId(null); }} className="w-full mt-2 bg-red-600/15 hover:bg-red-600/25 border border-red-500/25 text-red-400 font-black text-xs py-2.5 rounded-xl cursor-pointer">ELIMINAR</button>
+                          {obj.type === "enemy" && (
+                              <div>
+                                 <label className="text-[10px] text-gray-500 font-bold block mb-1">TIPO DE HOSTIL</label>
+                                 <select 
+                                   value={obj.enemy_type || "zombie"} 
+                                   onChange={(e) => {
+                                     const type = e.target.value;
+                                     setObjects(objects.map(o => o.id===obj.id ? {...o, enemy_type: type, color: type==="cyborg"?"#111827":type==="boss"?"#0f172a":"#047857"} : o))
+                                   }}
+                                   className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg text-xs"
+                                 >
+                                   <option value="zombie">VOXEL ZOMBIE</option>
+                                   <option value="cyborg">Robo-Cyborg Spider</option>
+                                   <option value="boss">HEAVY GOLEM BOSS</option>
+                                 </select>
+                              </div>
+                          )}
+
+                          {obj.type === "npc" && (
+                              <div className="space-y-2">
+                                 <div>
+                                   <label className="text-[10px] text-gray-500 font-bold block">EDITAR NOMBRE NPC</label>
+                                   <input 
+                                     type="text" 
+                                     value={obj.npc_name || "Guia Robot"} 
+                                     onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, npc_name: e.target.value} : o))}
+                                     className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono"
+                                   />
+                                 </div>
+                                 <div>
+                                   <label className="text-[10px] text-gray-500 font-bold block">MENSAJE DIALOGO</label>
+                                   <textarea 
+                                     rows={3}
+                                     value={obj.npc_dialog || "¡Hola!"} 
+                                     onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, npc_dialog: e.target.value} : o))}
+                                     className="w-full bg-slate-900 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-mono resize-none focus:outline-none"
+                                   />
+                                 </div>
+                              </div>
+                          )}
+                          
+                          <div>
+                             <label className="text-[10px] text-gray-500 font-bold block mb-1.5">COLOR DE MALLA</label>
+                             <div className="flex gap-1.5 flex-wrap">
+                               {["#0f172a", "#1e1b4b", "#1e293b", "#047857", "#fbbf24", "#06b6d4", "#dc2626", "#a21caf"].map(c => (
+                                 <button 
+                                   key={c} 
+                                   onClick={() => setObjects(objects.map(o => o.id===obj.id ? {...o, color: c} : o))}
+                                   className="w-5 h-5 rounded-full border border-white/10 cursor-pointer transition-all hover:scale-110" 
+                                   style={{ backgroundColor: c }}
+                                 />
+                               ))}
+                             </div>
+                          </div>
+
+                          <button onClick={() => { setObjects(objects.filter(o => o.id !== obj.id)); setSelectedId(null); }} className="w-full mt-2 bg-red-600/15 hover:bg-red-600/25 border border-red-500/25 text-red-400 font-black text-xs py-2.5 rounded-xl cursor-pointer">ELIMINAR</button>
                       </div>
                    ))}
                 </div>

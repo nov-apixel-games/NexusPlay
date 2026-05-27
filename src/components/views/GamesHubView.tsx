@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, 
-  Share2, MessageSquare, ExternalLink, Zap, Crosshair, Sparkles, Trash2, CheckCircle2 
+  Share2, MessageSquare, ExternalLink, Zap, Crosshair, Sparkles, Trash2, CheckCircle2,
+  Compass, Sliders
 } from 'lucide-react';
 import { GameStudioEditor } from './GameStudioEditor';
 import { GameStudioEditor3D } from './GameStudioEditor3D';
@@ -401,14 +402,14 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
               </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                {[
-                 { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10', desc: 'Combate en arena cibernética WebGL con físicas y mira láser real.' },
-                 { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10', desc: 'Sobrevive a peligrosos enemigos voxel en atmósfera 3D nocturna.' },
-                 { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10', desc: 'Prueba la velocidad conduciendo un bólido neón con físicas de drift 3D.' },
-                 { title: 'Platformer 3D', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10', desc: 'Plataformas flotantes 3D en el cielo con saltos de gravedad, lava y checkpoints.' },
-                 { title: 'Sandbox 3D', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Entorno de físicas libres donde puedes colocar, empujar y lanzar figuras 3D en tiempo real.' },
-                 { title: 'Endless Runner', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Obstáculos progresivos ultra rápidos y doble salto acrobático.' },
-                 { title: 'Arcade Shooter', icon: ExternalLink, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: 'Disparo espacial clásico con hordas dinámicas infinitas.' },
-                 { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10', desc: 'Producción masiva con física de rebote y bonus de cash flotantes.' },
+                 { title: 'Crear desde cero 3D', icon: Sliders, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: 'Comienza con un lienzo limpio y herramientas 3D completas: biomas, físicas, scripts e importaciones.' },
+                 { title: 'Adventure 3D', icon: Compass, color: 'text-orange-400', bg: 'bg-orange-500/10', desc: 'Explora un bioma interactivo con diálogos de NPCs, llaves, cerraduras, monstruos y portales.' },
+                 { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10', desc: 'Combate en arena cibernética WebGL con físicas, retroceso y selector de armas real.' },
+                 { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10', desc: 'Sobrevive a peligrosos enemigos voxel en atmósfera de niebla 3D nocturna.' },
+                 { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10', desc: 'Prueba la velocidad conduciendo un bólido neón con físicas de drift y telemetría 3D.' },
+                 { title: 'Platformer 3D', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10', desc: 'Plataformas flotantes en el cielo con gravedad, lava, checkpoints y doble salto.' },
+                 { title: 'Sandbox 3D', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Físicas dinámicas en tiempo real donde puedes empujar, apilar y rebotar cuerpos rígidos.' },
+                 { title: 'Endless Runner', icon: Sparkles, color: 'text-indigo-400', bg: 'bg-indigo-500/10', desc: 'Obstáculos progresivos ultra rápidos y saltos acrobáticos automatizados.' },
                ].map((t, i) => (
                  <button 
                     key={i} 
