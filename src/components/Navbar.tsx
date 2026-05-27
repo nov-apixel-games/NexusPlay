@@ -1,4 +1,4 @@
-import { Search, Bell, LogIn, LogOut, User as UserIcon, Sparkles, X, Edit2, User, Mail, Camera, Check, Loader2, Trophy } from 'lucide-react';
+import { Search, Bell, LogIn, LogOut, User as UserIcon, Sparkles, X, Edit2, User, Mail, Camera, Check, Loader2, Trophy, Upload, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
@@ -54,6 +54,11 @@ export default function Navbar({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Drag & drop metadata / AI generator state
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [aiPresetSeed, setAiPresetSeed] = useState('');
+  const [aiPresetStyle, setAiPresetStyle] = useState('bottts');
 
   const isAuth = !!session || !!userProfile;
   const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
@@ -120,8 +125,10 @@ export default function Navbar({
     setInputRealName(userRealName);
     setInputAvatar(userProfile?.avatar_url || '');
     setInputBio(userBio);
+    setAiPresetSeed(username || 'nexus_player');
     setEditError(null);
     setIsSaving(false);
+    setIsDragActive(false);
     setShowEditProfileModal(true);
     setShowProfileMenu(false);
   };
@@ -464,7 +471,7 @@ export default function Navbar({
       {/* Modal Moderno de Edición de Perfil (Estilo TapTap/Play Store) */}
       <AnimatePresence>
         {showEditProfileModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
             {/* Backdrop click blocker to dismiss modal */}
             <div className="absolute inset-0 cursor-default" onClick={() => setShowEditProfileModal(false)} />
             
@@ -473,16 +480,24 @@ export default function Navbar({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.3, type: "spring", stiffness: 350, damping: 28 }}
-              className="bg-[#0a0c16]/95 border border-white/10 rounded-[32px] max-w-md w-full p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col relative z-50 overflow-y-auto max-h-[92vh] no-scrollbar"
+              className="bg-[#0a0c16]/95 border border-white/10 rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col relative z-50 overflow-y-auto max-h-[92vh] no-scrollbar"
             >
               {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-6">
-                <h3 className="text-[17px] sm:text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <Edit2 className="w-4.5 h-4.5 text-cyan-400" /> Editar Perfil Nexus
-                </h3>
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                    <Sparkles className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">
+                      Perfil Personalizado
+                    </h3>
+                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">Configura tu identidad en Nexus Hub</p>
+                  </div>
+                </div>
                 <button 
                   onClick={() => setShowEditProfileModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -494,96 +509,317 @@ export default function Navbar({
                 </div>
               )}
 
-              {/* Form - Avatar Upload & Selector */}
-              <div className="space-y-6">
-                <div className="flex flex-col items-center">
-                  <div className="relative group cursor-pointer w-24 h-24 rounded-full bg-white/5 border-2 border-dashed border-white/20 hover:border-cyan-400/50 flex flex-col items-center justify-center overflow-hidden shadow-inner transition-colors">
+              {/* LIVE CARD PREVIEW (Amazing feature) */}
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#121422] to-[#0d0e1b] border border-white/5 shadow-inner relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-[30px] pointer-events-none" />
+                
+                <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-500/70 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/10">Vista Previa</span>
+                
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-white/10 overflow-hidden relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-white">
                     {inputAvatar ? (
-                      <img src={inputAvatar} className="w-full h-full object-cover" alt="Preview" />
+                      <img 
+                        src={inputAvatar} 
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                        alt="Quick Preview" 
+                        onError={(e) => {
+                          e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(inputUsername || 'nexus')}`;
+                        }}
+                      />
                     ) : (
-                      <UserIcon className="w-8 h-8 text-gray-400" />
+                      <span>{(inputUsername || username).charAt(0).toUpperCase()}</span>
                     )}
-                    <label 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[10px] text-white font-black transition-opacity gap-1"
-                    >
-                      <Camera className="w-4 h-4 text-cyan-400" />
-                      {uploadingImage ? 'Subiendo...' : 'SUBIR FOTO'}
-                    </label>
+                    <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-black rounded-full px-1.5 py-0.5 border border-slate-950 scale-90">
+                      Lvl {level}
+                    </div>
                   </div>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileUpload} 
-                    className="hidden" 
-                    accept="image/*" 
-                  />
-                  <p className="text-[10px] text-gray-500 font-medium uppercase mt-2 tracking-wider">Toca la foto para cargar una personalizada</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-white font-black text-base truncate font-mono">@{inputUsername || 'jugador_nexus'}</h4>
+                      <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">{roleName}</span>
+                    </div>
+                    <p className="text-gray-400 text-xs truncate mt-0.5">{inputRealName || 'Tu Nombre o Alias'}</p>
+                    <p className="text-gray-500 text-[10px] italic truncate mt-1">"{inputBio || 'Sin biografía establecida.'}"</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* PHOTO PICKER TABS */}
+              <div className="mb-5">
+                <div className="grid grid-cols-3 gap-1 bg-[#05060b] p-1 rounded-2xl border border-white/5 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const modeEl = document.getElementById('avatar-tab-upload');
+                      if (modeEl) modeEl.click();
+                    }}
+                    className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                      !inputAvatar.includes('unsplash.com') && !inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    📂 Subir Custom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const modeEl = document.getElementById('avatar-tab-ai');
+                      if (modeEl) modeEl.click();
+                    }}
+                    className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                      inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    ⚡ Avatar IA
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const modeEl = document.getElementById('avatar-tab-presets');
+                      if (modeEl) modeEl.click();
+                    }}
+                    className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                      inputAvatar.includes('unsplash.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    💎 PRESETS
+                  </button>
                 </div>
 
-                {/* Avatar Presets Grid */}
-                <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">Foto de Perfil Premium (Presets)</label>
-                  <div className="grid grid-cols-6 gap-2 bg-[#05060a] p-3 rounded-2xl border border-white/5">
-                    {AVATAR_PRESETS.map((preset, index) => {
-                      const isSelected = inputAvatar === preset.url;
-                      return (
-                        <div 
-                          key={index} 
-                          onClick={() => setInputAvatar(preset.url)}
-                          className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-transparent hover:scale-105'}`}
-                          title={preset.name}
-                        >
-                          <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
-                          {isSelected && (
-                            <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
-                              <Check className="w-4 h-4 text-cyan-400 font-extrabold stroke-[3]" />
-                            </div>
-                          )}
+                {/* HIDDEN INPUT TABS SWITCH CONTROLLER */}
+                <div className="hidden">
+                  <button id="avatar-tab-upload" onClick={() => {
+                    // Just triggers a state clear to fall back to customized upload mode
+                    if (inputAvatar.includes('unsplash.com') || inputAvatar.includes('api.dicebear.com')) {
+                      setInputAvatar('');
+                    }
+                  }} />
+                  <button id="avatar-tab-ai" onClick={() => {
+                    const seed = aiPresetSeed || inputUsername || 'nexus';
+                    setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(seed)}`);
+                  }} />
+                  <button id="avatar-tab-presets" onClick={() => {
+                    setInputAvatar(AVATAR_PRESETS[0].url);
+                  }} />
+                </div>
+
+                {/* TAB CONTENT: 1. UPLOAD CUSTOM */}
+                {!inputAvatar.includes('unsplash.com') && !inputAvatar.includes('api.dicebear.com') && (
+                  <div 
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragActive(true);
+                    }}
+                    onDragLeave={() => setIsDragActive(false)}
+                    onDrop={async (e) => {
+                      e.preventDefault();
+                      setIsDragActive(false);
+                      const file = e.dataTransfer.files?.[0];
+                      if (file && file.type.startsWith('image/')) {
+                        try {
+                          setUploadingImage(true);
+                          setEditError(null);
+                          const res = await uploadToCloudinary(file, 'avatars');
+                          if (res && res.secure_url) {
+                            setInputAvatar(res.secure_url);
+                          } else {
+                            throw new Error('No se recibió la dirección web de la imagen subida.');
+                          }
+                        } catch (err: any) {
+                          console.error(err);
+                          setEditError(err.message || 'Error al subir la imagen.');
+                        } finally {
+                          setUploadingImage(false);
+                        }
+                      }
+                    }}
+                    onClick={() => {
+                      if (!uploadingImage) fileInputRef.current?.click();
+                    }}
+                    className={`relative w-full h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer overflow-hidden ${
+                      isDragActive 
+                        ? 'border-cyan-400 bg-cyan-950/20 shadow-[0_0_20px_rgba(34,211,238,0.25)]' 
+                        : 'border-white/10 hover:border-cyan-400/50 bg-[#05060a]/40 hover:bg-[#080a13]'
+                    }`}
+                  >
+                    {uploadingImage ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-7 h-7 text-cyan-400 animate-spin" />
+                        <span className="text-xs uppercase font-black tracking-widest text-cyan-400 animate-pulse">Subiendo a Cloudinary...</span>
+                      </div>
+                    ) : inputAvatar ? (
+                      <div className="absolute inset-0 flex items-center justify-center group">
+                        <img src={inputAvatar} className="w-full h-full object-cover opacity-80" alt="Uploaded Profile" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-white gap-1 uppercase">
+                          <Upload className="w-4 h-4 text-cyan-400" /> Cambiar Imagen
                         </div>
-                      );
-                    })}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
+                          <Camera className="w-5 h-5" />
+                        </div>
+                        <p className="text-xs font-bold text-gray-200">Suelta tu imagen o Haz Clic para subir</p>
+                        <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-1">PNG, JPG, WEBP (SE GUARDA EN CLOUDINARY)</p>
+                      </div>
+                    )}
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleFileUpload} 
+                      className="hidden" 
+                      accept="image/*" 
+                    />
                   </div>
-                </div>
+                )}
 
+                {/* TAB CONTENT: 2. AI AVATAR ENGINE */}
+                {inputAvatar.includes('api.dicebear.com') && (
+                  <div className="space-y-4 bg-[#05060a]/60 p-4 rounded-2xl border border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-[#090b14] border border-white/10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center p-1.5 shadow-inner">
+                        <img 
+                          src={inputAvatar} 
+                          className="w-full h-full object-contain" 
+                          alt="AI Generator Realtime Output" 
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Generando por IA</span>
+                        <p className="text-xs font-bold text-white">Generación Dinámica Directa</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[
+                        { id: 'bottts', label: 'Robots' },
+                        { id: 'pixel-art', label: 'Pixeles' },
+                        { id: 'avataaars', label: 'Gente' },
+                        { id: 'micah', label: 'Abstract' }
+                      ].map((style) => (
+                        <button
+                          key={style.id}
+                          type="button"
+                          onClick={() => {
+                            setAiPresetStyle(style.id);
+                            const seed = aiPresetSeed || inputUsername || 'nexus';
+                            setInputAvatar(`https://api.dicebear.com/7.x/${style.id}/svg?seed=${encodeURIComponent(seed)}`);
+                          }}
+                          className={`py-2 px-1 text-[9px] uppercase tracking-wider font-extrabold rounded-lg transition-all border ${
+                            aiPresetStyle === style.id 
+                              ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400' 
+                              : 'bg-white/5 border-transparent text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          {style.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={aiPresetSeed}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setAiPresetSeed(val);
+                            setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val || 'nexus')}`);
+                          }}
+                          placeholder="Semilla (ej. Juan, Matrix, Cyberpunk)"
+                          className="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs font-mono outline-none focus:border-cyan-400"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = 'nexus_' + Math.floor(Math.random() * 89999 + 10000);
+                          setAiPresetSeed(val);
+                          setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val)}`);
+                        }}
+                        className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                        title="Randomizar semilla"
+                      >
+                        <Shuffle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB CONTENT: 3. PREMIUM PRESETS */}
+                {inputAvatar.includes('unsplash.com') && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-6 gap-2 bg-[#05060b]/60 p-3 rounded-2xl border border-white/5">
+                      {AVATAR_PRESETS.map((preset, index) => {
+                        const isSelected = inputAvatar === preset.url;
+                        return (
+                          <div 
+                            key={index} 
+                            onClick={() => setInputAvatar(preset.url)}
+                            className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-transparent hover:scale-105'}`}
+                            title={preset.name}
+                          >
+                            <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
+                                <Check className="w-4 h-4 text-cyan-400 font-extrabold stroke-[3]" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Form - Inputs Configuration */}
+              <div className="space-y-4">
                 {/* Username Input */}
                 <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Nombre de Usuario (Único)</label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre de Usuario (ID único)</label>
+                    {inputUsername.length >= 3 ? (
+                      <span className="text-[9px] uppercase font-mono text-green-400 font-black flex items-center gap-0.5">✓ VÁLIDO</span>
+                    ) : (
+                      <span className="text-[9px] uppercase font-mono text-yellow-500 font-black">MIN 3 CARACT.</span>
+                    )}
+                  </div>
                   <input 
                     type="text" 
                     value={inputUsername} 
-                    onChange={e => setInputUsername(e.target.value)} 
+                    onChange={e => setInputUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))} 
                     placeholder="jugador_nexus"
                     maxLength={15}
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all font-mono"
                   />
-                  <span className="text-[10px] text-gray-500 font-bold block mt-1 uppercase tracking-wider">Solo se permiten letras, números y guión bajo (_).</span>
+                  <span className="text-[8px] text-gray-500 font-extrabold block mt-1.5 uppercase tracking-wider">Solo se permiten letras, números y guiones bajos (_).</span>
                 </div>
 
                 {/* Real name / display name Input */}
                 <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Nombre Visible (Real o Alias)</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 animate-pulse">Nombre Visible (Avatar o Alias)</label>
                   <input 
                     type="text" 
                     value={inputRealName} 
                     onChange={e => setInputRealName(e.target.value)} 
-                    placeholder="Nombre Completo"
+                    placeholder="Tu Nombre / Alias"
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all"
                   />
                 </div>
 
                 {/* Description / Bio */}
                 <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Descripción o Biografía Corta</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Biografía corta o Estado</label>
                   <textarea 
                     value={inputBio} 
                     onChange={e => setInputBio(e.target.value)} 
-                    placeholder="Amo los juegos Pixel-Art y de estrategia."
+                    placeholder="¡Hola! Bienvenidos a mi rincón de juegos..."
                     maxLength={100}
                     rows={2}
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all resize-none shadow-inner"
                   />
-                  <div className="flex justify-between text-[10px] text-gray-500 font-mono mt-1 font-bold">
+                  <div className="flex justify-between text-[9px] text-gray-500 font-mono mt-1 font-extrabold">
                     <span>MÁXIMO 100 CARACTERES</span>
                     <span>{inputBio.length}/100</span>
                   </div>
@@ -593,19 +829,20 @@ export default function Navbar({
                 <div className="flex items-center gap-3 pt-4 border-t border-white/5">
                   <button 
                     onClick={handleSaveProfile} 
-                    disabled={isSaving || uploadingImage} 
-                    className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-widest rounded-xl text-[12px] transition-all duration-300 shadow-[0_4px_15px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2"
+                    disabled={isSaving || uploadingImage || inputUsername.length < 3} 
+                    className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-widest rounded-xl text-[11px] transition-all duration-300 shadow-[0_4px_15px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isSaving ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
                       </>
-                    ) : 'Guardar'}
+                    ) : 'Guardar Identidad'}
                   </button>
                   <button 
+                    type="button"
                     onClick={() => setShowEditProfileModal(false)} 
                     disabled={isSaving || uploadingImage} 
-                    className="py-3 px-6 bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-[12px] transition-all"
+                    className="py-3 px-6 bg-white/5 hover:bg-white/15 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-[11px] transition-all cursor-pointer"
                   >
                     Cancelar
                   </button>

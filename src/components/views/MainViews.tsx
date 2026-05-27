@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Edit2, Camera, X, Check } from 'lucide-react';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Edit2, Camera, X, Check, Shuffle, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AppGrid, { AppCard } from '../AppGrid';
 import { AppItem, Category } from '../../types';
@@ -261,6 +261,11 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  
+  // Custom states for drag-and-drop and AI generator
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [aiPresetSeed, setAiPresetSeed] = useState('');
+  const [aiPresetStyle, setAiPresetStyle] = useState('bottts');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -287,10 +292,12 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
 
   useEffect(() => {
     if (userProfile || session) {
-      setUsername(userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario');
+      const initialUser = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
+      setUsername(initialUser);
       setRealName(userProfile?.real_name || metadata.full_name || '');
       setAvatarUrl(userProfile?.avatar_url || metadata.avatar_url || '');
       setBio(metadata.bio || '');
+      setAiPresetSeed(initialUser);
     }
   }, [userProfile, session]);
 
@@ -451,110 +458,317 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
 
                 <button 
                   onClick={() => setIsEditing(true)}
-                  className="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-all shadow-sm"
+                  className="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
                 >
                   Editar Perfil Social
                 </button>
               </>
             ) : (
-              <div className="space-y-6 w-full bg-[#0a0c14]/50 p-6 rounded-3xl border border-white/5 backdrop-blur-md text-left">
-                 {error && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm font-medium">{error}</div>}
+              <div className="space-y-6 w-full bg-[#0a0c16]/75 p-6 sm:p-8 rounded-[2rem] border border-white/5 backdrop-blur-md text-left shadow-2xl relative overflow-hidden">
+                 {error && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold mb-5">{error}</div>}
                  
-                 {/* Drag & Drop/Click Native File Uploader and Preview */}
-                 <div className="flex flex-col items-center pb-4 border-b border-white/5">
-                   <div 
-                     onClick={() => !uploading && fileInputRef.current?.click()}
-                     className={`relative group ${uploading ? 'cursor-wait' : 'cursor-pointer'} w-24 h-24 rounded-full bg-white/5 border-2 border-dashed border-white/20 hover:border-cyan-400 flex flex-col items-center justify-center overflow-hidden shadow-inner transition-all hover:scale-105`}
-                   >
-                     {avatarUrl ? (
-                       <img src={avatarUrl} className="w-full h-full object-cover transition-transform duration-350 group-hover:scale-110" alt="Preview Avatar" />
-                     ) : (
-                       <User className="w-8 h-8 text-gray-400" />
-                     )}
-                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[10px] text-white font-black transition-opacity gap-1">
-                       <Camera className="w-4 h-4 text-cyan-400" />
-                       {uploading ? 'SUBIENDO...' : 'SUBIR FOTO'}
-                     </div>
-                     {uploading && (
-                       <div className="absolute inset-0 bg-black/75 flex items-center justify-center">
-                         <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                 {/* Live preview banner card */}
+                 <div className="mb-6 p-4 rounded-2xl bg-[#070914] border border-white/5 shadow-inner relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
+                   
+                   <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded-full border border-cyan-400/10">Identidad Actualizada</span>
+                   
+                   <div className="flex items-center gap-4">
+                     <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-white/10 overflow-hidden relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-white">
+                       {avatarUrl ? (
+                         <img 
+                           src={avatarUrl} 
+                           className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                           alt="Quick Preview" 
+                           onError={(e) => {
+                             e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`;
+                           }}
+                         />
+                       ) : (
+                         <span>{(username || 'U').charAt(0).toUpperCase()}</span>
+                       )}
+                       <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-black rounded-full px-1.5 py-0.5 border border-slate-950 scale-90">
+                         Lvl {level}
                        </div>
-                     )}
+                     </div>
+                     <div className="min-w-0 flex-1">
+                       <div className="flex items-center gap-2">
+                         <h4 className="text-white font-black text-base truncate font-mono">@{username || 'jugador_nexus'}</h4>
+                         <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">Jugador</span>
+                       </div>
+                       <p className="text-gray-400 text-xs truncate mt-0.5">{realName || 'Tu Nombre o Alias'}</p>
+                       <p className="text-gray-500 text-[10px] italic truncate mt-1">"{bio || 'Sin biografía establecida.'}"</p>
+                     </div>
                    </div>
-                   <input 
-                     type="file" 
-                     ref={fileInputRef} 
-                     onChange={handleFileUpload} 
-                     className="hidden" 
-                     accept="image/*" 
-                   />
-                   <p className="text-[10px] text-gray-500 font-bold uppercase mt-2.5 tracking-wider text-center">Subir foto desde Galería/Cámara o selecciona un Preset abajo</p>
                  </div>
 
-                 {/* Custom Avatar Presets selection */}
-                 <div>
-                   <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2.5">Avatar Especial de Jugador (Presets)</label>
-                   <div className="grid grid-cols-6 gap-2 bg-black/45 p-3 rounded-2xl border border-white/5">
-                     {PROFILE_AVATAR_PRESETS.map((preset, idx) => {
-                       const isSelected = avatarUrl === preset.url;
-                       return (
-                         <div 
-                           key={idx} 
-                           onClick={() => setAvatarUrl(preset.url)}
-                           className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-transparent hover:scale-105'}`}
-                           title={preset.name}
-                         >
-                           <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
-                           {isSelected && (
-                             <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
-                               <Check className="w-4 h-4 text-cyan-400 font-extrabold stroke-[3]" />
-                             </div>
-                           )}
+                 {/* PHOTO PICKER TABS */}
+                 <div className="mb-5">
+                   <div className="grid grid-cols-3 gap-1 bg-[#05060b] p-1 rounded-2xl border border-white/5 mb-4">
+                     <button
+                       type="button"
+                       onClick={() => {
+                         // Fallback to custom upload
+                         if (avatarUrl.includes('unsplash.com') || avatarUrl.includes('api.dicebear.com')) {
+                           setAvatarUrl('');
+                         }
+                       }}
+                       className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                         !avatarUrl.includes('unsplash.com') && !avatarUrl.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                       }`}
+                     >
+                       📂 Subir Custom
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         const seed = aiPresetSeed || username || 'nexus';
+                         setAvatarUrl(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(seed)}`);
+                       }}
+                       className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                         avatarUrl.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                       }`}
+                     >
+                       ⚡ Avatar IA
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setAvatarUrl(PROFILE_AVATAR_PRESETS[0].url);
+                       }}
+                       className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                         avatarUrl.includes('unsplash.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                       }`}
+                     >
+                       💎 PRESETS
+                     </button>
+                   </div>
+
+                   {/* TAB CONTENT: 1. UPLOAD CUSTOM */}
+                   {!avatarUrl.includes('unsplash.com') && !avatarUrl.includes('api.dicebear.com') && (
+                     <div 
+                       onDragOver={(e) => {
+                         e.preventDefault();
+                         setIsDragActive(true);
+                       }}
+                       onDragLeave={() => setIsDragActive(false)}
+                       onDrop={async (e) => {
+                         e.preventDefault();
+                         setIsDragActive(false);
+                         const file = e.dataTransfer.files?.[0];
+                         if (file && file.type.startsWith('image/')) {
+                           try {
+                             setUploading(true);
+                             setError(null);
+                             const res = await uploadToCloudinary(file, 'avatars');
+                             if (res && res.secure_url) {
+                               setAvatarUrl(res.secure_url);
+                             } else {
+                               throw new Error('No se recibió la dirección web de la imagen subida.');
+                             }
+                           } catch (err: any) {
+                             console.error(err);
+                             setError(err.message || 'Error al subir la imagen.');
+                           } finally {
+                             setUploading(false);
+                           }
+                         }
+                       }}
+                       onClick={() => {
+                         if (!uploading) fileInputRef.current?.click();
+                       }}
+                       className={`relative w-full h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer overflow-hidden ${
+                         isDragActive 
+                           ? 'border-cyan-400 bg-cyan-950/20 shadow-[0_0_20px_rgba(34,211,238,0.25)]' 
+                           : 'border-white/10 hover:border-cyan-400/50 bg-black/40 hover:bg-[#080a13]'
+                       }`}
+                     >
+                       {uploading ? (
+                         <div className="flex flex-col items-center gap-2">
+                           <Loader2 className="w-7 h-7 text-cyan-400 animate-spin" />
+                           <span className="text-xs uppercase font-black tracking-widest text-cyan-400 animate-pulse">Subiendo a Cloudinary...</span>
                          </div>
-                       );
-                     })}
-                   </div>
+                       ) : avatarUrl ? (
+                         <div className="absolute inset-0 flex items-center justify-center group">
+                           <img src={avatarUrl} className="w-full h-full object-cover opacity-80" alt="Uploaded Profile" />
+                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-white gap-1 uppercase">
+                             <Upload className="w-4 h-4 text-cyan-400" /> Cambiar Imagen
+                           </div>
+                         </div>
+                       ) : (
+                         <div className="flex flex-col items-center">
+                           <div className="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
+                             <Camera className="w-5 h-5" />
+                           </div>
+                           <p className="text-xs font-bold text-gray-200">Suelta tu imagen o Haz Clic para subir</p>
+                           <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-1">PNG, JPG, WEBP (SE GUARDA EN CLOUDINARY)</p>
+                         </div>
+                       )}
+                       <input 
+                         type="file" 
+                         ref={fileInputRef} 
+                         onChange={handleFileUpload} 
+                         className="hidden" 
+                         accept="image/*" 
+                       />
+                     </div>
+                   )}
+
+                   {/* TAB CONTENT: 2. AI AVATAR ENGINE */}
+                   {avatarUrl.includes('api.dicebear.com') && (
+                     <div className="space-y-4 bg-[#05060a]/60 p-4 rounded-2xl border border-white/5">
+                       <div className="flex items-center gap-3">
+                         <div className="w-12 h-12 bg-[#090b14] border border-white/10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center p-1.5 shadow-inner">
+                           <img 
+                             src={avatarUrl} 
+                             className="w-full h-full object-contain" 
+                             alt="AI Generator Realtime Output" 
+                           />
+                         </div>
+                         <div>
+                           <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest font-mono">Generando por IA</span>
+                           <p className="text-xs font-bold text-white">Generación Dinámica Directa</p>
+                         </div>
+                       </div>
+
+                       <div className="grid grid-cols-4 gap-1.5">
+                         {[
+                           { id: 'bottts', label: 'Robots' },
+                           { id: 'pixel-art', label: 'Pixeles' },
+                           { id: 'avataaars', label: 'Gente' },
+                           { id: 'micah', label: 'Abstract' }
+                         ].map((style) => (
+                           <button
+                             key={style.id}
+                             type="button"
+                             onClick={() => {
+                               setAiPresetStyle(style.id);
+                               const seed = aiPresetSeed || username || 'nexus';
+                               setAvatarUrl(`https://api.dicebear.com/7.x/${style.id}/svg?seed=${encodeURIComponent(seed)}`);
+                             }}
+                             className={`py-2 px-1 text-[9px] uppercase tracking-wider font-extrabold rounded-lg transition-all border ${
+                               aiPresetStyle === style.id 
+                                 ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400' 
+                                 : 'bg-white/5 border-transparent text-gray-400 hover:text-white'
+                             }`}
+                           >
+                             {style.label}
+                           </button>
+                         ))}
+                       </div>
+
+                       <div className="flex gap-2">
+                         <div className="relative flex-1">
+                           <input
+                             type="text"
+                             value={aiPresetSeed}
+                             onChange={(e) => {
+                               const val = e.target.value;
+                               setAiPresetSeed(val);
+                               setAvatarUrl(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val || 'nexus')}`);
+                             }}
+                             placeholder="Semilla (ej. Juan, Matrix, Cyberpunk)"
+                             className="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs font-mono outline-none focus:border-cyan-400"
+                           />
+                         </div>
+                         <button
+                           type="button"
+                           onClick={() => {
+                             const val = 'nexus_' + Math.floor(Math.random() * 89999 + 10000);
+                             setAiPresetSeed(val);
+                             setAvatarUrl(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val)}`);
+                           }}
+                           className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                           title="Randomizar semilla"
+                         >
+                           <Shuffle className="w-4 h-4" />
+                         </button>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* TAB CONTENT: 3. PREMIUM PRESETS */}
+                   {avatarUrl.includes('unsplash.com') && (
+                     <div className="space-y-2">
+                       <div className="grid grid-cols-6 gap-2 bg-[#05060b]/60 p-3 rounded-2xl border border-white/5">
+                         {PROFILE_AVATAR_PRESETS.map((preset, index) => {
+                           const isSelected = avatarUrl === preset.url;
+                           return (
+                             <div 
+                               key={index} 
+                               onClick={() => setAvatarUrl(preset.url)}
+                               className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-transparent hover:scale-105'}`}
+                               title={preset.name}
+                             >
+                               <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
+                               {isSelected && (
+                                 <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
+                                   <Check className="w-4 h-4 text-cyan-400 font-extrabold stroke-[3]" />
+                                 </div>
+                               )}
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   )}
                  </div>
 
-                 <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nombre de Usuario (Único)</label>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium font-mono" placeholder="usuario_123" />
-                 </div>
-                 <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nombre Visible</label>
-                    <input type="text" value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium" placeholder="Tu Nombre Real" />
-                 </div>
-                 <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Biografía corta</label>
-                    <input type="text" value={bio} onChange={e => setBio(e.target.value)} maxLength={100} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-cyan-500 focus:bg-black/80 transition-all font-medium" placeholder="Amo los juegos Indie..." />
-                 </div>
-                 
-                 <div className="flex items-center gap-3 pt-4 border-t border-white/5">
-                    <button 
-                      onClick={handleSaveProfile} 
-                      disabled={saving || uploading} 
-                      className="flex-1 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2"
-                    >
-                      {saving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
-                        </>
-                      ) : 'Guardar Cambios'}
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setIsEditing(false); setError(null);
-                        setUsername(userProfile?.username || ''); setRealName(userProfile?.real_name || '');
-                        setAvatarUrl(userProfile?.avatar_url || ''); setBio(metadata.bio || '');
-                      }} 
-                      disabled={saving || uploading} 
+                 <div className="space-y-4">
+                   <div>
+                     <div className="flex justify-between items-center mb-1.5">
+                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">Nombre de Usuario (Único)</label>
+                       {username.length >= 3 ? (
+                         <span className="text-[9px] uppercase font-mono text-green-400 font-extrabold">✓ VÁLIDO</span>
+                       ) : (
+                         <span className="text-[9px] uppercase font-mono text-yellow-500 font-extrabold">MIN 3 CARACT.</span>
+                       )}
+                     </div>
+                     <input type="text" value={username} onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500 focus:bg-[#070914] transition-all font-semibold font-mono text-[13px]" placeholder="usuario_123" />
+                     <span className="text-[8px] text-gray-500 font-bold block mt-1.5 uppercase tracking-wider">Solo se permiten letras, números y guiones bajos (_).</span>
+                   </div>
+                   
+                   <div>
+                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 font-mono">Nombre Visible</label>
+                     <input type="text" value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500 focus:bg-[#070914] transition-all font-semibold text-[13px]" placeholder="Tu Nombre Real" />
+                   </div>
+
+                   <div>
+                     <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 font-mono">
+                       <span>Biografía corta o Estado</span>
+                       <span className="text-gray-500 font-bold">{bio.length}/100</span>
+                     </div>
+                     <textarea value={bio} onChange={e => setBio(e.target.value)} maxLength={100} rows={2} className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500 focus:bg-[#070914] transition-all font-semibold text-[13px] resize-none" placeholder="Amo los juegos Indie..." />
+                   </div>
+                   
+                   <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                     <button 
+                       onClick={handleSaveProfile} 
+                       disabled={saving || uploading || username.length < 3} 
+                       className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-widest rounded-xl text-[11px] transition-all duration-300 shadow-[0_4px_15px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2 cursor-pointer"
+                     >
+                       {saving ? (
+                         <>
+                           <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
+                         </>
+                       ) : 'Guardar Cambios'}
+                     </button>
+                     <button 
+                       onClick={() => {
+                         setIsEditing(false); setError(null);
+                         setUsername(userProfile?.username || ''); setRealName(userProfile?.real_name || '');
+                         setAvatarUrl(userProfile?.avatar_url || ''); setBio(metadata.bio || '');
+                       }} 
+                       disabled={saving || uploading} 
                       className="px-6 py-2.5 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-colors"
                     >
                       Cancelar
-                    </button>
-                 </div>
+                     </button>
+                  </div>
+                </div>
               </div>
-            )}
+             )}
+             
           </div>
         </div>
       </div>
