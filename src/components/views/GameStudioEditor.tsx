@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Play, Square, Save, Upload, RotateCcw, Check, Move, MousePointer2, PlusCircle, Settings, ChevronLeft, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
+import { saveGameDraft } from '../../lib/offlineDb';
 
 interface GameStudioEditorProps {
   initialTemplate: string;
@@ -39,6 +40,33 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [gameScore, setGameScore] = useState(0);
+
+  // Auto-save local draft on objects modifications
+  useEffect(() => {
+    let active = true;
+    const triggerSave = async () => {
+      try {
+        if (!active || objects.length === 0) return;
+        
+        const draftId = `draft_${initialTemplate.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+        await saveGameDraft({
+          id: draftId,
+          title: `${initialTemplate} Game Studio`,
+          objects: objects,
+          updatedAt: new Date().toISOString()
+        });
+        console.log('[Offline AutoSave] Borrador de juego autoguardado en IndexedDB.');
+      } catch (err) {
+        console.warn('[Offline AutoSave] Error guardando borrador:', err);
+      }
+    };
+
+    const timer = setTimeout(triggerSave, 1200);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [objects, initialTemplate]);
 
   // Play mode state refs
   const playState = useRef({

@@ -27,6 +27,7 @@ import { SettingsView } from './components/views/SettingsView';
 import NexusHub from './components/NexusHub';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthModal from './components/AuthModal';
+import OfflineFallback from './components/OfflineFallback';
 
 export const DEFAULT_SETTINGS = {
   storeName: 'NexusPlay',
@@ -46,6 +47,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   // Data fetching state
   const [apps, setApps] = useState<AppItem[]>([]);
@@ -384,11 +386,55 @@ export default function App() {
   });
 
   const fetchApps = async () => {
-    const { data } = await supabase.from('apps').select('*').order('created_at', { ascending: false });
-    if (data) {
-      setApps(data.map(mapDbAppToAppItem));
+    try {
+      if (!navigator.onLine) {
+        throw new Error("Dispositivo sin conexión a internet");
+      }
+      const { data, error } = await supabase.from('apps').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        setApps(data.map(mapDbAppToAppItem));
+        localStorage.setItem('nexus_cached_apps', JSON.stringify(data));
+      } else {
+        throw new Error(error?.message || "Error al leer de Supabase");
+      }
+    } catch (e: any) {
+      console.warn("[Offline Cache] No se pudo leer de Supabase. Cargando copia en caché...", e.message || e);
+      const cached = localStorage.getItem('nexus_cached_apps');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setApps(parsed.map(mapDbAppToAppItem));
+          // Prevenir Toasts múltiples molestos en el boot
+          setTimeout(() => {
+            addToast('Cargado catálogo de apps offline desde almacenamiento local', 'info');
+          }, 500);
+        } catch (parseError) {
+          console.error("Error cargando caché local de la tienda", parseError);
+        }
+      }
     }
   };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      addToast('Conexión reestablecida. Volviendo al modo online.', 'success');
+      fetchApps();
+    };
+    
+    const handleOffline = () => {
+      setIsOffline(true);
+      addToast('Has perdido la conexión. Entrando en modo offline.', 'info');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const fetchAllData = async () => {
     const [reqs, usrs] = await Promise.all([
@@ -645,8 +691,28 @@ export default function App() {
       case 'search':
         return <SearchView apps={publishedApps} onAppClick={handleAppClick} onBack={() => setActiveView('home')} initialQuery={searchQuery} />;
       case 'nexus-hub':
+        if (isOffline) {
+          return (
+            <OfflineFallback 
+              onBack={() => setActiveView('home')} 
+              onGoToGames={() => setActiveView('games-hub')} 
+              title="Comunidades Desconectadas"
+              description="La sala de chat Nexus Hub y los canales de la comunidad requieren conexión a internet en tiempo real para enviar y recibir mensajes. ¡Vuelve en cuanto recuperes señal!"
+            />
+          );
+        }
         return <NexusHub session={session} userProfile={userProfile} onBack={() => setActiveView('home')} />;
       case 'admin-panel':
+        if (isOffline) {
+          return (
+            <OfflineFallback 
+              onBack={() => setActiveView('home')} 
+              onGoToGames={() => setActiveView('games-hub')} 
+              title="Panel de Administración Bloqueado"
+              description="El panel de control administrativo y la aprobación de apps requieren sincronización directa con los servicios en la nube de Supabase."
+            />
+          );
+        }
         return (
            <AdminPanel 
              onBack={() => setActiveView('home')} 
@@ -659,6 +725,16 @@ export default function App() {
            />
         );
       case 'nexus-ai':
+        if (isOffline) {
+          return (
+            <OfflineFallback 
+              onBack={() => setActiveView('home')} 
+              onGoToGames={() => setActiveView('games-hub')} 
+              title="Asistente de IA Desconectado"
+              description="Nexus AI requiere conexión a internet para procesar peticiones y generar respuestas a través del modelo de inteligencia artificial Google Gemini."
+            />
+          );
+        }
         return <NexusAIChat apps={publishedApps} apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} onAppClick={handleAppClick} />;
       case 'profile':
         return (
@@ -768,6 +844,29 @@ export default function App() {
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
       <GoogleAdSense />
+      {isOffline && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-lg bg-red-500/95 backdrop-blur-md border border-red-500/30 text-white rounded-2xl px-5 py-3 sm:py-3.5 shadow-[0_10px_30px_rgba(239,68,68,0.3)] flex items-center justify-between gap-4 font-sans text-xs sm:text-sm animate-bounce-short">
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-200 animate-pulse shrink-0"></span>
+            <span className="font-bold text-red-500-contrast">Modo Offline Activado • Explorando copia local</span>
+          </div>
+          <button 
+            onClick={() => {
+              addToast('Comprobando conexión...', 'info');
+              if (navigator.onLine) {
+                setIsOffline(false);
+                fetchApps();
+                addToast('¡Conexión restaurada! Sincronizando catálogo...', 'success');
+              } else {
+                addToast('Aún sin conexión. Seguimos en copia local.', 'info');
+              }
+            }}
+            className="px-3 py-1 bg-white/20 hover:bg-white/30 hover:scale-105 active:scale-95 border border-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase text-white transition-all shrink-0 cursor-pointer"
+          >
+            Reconectar
+          </button>
+        </div>
+      )}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showAuthModal && (
         <AuthModal 

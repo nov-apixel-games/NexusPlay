@@ -1,16 +1,106 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, Share2, MessageSquare, ExternalLink, Zap, Crosshair } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, 
+  Share2, MessageSquare, ExternalLink, Zap, Crosshair, Sparkles, Trash2, CheckCircle2 
+} from 'lucide-react';
 import { GameStudioEditor } from './GameStudioEditor';
 import { GameStudioEditor3D } from './GameStudioEditor3D';
+import { 
+  getOfflineGames, 
+  saveOfflineGame, 
+  deleteOfflineGame, 
+  getGameDrafts, 
+  saveGameDraft, 
+  deleteGameDraft, 
+  OfflineGame, 
+  GameDraft 
+} from '../../lib/offlineDb';
 
 interface GamesHubViewProps {
   onBack: () => void;
 }
 
+const COMMUNITY_GAMES: OfflineGame[] = [
+  { id: 'platformer', title: 'Platformer Retro Adventure', developer: '@retro_builder', category: 'Platformer', rating: 4.9 },
+  { id: 'arcade-shooter', title: 'Neon Galaxy Invaders', developer: '@pixel_voyager', category: 'Arcade Shooter', rating: 4.8 },
+  { id: 'idle-clicker', title: 'Pixel Cash Clicker 3D', developer: '@click_tycoon', category: 'Clicker / Idle', rating: 4.6 }
+];
+
 export function GamesHubView({ onBack }: GamesHubViewProps) {
   const [activeTab, setActiveTab] = useState('explore');
   const [editorTemplate, setEditorTemplate] = useState<string | null>(null);
+  
+  // Offline states
+  const [favorites, setFavorites] = useState<OfflineGame[]>([]);
+  const [recentGames, setRecentGames] = useState<OfflineGame[]>([]);
+  const [localDrafts, setLocalDrafts] = useState<GameDraft[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load all local data from IndexedDB
+  const loadLocalData = async () => {
+    setIsLoading(true);
+    try {
+      const savedGames = await getOfflineGames();
+      // En nuestra store, si tiene 'lastPlayed' se considera jugado recientemente
+      const recents = savedGames.filter(g => g.lastPlayed !== undefined)
+        .sort((a, b) => new Date(b.lastPlayed!).getTime() - new Date(a.lastPlayed!).getTime());
+      
+      const favs = savedGames.filter(g => !g.id.startsWith('draft_')); // Los borradores se guardan por separado
+      
+      setRecentGames(recents);
+      setFavorites(favs);
+
+      const draftsData = await getGameDrafts();
+      setLocalDrafts(draftsData);
+    } catch (err) {
+      console.error('[IndexedDB] Error cargando datos de Juegos offline:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLocalData();
+  }, [activeTab]);
+
+  const handleToggleFavorite = async (game: OfflineGame, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isFav = favorites.some(f => f.id === game.id);
+    if (isFav) {
+      await deleteOfflineGame(game.id);
+      setFavorites(prev => prev.filter(f => f.id !== game.id));
+    } else {
+      const favGame: OfflineGame = { ...game, lastPlayed: undefined };
+      await saveOfflineGame(favGame);
+      setFavorites(prev => [...prev, favGame]);
+    }
+  };
+
+  const handlePlayGame = async (game: OfflineGame) => {
+    // Registrar juego en Recientes (IndexedDB)
+    const recentGame: OfflineGame = {
+      ...game,
+      lastPlayed: new Date().toISOString(),
+      playCount: (game.playCount || 0) + 1
+    };
+    await saveOfflineGame(recentGame);
+    
+    // Abrir plantilla correspondiente en el editor interactivo de forma directa
+    let templateName = 'Platformer';
+    if (game.id === 'arcade-shooter') templateName = 'Arcade Shooter';
+    if (game.id === 'idle-clicker') templateName = 'Clicker / Idle';
+
+    setEditorTemplate(templateName);
+  };
+
+  const handleDeleteDraft = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('¿Estás seguro de que deseas eliminar este proyecto local offline?')) {
+      await deleteGameDraft(id);
+      setLocalDrafts(prev => prev.filter(d => d.id !== id));
+    }
+  };
 
   if (editorTemplate?.includes('3D')) {
     return <GameStudioEditor3D initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />;
@@ -27,7 +117,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <button onClick={onBack} className="p-2 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all group mr-2">
+              <button onClick={onBack} className="p-2 sm:p-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all group mr-2 cursor-pointer">
                  <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
               <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex flex-shrink-0 items-center justify-center">
@@ -41,7 +131,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setActiveTab('create')}
-                className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl font-bold shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all transform hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl font-bold shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <Plus className="w-5 h-5" /> Crear Juego HTML5
               </button>
@@ -49,20 +139,22 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
           </div>
           
           <div className="mt-6 flex flex-wrap items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
-            {['explore', 'trending', 'offline', 'favorites'].map(tab => (
+            {[
+              { id: 'explore', label: 'Explorar' },
+              { id: 'offline', label: 'Offline Ready' },
+              { id: 'favorites', label: 'Mis Favoritos' },
+              { id: 'drafts', label: 'Proyectos Locales' }
+            ].map(tab => (
               <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 rounded-full font-bold text-sm tracking-wide transition-all ${
-                  activeTab === tab 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-5 py-2.5 rounded-full font-bold text-sm tracking-wide transition-all cursor-pointer ${
+                  activeTab === tab.id 
                     ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]' 
                     : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                {tab === 'explore' && 'Explorar'}
-                {tab === 'trending' && 'Top Semanal'}
-                {tab === 'offline' && 'Offline Ready'}
-                {tab === 'favorites' && 'Mis Favoritos'}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -76,7 +168,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
             {/* Offline Support Banner */}
             {activeTab === 'explore' && (
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden"
               >
@@ -86,57 +178,193 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                     <Zap className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">Soporte Offline Activado</h3>
-                    <p className="text-gray-400 text-sm">Los juegos HTML5 que abras se guardarán automáticamente para jugar sin internet.</p>
+                    <h3 className="text-white font-bold text-lg">Soporte Offline Integrado</h3>
+                    <p className="text-gray-400 text-sm">Los juegos del catálogo arcade se guardan de forma local en IndexedDB y funcionan al 100% sin internet.</p>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Featured Games */}
-            <section>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-                 <Star className="w-5 h-5 text-yellow-400" /> Destacados de la Comunidad
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 group hover:border-cyan-500/30 transition-all hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                    <div className="aspect-video bg-[#1a1c24] relative overflow-hidden flex items-center justify-center">
-                      <Gamepad2 className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#12141c] to-transparent opacity-80"></div>
-                      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                        <span className="text-xs font-bold text-white uppercase">HTML5</span>
+            {/* EXPLORAR TAB */}
+            {activeTab === 'explore' && (
+              <section>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+                   <Star className="w-5 h-5 text-yellow-400" /> Destacados de la Comunidad
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {COMMUNITY_GAMES.map((game) => {
+                    const isFav = favorites.some(f => f.id === game.id);
+                    return (
+                      <div key={game.id} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 group hover:border-cyan-500/30 transition-all hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                        <div className="aspect-video bg-[#1a1c24] relative overflow-hidden flex items-center justify-center">
+                          <Gamepad2 className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#12141c] to-transparent opacity-80"></div>
+                          <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                            <span className="text-[10px] font-black text-white uppercase tracking-wider">OFFLINE READY</span>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                              <h3 className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors truncate max-w-[200px] sm:max-w-xs">{game.title}</h3>
+                              <p className="text-gray-400 text-xs mt-1">Por {game.developer} • {game.category}</p>
+                            </div>
+                            <div className="bg-yellow-500/10 text-yellow-500 px-2 py-1.5 rounded-xl flex items-center gap-1 font-bold text-xs shrink-0 h-8">
+                               <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" /> {game.rating}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                             <button onClick={() => handlePlayGame(game)} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                               <Play className="w-5 h-5" /> Jugar Ahora
+                             </button>
+                             <button 
+                               onClick={(e) => handleToggleFavorite(game, e)} 
+                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors cursor-pointer ${
+                                 isFav ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                               }`}
+                             >
+                               <Heart className={`w-5 h-5 ${isFav ? 'fill-red-500' : ''}`} />
+                             </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-4 mb-4">
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* OFFLINE READY / RECIENTES TAB */}
+            {activeTab === 'offline' && (
+              <section>
+                <div className="text-center sm:text-left mb-6">
+                  <h2 className="text-xl font-bold text-white flex items-center justify-center sm:justify-start gap-2">
+                     <Clock className="w-5 h-5 text-emerald-400" /> Jugados Recientemente Offline
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">Juegos que has lanzado y que están listones para ejecutarse con o sin red.</p>
+                </div>
+                {recentGames.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {recentGames.map((game) => (
+                      <div key={game.id} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-emerald-500/10 p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all">
                         <div>
-                          <h3 className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors">Neon Rider X</h3>
-                          <p className="text-gray-400 text-xs mt-1">Por @retro_dev • Arcade</p>
+                          <div className="flex items-center justify-between gap-1 mb-4">
+                            <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-xl text-[10px] font-bold">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> LISTO OFFLINE
+                            </div>
+                            {game.lastPlayed && (
+                              <span className="text-[10px] text-gray-500 font-mono">Última vez: {new Date(game.lastPlayed).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                          <h3 className="text-lg font-bold text-white mb-1">{game.title}</h3>
+                          <p className="text-gray-400 text-xs mb-4">Por {game.developer} • {game.category}</p>
                         </div>
-                        <div className="bg-yellow-500/10 text-yellow-500 p-2 rounded-xl flex items-center gap-1 font-bold text-xs">
-                           <Star className="w-4 h-4 fill-yellow-500" /> 4.9
-                        </div>
+                        <button onClick={() => handlePlayGame(game)} className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                          <Play className="w-4 h-4 fill-black" /> Jugar sin Red
+                        </button>
                       </div>
-                      <div className="flex items-center gap-3">
-                         <button className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
-                           <Play className="w-5 h-5" /> Jugar Ahora
-                         </button>
-                         <button className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                           <Heart className="w-5 h-5" />
-                         </button>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </section>
+                ) : (
+                  <div className="bg-[#12141c] rounded-2xl p-10 text-center border border-white/5">
+                    <Gamepad2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 font-bold">¡No has jugado a ningún juego todavía!</p>
+                    <p className="text-gray-500 text-xs mt-1">Los juegos que abras en el modo de exploración se guardarán automáticamente aquí.</p>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* FAVORITOS TAB */}
+            {activeTab === 'favorites' && (
+              <section>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+                   <Heart className="w-5 h-5 text-red-400 fill-red-400" /> Mis Juegos Favoritos
+                </h2>
+                {favorites.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {favorites.map((game) => (
+                      <div key={game.id} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 p-5 flex flex-col justify-between hover:border-cyan-500/30 transition-all">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="bg-red-500/10 text-red-500 px-2 py-0.5 rounded-lg text-[9px] font-bold tracking-wider uppercase">Favorito</span>
+                            <button 
+                              onClick={(e) => handleToggleFavorite(game, e)} 
+                              className="text-red-500 hover:text-red-400 p-1 rounded-lg bg-red-500/5 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            >
+                              <Heart className="w-4 h-4 fill-red-500" />
+                            </button>
+                          </div>
+                          <h3 className="text-lg font-bold text-white mb-1">{game.title}</h3>
+                          <p className="text-gray-400 text-xs mb-4">{game.category}</p>
+                        </div>
+                        <button onClick={() => handlePlayGame(game)} className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                          <Play className="w-4 h-4 fill-black" /> Lanzar Juego
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-[#12141c] rounded-2xl p-10 text-center border border-white/5">
+                    <Heart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 font-bold">Aún no tienes favoritos</p>
+                    <p className="text-gray-500 text-xs mt-1">Haz clic en el corazón de cualquier juego en "Explorar" para agregarlo aquí.</p>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* PROYECTOS LOCALES TAB */}
+            {activeTab === 'drafts' && (
+              <section>
+                <div className="text-center sm:text-left mb-6">
+                  <h2 className="text-xl font-bold text-white flex items-center justify-center sm:justify-start gap-2">
+                     <Plus className="w-5 h-5 text-cyan-400" /> Proyectos Locales en Desarrollo
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">Tus creaciones de minijuegos autoguardadas de forma segura de modo local (IndexedDB).</p>
+                </div>
+                {localDrafts.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {localDrafts.map((draft) => (
+                      <div key={draft.id} className="bg-[#12141c] rounded-[24px] border border-white/5 p-6 flex flex-col justify-between hover:border-cyan-500/20 transition-all group">
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-lg text-[10px] font-bold">Offline Draft</span>
+                            <button 
+                              onClick={(e) => handleDeleteDraft(draft.id, e)}
+                              className="text-gray-500 hover:text-red-400 p-1.5 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                              title="Eliminar proyecto"
+                            >
+                              <Trash2 className="w-4.5 h-4.5" />
+                            </button>
+                          </div>
+                          <h3 className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors mb-2">{draft.title}</h3>
+                          <p className="text-gray-500 text-xs font-mono mb-4">Módulos: {draft.objects?.length || 0} • {new Date(draft.updatedAt).toLocaleDateString()}</p>
+                        </div>
+                        <button 
+                          onClick={() => setEditorTemplate(draft.title.split(' ')[0] || 'Platformer')}
+                          className="w-full bg-[#1e293b] hover:bg-[#334155] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <Play className="w-4 h-4" /> Editar Borrador
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-[#12141c] rounded-2xl p-10 text-center border border-white/5">
+                    <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 font-bold">No tienes borradores todavía</p>
+                    <p className="text-gray-500 text-xs mt-1">Crea un nuevo juego haciendo clic en el botón superior, los cambios se autoguardarán.</p>
+                  </div>
+                )}
+              </section>
+            )}
             
           </div>
         ) : (
           <motion.div 
-             initial={{ opacity: 0, y: 20 }}
+             initial={{ opacity: 0, y: 15 }}
              animate={{ opacity: 1, y: 0 }}
              className="bg-[#12141c] rounded-[32px] border border-white/5 p-8 max-w-4xl mx-auto"
           >
@@ -145,15 +373,15 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                 <Plus className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-3xl font-black text-white mb-4">Games Studio (Beta)</h2>
-              <p className="text-gray-400 max-w-lg mx-auto">Crea minijuegos HTML5 instantáneos, arcade puzzles o plataformas de forma táctil e intuitiva, 100% desde Android.</p>
+              <p className="text-gray-400 max-w-lg mx-auto">Crea minijuegos HTML5 instantáneos, arcade puzzles o plataformas de forma táctil e intuitiva, 100% desde Android, sin necesidad de conexión.</p>
               <div className="flex items-center justify-center gap-3 mt-6">
                 <div className="flex items-center gap-1.5 bg-[#12141c] border border-emerald-500/30 px-3 py-1.5 rounded-full">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">Offline Ready</span>
+                  <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">Guardado Offline</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-[#12141c] border border-blue-500/30 px-3 py-1.5 rounded-full">
                   <Zap className="w-3 h-3 text-blue-400" />
-                  <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase">Cloudinary Storage</span>
+                  <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase">IndexedDB Activo</span>
                 </div>
               </div>
             </div>
@@ -167,12 +395,26 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                  { title: 'Arcade Shooter', icon: ExternalLink, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
                  { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
                ].map((t, i) => (
-                 <button key={i} onClick={() => setEditorTemplate(t.title)} className="p-6 rounded-2xl bg-[#1a1c24] border border-white/5 hover:border-cyan-500/30 text-left transition-all hover:bg-[#1f212a] group">
+                 <button 
+                    key={i} 
+                    onClick={async () => {
+                      // Registrar un nuevo borrador en IndexedDB
+                      const newDraft: GameDraft = {
+                        id: `draft_${Date.now()}`,
+                        title: `${t.title} offline game`,
+                        objects: [],
+                        updatedAt: new Date().toISOString()
+                      };
+                      await saveGameDraft(newDraft);
+                      setEditorTemplate(t.title);
+                    }} 
+                    className="p-6 rounded-2xl bg-[#1a1c24] border border-white/5 hover:border-cyan-500/30 text-left transition-all hover:bg-[#1f212a] group cursor-pointer"
+                 >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${t.bg} mb-4`}>
                       <t.icon className={`w-6 h-6 ${t.color}`} />
                     </div>
                     <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">{t.title}</h3>
-                    <p className="text-sm text-gray-500 mt-2">Plantilla base para iniciar</p>
+                    <p className="text-sm text-gray-500 mt-2">Crear proyecto offline interactivo</p>
                  </button>
                ))}
             </div>
