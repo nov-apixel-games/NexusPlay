@@ -124,8 +124,18 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                 <Gamepad2 className="w-6 h-6 text-cyan-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Games Hub</h1>
-                <p className="text-cyan-400/80 text-sm font-bold tracking-wide uppercase">Arcade HTML5 & Instant Games</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-black text-white tracking-tight">Games Hub</h1>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${navigator.onLine ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${navigator.onLine ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
+                    {navigator.onLine ? 'ONLINE' : 'OFFLINE'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-500 font-mono mt-1">
+                  <span>Tamaño Caché: ~3.7 MB</span>
+                  <span>•</span>
+                  <span>Sincronizado: Hoy, {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -384,16 +394,15 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                   <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase">IndexedDB Activo</span>
                 </div>
               </div>
-            </div>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                {[
-                 { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10' },
-                 { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10' },
-                 { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-                 { title: 'Platformer', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                 { title: 'Arcade Shooter', icon: ExternalLink, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-                 { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                 { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10', desc: 'Combate en arena cibernética WebGL con físicas y mira láser real.' },
+                 { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10', desc: 'Sobrevive a peligrosos enemigos voxel en atmósfera 3D nocturna.' },
+                 { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10', desc: 'Prueba la velocidad conduciendo un bólido neón con físicas de drift 3D.' },
+                 { title: 'Platformer', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10', desc: 'Salto 2D, recolección de monedas de oro, enemigos y gravedad.' },
+                 { title: 'Endless Runner', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Obstáculos progresivos ultra rápidos y doble salto acrobático.' },
+                 { title: 'Arcade Shooter', icon: ExternalLink, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: 'Disparo espacial clásico con hordas dinámicas infinitas.' },
+                 { title: 'Clicker / Idle', icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10', desc: 'Producción masiva con física de rebote y bonus de cash flotantes.' },
                ].map((t, i) => (
                  <button 
                     key={i} 
@@ -413,10 +422,11 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${t.bg} mb-4`}>
                       <t.icon className={`w-6 h-6 ${t.color}`} />
                     </div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">{t.title}</h3>
-                    <p className="text-sm text-gray-500 mt-2">Crear proyecto offline interactivo</p>
+                    <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors uppercase font-mono">{t.title}</h3>
+                    <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">{t.desc}</p>
                  </button>
                ))}
+            </div>
             </div>
           </motion.div>
         )}
