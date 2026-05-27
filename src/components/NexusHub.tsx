@@ -180,296 +180,87 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
   const activeNow = validCommunities.slice().reverse().slice(0, 3);
   const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Jugador';
 
+
   return (
-    <div className="flex flex-col h-[100dvh] w-full relative z-10 bg-[#06070a]">
-      {/* Background Orbs */}
-      <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] bg-cyan-900/30 rounded-full blur-[100px]" />
-        <div className="absolute top-[40%] -left-[10%] w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[120px]" />
-      </div>
+    <div className="flex flex-col h-[100dvh] w-full relative z-10 bg-[#020202] overflow-hidden">
+      {/* Sci-fi Overlay Elements */}
+      <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+      <div className="absolute top-0 w-full h-[500px] bg-gradient-to-b from-cyan-900/20 via-blue-900/10 to-transparent pointer-events-none"></div>
 
-      <header className="shrink-0 bg-[#06070a]/80 backdrop-blur-3xl border-b flex flex-col justify-between px-6 sm:px-10 sticky top-0 z-30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] pt-6" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-           <div className="flex items-center gap-4">
-             <button onClick={onBack} className="w-12 h-12 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-[16px] flex items-center justify-center transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-               <ChevronLeft className="w-6 h-6 text-gray-300" />
-             </button>
-             <div>
-               <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter flex items-center gap-3 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
-                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-                    <Users className="w-5 h-5 text-white drop-shadow-md" />
-                 </div>
-                 NEXUS HUB
-               </h1>
-             </div>
+      <header className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-4 sticky top-0 z-30 bg-black/40 backdrop-blur-md border-b border-cyan-900/50">
+        <div className="flex items-center gap-3 sm:gap-4">
+           <button onClick={onBack} className="w-10 h-10 sm:w-12 sm:h-12 bg-black/50 border border-cyan-500/30 hover:bg-cyan-900/40 rounded-xl flex items-center justify-center transition-all shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
+           </button>
+           <div className="relative">
+             <h1 className="text-xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-tighter uppercase drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]">Nexus_Net</h1>
+             <p className="text-[8px] sm:text-[10px] text-cyan-400 font-mono tracking-widest bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800 absolute -bottom-3 sm:-bottom-1 left-0">SYS.ONLINE</p>
            </div>
-           
-           <button 
-             onClick={onCreateClick}
-             className="px-5 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-[13px] uppercase tracking-widest rounded-[16px] flex items-center gap-2 transition-transform shadow-[0_0_20px_rgba(8,145,178,0.4)] hover:shadow-[0_0_30px_rgba(8,145,178,0.6)] active:scale-95"
-           >
-             <Plus className="w-5 h-5" /> <span className="hidden sm:inline">Nueva Comunidad</span>
-           </button>
         </div>
-        
-        {/* Tabs */}
-        <div className="flex items-center gap-8 mt-6 overflow-x-auto scrollbar-hide">
-           <button 
-             onClick={() => setActiveTab('home')}
-             className={`pb-4 text-[13px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeTab === 'home' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-gray-500 hover:text-gray-300'}`}
-           >
-              <div className="flex items-center gap-2"><Sparkles className="w-4 h-4" /> Inicio</div>
-              {activeTab === 'home' && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-cyan-400 rounded-t-full shadow-[0_-2px_10px_rgba(34,211,238,0.8)]"></div>}
-           </button>
-           <button 
-             onClick={() => setActiveTab('explore')}
-             className={`pb-4 text-[13px] font-black uppercase tracking-widest transition-all relative whitespace-nowrap ${activeTab === 'explore' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-gray-500 hover:text-gray-300'}`}
-           >
-              <div className="flex items-center gap-2"><Compass className="w-4 h-4" /> Explorar Servidores</div>
-              {activeTab === 'explore' && <div className="absolute bottom-0 left-0 w-full h-[3px] bg-cyan-400 rounded-t-full shadow-[0_-2px_10px_rgba(34,211,238,0.8)]"></div>}
-           </button>
-        </div>
+        <button onClick={onCreateClick} className="px-3 py-2 sm:px-5 sm:py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-black uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.6)] animate-pulse flex items-center gap-1.5">
+           <Plus className="w-4 h-4"/> <span className="hidden sm:inline">INICIAR SERVER</span>
+        </button>
       </header>
-      
-      <main className="flex-1 overflow-y-auto bg-transparent">
-        {activeTab === 'home' ? (
-           <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10 space-y-12 pb-24">
-              
-              {/* Home Welcome Header */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-[#0d0f18] to-transparent p-6 sm:p-8 rounded-[32px] border border-white/5 relative overflow-hidden shadow-2xl">
-                 <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-cyan-900/10 to-transparent pointer-events-none"></div>
-                 <div className="flex items-center gap-5 relative z-10">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[24px] bg-[#1a1d2d] border-2 border-cyan-500/30 flex items-center justify-center p-1 shadow-[0_0_20px_rgba(34,211,238,0.2)] overflow-hidden">
-                       {userProfile?.avatar_url ? (
-                         <img src={userProfile.avatar_url} className="w-full h-full object-cover rounded-[18px]" />
-                       ) : (
-                         <span className="text-2xl font-black text-white">{username[0].toUpperCase()}</span>
-                       )}
-                    </div>
-                    <div>
-                       <h2 className="text-xl sm:text-3xl font-black text-white tracking-tighter shadow-sm mb-1">Que bueno verte, <span className="text-cyan-400">{username}</span></h2>
-                       <p className="text-cyan-500 font-bold text-xs uppercase tracking-widest flex items-center gap-1.5 opacity-80 mt-1"><Activity className="w-4 h-4" /> Sesión Iniciada en Nexus Hub</p>
-                    </div>
-                 </div>
-              </div>
 
-              {/* Home Recommended Section */}
-              <section>
-                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
-                      <Flame className="w-6 h-6 text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]" /> 
-                      Tendencias y Populares
-                    </h3>
+      <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-32">
+        <div className="max-w-7xl mx-auto space-y-12 mt-8">
+           {/* Active/Trending Showcase */}
+           <section>
+             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]"><Flame className="w-4 h-4 sm:w-5 sm:h-5"/> SECTORES DESTACADOS</h2>
+             <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-6 pt-2 px-2 -mx-2">
+               {recommended.map((c: any) => (
+                 <div key={c.id} onClick={() => onSelect(c)} className="snap-center shrink-0 w-[280px] sm:w-[400px] h-[200px] sm:h-[240px] rounded-[24px] relative group cursor-pointer border border-cyan-500/20 hover:border-cyan-400 shadow-[0_0_30px_rgba(0,0,0,0.8)] hover:shadow-[0_0_40px_rgba(34,211,238,0.3)] overflow-hidden transition-all duration-300">
+                    <img src={c.image_url} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 mix-blend-screen" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                    <div className="absolute top-4 right-4 bg-black/80 border border-cyan-500/50 text-cyan-400 px-2 py-1 rounded text-[9px] font-black tracking-widest shadow-[0_0_10px_rgba(34,211,238,0.5)] uppercase animate-pulse">
+                      LIVE
+                    </div>
+                    <div className="absolute bottom-6 left-6 right-6">
+                       <h3 className="text-xl sm:text-3xl font-black text-white uppercase tracking-tighter drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] mb-1 leading-tight">{c.name}</h3>
+                       <p className="text-[10px] sm:text-xs text-cyan-400 font-mono opacity-90 truncate bg-cyan-900/30 inline-block px-2 py-0.5 rounded border border-cyan-800/50">{c.category}</p>
+                    </div>
                  </div>
-                 
-                 {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                       {[1,2,3,4].map(i => <div key={i} className="bg-[#121420]/50 border border-white/5 rounded-[28px] h-[300px] animate-pulse"></div>)}
-                    </div>
-                 ) : recommended.length === 0 ? (
-                    <div className="p-8 bg-white/5 border border-white/10 rounded-[24px] text-center">
-                       <p className="text-gray-400 font-medium tracking-wide">No hay comunidades suficientes para mostrar tendencias.</p>
-                    </div>
-                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 hover-group">
-                       {recommended.map((c: any) => (
-                           <div key={c.id} onClick={() => onSelect(c)} className="group cursor-pointer bg-[#0a0c16] rounded-[28px] border border-white/5 hover:border-orange-500/40 overflow-hidden transition-all duration-300 hover:shadow-[0_15px_40px_rgba(249,115,22,0.15)] hover:-translate-y-1">
-                              <div className="h-[140px] relative overflow-hidden">
-                                 <img src={c.image_url} className="w-full h-full object-cover transform scale-105 opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out" />
-                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c16] to-transparent opacity-90"></div>
-                                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,0.5)_100%)] pointer-events-none"></div>
-                                 <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-[10px] flex items-center gap-1.5 border border-white/10 shadow-lg">
-                                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                    <span className="text-[10px] font-black text-white tracking-widest">TOP</span>
-                                 </div>
-                              </div>
-                              <div className="p-5 relative">
-                                 <div className="absolute -top-12 left-5 w-[68px] h-[68px] rounded-[20px] border-[3px] border-[#0a0c16] overflow-hidden bg-[#121422] shadow-[0_0_20px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
-                                    <img src={c.image_url} className="w-full h-full object-cover" />
-                                 </div>
-                                 <h4 className="text-[19px] font-black text-white mt-5 line-clamp-1 group-hover:text-orange-400 transition-colors drop-shadow-sm">{c.name}</h4>
-                                 <p className="text-[11px] text-gray-400 mt-1 uppercase tracking-widest font-black bg-white/5 inline-block px-2 py-0.5 rounded-lg border border-white/5">{c.category}</p>
-                              </div>
+               ))}
+             </div>
+           </section>
+
+           {/* All Communities as Sci-fi Panels */}
+           <section>
+             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]"><Zap className="w-4 h-4 sm:w-5 sm:h-5"/> DATABANKS GLOBALES</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {communities.map((c: any) => (
+                  <div key={c.id} onClick={() => onSelect(c)} className="group bg-black/60 backdrop-blur-md border border-cyan-900/50 hover:border-cyan-400/80 rounded-[20px] p-4 sm:p-5 cursor-pointer transition-all hover:bg-cyan-950/20 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] flex gap-4 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/5 blur-2xl group-hover:bg-cyan-500/20 transition-all rounded-full pointer-events-none"></div>
+                     <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-black rounded-[14px] border border-cyan-800 overflow-hidden relative shadow-inner">
+                        {c.image_url ? (
+                           <img src={c.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 mix-blend-screen group-hover:scale-110 transition-transform duration-500"/>
+                        ) : (
+                           <div className="w-full h-full flex items-center justify-center">
+                              <span className="text-cyan-800 font-black text-2xl group-hover:text-cyan-500 transition-colors uppercase">{c.name[0]}</span>
                            </div>
-                       ))}
-                    </div>
-                 )}
-              </section>
-
-              {/* Active Now / Hot */}
-              <section>
-                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
-                      <Zap className="w-6 h-6 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" /> 
-                      Activas Ahora
-                    </h3>
-                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {activeNow.map((c: any) => (
-                       <div key={c.id} onClick={() => onSelect(c)} className="flex items-center gap-4 bg-[#0d0f18]/80 hover:bg-[#121422] border border-white/5 hover:border-yellow-400/30 p-4 sm:p-5 rounded-[28px] cursor-pointer transition-all group shadow-lg hover:shadow-[0_10px_30px_rgba(250,204,21,0.1)] hover:-translate-y-1">
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] overflow-hidden shrink-0 relative shadow-inner">
-                             <img src={c.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                             <div className="absolute inset-0 bg-gradient-to-tr from-black/50 to-transparent"></div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                             <h4 className="text-lg font-black text-white truncate group-hover:text-yellow-400 transition-colors">{c.name}</h4>
-                             <p className="text-[13px] text-gray-400 line-clamp-1 font-medium mt-0.5">{c.description}</p>
-                             <div className="flex items-center gap-2 mt-2.5">
-                                <span className="relative flex h-2.5 w-2.5">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
-                                </span>
-                                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">En Línea</span>
-                             </div>
-                          </div>
-                          <div className="w-10 h-10 rounded-[14px] bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-yellow-400/10 transition-colors">
-                             <ChevronLeft className="w-5 h-5 text-gray-500 group-hover:text-yellow-400 rotate-180 transition-colors" />
-                          </div>
-                       </div>
-                    ))}
-                 </div>
-              </section>
-
-              {/* Events Banner */}
-              <section className="bg-gradient-to-br from-indigo-900/60 to-[#06070a] border border-indigo-500/30 rounded-[32px] p-8 md:p-14 relative overflow-hidden group hover:border-indigo-500/50 shadow-[0_20px_50px_rgba(79,70,229,0.15)] transition-all">
-                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-screen group-hover:scale-105 transition-transform duration-1000 ease-out"></div>
-                 <div className="absolute inset-0 bg-gradient-to-r from-[#06070a] via-[#06070a]/90 to-transparent"></div>
-                 <div className="relative z-10 max-w-xl">
-                    <span className="px-3 py-1.5 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-black text-[11px] uppercase tracking-widest rounded-xl mb-6 inline-block shadow-[0_0_15px_rgba(99,102,241,0.3)]">
-                       <span className="flex items-center gap-2"><Gamepad2 className="w-4 h-4" /> EVENTO DESTACADO</span>
-                    </span>
-                    <h3 className="text-4xl md:text-5xl font-black text-white mb-5 tracking-tighter leading-tight drop-shadow-md">Nexus Play <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Festival</span></h3>
-                    <p className="text-gray-300 font-medium mb-8 text-base md:text-lg leading-relaxed shadow-sm">Únete a las mayores comunidades gaming, participa en torneos exclusivos y conecta con jugadores este fin de semana.</p>
-                    <button className="px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase tracking-widest text-[13px] rounded-2xl transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] flex items-center gap-2">
-                       Ver Detalles <ChevronLeft className="w-4 h-4 rotate-180" />
-                    </button>
-                 </div>
-              </section>
-
-           </div>
-        ) : (
-           <div className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-10">
-              <div className="mb-10 mt-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tighter">Explorar Todas</h2>
-                  <p className="text-gray-400 font-medium text-[15px]">Únete a debates, comparte ideas y conecta con jugadores de todo el mundo.</p>
-                </div>
-                <div className="relative w-full md:w-auto">
-                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Search className="h-5 w-5 text-gray-500" />
-                   </div>
-                   <input type="text" placeholder="Buscar comunidad..." className="w-full md:w-[320px] bg-[#121422]/80 backdrop-blur-md border border-white/10 rounded-[20px] pl-12 pr-4 py-3.5 text-[15px] text-white font-medium focus:outline-none focus:border-cyan-500/50 focus:bg-[#151822] transition-colors shadow-inner" />
-                </div>
-              </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1,2,3,4,5,6,7,8].map(i => (
-                <div key={i} className="bg-[#121420]/50 border border-white/5 rounded-[28px] h-[320px] animate-pulse"></div>
-              ))}
-            </div>
-          ) : communities.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-[#121420]/80 to-[#0A0D14]/80 backdrop-blur-md border border-white/5 rounded-[32px] mt-12 shadow-2xl">
-              <div className="w-24 h-24 bg-cyan-900/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(34,211,238,0.2)]">
-                <Users className="w-12 h-12 text-cyan-400" />
-              </div>
-              <h3 className="text-2xl font-black text-white mb-2">Comunidades Vacías</h3>
-              <p className="text-gray-400 text-center max-w-sm mb-8 font-medium">Nadie ha creado una comunidad todavía. Sé el primero en iniciar un nuevo debate.</p>
-              <button 
-                onClick={onCreateClick}
-                className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl hover:scale-105 active:scale-95 transition-transform"
-              >
-                Crear Mi Comunidad
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {communities.map((c: any) => (
-                <div key={c.id} onClick={() => { if(c.image_url) onSelect(c); }} className="group relative bg-[#090b12]/60 hover:bg-[#0c0e18]/80 backdrop-blur-3xl cursor-pointer border border-white/5 hover:border-cyan-500/50 rounded-[32px] overflow-hidden transition-all duration-300 flex flex-col h-[340px] shadow-2xl hover:shadow-[0_20px_50px_rgba(34,211,238,0.2)] hover:-translate-y-2">
-                  
-                  {/* Card Header Banner */}
-                  <div className="h-[140px] w-full bg-gradient-to-br from-[#151822] to-[#0d0f18] relative shrink-0 overflow-hidden">
-                    {c.image_url ? (
-                      <>
-                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transform scale-105 opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#090b12] to-transparent opacity-80" />
-                        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:16px_16px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 bg-red-900/10 flex items-center justify-center">
-                         <AlertTriangle className="w-10 h-10 text-red-500/30" />
-                      </div>
-                    )}
-                    
-                    {/* Glowing effect line at top edge */}
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-[12px] border border-white/10 flex items-center gap-2 shadow-lg">
-                       <span className={`w-2 h-2 rounded-full ${c.image_url ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse' : 'bg-red-500'}`}></span>
-                       <span className="text-[10px] font-black text-white uppercase tracking-widest">{c.category}</span>
-                    </div>
-                    {(isAdmin || !c.image_url) && (
-                      <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-xl backdrop-blur-md transition-all border border-white/10 shadow-lg relative z-10 opacity-0 group-hover:opacity-100 focus:opacity-100">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Icon Overlap */}
-                  <div className="absolute top-[100px] left-6 z-10">
-                    <div className="w-20 h-20 bg-[#090b12] p-1.5 border-2 border-white/10 group-hover:border-cyan-500/50 rounded-[20px] flex items-center justify-center transition-colors duration-300 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                      {c.image_url ? (
-                        <div className="w-full h-full rounded-[14px] overflow-hidden relative">
-                           <img src={c.image_url} alt={c.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                        )}
+                     </div>
+                     <div className="flex-1 flex flex-col justify-center min-w-0 z-10">
+                        <h4 className="text-base sm:text-lg font-black text-white truncate uppercase tracking-tight group-hover:text-cyan-400 drop-shadow-sm">{c.name}</h4>
+                        <p className="text-[10px] sm:text-[11px] text-gray-500 font-mono mt-1 line-clamp-1">{c.description}</p>
+                        <div className="flex items-center gap-2 mt-3">
+                           <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-[#0ff] bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-900">Activo</span>
+                           {isAdmin && (
+                             <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" title="Eliminar Base">
+                               <Trash2 className="w-4 h-4"/>
+                             </button>
+                           )}
                         </div>
-                      ) : (
-                        <AlertTriangle className="w-8 h-8 text-red-500" />
-                      )}
-                    </div>
+                     </div>
                   </div>
-
-                  {/* Card Content */}
-                  <div className="p-6 pt-14 flex flex-col flex-1 relative bg-gradient-to-b from-transparent to-[#030407]/40">
-                    {!c.image_url ? (
-                       <div className="absolute inset-0 bg-[#0f111a]/95 backdrop-blur-md z-10 flex flex-col items-center justify-center p-4 text-center">
-                          <AlertTriangle className="w-10 h-10 text-red-500 mb-3" />
-                          <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Comunidad Incompatible</p>
-                          <p className="text-xs text-gray-400 mb-6 font-medium">Esta comunidad quedó incompatible tras una actualización.</p>
-                          <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl transition-colors shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                             Eliminar y Recrear
-                          </button>
-                       </div>
-                    ) : null}
-
-                    <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-1 drop-shadow-sm tracking-tighter">{c.name}</h3>
-                    <p className="text-[14px] sm:text-[15px] text-gray-400 line-clamp-2 leading-relaxed flex-1 font-medium">{c.description}</p>
-                    
-                    <div className="mt-5 pt-5 border-t border-white/5 flex items-center justify-between w-full relative">
-                       <div className="flex items-center gap-2 text-[12px] font-black text-gray-400 uppercase tracking-widest group-hover:text-cyan-400 transition-colors">
-                           <Users className="w-[18px] h-[18px] text-cyan-500 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] transition-all" />
-                           Descubrir
-                       </div>
-                       
-                       <div className="absolute right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                          <button onClick={(e) => { e.stopPropagation(); onSelect(c); }} className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 rounded-[14px] text-[13px] font-black text-[#030407] hover:text-black shadow-[0_0_20px_rgba(34,211,238,0.5)] hover:shadow-[0_0_30px_rgba(34,211,238,0.8)] transition-all border border-cyan-300 transform hover:scale-105 active:scale-95 uppercase tracking-widest">
-                              Unirse →
-                          </button>
-                       </div>
-                       
-                       {/* Default footer info (hides on hover) */}
-                       <div className="absolute right-0 flex items-center gap-4 text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:opacity-0 transition-opacity duration-300 transform group-hover:-translate-y-2">
-                         <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(c.created_at).toLocaleDateString()}</span>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+             </div>
+           </section>
         </div>
-        )}
       </main>
     </div>
   );
+
 }
 
 // ============================================================================
@@ -927,561 +718,239 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
     return parsed.channel === activeChannel;
   });
 
+
   return (
-    <div className="flex h-full w-full bg-[#0a0b14] overflow-hidden relative">
+    <div className="flex flex-col h-[100dvh] w-full bg-[#030303] overflow-hidden relative font-sans">
+      
+       {/* Sci background */}
+       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
        
-       {/* Error Toast */}
+       <header className="shrink-0 bg-black/90 backdrop-blur-xl border-b border-cyan-900/80 flex flex-col justify-center px-2 sm:px-6 py-2 sm:py-4 z-20 shadow-[0_0_30px_rgba(34,211,238,0.1)]">
+          <div className="flex items-center justify-between mb-3 mt- safe-top">
+             <div className="flex items-center gap-2 sm:gap-4 flex-1 overflow-hidden">
+                <button onClick={onBack} className="p-2 sm:p-2.5 border border-cyan-900 rounded-lg text-cyan-500 hover:bg-cyan-950/50 hover:text-cyan-300 transition-colors shrink-0 shadow-inner">
+                   <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+                <div className="flex items-center gap-3 min-w-0" onClick={() => setIsSidebarOpen(true)}>
+                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black border border-cyan-500/50 rounded-[10px] shrink-0 overflow-hidden shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                      {currentCommunity.image_url ? (
+                        <img src={currentCommunity.image_url} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-cyan-400 font-black text-xl uppercase">{currentCommunity.name[0]}</div>
+                      )}
+                   </div>
+                   <div className="min-w-0">
+                      <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tighter drop-shadow-[0_0_10px_rgba(34,211,238,0.5)] truncate">{currentCommunity.name}</h2>
+                      <p className="text-[9px] sm:text-[10px] font-mono text-cyan-400 capitalize flex items-center gap-1.5 whitespace-nowrap">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                        {onlineCount} EN RED
+                      </p>
+                   </div>
+                </div>
+             </div>
+             
+             {/* HUD elements */}
+             <div className="hidden sm:flex items-center gap-4 shrink-0 border-l border-cyan-900/50 pl-4 ml-4">
+                 <div className="text-right">
+                    <p className="text-[9px] font-mono text-cyan-500 uppercase tracking-widest opacity-80">Identidad</p>
+                    <p className="text-xs font-black text-white uppercase tracking-wider">{session.user.email?.split('@')[0]}</p>
+                 </div>
+                 <div className="w-10 h-10 rounded bg-cyan-950/40 border border-cyan-800 flex items-center justify-center shadow-inner">
+                    <Users className="w-5 h-5 text-cyan-400" />
+                 </div>
+             </div>
+          </div>
+          
+          {/* Top Channel Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+             {channels.map(chanName => (
+               <button 
+                  key={chanName}
+                  onClick={() => setActiveChannel(chanName)}
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-[8px] transition-all whitespace-nowrap flex items-center gap-1.5
+                    ${activeChannel === chanName 
+                      ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(34,211,238,0.5)]' 
+                      : 'bg-black border border-cyan-900/80 text-cyan-500/70 hover:border-cyan-500/50 hover:text-cyan-400 hover:bg-cyan-950/20'}
+                  `}
+               >
+                 <Hash className="w-3 h-3 sm:w-4 sm:h-4 opacity-70" /> {chanName}
+               </button>
+             ))}
+             {isCreatorOrAdmin && (
+               <button onClick={() => setShowChannelForm(!showChannelForm)} className="px-3 py-1.5 sm:py-2 bg-black border border-dashed border-cyan-800 text-cyan-600 hover:text-cyan-400 hover:border-cyan-400 rounded transition-colors text-xs font-bold shrink-0">
+                  + RECEPTOR
+               </button>
+             )}
+          </div>
+       </header>
+
+       {/* Floating form for new channel */}
+       {showChannelForm && (
+         <div className="absolute top-[120px] left-0 w-full bg-cyan-950/90 backdrop-blur-md border-b border-cyan-500/50 p-3 z-30 flex justify-center shadow-2xl">
+             <form onSubmit={handleCreateChannel} className="flex gap-2 w-full max-w-sm">
+               <input type="text" value={newChannelName} onChange={(e) => setNewChannelName(e.target.value)} placeholder="NUEVO_CANAL" maxLength={16}
+                 className="flex-1 bg-black border border-cyan-500/80 text-cyan-400 font-mono text-xs px-3 py-2 rounded focus:outline-none uppercase placeholder:text-cyan-900 shadow-inner" />
+               <button type="submit" className="bg-cyan-500 hover:bg-cyan-400 text-black px-4 py-2 font-black text-xs rounded uppercase tracking-widest shadow-[0_0_10px_rgba(34,211,238,0.5)] shrink-0">SETEAR</button>
+             </form>
+         </div>
+       )}
+
+       {/* Error Hologram */}
        <AnimatePresence>
          {errorMsg && (
-           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-full font-bold text-sm shadow-2xl flex items-center gap-2">
-             <AlertTriangle className="w-5 h-5 animate-bounce" />
-             {errorMsg}
-             <button onClick={() => setErrorMsg(null)} className="ml-2 hover:bg-black/20 p-1 rounded-full"><X className="w-4 h-4" /></button>
-           </motion.div>
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} 
+               className="absolute top-[140px] left-1/2 -translate-x-1/2 z-50 bg-red-950/90 border border-red-500 text-red-100 px-4 py-2 rounded-lg font-mono text-[10px] uppercase tracking-widest shadow-[0_0_20px_rgba(239,68,68,0.4)] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+              {errorMsg}
+              <button onClick={() => setErrorMsg(null)} className="ml-2 hover:text-white"><X className="w-4 h-4" /></button>
+            </motion.div>
          )}
        </AnimatePresence>
 
-       {/* ====================================================================
-           SIDEBAR DISCORD STYLE
-           ==================================================================== */}
-       {/* Sidebar Overlay on Mobile */}
-       <AnimatePresence>
-         {isSidebarOpen && (
-           <motion.div 
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             exit={{ opacity: 0 }}
-             onClick={() => setIsSidebarOpen(false)}
-             className="md:hidden fixed inset-0 bg-black/70 z-40 backdrop-blur-sm"
-           />
-         )}
-       </AnimatePresence>
-
-       {/* Sidebars Container (Servers + Channels) */}
-       <aside className={`
-         fixed top-0 left-0 bottom-0 z-40 md:relative flex h-full transform transition-transform duration-300 ease-out shrink-0
-         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-       `}>
-          {/* Server Sidebar (Extreme Left) */}
-          <div className="w-[80px] bg-gradient-to-b from-[#030407] to-[#06070a] border-r border-white/5 flex flex-col items-center py-4 gap-4 h-full shrink-0 overflow-y-auto overflow-x-hidden pt-safe pb-safe scrollbar-hide relative z-10 shadow-[5px_0_30px_rgba(0,0,0,0.5)]">
-             {/* Home / Discover Button */}
-             <div className="relative group flex items-center justify-center w-full">
-                <div className="absolute left-0 w-[4px] h-0 bg-cyan-400 rounded-r-full transition-all duration-300 ease-out group-hover:h-8 shadow-[0_0_10px_rgba(34,211,238,0.8)]"></div>
-                <button 
-                  onClick={onBack}
-                  className="w-[52px] h-[52px] rounded-[24px] bg-gradient-to-br from-[#121422] to-[#0a0c14] border border-white/10 hover:border-cyan-500/50 hover:bg-gradient-to-tr hover:from-cyan-600 hover:to-blue-600 hover:rounded-[18px] flex items-center justify-center text-cyan-400 hover:text-white transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] relative overflow-hidden"
-                >
-                  <Activity className="w-6 h-6 relative z-10 group-hover:scale-110 transition-transform" />
-                </button>
-             </div>
-
-             <div className="w-8 h-[2px] bg-white/5 rounded-full my-1"></div>
-
-             {/* Communities List */}
-             {communities?.map((c: any) => {
-               const isActive = c.id === currentCommunity.id;
-               return (
-                 <div key={c.id} className="relative group w-full flex items-center justify-center">
-                    <div className={`absolute left-0 w-[4px] bg-white rounded-r-full transition-all duration-300 ease-out ${isActive ? 'h-10 opacity-100 shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'h-0 opacity-0 group-hover:h-6 group-hover:opacity-100'}`}></div>
-                    <button
-                      onClick={() => {
-                        onSelectCommunity(c);
-                        if(window.innerWidth < 768) setIsSidebarOpen(false);
-                      }}
-                      className={`w-[52px] h-[52px] flex items-center justify-center overflow-hidden transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] relative border border-transparent
-                         ${isActive ? 'rounded-[18px] border-cyan-500/50 shadow-[0_0_30px_rgba(34,211,238,0.4)] ring-2 ring-cyan-500/20' : 'rounded-[26px] bg-[#121422] group-hover:rounded-[18px] group-hover:border-cyan-500/50 hover:ring-2 hover:ring-cyan-500/10 border-white/5'}
-                      `}
-                    >
-                       {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-cyan-600/80 to-blue-600/80 pointer-events-none" />}
-                       {c.image_url ? (
-                         <img src={c.image_url} alt={c.name} className={`w-full h-full object-cover relative z-10 transition-transform duration-500 ${isActive ? 'opacity-90 scale-110' : 'opacity-70 group-hover:opacity-100 group-hover:scale-105'}`} />
-                       ) : (
-                         <span className={`font-black text-lg relative z-10 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{c.name[0].toUpperCase()}</span>
-                       )}
-                    </button>
-                 </div>
-               );
-             })}
-             
-             <div className="w-8 h-[2px] bg-white/5 rounded-full my-1"></div>
-             
-             {/* New Server Button */}
-             <div className="relative group flex items-center justify-center w-full mt-2">
-                <button 
-                  onClick={() => { onBack(); }}
-                  className="w-[52px] h-[52px] rounded-[24px] bg-[#121422] border border-white/5 hover:border-green-500/50 hover:bg-green-500/10 hover:rounded-[18px] flex items-center justify-center text-green-400 hover:text-green-300 transition-all duration-300 shadow-md group-hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
-                >
-                  <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                </button>
-             </div>
-          </div>
-
-          {/* Channel Sidebar */}
-          <div className="w-[280px] bg-gradient-to-b from-[#090b12] to-[#0a0c16] border-r border-white/5 flex flex-col h-full shrink-0 relative z-20">
-          {/* Sidebar Header */}
-          <div className="h-[76px] border-b border-white/5 px-5 flex items-center gap-4 shrink-0 bg-gradient-to-r from-transparent to-white/[0.02] shadow-[0_10px_20px_rgba(0,0,0,0.2)]">
-             <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-base font-black shadow-[0_0_20px_rgba(0,229,255,0.4)] border border-cyan-400/30 overflow-hidden relative">
-                {currentCommunity.image_url ? (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/50 to-transparent mix-blend-overlay z-10 pointer-events-none" />
-                    <img src={currentCommunity.image_url} alt={currentCommunity.name} className="w-full h-full object-cover" />
-                  </>
-                ) : (
-                  currentCommunity.name[0].toUpperCase()
-                )}
-             </div>
-             <div className="flex-1 min-w-0">
-                <h3 className="text-[15px] font-black text-white uppercase tracking-wider truncate leading-tight drop-shadow-sm">{currentCommunity.name}</h3>
-                <p className="text-[10px] text-cyan-400 font-black uppercase tracking-widest bg-cyan-900/30 px-1.5 py-0.5 rounded-md inline-block mt-0.5 border border-cyan-500/20">{currentCommunity.category}</p>
-             </div>
-             <button onClick={onBack} className="w-8 h-8 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-all shrink-0">
-                <ChevronLeft className="w-5 h-5" />
-             </button>
-          </div>
-
-          {/* Description Section */}
-          <div className="p-4 border-b border-white/5 bg-[#090b12]/30 shrink-0">
-             <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">
-                {getCleanDescription(currentCommunity.description) || "Bienvenido a este canal."}
-             </p>
-          </div>
-
-          {/* Sidebar Channels List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-6">
-             <div>
-                <div className="flex items-center justify-between px-2 mb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                   <span>Canales de Texto</span>
-                   {isCreatorOrAdmin && (
-                     <button 
-                       onClick={() => setShowChannelForm(prev => !prev)} 
-                       className="p-1 hover:bg-white/5 hover:text-white rounded-md transition-colors"
-                     >
-                        <Plus className="w-4 h-4" />
-                     </button>
-                   )}
-                </div>
-
-                {/* Inline Channel Creation Form */}
-                {showChannelForm && (
-                  <form onSubmit={handleCreateChannel} className="px-2 mb-3">
-                     <div className="flex items-center gap-2 bg-[#121420] border border-cyan-500/30 rounded-xl px-2 py-1.5">
-                        <Hash className="w-4 h-4 text-cyan-400 shrink-0" />
-                        <input 
-                          type="text" 
-                          autoFocus
-                          placeholder="nombre-canal" 
-                          value={newChannelName}
-                          onChange={(e) => setNewChannelName(e.target.value)}
-                          className="w-full bg-transparent text-xs text-white outline-none placeholder:text-gray-600 font-bold"
-                          maxLength={18}
-                        />
-                        <button type="submit" className="text-[10px] text-cyan-400 font-black px-2 hover:text-cyan-300">✔</button>
-                     </div>
-                  </form>
-                )}
-
-                {/* Listing channels */}
-                <div className="space-y-1">
-                   {channels.map((chanName) => {
-                      const isActive = activeChannel === chanName;
-                      return (
-                        <div 
-                          key={chanName}
-                          className={`
-                            group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium cursor-pointer transition-all
-                            ${isActive 
-                              ? 'bg-gradient-to-r from-cyan-900/40 text-white font-bold border-l-[3px] border-cyan-400 shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]' 
-                              : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 border-l-[3px] border-transparent font-medium'}
-                          `}
-                          onClick={() => {
-                            setActiveChannel(chanName);
-                            setIsSidebarOpen(false);
-                          }}
-                        >
-                           <div className="flex items-center gap-2 truncate">
-                              <Hash className={`w-4 h-4 ${isActive ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]' : 'text-gray-600 group-hover:text-gray-400'}`} />
-                              <span className="truncate">{chanName}</span>
-                           </div>
-                           
-                           {isCreatorOrAdmin && chanName !== 'general' && (
-                             <button 
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 handleDeleteChannel(chanName);
-                                }}
-                               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-md transition-all"
-                             >
-                                <Trash2 className="w-3.5 h-3.5" />
-                             </button>
-                           )}
-                        </div>
-                      );
-                   })}
-                </div>
-             </div>
-
-             {/* Dynamic Members Online Status */}
-             <div>
-                <div className="px-2 mb-2 text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center justify-between">
-                   <span>En línea ({onlineCount})</span>
-                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                </div>
-                <div className="space-y-2">
-                   <div className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-[#121420]/40 rounded-xl transition-all">
-                      <div className="w-6 h-6 rounded-full bg-cyan-600 flex items-center justify-center text-[10px] font-bold text-white relative">
-                        {userProfile?.avatar_url ? (
-                          <img src={userProfile.avatar_url} className="w-full h-full object-cover rounded-full" />
-                        ) : (userProfile?.username?.[0]?.toUpperCase() || 'P')}
-                        <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-500 border border-[#06070c]" />
-                      </div>
-                      <span className="text-xs font-semibold text-gray-200 truncate">{userProfile?.username || 'Tú'}</span>
-                   </div>
-                </div>
+       <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 flex flex-col gap-5 sm:gap-6 relative z-10 scrollbar-hide">
+         
+         {/* Welcome Hologram */}
+         {filteredMessages.length === 0 && (
+           <div className="flex flex-col items-center justify-center my-auto animate-pulse">
+              <div className="w-20 h-20 bg-cyan-950/30 rounded-full flex items-center justify-center border border-cyan-900/50 shadow-[0_0_30px_rgba(34,211,238,0.1)] mb-4">
+                 <Lock className="w-8 h-8 text-cyan-700" />
               </div>
-            </div>
-           <div className="p-4 border-t border-white/5 bg-[#06070c] flex items-center justify-between shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.5)] z-30">
-             <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-10 h-10 rounded-[12px] bg-[#121420] border border-white/10 flex items-center justify-center font-bold text-xs relative group cursor-pointer overflow-hidden shadow-inner">
-                  {userProfile?.avatar_url ? (
-                     <img src={userProfile.avatar_url} className="w-full h-full object-cover" />
-                  ) : (userProfile?.username?.[0]?.toUpperCase() || 'U')}
-                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-[#06070c] shadow-[0_0_5px_rgba(34,197,94,0.8)]" />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                </div>
-                <div className="min-w-0 flex-1 cursor-pointer group">
-                   <p className="text-[13px] font-black text-gray-200 truncate leading-tight group-hover:text-cyan-400 transition-colors drop-shadow-sm">{userProfile?.username || 'Usuario'}</p>
-                   <p className="text-[11px] text-gray-500 font-black uppercase tracking-widest truncate">{userProfile?.role || 'Online'}</p>
-                </div>
-             </div>
-             
-             <div className="flex items-center gap-1">
-                <button className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                   <Volume2 className="w-4 h-4" />
-                </button>
-                {isAdmin && (
-                  <button className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                     <Settings className="w-4 h-4" />
-                  </button>
-                )}
-             </div>
+              <p className="text-cyan-600 font-mono text-[10px] uppercase tracking-widest">TRANSMISIÓN VACÍA</p>
            </div>
-          </div>
-       </aside>
-            {/* ====================================================================
-           CHAT CONTAINER
-           ==================================================================== */}
-       <div className="flex-1 flex flex-col h-full bg-[#030407] overflow-hidden relative">
-          
-          {/* Chat Header */}
-          <header className="h-[76px] shrink-0 bg-[#06070c]/80 backdrop-blur-3xl border-b border-white/5 flex items-center justify-between px-4 sm:px-8 shadow-2xl z-20 relative">
-             <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 to-transparent pointer-events-none" />
-             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 relative z-10">
-                {/* Burger Trigger to open channels */}
-                <button 
-                  onClick={() => setIsSidebarOpen(true)} 
-                  className="md:hidden w-10 h-10 hover:bg-white/5 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-all shrink-0"
-                >
-                   <Menu className="w-6 h-6" />
-                </button>
+         )}
 
-                <div className="flex items-center gap-2 text-white shrink-0 group">
-                   <Hash className="w-7 h-7 text-cyan-500 group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_10px_rgba(34,211,238,0.5)] transform group-hover:scale-110" />
-                   <span className="text-lg sm:text-2xl font-black tracking-tighter text-white uppercase drop-shadow-md">{activeChannel}</span>
-                </div>
+         {filteredMessages.map((msg, index) => {
+             const parsed = parseMessageContent(msg.content);
+             const isOwn = msg.user_id === session.user.id;
+             const isAI = parsed.text?.startsWith('[NEXUS AI]');
+             const displayText = isAI ? parsed.text.replace('[NEXUS AI]', '').trim() : parsed.text;
+             const showAvatar = true; 
+             const msgReactions = getRenderReactions(msg.id);
 
-                <div className="h-6 w-[2px] bg-white/10 hidden sm:block mx-2"></div>
+             return (
+               <div key={msg.id} className={`flex w-full ${(isOwn && !isAI) ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[75%] ${(isOwn && !isAI) ? 'flex-row-reverse' : 'flex-row'}`}>
+                     
+                     {/* Cyber Avatar Bubble */}
+                     <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 bg-black border border-cyan-800 rounded-[8px] flex items-center justify-center p-0.5 relative shadow-inner overflow-hidden mt-2">
+                        {isAI ? (
+                          <div className="w-full h-full bg-gradient-to-br from-indigo-900 to-black text-indigo-400 flex items-center justify-center">
+                             <Bot className="w-4 h-4 sm:w-5 sm:h-5 " />
+                          </div>
+                        ) : msg.profiles?.avatar_url ? (
+                          <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-[5px] grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"/>
+                        ) : <span className="text-cyan-500 font-mono font-bold text-xs sm:text-sm">{msg.profiles?.username?.[0]?.toUpperCase()}</span>}
+                     </div>
 
-                <div className="flex-1 min-w-0 hidden sm:block">
-                   <p className="text-[14px] text-gray-400 truncate flex items-center gap-2">
-                      <span className="text-gray-500 font-medium">en</span>
-                      <span className="text-gray-200 font-bold hover:text-white cursor-pointer transition-colors">{currentCommunity.name}</span>
-                      <span className="px-2 py-0.5 rounded-[8px] text-[10px] bg-cyan-900/30 text-cyan-400 font-black uppercase tracking-widest border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]">{currentCommunity.category}</span>
-                   </p>
-                </div>
-             </div>
-             
-             {/* Action icons */}
-             <div className="flex items-center gap-3 relative z-10">
-                {/* Online members indicator modern */}
-                <div className="px-4 py-2 bg-[#0d0f18] border border-white/10 text-gray-200 text-[11px] font-black uppercase tracking-widest rounded-[12px] flex items-center gap-2 sm:gap-3 select-none shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] transition-all hover:bg-[#121420]">
-                   <div className="relative flex items-center justify-center w-2.5 h-2.5">
-                     <span className="absolute w-full h-full rounded-full bg-green-500 animate-ping opacity-60" />
-                     <span className="relative w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-                   </div>
-                   <span>{onlineCount} Online</span>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-2 border-l border-white/10 pl-3">
-                   <button className="w-10 h-10 rounded-[12px] bg-[#121420] border border-white/5 hover:border-cyan-500/30 hover:bg-[#1a1d2d] flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]" title="Buscar">
-                     <Search className="w-4 h-4" />
-                   </button>
-                   <button className="w-10 h-10 rounded-[12px] bg-[#121420] border border-white/5 hover:border-cyan-500/30 hover:bg-[#1a1d2d] flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]" title="Miembros">
-                     <Users className="w-4 h-4" />
-                   </button>
-                </div>
-             </div>
-          </header>
-
-          {/* Messages display area */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 relative bg-[#07080d] bg-[linear-gradient(rgba(0,229,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]">
-             
-             {/* Dynamic welcome card based on active channel */}
-             <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto mt-6 mb-10 p-6 bg-[#0f111a]/40 border border-white/5 rounded-3xl backdrop-blur">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-950/40 border border-cyan-500/20 flex items-center justify-center mb-4 text-cyan-400 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                   <Hash className="w-8 h-8" />
-                </div>
-                <h4 className="text-lg font-black text-white italic tracking-tight mb-2">Comienzo de #{activeChannel}</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                   Este es el inicio oficial de la conversación en el canal #{activeChannel}. ¡Comparte textos, capturas, y diviértete con la comunidad!
-                </p>
-             </div>
-
-             {/* Loading messages spinner fallback */}
-             {messages.length === 0 && !isSending && (
-               <div className="text-center py-10 opacity-30">
-                  <MessageSquare className="w-10 h-10 mx-auto text-gray-500 mb-2 animate-bounce" />
-                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Sin mensajes hoy</p>
-               </div>
-             )}
-
-             {/* Rendering the lists of actual messages */}
-             {filteredMessages.map((msg, index) => {
-                const parsed = parseMessageContent(msg.content);
-                const isOwn = msg.user_id === session.user.id;
-                const isAI = parsed.text?.startsWith('[NEXUS AI]');
-                const displayText = isAI ? parsed.text.replace('[NEXUS AI]', '').trim() : parsed.text;
-                
-                // Si es un mensaje falso de IA, fingimos que no es propio para que salga a la izquierda, salvo que estemos enviando un debug real
-                const renderAsOwn = isOwn && !isAI; 
-                
-                                const showAvatar = index === 0 || filteredMessages[index-1].user_id !== msg.user_id || isAI !== (parseMessageContent(filteredMessages[index-1].content).text?.startsWith('[NEXUS AI]')) || new Date(msg.created_at).getTime() - new Date(filteredMessages[index-1].created_at).getTime() > 5 * 60000;
-                const msgReactions = getRenderReactions(msg.id);
-
-                return (
-                    <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    key={msg.id} 
-                    className={`flex flex-col group hover:bg-white/[0.02] -mx-4 px-4 py-2 transition-colors ${showAvatar ? 'mt-6' : 'mt-1'}`}
-                  >
-                     <div className="flex items-start gap-4 max-w-full relative">
-                        
-                        {/* Avatar Column */}
-                        <div className="w-12 flex-shrink-0 flex justify-center mt-1">
-                          {showAvatar ? (
-                            <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center text-sm font-black shadow-lg select-none transition-transform duration-300 cursor-pointer hover:scale-110 active:scale-95 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] relative overflow-hidden
-                              ${isAI ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]' : (isOwn ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white' : 'bg-[#151822] border border-white/10 text-white')} 
-                            `}>
-                              <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent pointer-events-none" />
-                              {isAI ? (
-                                <Bot className="w-6 h-6 drop-shadow-md relative z-10" />
-                              ) : msg.profiles?.avatar_url ? (
-                                <img src={msg.profiles.avatar_url} className="w-full h-full object-cover relative z-10" />
-                              ) : (<span className="relative z-10">{msg.profiles?.username?.[0]?.toUpperCase() || '?'}</span>)}
-                              
-                              {/* Online indicator */}
-                              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#090b12] rounded-full z-20"></span>
-                            </div>
-                          ) : null}
+                     {/* Content Bubble HUD */}
+                     <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        <div className={`flex items-baseline gap-2 ${(isOwn && !isAI) ? 'justify-end flex-row-reverse' : 'justify-start'}`}>
+                           {isAI ? (
+                             <span className="text-[9px] sm:text-[11px] font-black italic text-indigo-400 uppercase tracking-widest text-shadow-[0_0_5px_rgba(99,102,241,0.5)]">AI.SYS</span>
+                           ) : (
+                             <span className="text-[10px] sm:text-[12px] font-black text-cyan-100 tracking-wider">{(msg.profiles?.username || 'USER').toUpperCase()}</span>
+                           )}
+                           <span className="text-[8px] sm:text-[9px] font-mono text-cyan-800 tracking-widest">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         </div>
                         
-                        {/* Message Content Column */}
-                        <div className="flex flex-col relative w-full pt-1.5 min-w-0">
-                           {/* Author detail info */}
-                           {showAvatar && (
-                             <div className="flex items-baseline flex-wrap gap-2 mb-1.5">
-                               <span className="text-[15px] font-bold tracking-wide text-gray-100 hover:underline cursor-pointer decoration-white/30 underline-offset-4">{isAI ? 'Nexus AI' : msg.profiles?.username}</span>
-                               {isAI && (
-                                 <span className="px-1.5 py-0.5 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-400 border border-indigo-500/30 rounded-[6px] text-[9px] font-black tracking-widest uppercase flex items-center gap-1 shadow-sm">
-                                    <Bot className="w-3 h-3" /> BOT
-                                 </span>
+                        <div className={`relative px-3 py-2 sm:px-4 sm:py-3 border ${
+                          isAI ? 'bg-indigo-950/20 border-indigo-500/20 rounded-b-xl rounded-tr-xl shadow-[0_4px_20px_rgba(99,102,241,0.05)]' :
+                          (isOwn ? 'bg-cyan-950/30 border-cyan-500/20 rounded-b-xl rounded-tl-xl text-right shadow-[0_4px_15px_rgba(34,211,238,0.05)]' : 'bg-[#0a0c12]/80 border-cyan-900/40 rounded-b-xl rounded-tr-xl')
+                        }`}>
+                           {msg.deleted ? (
+                             <p className="text-[11px] font-mono text-red-500/70 italic flex items-center justify-center gap-2">
+                               <AlertTriangle className="w-3 h-3" /> DATOS PURGADOS
+                             </p>
+                           ) : (
+                             <>
+                               {displayText && (
+                                 <div className={`text-[13px] sm:text-[14px] leading-relaxed ${isAI ? 'text-indigo-200' : 'text-gray-300'} font-sans break-words whitespace-pre-wrap`}>{displayText}</div>
                                )}
-                               {!isAI && msg.profiles?.role === 'admin' && (
-                                 <span className="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/30 rounded-[6px] text-[9px] font-black tracking-widest uppercase shadow-sm">ADMIN</span>
-                               )}
-                               <span className="text-[11px] font-medium text-gray-500 tracking-wider transition-opacity opacity-70">
-                                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                               </span>
-                             </div>
-                           )}
-
-                           {/* Inline block */}
-                           <div className={`relative pr-12 lg:pr-20 ${msg.temp_id ? 'opacity-50 animate-pulse' : 'opacity-100'}`}>
-                               {msg.deleted ? (
-                                  <span className="italic text-gray-500 flex items-center gap-2 text-[13px] bg-red-900/10 border border-red-900/20 w-max px-3 py-1.5 rounded-xl font-medium">
-                                    <AlertTriangle className="w-4 h-4 text-red-500" /> Mensaje oculto
-                                  </span>
-                               ) : (
-                                  <div className="space-y-3 mt-0.5">
-                                     {/* Text paragraph */}
-                                     {displayText && (
-                                        <div className={`text-[15px] ${isAI ? 'text-indigo-200' : 'text-gray-300'} leading-[1.6] whitespace-pre-wrap break-words`}>
-                                           {displayText}
-                                        </div>
-                                     )}
-                                     {/* Message attachment image */}
-                                     {parsed.image_url && (
-                                       <div className="max-w-[280px] sm:max-w-md rounded-[16px] overflow-hidden border border-white/10 bg-[#0a0b14] cursor-zoom-in group/img transition-all hover:border-cyan-500/50 shadow-lg relative mt-2">
-                                          <img 
-                                            src={parsed.image_url} 
-                                            alt="Adjunto" 
-                                            className="w-full h-auto object-cover max-h-[400px] transform group-hover/img:scale-[1.02] transition-transform duration-500" 
-                                            referrerPolicy="no-referrer"
-                                            onClick={() => window.open(parsed.image_url || '', '_blank')}
-                                          />
-                                          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors pointer-events-none" />
-                                       </div>
-                                     )}
-                                  </div>
+                               
+                               {parsed.image_url && (
+                                 <img src={parsed.image_url} onClick={() => window.open(parsed.image_url||'', '_blank')} className="mt-3 w-full max-w-[200px] sm:max-w-[280px] rounded-lg border border-cyan-900/50 hover:border-cyan-500/50 grayscale hover:grayscale-0 transition-all cursor-pointer shadow-lg" />
                                )}
 
-                               {/* Hover Options Menu with React emoji buttons */}
+                               {/* HUD Hover Options */}
                                {!msg.deleted && (
-                                 <div className={`
-                                   absolute -top-5 right-0
-                                   opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0
-                                   flex items-center bg-[#0d0f18]/90 backdrop-blur-md shadow-[0_4_20px_rgba(0,0,0,0.5)] rounded-[12px] border border-white/10 px-1.5 py-1 z-30 gap-0.5
-                                 `}>
-                                    {['👍', '❤️', '🔥', '😂', '💯'].map(emoji => (
-                                       <button 
-                                         key={emoji}
-                                         onClick={() => handleToggleReaction(msg.id, emoji)}
-                                         className="w-8 h-8 flex items-center justify-center rounded-[8px] text-[16px] hover:bg-[#1a1d2d] hover:scale-110 transition-all active:scale-95"
-                                       >
-                                          <span className="drop-shadow-sm">{emoji}</span>
-                                       </button>
-                                    ))}
-                                    
-                                    {(isOwn || isAdmin) && (
-                                       <div className="w-[1px] h-5 bg-white/10 mx-1.5"></div>
-                                    )}
-                                    {(isOwn || isAdmin) && (
-                                       <button 
-                                         onClick={() => deleteMessage(msg.id)} 
-                                         className="w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-red-500/15 text-red-400 hover:text-red-500 hover:shadow-[0_0_10px_rgba(239,68,68,0.2)] transition-all active:scale-95"
-                                         title="Eliminar mensaje"
-                                       >
-                                          <Trash2 className="w-4 h-4" />
-                                       </button>
-                                    )}
+                                 <div className={`absolute top-2 ${(isOwn && !isAI) ? '-left-8' : '-right-8'} opacity-0 opacity-100 flex flex-col gap-1 transition-opacity`}>
+                                    <button onClick={() => deleteMessage(msg.id)} className="w-6 h-6 bg-red-950/80 border border-red-900 rounded flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Borrar">
+                                       <Trash2 className="w-3 h-3" />
+                                    </button>
                                  </div>
                                )}
-                           </div>
-
-                           {/* Rendered custom reactions below message */}
-                           {msgReactions.length > 0 && (
-                             <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                {msgReactions.map(([emoji, meta]: any) => (
-                                   <button
-                                     key={emoji}
-                                     onClick={() => handleToggleReaction(msg.id, emoji)}
-                                     className={`
-                                       px-2.5 py-1 rounded-[10px] text-[13px] font-bold flex items-center gap-1.5 transition-all active:scale-95 border
-                                       ${meta.active 
-                                         ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.15)]' 
-                                         : 'bg-[#151822]/80 border-white/5 text-gray-400 hover:bg-[#1a1d2d] hover:text-gray-200 hover:border-white/10'}
-                                     `}
-                                   >
-                                      <span className="drop-shadow-sm">{emoji}</span>
-                                      <span className="text-[11px] font-black">{meta.count}</span>
-                                   </button>
-                                ))}
+                             </>
+                           )}
+                           
+                           {/* Rendered Reactions */}
+                           {msgReactions.length > 0 && !msg.deleted && (
+                             <div className={`flex gap-1.5 mt-2 flex-wrap ${(isOwn && !isAI) ? 'justify-end' : 'justify-start'}`}>
+                               {msgReactions.map(([emoji, meta]: any) => (
+                                 <button key={emoji} onClick={() => handleToggleReaction(msg.id, emoji)} className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 cursor-pointer transition-colors ${meta.active ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(34,211,238,0.2)]' : 'bg-black/50 text-gray-500 border border-cyan-900/50 hover:border-cyan-700'}`}>
+                                    <span>{emoji}</span> <span>{meta.count}</span>
+                                 </button>
+                               ))}
                              </div>
                            )}
                         </div>
+                        
+                        {/* Quick react HUD (always visible minimal on mobile) */}
+                        {!msg.deleted && (
+                            <div className={`flex gap-1 mt-1 ${(isOwn && !isAI) ? 'justify-end' : 'justify-start'}`}>
+                              {['👍', '🔥', '😆'].map(emoji => (
+                                 <button key={emoji} onClick={() => handleToggleReaction(msg.id, emoji)} className="text-[12px] opacity-60 hover:opacity-100 hover:scale-110 active:scale-90 transition-all mr-1">{emoji}</button>
+                              ))}
+                           </div>
+                        )}
+                        
                      </div>
-                  </motion.div>
-                );
-             })}
-             <div ref={messagesEndRef} className="h-4" />
-          </main>
-
-          {/* Message attachment & Send input form */}
-          <div className="p-3 sm:p-5 bg-transparent shrink-0 z-20 pb-safe relative">
-             <div className="absolute inset-0 bg-gradient-to-t from-[#030407] via-[#030407]/90 to-transparent pointer-events-none" />
-             <div className="max-w-4xl mx-auto relative z-10">
-                
-                {/* Visual Image Upload Draft Preview bar */}
-                {chatImagePreviewUrl && (
-                  <div className="px-4 py-3 bg-[#0d0f18]/90 backdrop-blur-xl rounded-t-[20px] flex items-center gap-3 border border-white/10 border-b-0 max-w-sm mb-0 shadow-2xl relative translate-y-3">
-                     <div className="w-12 h-12 rounded-[12px] border border-white/10 overflow-hidden shrink-0 bg-black shadow-inner">
-                        <img src={chatImagePreviewUrl} alt="Preview" className="w-full h-full object-cover" />
-                     </div>
-                     <div className="flex-1 overflow-hidden">
-                        <p className="text-[13px] font-black text-gray-200 truncate">{chatImageFile?.name || "Adjunto"}</p>
-                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Listo para enviar
-                        </p>
-                     </div>
-                     <button 
-                       type="button" 
-                       onClick={() => { setChatImageFile(null); setChatImagePreviewUrl(null); }} 
-                       className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 flex items-center justify-center text-gray-400 hover:text-red-400 transition-colors"
-                     >
-                        <X className="w-4 h-4" />
-                     </button>
                   </div>
-                )}
+               </div>
+             )
+         })}
+         <div ref={messagesEndRef} className="h-6" />
+       </main>
 
-                <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3">
-                   
-                   {/* Chat input fields and image sub-form togglers */}
-                   <div className={`flex-1 relative flex items-center bg-[#090b12]/80 backdrop-blur-3xl border border-white/10 transition-all duration-300 ${chatImagePreviewUrl ? 'rounded-b-[24px] rounded-tr-[24px]' : 'rounded-[24px]'} focus-within:border-cyan-500/50 focus-within:bg-[#0c0e18]/90 shadow-[0_10px_40px_rgba(0,0,0,0.5)] focus-within:shadow-[0_0_40px_rgba(34,211,238,0.15)] group/input`}>
-                      <div className="absolute inset-0 rounded-[24px] bg-gradient-to-r from-cyan-900/10 to-blue-900/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
-                      {/* Hidden image chooser input */}
-                      <input 
-                        type="file" 
-                        id="chat-image-upload" 
-                        accept="image/png, image/jpeg, image/webp, image/gif" 
-                        className="hidden" 
-                        onChange={handleChatImageChange}
-                        disabled={isSending}
-                      />
-                      
-                      {/* Attach button */}
-                      <button 
-                        type="button"
-                        onClick={() => document.getElementById('chat-image-upload')?.click()}
-                        disabled={isSending}
-                        className="absolute left-2 w-11 h-11 rounded-[16px] hover:bg-cyan-500/20 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all active:scale-95 disabled:scale-100 group relative z-10"
-                        title="Adjuntar"
-                      >
-                         <Plus className="w-[22px] h-[22px] group-hover:rotate-90 transition-transform duration-300" />
-                      </button>
-
-                      <input 
-                        type="text"
-                        className="w-full bg-transparent h-[60px] sm:h-[64px] pl-16 pr-16 text-white text-[15px] sm:text-[16px] font-medium tracking-wide focus:outline-none placeholder:text-gray-600 relative z-10"
-                        placeholder={`Enviar mensaje en #${activeChannel}...`}
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        disabled={isSending}
-                        autoComplete="off"
-                      />
-
-                      {/* Right edge emoji button (visual only) */}
-                      <div className="absolute right-3 w-10 h-10 rounded-[14px] flex items-center justify-center hover:bg-white/5 opacity-60 hover:opacity-100 transition-all cursor-pointer text-gray-400 hover:text-white relative z-10">
-                         <Smile className="w-[22px] h-[22px]" />
-                      </div>
-                   </div>
-
-                   {/* Send Button */}
-                   <button 
-                      type="submit"
-                      disabled={(!newMessage.trim() && !chatImageFile) || isSending}
-                      className="w-[60px] h-[60px] sm:w-[64px] sm:h-[64px] shrink-0 bg-gradient-to-tr from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-[#151822] disabled:to-[#151822] active:scale-95 disabled:scale-100 rounded-[24px] flex items-center justify-center text-white disabled:opacity-50 disabled:text-gray-600 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] disabled:shadow-none relative group overflow-hidden border border-cyan-400/20 disabled:border-white/5"
-                   >
-                      <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden" />
-                      {isSending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-1 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
-                   </button>
-                </form>
+       {/* Cyber Input Area */}
+       <div className="p-3 sm:p-5 shrink-0 relative bg-black border-t border-cyan-900/50 z-20 pb-safe">
+           {chatImagePreviewUrl && (
+             <div className="absolute bottom-full left-4 bg-[#0a0c10]/95 backdrop-blur-md border border-cyan-800 p-2 rounded-t-xl flex gap-3 items-center shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+                <img src={chatImagePreviewUrl} className="w-14 h-14 object-cover rounded-lg border border-cyan-900" />
+                <button onClick={() => {setChatImageFile(null); setChatImagePreviewUrl(null);}} className="w-6 h-6 bg-red-950 rounded-full flex items-center justify-center text-red-500 hover:text-red-300 transition-colors"><X className="w-3 h-3"/></button>
              </div>
-          </div>
+           )}
 
+           <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 relative max-w-5xl mx-auto items-stretch">
+              <input type="file" id="hud-file" className="hidden" accept="image/*" onChange={(e)=>{
+                if(e.target.files&&e.target.files[0]){
+                  setChatImageFile(e.target.files[0]);
+                  setChatImagePreviewUrl(URL.createObjectURL(e.target.files[0]));
+                }
+              }} />
+              <label htmlFor="hud-file" className="w-[45px] sm:w-[50px] bg-cyan-950/40 border border-cyan-800/80 text-cyan-500 flex justify-center items-center cursor-pointer hover:bg-cyan-900/80 hover:border-cyan-400 hover:text-cyan-400 transition-all rounded-[12px] shadow-inner shrink-0 group">
+                 <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform"/>
+              </label>
+
+              <div className="flex-1 relative flex items-center">
+                 <input 
+                   type="text" 
+                   value={newMessage} 
+                   onChange={e=>setNewMessage(e.target.value)} 
+                   placeholder="TRANSMITIR MENSAJE..." 
+                   className="w-full h-full bg-[#0a0c10] border border-cyan-800/80 text-cyan-300 font-mono text-[11px] sm:text-xs px-4 focus:outline-none focus:border-cyan-500 focus:bg-[#0d1017] transition-all shadow-inner rounded-[12px] placeholder:text-cyan-900/80" 
+                 />
+                 <div className="absolute right-3 w-1.5 h-1.5 bg-cyan-700 rounded-full animate-pulse pointer-events-none"></div>
+              </div>
+              
+              <button type="submit" disabled={(!newMessage.trim() && !chatImageFile) || isSending} className="w-[80px] sm:w-[120px] bg-cyan-500 text-black font-black uppercase text-[10px] sm:text-xs hover:bg-cyan-400 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 transition-all rounded-[12px] disabled:opacity-30 disabled:hover:scale-100 disabled:pointer-events-none shadow-[0_0_20px_rgba(34,211,238,0.2)] shrink-0">
+                 <span className="hidden sm:inline">ENVIAR</span>
+                 <Send className="w-4 h-4" />
+              </button>
+           </form>
        </div>
     </div>
   );
+
 }
 
 
