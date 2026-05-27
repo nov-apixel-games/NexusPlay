@@ -3,20 +3,21 @@ import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky, Text, Box, Sphere, Cylinder, OrbitControls, Grid, TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { Play, Square, Save, Upload, RotateCcw, Check, Settings, ChevronLeft, Move, Crosshair, PlusCircle, Sparkles, Trash2, Copy, Sliders, MapPin, Eye, Compass, Shield, Zap, Plus, Info } from 'lucide-react';
+import { Play, Square, Save, Upload, RotateCcw, Check, Settings, ChevronLeft, Move, Crosshair, PlusCircle, Sparkles, Trash2, Copy, Sliders, MapPin, Eye, Compass, Shield, Zap, Plus, Info, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { saveGameDraft, getGameDrafts, GameDraft } from '../../lib/offlineDb';
 
 interface GameObject3D {
   id: string;
-  type: 'wall' | 'enemy' | 'pickup' | 'spawn' | 'finish' | 'checkpoint' | 'nature' | 'npc' | 'trigger' | 'map_config';
+  type: 'wall' | 'enemy' | 'pickup' | 'spawn' | 'finish' | 'checkpoint' | 'nature' | 'npc' | 'trigger' | 'map_config' | 'vehicle' | 'water';
   position: [number, number, number];
   scale: [number, number, number];
   color: string;
   rotation?: [number, number, number]; // [X, Y, Z] in radians
+  label?: string;
   texture_style?: 'neon' | 'grid' | 'metal' | 'lava' | 'ruins' | string;
   enemy_type?: 'zombie' | 'cyborg' | 'boss' | string;
-  shape?: 'cube' | 'sphere' | 'cylinder' | 'cone' | 'torus';
+  shape?: 'cube' | 'sphere' | 'cylinder' | 'cone' | 'torus' | string;
   category?: string;
   nature_type?: 'tree' | 'rock' | 'bush' | 'crate' | string;
   npc_name?: string;
@@ -1397,6 +1398,48 @@ function getProceduralTexture(type: string): THREE.Texture {
     ctx.moveTo(0, 64); ctx.lineTo(128, 64);
     ctx.stroke();
     createNoise(0.04);
+
+  } else if (type === 'dirt') {
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 300; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? '#451a03' : '#92400e';
+      ctx.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
+    }
+    createNoise(0.12);
+  } else if (type === 'sand') {
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 400; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? '#fef08a' : '#d97706';
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(Math.random() * 128, Math.random() * 128, 1.5, 1.5);
+    }
+    ctx.globalAlpha = 1.0;
+    createNoise(0.08);
+  } else if (type === 'snow') {
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = '#e2e8f0';
+    for (let i = 0; i < 50; i++) {
+       ctx.beginPath();
+       ctx.arc(Math.random() * 128, Math.random() * 128, Math.random() * 15 + 5, 0, Math.PI * 2);
+       ctx.fill();
+    }
+    createNoise(0.05);
+  } else if (type === 'concrete') {
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 20; i++) {
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * 128, Math.random() * 128);
+      ctx.lineTo(Math.random() * 128, Math.random() * 128);
+      ctx.stroke();
+    }
+    createNoise(0.15);
+
   } else if (type === 'lava') {
     ctx.fillStyle = '#f97316';
     ctx.fillRect(0, 0, 128, 128);
@@ -1878,11 +1921,58 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
                 </mesh>
              );
            }
+           if (obj.type === 'water') {
+             return (
+               <mesh key={obj.id} position={obj.position} rotation={obj.rotation || [0,0,0]} scale={obj.scale} onClick={(e) => {
+                 if (mode === 'edit') {
+                   e.stopPropagation();
+                   setSelectedId(obj.id);
+                 }
+               }}>
+                 <boxGeometry args={[1, 1, 1]} />
+                 <meshStandardMaterial color={obj.color} roughness={0.0} metalness={0.9} transparent opacity={0.65} emissive="#0284c7" emissiveIntensity={0.5} />
+                 {mode === 'edit' && selectedId === obj.id && (
+                   <lineSegments>
+                     <edgesGeometry args={[new THREE.BoxGeometry(1.02, 1.02, 1.02)]} />
+                     <lineBasicMaterial color="#22d3ee" linewidth={4} />
+                   </lineSegments>
+                 )}
+               </mesh>
+             )
+           }
+           if (obj.type === 'vehicle') {
+             return (
+               <group key={obj.id} position={obj.position} rotation={obj.rotation || [0,0,0]} scale={obj.scale} onClick={(e) => {
+                 if (mode === 'edit') {
+                   e.stopPropagation();
+                   setSelectedId(obj.id);
+                 }
+               }}>
+                 {/* Body */}
+                 <mesh position={[0, 0.4, 0]} castShadow>
+                   <boxGeometry args={[1.8, 0.4, 4]} />
+                   <meshStandardMaterial color={obj.color || "#ef4444"} roughness={0.3} metalness={0.7} />
+                 </mesh>
+                 {/* Cabin */}
+                 <mesh position={[0, 0.8, -0.2]} castShadow>
+                   <boxGeometry args={[1.4, 0.5, 1.8]} />
+                   <meshStandardMaterial color="#1e293b" roughness={0.1} metalness={0.9} transparent opacity={0.8} />
+                 </mesh>
+                 {/* Selection Box */}
+                 {mode === 'edit' && selectedId === obj.id && (
+                   <mesh position={[0, 0.6, 0]}>
+                      <boxGeometry args={[2, 1.2, 4.2]} />
+                      <meshBasicMaterial color="#22d3ee" wireframe transparent opacity={0.6} />
+                   </mesh>
+                 )}
+               </group>
+             );
+           }
             if (obj.type === 'nature') {
               const natureType = obj.nature_type || 'tree';
               const color = obj.color || (natureType === 'tree' ? '#15803d' : '#64748b');
               return (
-                <group key={obj.id} position={obj.position} scale={obj.scale} onClick={(e) => {
+                <group key={obj.id} position={obj.position} scale={obj.scale} rotation={obj.rotation || [0,0,0]} onClick={(e) => {
                   if (mode === 'edit') {
                     e.stopPropagation();
                     setSelectedId(obj.id);
@@ -1923,6 +2013,13 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
                         <meshStandardMaterial color={color} roughness={0.9} />
                       </mesh>
                     </group>
+                  ) : natureType === 'mountain' ? (
+                    <group>
+                      <mesh position={[0, -0.2, 0]} castShadow receiveShadow>
+                        <coneGeometry args={[4, 6, 8]} />
+                        <meshStandardMaterial color={color} roughness={0.9} flatShading />
+                      </mesh>
+                    </group>
                   ) : (
                     <mesh castShadow receiveShadow>
                       <boxGeometry args={[1.2, 1.2, 1.2]} />
@@ -1934,6 +2031,13 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
                       <edgesGeometry args={[new THREE.BoxGeometry(1.5, 2.5, 1.5)]} />
                       <lineBasicMaterial color="#22d3ee" linewidth={4} />
                     </lineSegments>
+                  )}
+
+                  {mode === 'edit' && selectedId === obj.id && (
+                     <mesh position={[0, 1.0, 0]}>
+                        <boxGeometry args={[1.5, 3.0, 1.5]} />
+                        <meshBasicMaterial color="#22d3ee" wireframe transparent opacity={0.6} />
+                     </mesh>
                   )}
                 </group>
               );
@@ -2005,7 +2109,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // States for the Visual Game Studio Editor
-  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets'>('entidades');
+  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets' | 'terreno' | 'inspector'>('entidades');
   const [npcDialogueText, setNpcDialogueText] = useState('¡Hola aventurero! Recoge la gema.');
   const [npcNameText, setNpcNameText] = useState('Guía Nexus-7');
   const [cloudinaryAssetUrl, setCloudinaryAssetUrl] = useState('');
@@ -2663,7 +2767,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
               {/* Premium Tab Buttons */}
               <div className="flex border-b border-white/10 pb-2 overflow-x-auto gap-2 no-scrollbar scroll-smooth">
-                {(["entidades", "bioma", "scripting", "assets"] as const).map((tab) => (
+                {((["entidades", "bioma", "scripting", "assets", "terreno", "inspector"] as const)).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setEditorTab(tab)}
@@ -2676,19 +2780,51 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
               
               {/* TAB 1: ADD ENTITIY PAINTERS */}
               {editorTab === "entidades" && (
-                <div className="flex flex-col gap-2.5">
-                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Estanteria de Elementos</div>
-                  <div className="grid grid-cols-2 gap-2">
-                     <button onClick={() => setObjects([...objects, { id: "w_"+Date.now(), type: "wall", position: [0, 2, 0], scale: [4, 4, 4], color: "#334155", texture_style: "neon" }])} className="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-white text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><Move className="w-3.5 h-3.5 text-cyan-400"/> + Muro</button>
-                     <button onClick={() => setObjects([...objects, { id: "e_"+Date.now(), type: "enemy", position: [0, 1.2, 0], scale: [1.3, 2, 1.3], color: "#047857", enemy_type: "zombie" }])} className="bg-emerald-500/5 hover:bg-emerald-500/15 text-emerald-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-emerald-500/10"><PlusCircle className="w-3.5 h-3.5"/> + Zombie</button>
-                     <button onClick={() => setObjects([...objects, { id: "n_"+Date.now(), type: "nature", nature_type: "tree", position: [0, 0, 0], scale: [1, 1, 1], color: "#15803d" }])} className="bg-green-500/5 hover:bg-green-500/15 text-green-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-green-500/10"><Sliders className="w-3.5 h-3.5"/> + Arbol Pino</button>
-                     <button onClick={() => setObjects([...objects, { id: "n_"+Date.now(), type: "nature", nature_type: "rock", position: [0, 0.5, 0], scale: [1, 1, 1], color: "#64748b" }])} className="bg-slate-500/5 hover:bg-slate-500/15 text-slate-300 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-slate-500/10"><Compass className="w-3.5 h-3.5"/> + Roca Voxel</button>
-                     <button onClick={() => setObjects([...objects, { id: "npc_"+Date.now(), type: "npc", npc_name: npcNameText, npc_dialog: npcDialogueText, position: [0, 0, 0], scale: [1, 1, 1], color: "#f43f5e" }])} className="bg-rose-500/5 hover:bg-rose-500/15 text-rose-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-rose-500/10"><PlusCircle className="w-3.5 h-3.5 text-rose-400"/> + Guia NPC</button>
-                     <button onClick={() => setObjects([...objects, { id: "trig_"+Date.now(), type: "trigger", position: [0, 0.5, 0], scale: [3, 3, 3], color: "#ec4899" }])} className="bg-pink-500/5 hover:bg-pink-500/15 text-pink-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-pink-500/10"><Sliders className="w-3.5 h-3.5 text-pink-400"/> + Zona Trigger</button>
-                     <button onClick={() => setObjects([...objects, { id: "c_"+Date.now(), type: "checkpoint", position: [0, 0, 0], scale: [1, 1, 1], color: "#10b981" }])} className="bg-teal-500/5 hover:bg-teal-500/15 text-teal-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-teal-500/10"><Sliders className="w-3.5 h-3.5"/> + Checkpoint</button>
-                     <button onClick={() => setObjects([...objects, { id: "f_"+Date.now(), type: "finish", position: [0, 0, 0], scale: [1, 1, 1], color: "#c084fc" }])} className="bg-purple-500/5 hover:bg-purple-500/15 text-purple-400 p-2.5 rounded-xl text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-purple-500/10"><Compass className="w-3.5 h-3.5"/> + Portal Final</button>
-                     <button onClick={() => setObjects([...objects, { id: "gem_"+Date.now(), type: "pickup", position: [0, 1.2, 0], scale: [1, 1, 1], color: "#fbbf24" }])} className="col-span-2 bg-yellow-500/5 hover:bg-yellow-500/15 text-yellow-400 p-2 rounded-xl text-[10px] font-mono flex items-center justify-center gap-1.5 cursor-pointer border border-yellow-500/10"><PlusCircle className="w-4 h-4 text-yellow-400"/> + Gema De Puntos</button>
+                <div className="flex flex-col gap-4 text-xs h-[60vh] overflow-y-auto no-scrollbar scroll-smooth">
+                  
+                  {/* CONSTRUCCION */}
+                  <div className="flex flex-col gap-2 mt-1">
+                    <div className="text-[9px] text-cyan-300 font-bold tracking-wider mb-0.5 border-b border-cyan-500/20 pb-1">CONSTRUCCIÓN</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => setObjects([...objects, { id: "w_"+Date.now(), type: "wall", shape: "cube", position: [0, 2, 0], scale: [4, 4, 1], color: "#334155", texture_style: "metal", label: "Pared" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-6 h-6 bg-slate-500 rounded-sm mb-1"></div>Pared</button>
+                      <button onClick={() => setObjects([...objects, { id: "f_"+Date.now(), type: "wall", shape: "cube", position: [0, 0.5, 0], scale: [6, 1, 6], color: "#475569", texture_style: "concrete", label: "Piso" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-6 h-2 bg-slate-400 rounded-sm mb-2 mt-2"></div>Piso</button>
+                      <button onClick={() => setObjects([...objects, { id: "r_"+Date.now(), type: "wall", shape: "cube", position: [0, 4, 0], scale: [6, 0.5, 6], color: "#1e293b", texture_style: "grid", label: "Techo" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-6 h-2 bg-slate-600 rounded-sm mb-1 mt-1"></div>Techo</button>
+                      <button onClick={() => setObjects([...objects, { id: "b_"+Date.now(), type: "wall", shape: "cube", position: [0, 1.5, 0], scale: [1, 3, 1], color: "#8b5cf6", texture_style: "neon", label: "Pilar" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-2 h-6 bg-violet-500 rounded-sm mb-1"></div>Pilar</button>
+                      <button onClick={() => setObjects([...objects, { id: "rs_"+Date.now(), type: "wall", shape: "cylinder", position: [0, 1.5, 0], scale: [1, 3, 1], color: "#fb7185", texture_style: "ruins", label: "Pedestal" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-4 h-6 bg-rose-400 rounded-sm mb-1 rounded-t-full"></div>Cilindro</button>
+                      <button onClick={() => setObjects([...objects, { id: "lake_"+Date.now(), type: "water", position: [0, 0, 0], scale: [10, 1, 10], color: "#0ea5e9", label: "Cubo de Agua" }])} className="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-sky-500/20"><div className="w-4 h-4 mb-1 bg-sky-500/50 border border-sky-400 rounded-sm"></div> Agua</button>
+                    </div>
                   </div>
+
+                  {/* OBJETOS INTERACTIVOS */}
+                  <div className="flex flex-col gap-2">
+                    <div className="text-[9px] text-amber-300 font-bold tracking-wider mb-0.5 border-b border-amber-500/20 pb-1">GAMEPLAY & LOOT</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => setObjects([...objects, { id: "p_"+Date.now(), type: "pickup", position: [0, 1.5, 0], scale: [1, 1, 1], color: "#fbbf24", label: "Cofre" }])} className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-amber-500/20"><Sparkles className="w-4 h-4 mb-1"/> Cofre Loot</button>
+                      <button onClick={() => setObjects([...objects, { id: "c_"+Date.now(), type: "checkpoint", position: [0, 0.5, 0], scale: [1, 1, 1], color: "#10b981", label: "Checkpoint" }])} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-emerald-500/20"><MapPin className="w-4 h-4 mb-1"/> Punto Respawn</button>
+                      <button onClick={() => setObjects([...objects, { id: "car_"+Date.now(), type: "vehicle", position: [0, 0.5, 0], scale: [1, 1, 1], color: "#ef4444", label: "Vehículo", rotation: [0,0,0] }])} className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-red-500/20"><Zap className="w-4 h-4 mb-1"/> Auto</button>
+                    </div>
+                  </div>
+
+                  {/* NATURALEZA Y PROPS */}
+                  <div className="flex flex-col gap-2">
+                    <div className="text-[9px] text-emerald-300 font-bold tracking-wider mb-0.5 border-b border-emerald-500/20 pb-1">NATURALEZA</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => setObjects([...objects, { id: "n_"+Date.now(), type: "nature", nature_type: "tree", position: [0, 0, 0], scale: [1.2, 1.2, 1.2], color: "#166534", label: "Árbol Pino" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><Info className="w-4 h-4 mb-1 text-emerald-500"/> Pino</button>
+                      <button onClick={() => setObjects([...objects, { id: "nr_"+Date.now(), type: "nature", nature_type: "rock", position: [0, 0, 0], scale: [2, 2, 2], color: "#475569", label: "Roca Gigante" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-4 h-4 mb-1 bg-slate-500 rounded-full"></div> Roca</button>
+                      <button onClick={() => setObjects([...objects, { id: "nb_"+Date.now(), type: "nature", nature_type: "bush", position: [0, 0, 0], scale: [1, 1, 1], color: "#15803d", label: "Arbusto" }])} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg text-white text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5"><div className="w-4 h-4 mb-1 bg-green-600 rounded-full"></div> Arbusto</button>
+                    </div>
+                  </div>
+
+                  {/* IA Y ENEMIGOS */}
+                  <div className="flex flex-col gap-2 border-t border-fuchsia-500/20 pt-2 pb-4">
+                    <div className="text-[9px] text-fuchsia-300 font-bold tracking-wider mb-0.5 border-b border-fuchsia-500/20 pb-1">PERSONAJES E IA</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button onClick={() => setObjects([...objects, { id: "e_"+Date.now(), type: "enemy", position: [0, 1.2, 0], scale: [1, 1, 1], color: "#047857", enemy_type: "zombie", label: "Zombie" }])} className="bg-red-500/5 hover:bg-red-500/15 text-red-400 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-red-500/10"><Eye className="w-4 h-4 mb-1"/> Enemigo Base</button>
+                      <button onClick={() => setObjects([...objects, { id: "eb_"+Date.now(), type: "enemy", position: [0, 2, 0], scale: [1.5, 1.5, 1.5], color: "#b91c1c", enemy_type: "boss", label: "Jefe Final" }])} className="bg-red-500/5 hover:bg-red-500/15 text-red-500 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-red-500/10"><Shield className="w-4 h-4 mb-1"/> Mega Boss</button>
+                      <button onClick={() => setObjects([...objects, { id: "npc_"+Date.now(), type: "npc", npc_name: "Aldeano Nuevo", npc_dialog: "Presiona para hablar.", position: [0, 1.2, 0], scale: [1, 1, 1], color: "#c084fc", label: "NPC Fijo" }])} className="bg-fuchsia-500/5 hover:bg-fuchsia-500/15 text-fuchsia-400 p-2 rounded-lg text-[9px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-fuchsia-500/10"><UserCircle className="w-4 h-4 mb-1"/> NPC Diálogo</button>
+                    </div>
+                  </div>
+
                 </div>
               )}
 
@@ -2810,6 +2946,63 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                   </div>
                 </div>
               )}
+
+              
+              {/* TAB: TERRENO ESTRUCTURAL */}
+              {editorTab === "terreno" && (
+                <div className="flex flex-col gap-3 text-xs">
+                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Editor de Terreno Real</div>
+                  
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-2xl text-[10.5px] leading-relaxed text-slate-300 font-mono">
+                     Selecciona herramientas para esculpir el terreno o utiliza la construcción modular. (Deslizadores para escalar montañas próximamente).
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                     <button onClick={() => setObjects([...objects, { id: "n_"+Date.now(), type: "nature", nature_type: "mountain", position: [0, 0, 0], scale: [8, 8, 8], color: "#475569", label: "Montaña Rocosa" }])} className="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-white text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5">Montañas +</button>
+                     <button onClick={() => setObjects(objects.filter(o => o.nature_type !== 'mountain'))} className="bg-white/5 hover:bg-white/10 p-2.5 rounded-xl text-white text-[10px] font-mono flex flex-col items-center gap-1 cursor-pointer border border-white/5">Aplanar -</button>
+                  </div>
+                  
+                  <div className="mt-4">
+                     <label className="text-[10px] text-gray-500 font-bold block mb-1 font-mono">TEXTURAS DE TERRENO (GLOBAL)</label>
+                     <select 
+                       value={mapProps?.floorTexture || 'grid'} 
+                       onChange={(e) => setMapProps({...mapProps, floorTexture: e.target.value})}
+                       className="w-full bg-slate-900 border border-white/10 text-white px-3 py-2 rounded-lg font-mono focus:outline-none"
+                     >
+                       <option value="grass">Hierba Real</option>
+                       <option value="dirt">Tierra</option>
+                       <option value="sand">Arena</option>
+                       <option value="snow">Nieve</option>
+                       <option value="concrete">Concreto Urbano</option>
+                       <option value="grid">Grid (Development)</option>
+                     </select>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: INSPECTOR / JERARQUIA */}
+              {editorTab === "inspector" && (
+                <div className="flex flex-col gap-3 text-xs">
+                  <div className="text-[10px] text-cyan-300/60 font-mono uppercase tracking-wider mb-0.5">Jerarquía de la Escena (Real)</div>
+                  
+                  <div className="bg-black/40 border border-white/10 p-2 rounded-xl text-[10px] font-mono max-h-48 overflow-y-auto">
+                     {objects.map(o => (
+                       <div 
+                         key={o.id} 
+                         onClick={() => setSelectedId(o.id)}
+                         className={`p-1.5 flex justify-between items-center rounded cursor-pointer ${selectedId === o.id ? 'bg-cyan-500/20 text-cyan-300' : 'hover:bg-white/5 text-gray-400'}`}
+                       >
+                         <span>{o.type.toUpperCase()} ({o.id.split('_').pop()})</span>
+                         <button onClick={(e) => { e.stopPropagation(); setObjects(objects.filter(x => x.id !== o.id)); }} className="text-red-400 hover:text-red-300"><Trash2 className="w-3 h-3"/></button>
+                       </div>
+                     ))}
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                     <button onClick={() => setObjects([])} className="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded font-bold uppercase cursor-pointer">Limpiar Mapa</button>
+                  </div>
+                </div>
+              )}
+
 
               {/* TAB 4: EXTERNAL CLOUDINARY TEXTURES AND CDN STORES */}
               {editorTab === "assets" && (

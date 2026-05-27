@@ -28,6 +28,7 @@ import NexusHub from './components/NexusHub';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthModal from './components/AuthModal';
 import OfflineFallback from './components/OfflineFallback';
+import OfflineIndicator from './components/OfflineIndicator';
 
 export const DEFAULT_SETTINGS = {
   storeName: 'NexusPlay',
@@ -844,29 +845,7 @@ export default function App() {
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
       <GoogleAdSense />
-      {isOffline && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-lg bg-red-500/95 backdrop-blur-md border border-red-500/30 text-white rounded-2xl px-5 py-3 sm:py-3.5 shadow-[0_10px_30px_rgba(239,68,68,0.3)] flex items-center justify-between gap-4 font-sans text-xs sm:text-sm animate-bounce-short">
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-200 animate-pulse shrink-0"></span>
-            <span className="font-bold text-red-500-contrast">Modo Offline Activado • Explorando copia local</span>
-          </div>
-          <button 
-            onClick={() => {
-              addToast('Comprobando conexión...', 'info');
-              if (navigator.onLine) {
-                setIsOffline(false);
-                fetchApps();
-                addToast('¡Conexión restaurada! Sincronizando catálogo...', 'success');
-              } else {
-                addToast('Aún sin conexión. Seguimos en copia local.', 'info');
-              }
-            }}
-            className="px-3 py-1 bg-white/20 hover:bg-white/30 hover:scale-105 active:scale-95 border border-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase text-white transition-all shrink-0 cursor-pointer"
-          >
-            Reconectar
-          </button>
-        </div>
-      )}
+      <OfflineIndicator />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showAuthModal && (
         <AuthModal 

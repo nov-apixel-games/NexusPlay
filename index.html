@@ -5,22 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NexusPlay</title>
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png" />
-    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0a0c10" />
-    <script>
-      // Registrar el Service Worker para soporte offline
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('[PWA] Service Worker registrado exitosamente con scope:', registration.scope);
-            })
-            .catch((error) => {
-              console.error('[PWA] Fallo en el registro del Service Worker:', error);
-            });
-        });
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
