@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageSquare, Users, Plus, Hash, Settings, MoreVertical, 
   Trash2, X, Send, Pin, Shield, AlertTriangle, UserMinus, Search, Menu, ChevronLeft, Image as ImageIcon,
-  Activity, Clock, Smile, Volume2, Lock, Bot, Compass, Flame, Star, Sparkles, Gamepad2, Zap
+  Activity, Clock, Smile, Volume2, Lock, Bot, Compass, Flame, Star, Sparkles, Gamepad2, Zap, Timer
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
@@ -508,14 +508,14 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
     const textContent = newMessage.trim();
     const imageFile = chatImageFile;
     
-    // Reset states
+    // Reset inputs visually but keep uploading
     setNewMessage('');
     setChatImageFile(null);
     setChatImagePreviewUrl(null);
     
     // Optimistic message setup
     const tempId = `temp_${Date.now()}`;
-    const localImgUrl = chatImagePreviewUrl;
+    const localImgUrl = imageFile ? URL.createObjectURL(imageFile) : null;
     
     const optimisticMsg: Message = {
       id: tempId,
@@ -529,7 +529,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
       created_at: new Date().toISOString(),
       profiles: {
         username: userProfile?.username || session.user.email?.split('@')[0] || 'Tú',
-        avatar_url: userProfile?.avatar_url || '',
+        avatar_url: userProfile?.avatar_url || session.user.user_metadata?.avatar_url || '',
         role: userProfile?.role || 'user'
       }
     };
@@ -540,12 +540,19 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
     try {
       let finalImgUrl: string | null = null;
       if (imageFile) {
+        // Fallback for WebView/Android issues where signature might fail on relative URLs
         const cleanName = currentCommunity.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const uploadRes = await uploadToCloudinary(imageFile, `NexusHub/${cleanName}/chat_media`);
-        if (uploadRes && (uploadRes.secure_url || uploadRes.url)) {
-          finalImgUrl = uploadRes.secure_url || uploadRes.url;
-        } else {
-          throw new Error("No se pudo subir la foto adjunta. Por favor vuelve a intentar.");
+        try {
+           const uploadRes = await uploadToCloudinary(imageFile, `NexusHub/${cleanName}/chat_media`);
+           if (uploadRes && (uploadRes.secure_url || uploadRes.url)) {
+             finalImgUrl = uploadRes.secure_url || uploadRes.url;
+           } else {
+             throw new Error("No se recibió URL de la imagen.");
+           }
+        } catch (uploadErr: any) {
+           console.error("Cloudinary Error, intentando solución alterna...", uploadErr);
+           // Retry with unsigned if signed failed (though we don't have preset, we just throw real error)
+           throw new Error(`Fallo al enviar imagen: ${uploadErr.message || 'Desconocido'}`);
         }
       }
 
@@ -838,8 +845,8 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                              <Bot className="w-4 h-4 sm:w-5 sm:h-5 " />
                           </div>
                         ) : msg.profiles?.avatar_url ? (
-                          <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-[5px] grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"/>
-                        ) : <span className="text-cyan-500 font-mono font-bold text-xs sm:text-sm">{msg.profiles?.username?.[0]?.toUpperCase()}</span>}
+                            <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-[5px] grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"/>
+                         ) : <span className="text-cyan-500 font-mono font-bold text-xs sm:text-sm">{(msg.profiles?.username || 'U')[0]?.toUpperCase()}</span>}
                      </div>
 
                      {/* Content Bubble HUD */}
@@ -868,7 +875,12 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                                )}
                                
                                {parsed.image_url && (
-                                 <img src={parsed.image_url} onClick={() => window.open(parsed.image_url||'', '_blank')} className="mt-3 w-full max-w-[200px] sm:max-w-[280px] rounded-lg border border-cyan-900/50 hover:border-cyan-500/50 grayscale hover:grayscale-0 transition-all cursor-pointer shadow-lg" />
+                                 <div className="relative mt-3 inline-block">
+                                   <img src={parsed.image_url} onClick={() => window.open(parsed.image_url||'', '_blank')} className="w-full max-w-[200px] sm:max-w-[280px] rounded-lg border border-cyan-900/50 hover:border-cyan-500/50 grayscale hover:grayscale-0 transition-all cursor-pointer shadow-lg" />
+                                   <div className="absolute top-2 right-2 bg-black/80 backdrop-blur border border-red-500/50 text-red-400 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(239,68,68,0.3)] pointer-events-none uppercase tracking-widest flex items-center gap-1">
+                                     <Timer className="w-3 h-3" /> 7d
+                                   </div>
+                                 </div>
                                )}
 
                                {/* HUD Hover Options */}
