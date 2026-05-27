@@ -166,17 +166,33 @@ export default function Navbar({
       });
       if (authError) throw authError;
 
-      // 2. Update profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          username: cleanUsername, 
-          real_name: inputRealName, 
-          avatar_url: inputAvatar 
-        })
-        .eq('id', session.user.id);
+      // 2. Update profiles table with retry for schema cache errors
+      let profileError: any = null;
+      let attempts = 0;
+      while (attempts < 3) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            username: cleanUsername, 
+            real_name: inputRealName, 
+            avatar_url: inputAvatar 
+          })
+          .eq('id', session.user.id);
+        
+        profileError = error;
+        if (!error) {
+          break;
+        }
+        if (error.message && error.message.includes('schema cache')) {
+          attempts++;
+          console.warn(`[Navbar Profile Update] Schema cache error. Retrying attempt ${attempts} in 600ms...`);
+          await new Promise(r => setTimeout(r, 600));
+        } else {
+          break;
+        }
+      }
 
-      if (profileError && profileError.message && !profileError.message.includes('schema cache')) {
+      if (profileError) {
         throw profileError;
       }
 
@@ -194,6 +210,11 @@ export default function Navbar({
   // Profile Roles
   const userRole = userProfile?.role || 'user';
   const roleName = userRole === 'admin' ? 'Administrador' : userRole === 'developer' ? 'Desarrollador' : 'Jugador Nexus';
+
+  const xp = userProfile?.xp || 0;
+  const level = Math.floor(xp / 1000) + 1;
+  const currentLevelXp = xp % 1000;
+  const progressPercent = (currentLevelXp / 1000) * 100;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-[80px] bg-[#030407]/70 backdrop-blur-3xl border-b border-white/5 flex items-center justify-between px-6 sm:px-10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
@@ -317,7 +338,7 @@ export default function Navbar({
                     <div className="absolute inset-0 bg-cyan-400 rounded-full blur-[10px] opacity-0 group-hover:opacity-40 transition-opacity"></div>
                     <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#121420] border-2 border-white/10 group-hover:border-cyan-400 flex items-center justify-center text-sm font-black text-white uppercase relative z-10 transition-all overflow-hidden shadow-lg animate-fade-in">
                        {userProfile?.avatar_url ? (
-                         <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                         <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar" onError={(e) => { e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`; }} />
                        ) : (
                          username?.charAt(0) || <UserIcon className="w-5 h-5"/>
                        )}
@@ -339,14 +360,14 @@ export default function Navbar({
                           <div className="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-xl relative mb-3">
                             <div className="w-full h-full rounded-full bg-[#0d0f1a] overflow-hidden flex items-center justify-center font-black text-2xl text-white">
                               {userProfile?.avatar_url ? (
-                                <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar Grande" />
+                                <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar Grande" onError={(e) => { e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`; }} />
                               ) : (
                                 username?.charAt(0)
                               )}
                             </div>
                             <div className="absolute -bottom-1 -right-1 bg-[#121422] rounded-full p-1 border border-white/10">
                               <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-black font-black text-[10px]" title="Nivel del Jugador">
-                                Lvl 1
+                                Lvl {level}
                               </div>
                             </div>
                           </div>
@@ -359,7 +380,18 @@ export default function Navbar({
                             <Mail className="w-3.5 h-3.5 text-cyan-400" /> {userEmail}
                           </span>
 
-                          <div className="mt-3 px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-400 text-[10px] font-black tracking-widest uppercase border border-cyan-400/20 shadow-sm inline-block">
+                          {/* XP progressive meter */}
+                          <div className="w-full mt-3 px-1">
+                            <div className="flex justify-between items-center text-[9px] uppercase font-bold text-gray-400 mb-1 font-mono tracking-wider">
+                              <span>Progreso Nivel</span>
+                              <span className="text-yellow-500 font-extrabold">{currentLevelXp} / 1000 XP</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-[#090b14] border border-white/5 rounded-full overflow-hidden shadow-inner">
+                              <div className="h-full bg-[#ef4444] bg-gradient-to-r from-cyan-400 via-blue-500 to-yellow-500 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+                            </div>
+                          </div>
+
+                          <div className="mt-3.5 px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-400 text-[10px] font-black tracking-widest uppercase border border-cyan-400/20 shadow-sm inline-block">
                             {roleName}
                           </div>
 

@@ -49,9 +49,45 @@ const compressImage = async (file: File): Promise<File> => {
 
 export const uploadToCloudinary = async (file: File, folder: string) => {
   const processedFile = await compressImage(file);
+  
+  // Try signed upload first
+  try {
+    const sigResponse = await fetch(`/api/cloudinary-signature?folder=${encodeURIComponent(folder || 'avatars')}`);
+    if (sigResponse.ok) {
+      const sigData = await sigResponse.json();
+      if (sigData && sigData.signature) {
+        console.log("[Cloudinary] Realizando subida firmada mediante backend...");
+        const formData = new FormData();
+        formData.append('file', processedFile);
+        formData.append('api_key', sigData.api_key);
+        formData.append('timestamp', sigData.timestamp.toString());
+        formData.append('signature', sigData.signature);
+        formData.append('folder', sigData.folder);
+
+        const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloud_name}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (uploadResponse.ok) {
+          const resJson = await uploadResponse.json();
+          console.log("[Cloudinary] Subida firmada exitosa:", resJson.secure_url || resJson.url);
+          return resJson;
+        } else {
+          const errData = await uploadResponse.json();
+          console.warn("[Cloudinary] Intento de subida firmada falló, reintentando de forma no firmada...", errData);
+        }
+      }
+    }
+  } catch (sigErr) {
+    console.warn("[Cloudinary] No se pudo obtener firma del backend, usando fallback no firmado:", sigErr);
+  }
+
+  // Fallback to unsigned upload
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dnpnmhmht';
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'nexus_unsigned';
   
+  console.log("[Cloudinary] Realizando subida no firmada usando preset:", uploadPreset);
   const formData = new FormData();
   formData.append('file', processedFile);
   formData.append('upload_preset', uploadPreset);
@@ -67,7 +103,7 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   if (!uploadResponse.ok) {
     const errData = await uploadResponse.json();
     const errorMsg = errData.error?.message || "Error al subir a Cloudinary";
-    console.error("Cloudinary Upload Error Details:", errData);
+    console.error("Cloudinary Unsigned Upload Error Details:", errData);
     throw new Error(errorMsg);
   }
 

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Sky, Text, Box, Sphere, Cylinder, OrbitControls, Grid, TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { Play, Square, Save, Upload, RotateCcw, Check, Settings, ChevronLeft, Move, Crosshair, PlusCircle, Sparkles, Trash2, Copy, Sliders, MapPin, Eye, Compass, Shield, Zap, Plus, Info, UserCircle } from 'lucide-react';
+import { Play, Square, Save, Upload, RotateCcw, Check, Settings, ChevronLeft, Move, Crosshair, PlusCircle, Sparkles, Trash2, Copy, Sliders, MapPin, Eye, Compass, Shield, Zap, Plus, Info, UserCircle, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { saveGameDraft, getGameDrafts, GameDraft } from '../../lib/offlineDb';
 
@@ -1667,7 +1667,7 @@ function GameplayTriggers({ objects, template, mapProps }: any) {
   return null;
 }
 
-function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId, template, mapProps }: any) { 
+function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId, template, mapProps, qualityMode }: any) { 
   const updateObject = (id: string, newProps: any) => {
     if(setObjects) {
        setObjects((prev: any[]) => prev.map(o => o.id === id ? { ...o, ...newProps } : o));
@@ -1748,7 +1748,9 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
   return (
     <>
       {/* Premium environmental atmospheric fog */}
-      <fog attach="fog" args={[fogColor, 15, Math.max(20, fogDensity * 4)]} />
+      {qualityMode !== 'low' && (
+        <fog attach="fog" args={[fogColor, 15, Math.max(20, fogDensity * 4)]} />
+      )}
 
       {/* Dynamic sky dome colors matching theme context */}
       <Sky 
@@ -1775,10 +1777,10 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
       <directionalLight 
         position={[25, 45, 20]} 
         intensity={skyPreset === 'night' ? 0.3 : 1.7} 
-        castShadow 
+        castShadow={qualityMode !== 'low'} 
         shadow-bias={-0.0001}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={qualityMode === 'high' ? 1024 : 512}
+        shadow-mapSize-height={qualityMode === 'high' ? 1024 : 512}
         shadow-camera-left={-60}
         shadow-camera-right={60}
         shadow-camera-top={60}
@@ -2103,6 +2105,9 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
 }
 
 export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3DProps) {
+  const [qualityMode, setQualityMode] = useState<'high' | 'medium' | 'low'>(() => {
+    return (localStorage.getItem('nexus_render_quality') as any) || 'medium';
+  });
   const [mode, setMode] = useState<'edit' | 'play'>('edit');
   const [isPublishing, setIsPublishing] = useState(false);
   const [objects, setObjects] = useState<GameObject3D[]>([]);
@@ -2566,6 +2571,19 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
          </div>
          
          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => {
+                const nextQ = qualityMode === 'high' ? 'medium' : qualityMode === 'medium' ? 'low' : 'high';
+                setQualityMode(nextQ);
+                localStorage.setItem('nexus_render_quality', nextQ);
+              }}
+              title="Calidad de Gráficos (Low desactiva sombras para maximizar FPS en Android de gama baja)"
+              className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-xs font-mono font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
+            >
+              <Cpu className={`w-4 h-4 ${qualityMode === 'high' ? 'text-green-400' : qualityMode === 'medium' ? 'text-yellow-400' : 'text-red-400'}`} />
+              <span className="hidden sm:inline">RENDER:</span>
+              <span className={`uppercase font-black ${qualityMode === 'high' ? 'text-green-400' : qualityMode === 'medium' ? 'text-yellow-400' : 'text-red-400'}`}>{qualityMode}</span>
+            </button>
            {mode === 'edit' ? (
              <button onClick={handleStartPlay} className="flex items-center gap-2 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 text-black px-5 py-2.5 rounded-xl font-bold font-mono shadow-[0_0_20px_rgba(16,185,129,0.35)] transition-all cursor-pointer">
                <Play className="w-4.5 h-4.5 fill-black" /> ENTRAR GAMEPLAY
@@ -2580,7 +2598,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
       <div className="flex-1 flex overflow-hidden relative">
           
-          <Canvas shadows camera={{ position: [0, 6, 14], fov: 70 }}>
+          <Canvas shadows={qualityMode !== 'low'} camera={{ position: [0, 6, 14], fov: 70 }}>
             <color 
               attach="background" 
               args={[
@@ -2601,6 +2619,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
               selectedId={selectedId} 
               setSelectedId={setSelectedId} 
               template={initialTemplate}
+              qualityMode={qualityMode}
             />
 
             {mode === 'play' && (

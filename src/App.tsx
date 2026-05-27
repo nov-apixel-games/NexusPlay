@@ -331,15 +331,28 @@ export default function App() {
           }
 
           if (needsUpdate) {
-            const { error: updErr, data: updated } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
-            if (updErr && updErr.message && updErr.message.includes('schema cache') && updates.avatar_url) {
-               delete updates.avatar_url;
-               if (Object.keys(updates).length > 0) {
-                 const { data: retryUpdated } = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
-                 setUserProfile(retryUpdated || { ...data, ...updates });
-               } else {
-                 setUserProfile(data);
-               }
+            let updErr: any = null;
+            let updated: any = null;
+            let attempts = 0;
+            while (attempts < 3) {
+              const res = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
+              updErr = res.error;
+              updated = res.data;
+              
+              if (!updErr) {
+                break;
+              }
+              if (updErr.message && updErr.message.includes('schema cache')) {
+                attempts++;
+                console.warn(`[App Profile Autosync] Schema cache error. Retrying attempt ${attempts} in 600ms...`);
+                await new Promise(r => setTimeout(r, 600));
+              } else {
+                break;
+              }
+            }
+
+            if (updErr) {
+              setUserProfile(data);
             } else {
               setUserProfile(updated || { ...data, ...updates });
             }

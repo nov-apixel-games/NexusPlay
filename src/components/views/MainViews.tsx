@@ -330,19 +330,24 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       let updateErr: any = null;
       const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
 
-      const { error: err1 } = await supabase
-        .from('profiles')
-        .update({ username: cleanUsername, real_name: realName, avatar_url: avatarUrl })
-        .eq('id', session.user.id);
-        
-      updateErr = err1;
-
-      if (err1 && err1.message && err1.message.includes('schema cache')) {
-        const { error: err2 } = await supabase
+      let attempts = 0;
+      while (attempts < 3) {
+        const { error } = await supabase
           .from('profiles')
-          .update({ username: cleanUsername, real_name: realName })
+          .update({ username: cleanUsername, real_name: realName, avatar_url: avatarUrl })
           .eq('id', session.user.id);
-        updateErr = err2;
+        
+        updateErr = error;
+        if (!error) {
+          break;
+        }
+        if (error.message && error.message.includes('schema cache')) {
+          attempts++;
+          console.warn(`[MainViews Profile Update] Schema cache error. Retrying attempt ${attempts} in 600ms...`);
+          await new Promise(r => setTimeout(r, 600));
+        } else {
+          break;
+        }
       }
         
       if (updateErr && updateErr.code !== '23505') {
@@ -386,7 +391,14 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
           <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2rem] bg-gradient-to-tr from-cyan-400 to-purple-500 p-1 flex-shrink-0 shadow-2xl relative group">
             <div className="w-full h-full bg-[#0a0c14] rounded-[1.8rem] flex items-center justify-center text-4xl sm:text-5xl font-black overflow-hidden relative">
                {avatarUrl ? (
-                 <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+                 <img 
+                   src={avatarUrl} 
+                   alt={username} 
+                   className="w-full h-full object-cover" 
+                   onError={(e) => {
+                     e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`;
+                   }}
+                 />
                ) : (
                  <span>{initial}</span>
                )}
