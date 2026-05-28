@@ -2412,6 +2412,29 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
   const [mode, setMode] = useState<'edit' | 'play'>('edit');
   const [isPublishing, setIsPublishing] = useState(false);
   const [objects, setObjects] = useState<GameObject3D[]>([]);
+  const [historyList, setHistoryList] = useState<GameObject3D[][]>([]);
+  
+  const updateObjectsWithHistory = (newObjects: GameObject3D[]) => {
+     setHistoryList(prev => {
+       const next = [...prev.slice(-15), objects];
+       return next;
+     });
+     setObjects(newObjects);
+  };
+  
+  const handleUndo = () => {
+    if (historyList.length > 0) {
+       const prevObjects = historyList[historyList.length - 1];
+       setObjects(prevObjects);
+       setHistoryList(prev => prev.slice(0, -1));
+       setShowNotification("¡Deshacer completado!");
+       setTimeout(() => setShowNotification(null), 1500);
+    } else {
+       setShowNotification("Nada que deshacer.");
+       setTimeout(() => setShowNotification(null), 1500);
+    }
+  };
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
@@ -2422,10 +2445,15 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
   const [liveFps, setLiveFps] = useState(60);
 
   // States for the Visual Game Studio Editor
-  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets' | 'terreno' | 'inspector' | 'gameplay'>('bioma');
+  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets' | 'terreno' | 'inspector' | 'gameplay' | 'nexus-ai'>('bioma');
   const [npcDialogueText, setNpcDialogueText] = useState('¡Hola aventurero! Recoge la gema.');
   const [npcNameText, setNpcNameText] = useState('Guía Nexus-7');
   const [cloudinaryAssetUrl, setCloudinaryAssetUrl] = useState('');
+  
+  // Advanced Terrain Editor State
+  const [terrainBrushRadius, setTerrainBrushRadius] = useState(5);
+  const [terrainBrushIntensity, setTerrainBrushIntensity] = useState(1);
+  const [nexusAIPrompt, setNexusAIPrompt] = useState('');
   
   const [mapProps, setMapProps] = useState<any>({
     skyPreset: initialTemplate === 'Zombie Survival 3D' ? 'night' : initialTemplate === 'Racing 3D' ? 'sunset' : initialTemplate === 'Platformer 3D' ? 'noon' : initialTemplate === 'Adventure 3D' ? 'forest' : 'noon',
@@ -2792,7 +2820,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
       id: clonedId,
       position: [model.position[0] + 3, model.position[1], model.position[2] + 3]
     };
-    setObjects([...objects, clonedObj]);
+    updateObjectsWithHistory([...objects, clonedObj]);
     setSelectedId(clonedId);
     audio3D.playScoreUp();
   };
@@ -2931,6 +2959,21 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
       <div className="flex-1 flex overflow-hidden relative">
           
+          {mode === 'edit' && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-[#0b0f19]/80 backdrop-blur-md p-2 rounded-2xl border border-white/10 shadow-[0_0_30px_rgba(34,211,238,0.1)] pointer-events-auto">
+                <button onClick={handleUndo} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all cursor-pointer" title="Deshacer (Undo)"><RotateCcw className="w-5 h-5" /></button>
+                <div className="w-px h-6 bg-white/10 mx-1"></div>
+                <button onClick={cloneSelection} className="p-2 bg-white/5 hover:bg-cyan-500/20 rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer border border-transparent hover:border-cyan-500/30" title="Duplicar Objeto Seleccionado"><Copy className="w-5 h-5" /></button>
+                <div className="w-px h-6 bg-white/10 mx-1"></div>
+                <button onClick={() => {
+                  if(selectedId) {
+                    updateObjectsWithHistory(objects.filter(o => o.id !== selectedId));
+                    setSelectedId(null);
+                  }
+                }} className="p-2 bg-white/5 hover:bg-rose-500/20 rounded-xl text-rose-500 hover:text-rose-400 transition-all cursor-pointer border border-transparent hover:border-rose-500/30" title="Eliminar Objeto"><Trash2 className="w-5 h-5" /></button>
+            </div>
+          )}
+
           <Canvas shadows={qualityMode !== 'low'} camera={{ position: [0, 6, 14], fov: 70 }}>
             <color 
               attach="background" 
@@ -3216,7 +3259,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
                   {/* Settings tab selector buttons */}
                   <div className="flex overflow-x-auto gap-1 border-b border-white/5 pb-2 flex-shrink-0 no-scrollbar select-none">
-                    {((["bioma", "scripting", "assets", "terreno", "inspector", "gameplay"] as const)).map((tab) => (
+                    {((["bioma", "scripting", "assets", "terreno", "inspector", "gameplay", "nexus-ai"] as const)).map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setEditorTab(tab as any)}
@@ -3227,6 +3270,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                          tab === 'assets' ? 'MATERIAL' :
                          tab === 'terreno' ? 'TERRENO' :
                          tab === 'gameplay' ? 'JUGADOR' :
+                         tab === 'nexus-ai' ? 'NEXUS AI' :
                          'PROPIEDADES'}
                       </button>
                     ))}
@@ -3234,6 +3278,44 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
                   {/* Settings dynamic tab views */}
                   <div className="flex-1 overflow-y-auto pr-1 no-scrollbar space-y-3.5">
+                    {editorTab === "nexus-ai" && (
+                      <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono">
+                        <div className="flex flex-col items-center justify-center p-3 text-center bg-cyan-500/10 border border-cyan-500/20 rounded-2xl mb-2">
+                          <Sparkles className="w-8 h-8 text-cyan-400 mb-2" />
+                          <h4 className="text-[10px] font-black text-white">NEXUS PLAY AI</h4>
+                          <p className="text-[8px] text-cyan-300/80 mt-1">Tu asistente inteligente en el Editor 3D.</p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-cyan-400 font-bold uppercase">Prompt de Generación</label>
+                          <textarea 
+                            rows={3}
+                            placeholder="Ej: Genera un pequeño campamento militar con 3 muros de acero y un cofre dorado en el centro..."
+                            value={nexusAIPrompt}
+                            onChange={(e) => setNexusAIPrompt(e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 text-white px-2.5 py-1.5 rounded-lg text-xs font-mono focus:border-cyan-500/50 outline-none resize-none"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <button onClick={() => {
+                            if(!nexusAIPrompt.trim()) return;
+                            setShowNotification("Generando estructura por IA... (Simulado)");
+                            setTimeout(() => {
+                              setObjects([...objects, 
+                                { id: "ai_"+Date.now(), type: "wall", shape: "cube", position: [0, 4, -10], scale: [8, 8, 8], color: "#475569", label: "Estructura AI", texture_style: "metal" },
+                                { id: "ai2_"+Date.now(), type: "pickup", position: [0, 1, -10], scale: [1,1,1], color: "#fbbf24", label: "Cofre AI" }
+                              ]);
+                              setShowNotification("Estructura generada.");
+                              setNexusAIPrompt("");
+                            }, 1500);
+                          }} className="w-full bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/40 text-cyan-200 py-1.5 rounded text-[9px] font-bold uppercase cursor-pointer transition-all">
+                            Generar Entorno
+                          </button>
+                          <button className="w-full bg-emerald-500/20 border border-emerald-500/50 hover:bg-emerald-500/40 text-emerald-200 py-1.5 rounded text-[9px] font-bold uppercase cursor-pointer transition-all" title="Asignar lógicas complejas">
+                            Sugerir Lógicas
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {editorTab === "bioma" && (
                       <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono">
                         <div className="space-y-1">
@@ -3405,13 +3487,24 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                         </div>
 
                         <div className="space-y-1.5 mt-1">
-                          <label className="text-[9px] text-cyan-400 font-bold block uppercase border-b border-white/5 pb-1">Levantar Montañas</label>
-                          <div className="grid grid-cols-2 gap-2">
+                          <label className="text-[9px] text-cyan-400 font-bold block uppercase border-b border-white/5 pb-1">Levantar Montañas (Pincel)</label>
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                             <div className="space-y-1">
+                               <label className="text-[8px] text-slate-400">Radio Pincel</label>
+                               <input type="range" min={1} max={15} value={terrainBrushRadius} onChange={(e)=>setTerrainBrushRadius(Number(e.target.value))} className="w-full accent-cyan-400" />
+                             </div>
+                             <div className="space-y-1">
+                               <label className="text-[8px] text-slate-400">Intensidad</label>
+                               <input type="range" min={1} max={5} value={terrainBrushIntensity} onChange={(e)=>setTerrainBrushIntensity(Number(e.target.value))} className="w-full accent-emerald-400" />
+                             </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-2">
                             <button 
-                              onClick={() => setObjects([...objects, { id: "m_"+Date.now(), type: "nature", nature_type: "mountain", position: [0, 0, 0], scale: [8, 8, 8], color: "#475569", label: "Montaña Rocosa" }])} 
+                              onClick={() => setObjects([...objects, { id: "m_"+Date.now(), type: "nature", nature_type: "mountain", position: [0, 0, 0], scale: [terrainBrushRadius*2, terrainBrushIntensity*4, terrainBrushRadius*2], color: "#475569", label: "Montaña Generada" }])} 
                               className="bg-white/5 hover:bg-white/10 p-2 rounded-xl text-white text-[9px] cursor-pointer text-center"
                             >
-                              Añadir Montaña
+                              Aplicar Pincel
                             </button>
                             <button 
                               onClick={() => setObjects(objects.filter(o => o.nature_type !== 'mountain'))} 

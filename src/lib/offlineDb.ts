@@ -8,6 +8,7 @@ export interface OfflineGame {
   category: string;
   rating: number;
   icon?: string;
+  description?: string;
   lastPlayed?: string;
   playCount?: number;
 }
