@@ -1855,7 +1855,7 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
     rayleigh = 0.1;
   }
 
-  const floorTextureType = isSurvival ? 'grass' : isRacing ? 'road' : isPlatformer ? 'grid' : isAdventure ? 'grass' : 'grid';
+  const floorTextureType = mapProps?.floorTexture || (isSurvival ? 'grass' : isRacing ? 'road' : isPlatformer ? 'grid' : isAdventure ? 'grass' : 'grid');
   const floorBaseTexture = getProceduralTexture(floorTextureType);
 
   const floorTexture = useMemo(() => {
@@ -1936,7 +1936,7 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial 
           map={floorTexture}
-          color={skyPreset === 'forest' ? '#15803d' : skyPreset === 'desert' ? '#eab308' : skyPreset === 'nuclear' ? '#052e16' : skyPreset === 'night' ? '#111827' : '#0284c7'} 
+          color="#ffffff"
           roughness={0.85} 
           metalness={0.1}
         />
@@ -2482,6 +2482,103 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
   // Stats for the live Speed HUD
   const [racingHUD, setRacingHUD] = useState({ speed: 0, lap: 1, best: 99.9 });
+
+  const handleAIGeneration = () => {
+    if(!nexusAIPrompt.trim()) return;
+    setShowNotification("Analizando prompt con Nexus AI...");
+    
+    setTimeout(() => {
+      const p = nexusAIPrompt.toLowerCase();
+      let generatedObjects: GameObject3D[] = [...objects];
+      let newMapProps = { ...mapProps };
+      
+      if (p.includes("desolado") || p.includes("apocal") || p.includes("ruin") || p.includes("destruido")) {
+         newMapProps.skyPreset = "nuclear";
+         newMapProps.floorTexture = "concrete";
+         newMapProps.fogColor = "#1f2937";
+         newMapProps.fogDensity = 15;
+         
+         const spread = 20;
+         for(let i=0; i<8; i++) {
+            generatedObjects.push({
+               id: "ai_ruin_"+Date.now()+"_"+i,
+               type: "wall", shape: "cube",
+               position: [(Math.random()-0.5)*spread, 3, (Math.random()-0.5)*spread],
+               scale: [Math.random()*4+2, Math.random()*6+2, Math.random()*2+1],
+               rotation: [0, Math.random()*Math.PI, 0],
+               color: "#475569", label: "Muro Destruido", texture_style: "ruins"
+            });
+         }
+         setShowNotification("Mundo desolado post-apocalíptico generado.");
+         
+      } else if (p.includes("bosque") || p.includes("naturaleza") || p.includes("verde") || p.includes("forest")) {
+         newMapProps.skyPreset = "forest";
+         newMapProps.floorTexture = "grass";
+         newMapProps.fogColor = "#14532d";
+         newMapProps.fogDensity = 18;
+         
+         const spread = 35;
+         for(let i=0; i<15; i++) {
+            generatedObjects.push({
+               id: "ai_tree_"+Date.now()+"_"+i,
+               type: "nature", nature_type: "tree",
+               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
+               scale: [Math.random()*0.5+0.8, Math.random()*0.8+1, Math.random()*0.5+0.8],
+               color: "#16a34a", label: "Árbol Generado"
+            });
+         }
+         setShowNotification("Bosque frondoso generado.");
+         
+      } else if (p.includes("ciudad") || p.includes("urbano") || p.includes("city")) {
+         newMapProps.skyPreset = "sunset";
+         newMapProps.floorTexture = "road";
+         newMapProps.fogColor = "#0f172a";
+         newMapProps.fogDensity = 25;
+         
+         for (let x = -20; x <= 20; x+= 10) {
+            for (let z = -20; z <= 20; z+= 15) {
+               if(Math.random() > 0.3) {
+                  generatedObjects.push({
+                     id: "ai_bldg_"+Date.now()+"_"+x+"_"+z,
+                     type: "wall", shape: "cube",
+                     position: [x, Math.random()*5+5, z],
+                     scale: [6, Math.random()*10+8, 6],
+                     color: Math.random() > 0.5 ? "#1e293b" : "#475569", 
+                     label: "Edificio", texture_style: "metal"
+                  });
+               }
+            }
+         }
+         setShowNotification("Zona urbana generada.");
+         
+      } else if (p.includes("desierto") || p.includes("arena") || p.includes("desert") || p.includes("calor")) {
+         newMapProps.skyPreset = "desert";
+         newMapProps.floorTexture = "sand";
+         newMapProps.fogColor = "#78350f";
+         newMapProps.fogDensity = 15;
+         
+         const spread = 40;
+         for(let i=0; i<12; i++) {
+            generatedObjects.push({
+               id: "ai_d_rock_"+Date.now()+"_"+i,
+               type: "nature", nature_type: "rock",
+               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
+               scale: [Math.random()*4+2, Math.random()*3+2, Math.random()*4+2],
+               color: "#9a3412", label: "Roca Desértica"
+            });
+         }
+         setShowNotification("Desierto árido generado.");
+         
+      } else {
+         generatedObjects.push({ id: "ai_"+Date.now(), type: "wall", shape: "cube", position: [0, 4, -10], scale: [8, 8, 8], color: "#475569", label: "Estructura AI", texture_style: "metal" });
+         setShowNotification("Estructura base generada por IA.");
+      }
+      
+      setMapProps(newMapProps);
+      updateObjectsWithHistory(generatedObjects);
+      setNexusAIPrompt("");
+    }, 1500);
+  };
 
   useEffect(() => {
      async function loadAll() {
@@ -3258,12 +3355,12 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                   </div>
 
                   {/* Settings tab selector buttons */}
-                  <div className="flex overflow-x-auto gap-1 border-b border-white/5 pb-2 flex-shrink-0 no-scrollbar select-none">
-                    {((["bioma", "scripting", "assets", "terreno", "inspector", "gameplay", "nexus-ai"] as const)).map((tab) => (
+                  <div className="flex overflow-x-auto gap-2 border-b border-white/5 pb-3 pt-1 flex-shrink-0 no-scrollbar select-none snap-x active:cursor-grabbing">
+                    {((["nexus-ai", "bioma", "terreno", "gameplay", "inspector", "assets", "scripting"] as const)).map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setEditorTab(tab as any)}
-                        className={editorTab === tab ? "text-[8px] px-2 py-1 rounded border font-black font-mono tracking-wide uppercase transition-all bg-cyan-500/20 text-cyan-300 border-cyan-400/45 shrink-0" : "text-[8px] px-2 py-1 rounded border font-black font-mono tracking-wide uppercase transition-all bg-transparent text-gray-500 border-transparent hover:text-white hover:bg-white/5 shrink-0"}
+                        className={editorTab === tab ? "text-[10px] px-3 py-1.5 rounded-lg border font-black font-mono tracking-wide uppercase transition-all bg-cyan-500/20 text-cyan-300 border-cyan-400/45 shrink-0 snap-center min-w-[70px]" : "text-[10px] px-3 py-1.5 rounded-lg border font-black font-mono tracking-wide uppercase transition-all bg-transparent text-gray-400 border-transparent hover:text-white hover:bg-white/5 shrink-0 snap-center min-w-[70px]"}
                       >
                         {tab === 'bioma' ? 'MUNDO' :
                          tab === 'scripting' ? 'LÓGICA' :
@@ -3296,23 +3393,38 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-2 mt-1">
-                          <button onClick={() => {
-                            if(!nexusAIPrompt.trim()) return;
-                            setShowNotification("Generando estructura por IA... (Simulado)");
-                            setTimeout(() => {
-                              setObjects([...objects, 
-                                { id: "ai_"+Date.now(), type: "wall", shape: "cube", position: [0, 4, -10], scale: [8, 8, 8], color: "#475569", label: "Estructura AI", texture_style: "metal" },
-                                { id: "ai2_"+Date.now(), type: "pickup", position: [0, 1, -10], scale: [1,1,1], color: "#fbbf24", label: "Cofre AI" }
-                              ]);
-                              setShowNotification("Estructura generada.");
-                              setNexusAIPrompt("");
-                            }, 1500);
-                          }} className="w-full bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/40 text-cyan-200 py-1.5 rounded text-[9px] font-bold uppercase cursor-pointer transition-all">
+                          <button id="ai-gen-btn" onClick={handleAIGeneration} className="w-full bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/40 text-cyan-200 py-1.5 rounded text-[9px] font-bold uppercase cursor-pointer transition-all">
                             Generar Entorno
                           </button>
                           <button className="w-full bg-emerald-500/20 border border-emerald-500/50 hover:bg-emerald-500/40 text-emerald-200 py-1.5 rounded text-[9px] font-bold uppercase cursor-pointer transition-all" title="Asignar lógicas complejas">
                             Sugerir Lógicas
                           </button>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-white/5 space-y-1">
+                           <label className="text-[9px] text-cyan-400 font-bold uppercase block text-center mb-2">Generación Rápida</label>
+                           <div className="grid grid-cols-2 gap-2">
+                             {[
+                               { label: "Mundo Desolado", prompt: "Mundo desolado post-apocalíptico en ruinas" },
+                               { label: "Bosque Verde", prompt: "Bosque natural verde frondoso" },
+                               { label: "Ciudad Urbana", prompt: "Ciudad urbana con edificios altos de acero" },
+                               { label: "Desierto Árido", prompt: "Desierto cálido con dunas de arena rojiza" },
+                             ].map(b => (
+                               <button 
+                                 key={b.label}
+                                 onClick={() => {
+                                    setNexusAIPrompt(b.prompt);
+                                    // small delay to let state update before generation runs
+                                    setTimeout(() => {
+                                       document.getElementById('ai-gen-btn')?.click();
+                                    }, 50);
+                                 }}
+                                 className="bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/50 py-2 rounded-xl text-[8.5px] font-bold text-slate-300 hover:text-cyan-300 uppercase cursor-pointer transition-all"
+                               >
+                                 {b.label}
+                               </button>
+                             ))}
+                           </div>
                         </div>
                       </div>
                     )}
@@ -3470,20 +3582,36 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
                     {editorTab === "terreno" && (
                       <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono">
-                        <div className="space-y-1">
-                          <label className="text-[9px] text-cyan-400 font-bold uppercase">Suelo Texturizado de Base</label>
-                          <select 
-                            value={mapProps?.floorTexture || 'grid'} 
-                            onChange={(e) => setMapProps({...mapProps, floorTexture: e.target.value})}
-                            className="w-full bg-slate-900 border border-white/10 text-white px-2.5 py-1.5 rounded-lg text-xs font-mono focus:outline-none"
-                          >
-                            <option value="grass">Hermosa Hierba 3D (PBR-Style)</option>
-                            <option value="dirt">Tierra del Bosque</option>
-                            <option value="sand">Arena Desértica Ondulada</option>
-                            <option value="snow">Nieve Invernal</option>
-                            <option value="concrete">Concreto Industrial</option>
-                            <option value="grid">Líneas de Grid Teñidas</option>
-                          </select>
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-cyan-400 font-bold uppercase block">Materiales de Terreno Base</label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {[
+                              { id: 'grass', name: 'Hierba 3D', color: '#16a34a' },
+                              { id: 'dirt', name: 'Tierra Base', color: '#78350f' },
+                              { id: 'sand', name: 'Arena Duna', color: '#f59e0b' },
+                              { id: 'snow', name: 'Nieve', color: '#f8fafc' },
+                              { id: 'rock', name: 'Roca', color: '#475569' },
+                              { id: 'lava', name: 'Lava Activa', color: '#ef4444' },
+                              { id: 'concrete', name: 'Concreto', color: '#64748b' },
+                              { id: 'grid', name: 'Líneas Grid', color: '#0ea5e9' },
+                              { id: 'neon', name: 'Neon Sci-Fi', color: '#a21caf' },
+                            ].map(t => (
+                              <button 
+                                key={t.id} 
+                                onClick={() => setMapProps({...mapProps, floorTexture: t.id})}
+                                className={`p-2 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all outline-none touch-manipulation cursor-pointer border ${
+                                  (mapProps?.floorTexture || 'grid') === t.id 
+                                  ? 'border-cyan-400 bg-cyan-900/40 shadow-[0_0_15px_rgba(34,211,238,0.2)] scale-[1.02]' 
+                                  : 'border-white/5 bg-black/40 hover:bg-white/5 opacity-80'
+                                }`}
+                              >
+                                <div className="w-6 h-6 rounded-md shadow-inner" style={{ backgroundColor: t.color }}></div>
+                                <span className={`text-[9px] font-extrabold text-center uppercase tracking-wider ${
+                                  (mapProps?.floorTexture || 'grid') === t.id ? 'text-cyan-300' : 'text-slate-400'
+                                }`}>{t.name}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
                         <div className="space-y-1.5 mt-1">
