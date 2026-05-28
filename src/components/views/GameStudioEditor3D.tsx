@@ -2318,42 +2318,89 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
 
 const libraryCategories = [
   {
-    title: "CONSTRUCCIÓN",
+    title: "🧱 CONSTRUCCIÓN BÁSICA",
     items: [
       { label: "Pared Concreto", type: "wall", shape: "cube", scale: [4, 4, 1], color: "#475569", texture_style: "concrete" },
       { label: "Piso Firme", type: "wall", shape: "cube", scale: [6, 1, 6], color: "#334155", texture_style: "metal" },
-      { label: "Techo Estelar", type: "wall", shape: "cube", scale: [6, 0.5, 6], color: "#1e1b4b", texture_style: "grid" },
-      { label: "Pilar Neón", type: "wall", shape: "cube", scale: [1, 3, 1], color: "#8b5cf6", texture_style: "neon" },
-      { label: "Pedestal Antiguo", type: "wall", shape: "cylinder", scale: [1.2, 2.5, 1.2], color: "#94a3b8", texture_style: "ruins" },
+      { label: "Pared Ladrillo Clásico", type: "wall", shape: "cube", scale: [4, 4, 1], color: "#991b1b", texture_style: "ruins" },
+      { label: "Muro Metal Sci-Fi", type: "wall", shape: "cube", scale: [4, 4, 1], color: "#1e293b", texture_style: "neon" },
+      { label: "Pared Madera Roble", type: "wall", shape: "cube", scale: [4, 4, 1], color: "#854d0e", texture_style: "concrete" },
+      { label: "Cristal Blindado", type: "wall", shape: "cube", scale: [4, 4, 0.2], color: "#38bdf8", texture_style: "neon" },
+      { label: "Columna Romana", type: "wall", shape: "cylinder", scale: [1, 5, 1], color: "#f8fafc", texture_style: "concrete" },
+      { label: "Viga Acero", type: "wall", shape: "cube", scale: [0.5, 6, 0.5], color: "#334155", texture_style: "metal" },
+      { label: "Rampa Subida", type: "wall", shape: "cube", scale: [4, 1, 6], rotation: [0.5, 0, 0], color: "#475569", texture_style: "concrete" },
+      { label: "Pilar Neón Cyber", type: "wall", shape: "cube", scale: [1, 4, 1], color: "#8b5cf6", texture_style: "neon" },
     ]
   },
   {
-    title: "PROP & INTERACTIVOS",
+    title: "🌲 NATURALEZA Y BIOMAS",
     items: [
-      { label: "Bloque de Agua", type: "water", scale: [8, 1, 8], color: "#0ea5e9" },
-      { label: "Cofre Dorado", type: "pickup", scale: [1, 1, 1], color: "#fbbf24" },
-      { label: "Punto Respawn", type: "checkpoint", scale: [1, 1, 1], color: "#10b981" },
-      { label: "Coche Deportivo", type: "vehicle", scale: [1, 1, 1], color: "#ef4444" },
-      { label: "Emisor Luz", type: "light", scale: [1, 1, 1], color: "#38bdf8" },
+      { label: "Pino Frondoso", type: "nature", nature_type: "tree", scale: [1.5, 1.5, 1.5], color: "#166534" },
+      { label: "Palmera Tropical", type: "nature", nature_type: "tree", scale: [1.2, 2.0, 1.2], color: "#65a30d" },
+      { label: "Roca Volcánica", type: "nature", nature_type: "rock", scale: [2.5, 2.5, 2.5], color: "#1c1917" },
+      { label: "Piedra Simple", type: "nature", nature_type: "rock", scale: [1.2, 0.8, 1.2], color: "#64748b" },
+      { label: "Arbusto Silvestre", type: "nature", nature_type: "bush", scale: [1.2, 1.2, 1.2], color: "#15803d" },
+      { label: "Cactus Desierto", type: "nature", nature_type: "tree", scale: [0.8, 1.2, 0.8], color: "#4d7c0f" },
+      { label: "Montaña Rocosa", type: "nature", nature_type: "mountain", scale: [8, 8, 8], color: "#475569" },
+      { label: "Volcán", type: "nature", nature_type: "mountain", scale: [10, 10, 10], color: "#7f1d1d" },
+      { label: "Bloque de Agua", type: "water", scale: [12, 1, 12], color: "#0ea5e9" },
+      { label: "Bloque de Lava", type: "water", scale: [12, 1, 12], color: "#ea580c" },
     ]
   },
   {
-    title: "NATURALEZA",
+    title: "🏠 ESTRUCTURAS PREFAB",
     items: [
-      { label: "Pino Frondoso", type: "nature", nature_type: "tree", scale: [1.2, 1.2, 1.2], color: "#166534" },
-      { label: "Roca Volcánica", type: "nature", nature_type: "rock", scale: [1.8, 1.8, 1.8], color: "#475569" },
-      { label: "Arbusto Silvestre", type: "nature", nature_type: "bush", scale: [1, 1, 1], color: "#15803d" },
-      { label: "Caja de Suministro", type: "nature", nature_type: "crate", scale: [1.1, 1.1, 1.1], color: "#78350f" },
+      { label: "Cabaña Madera", type: "wall", shape: "cube", scale: [10, 6, 8], color: "#78350f", texture_style: "concrete" },
+      { label: "Casa Base", type: "wall", shape: "cube", scale: [12, 8, 12], color: "#94a3b8", texture_style: "concrete" },
+      { label: "Torre Vigía", type: "wall", shape: "cylinder", scale: [4, 15, 4], color: "#475569", texture_style: "metal" },
+      { label: "Bunker Militar", type: "wall", shape: "cube", scale: [15, 5, 15], color: "#1e293b", texture_style: "metal" },
+      { label: "Edificio Sci-Fi", type: "wall", shape: "cube", scale: [12, 25, 12], color: "#0f172a", texture_style: "neon" },
+      { label: "Castillo Muro", type: "wall", shape: "cube", scale: [8, 8, 2], color: "#64748b", texture_style: "ruins" },
+    ]
+  },
+  {
+    title: "👾 ENEMIGOS Y FAUNA",
+    items: [
+      { label: "Mutante Zombie", type: "enemy", enemy_type: "zombie", scale: [1.1, 1.1, 1.1], color: "#047857" },
+      { label: "Zombi Corredor", type: "enemy", enemy_type: "zombie", scale: [0.9, 0.9, 0.9], color: "#065f46" },
+      { label: "Cyborg Spider", type: "enemy", enemy_type: "cyborg", scale: [1.2, 1.2, 1.2], color: "#334155" },
+      { label: "Alien Soldado", type: "enemy", enemy_type: "cyborg", scale: [1.1, 1.1, 1.1], color: "#6d28d9" },
+      { label: "Jefe Golem", type: "enemy", enemy_type: "boss", scale: [2.5, 2.5, 2.5], color: "#b91c1c" },
       { label: "Lobo Voxel", type: "nature", nature_type: "animal", scale: [1, 1, 1], color: "#78716c" },
+      { label: "Oso Salvaje", type: "nature", nature_type: "animal", scale: [1.5, 1.5, 1.5], color: "#451a03" },
     ]
   },
   {
-    title: "IA Y ENEMIGOS",
+    title: "🚗 VEHÍCULOS",
     items: [
-      { label: "Mutante Zombie", type: "enemy", enemy_type: "zombie", scale: [1, 1, 1], color: "#047857" },
-      { label: "Cyborg Spider", type: "enemy", enemy_type: "cyborg", scale: [1.1, 1.1, 1.1], color: "#475569" },
-      { label: "Jefe Golem", type: "enemy", enemy_type: "boss", scale: [1.8, 1.8, 1.8], color: "#b91c1c" },
-      { label: "NPC Nexus-7", type: "npc", npc_name: "Guía Nexus-7", npc_dialog: "Presiona para hablar.", scale: [1, 1, 1], color: "#c084fc" },
+      { label: "Deportivo Turbo", type: "vehicle", scale: [2, 1, 4], color: "#ef4444" },
+      { label: "Coche Policía", type: "vehicle", scale: [2, 1.2, 4.2], color: "#0284c7" },
+      { label: "Camión Blindado", type: "vehicle", scale: [2.5, 2, 6], color: "#1e293b" },
+      { label: "Tanque Militar", type: "vehicle", scale: [3, 2.5, 5], color: "#4d7c0f" },
+      { label: "Nave Deslizadora", type: "vehicle", scale: [2.5, 0.5, 3.5], color: "#f59e0b" },
+    ]
+  },
+  {
+    title: "📦 PROP & BOTINES",
+    items: [
+      { label: "Cofre Dorado", type: "pickup", scale: [1, 1, 1], color: "#fbbf24" },
+      { label: "Botiquín Salud", type: "pickup", scale: [0.8, 0.8, 0.8], color: "#10b981", pickup_type: "health" },
+      { label: "Caja Munición", type: "pickup", scale: [0.8, 0.5, 0.8], color: "#475569", pickup_type: "ammo" },
+      { label: "Caja Suministro", type: "nature", nature_type: "crate", scale: [1.2, 1.2, 1.2], color: "#78350f" },
+      { label: "Barril Explosivo", type: "nature", nature_type: "crate", scale: [1, 1.2, 1], color: "#b91c1c" },
+      { label: "Emisor Luz Simple", type: "light", scale: [1, 1, 1], color: "#fef08a" },
+      { label: "Luz Alerta Roja", type: "light", scale: [1, 1, 1], color: "#ef4444" },
+    ]
+  },
+  {
+    title: "⚙️ LÓGICA & NPCS",
+    items: [
+      { label: "Punto Respawn", type: "checkpoint", scale: [1.5, 1.5, 1.5], color: "#10b981" },
+      { label: "Zona Final / Meta", type: "finish", scale: [2, 2, 2], color: "#f59e0b" },
+      { label: "Trigger Oculto", type: "trigger", scale: [2, 2, 2], color: "#ec4899" },
+      { label: "Comerciante Místico", type: "npc", npc_name: "Zeal el Sabio", npc_dialog: "Te vendo armas épicas...", scale: [1.1, 1.1, 1.1], color: "#c084fc" },
+      { label: "Soldado Aliado", type: "npc", npc_name: "Sgto. Rex", npc_dialog: "¡Cúbreme, avanzamos!", scale: [1, 1, 1], color: "#3b82f6" },
+      { label: "Civil Asustado", type: "npc", npc_name: "Sobreviviente", npc_dialog: "¡Ayúdame, vienen por mí!", scale: [1, 1, 1], color: "#fca5a5" },
     ]
   }
 ];
@@ -2375,7 +2422,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
   const [liveFps, setLiveFps] = useState(60);
 
   // States for the Visual Game Studio Editor
-  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets' | 'terreno' | 'inspector'>('entidades');
+  const [editorTab, setEditorTab] = useState<'entidades' | 'bioma' | 'scripting' | 'assets' | 'terreno' | 'inspector' | 'gameplay'>('bioma');
   const [npcDialogueText, setNpcDialogueText] = useState('¡Hola aventurero! Recoge la gema.');
   const [npcNameText, setNpcNameText] = useState('Guía Nexus-7');
   const [cloudinaryAssetUrl, setCloudinaryAssetUrl] = useState('');
@@ -3169,17 +3216,18 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
                   {/* Settings tab selector buttons */}
                   <div className="flex overflow-x-auto gap-1 border-b border-white/5 pb-2 flex-shrink-0 no-scrollbar select-none">
-                    {((["bioma", "scripting", "assets", "terreno", "inspector"] as const)).map((tab) => (
+                    {((["bioma", "scripting", "assets", "terreno", "inspector", "gameplay"] as const)).map((tab) => (
                       <button
                         key={tab}
-                        onClick={() => setEditorTab(tab)}
+                        onClick={() => setEditorTab(tab as any)}
                         className={editorTab === tab ? "text-[8px] px-2 py-1 rounded border font-black font-mono tracking-wide uppercase transition-all bg-cyan-500/20 text-cyan-300 border-cyan-400/45 shrink-0" : "text-[8px] px-2 py-1 rounded border font-black font-mono tracking-wide uppercase transition-all bg-transparent text-gray-500 border-transparent hover:text-white hover:bg-white/5 shrink-0"}
                       >
-                        {tab === 'bioma' ? 'ENTORNO' :
-                         tab === 'scripting' ? 'REGLAS' :
-                         tab === 'assets' ? 'TEXTURAS' :
-                         tab === 'terreno' ? 'SUELO' :
-                         'ESCENA'}
+                        {tab === 'bioma' ? 'MUNDO' :
+                         tab === 'scripting' ? 'LÓGICA' :
+                         tab === 'assets' ? 'MATERIAL' :
+                         tab === 'terreno' ? 'TERRENO' :
+                         tab === 'gameplay' ? 'JUGADOR' :
+                         'PROPIEDADES'}
                       </button>
                     ))}
                   </div>
@@ -3376,6 +3424,49 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                       </div>
                     )}
 
+                    {editorTab === "gameplay" && (
+                      <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono">
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-cyan-400 font-bold uppercase">Sistema de Supervivencia</label>
+                          <select className="w-full bg-slate-900 border border-white/10 text-white px-2.5 py-1.5 rounded-lg text-xs font-mono">
+                            <option>Desactivado (Clásico)</option>
+                            <option>Completo (Hambre, Sed, Temperatura)</option>
+                            <option>Ligero (Solo Daño por Caída)</option>
+                          </select>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-cyan-400 font-bold uppercase">Inventario y Crafteo</label>
+                          <select className="w-full bg-slate-900 border border-white/10 text-white px-2.5 py-1.5 rounded-lg text-xs font-mono">
+                            <option>Ninguno (Shooter Simple)</option>
+                            <option>Hotbar de 9 Slots</option>
+                            <option>Mochila Completa (Con Crafteo)</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5 mt-1">
+                          <label className="text-[9px] text-cyan-400 font-bold block uppercase border-b border-white/5 pb-1">ESTADÍSTICAS DEL JUGADOR</label>
+                          
+                          <div className="flex justify-between items-center text-[9px]">
+                             <span>Velocidad de Mov.</span>
+                             <input type="number" defaultValue="8" className="w-12 bg-black border border-white/10 px-1 py-0.5 rounded text-center text-cyan-400" />
+                          </div>
+                          <div className="flex justify-between items-center text-[9px]">
+                             <span>Fuerza de Salto</span>
+                             <input type="number" defaultValue="14" className="w-12 bg-black border border-white/10 px-1 py-0.5 rounded text-center text-cyan-400" />
+                          </div>
+                          <div className="flex justify-between items-center text-[9px]">
+                             <span>Salud Máxima</span>
+                             <input type="number" defaultValue="100" className="w-12 bg-black border border-white/10 px-1 py-0.5 rounded text-center text-emerald-400" />
+                          </div>
+                          <div className="flex justify-between items-center text-[9px]">
+                             <span>Stamina Máxima</span>
+                             <input type="number" defaultValue="100" className="w-12 bg-black border border-white/10 px-1 py-0.5 rounded text-center text-yellow-400" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {editorTab === "inspector" && (
                       <div className="flex flex-col gap-3 text-xs text-slate-300 font-mono h-full">
                         <div className="text-[9px] text-cyan-300 font-bold tracking-wider uppercase border-b border-white/5 pb-1">Lista de Escena ({objects.length})</div>
@@ -3510,34 +3601,59 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                              </div>
                              
                              <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/5 col-span-3">
-                               <span className="text-slate-400">Color</span>
+                               <span className="text-slate-400">Color Base</span>
                                <div className="flex gap-1">
-                                 {["#1e293b", "#047857", "#fbbf24", "#06b6d4", "#dc2626"].map(c => (
+                                 {["#ffffff", "#1e293b", "#047857", "#fbbf24", "#06b6d4", "#dc2626"].map(c => (
                                    <button 
                                      key={c} 
                                      onClick={() => setObjects(objects.map(o => o.id===obj.id ? {...o, color: c} : o))}
-                                     className={`w-3.5 h-3.5 rounded-full border ${obj.color === c ? 'border-cyan-400 scale-110' : 'border-transparent'}`}
+                                     className={`w-3.5 h-3.5 rounded-full border ${obj.color === c ? 'border-cyan-400 scale-110 shadow-[0_0_5px_rgba(34,211,238,0.8)]' : 'border-white/20'}`}
                                      style={{ backgroundColor: c }}
                                    />
                                  ))}
+                                 <input 
+                                   type="color" 
+                                   value={obj.color} 
+                                   onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, color: e.target.value} : o))}
+                                   className="w-4 h-4 ml-1 p-0 border-0 rounded cursor-pointer bg-transparent"
+                                 />
                                </div>
                              </div>
 
+                             <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/5 col-span-3">
+                               <span className="text-slate-400">Rotación Y</span>
+                               <input 
+                                 type="range" 
+                                 min="0" 
+                                 max={Math.PI * 2} 
+                                 step={0.1}
+                                 value={obj.rotation ? obj.rotation[1] : 0} 
+                                 onChange={(e) => {
+                                   const val = parseFloat(e.target.value);
+                                   setObjects(objects.map(o => o.id===obj.id ? {...o, rotation: [0, val, 0]} : o));
+                                 }}
+                                 className="w-24 h-1 accent-cyan-400 bg-slate-800 rounded appearance-none"
+                               />
+                             </div>
+
                              {obj.type === "wall" && (
-                               <div className="grid grid-cols-2 gap-1 px-1">
-                                 <span className="text-slate-400 flex items-center">Textura:</span>
-                                 <select 
-                                   value={obj.texture_style || "neon"} 
-                                   onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, texture_style: e.target.value} : o))}
-                                   className="w-full bg-slate-950 border border-white/5 text-white text-[9px]"
-                                 >
-                                   <option value="neon">NEON MATRIX</option>
-                                   <option value="grid">VECTOR GRID</option>
-                                   <option value="metal">SCI-FI METAL</option>
-                                   <option value="lava">MOLTEN LAVA</option>
-                                   <option value="ruins">ANCIENT STONE</option>
-                                 </select>
-                               </div>
+                               <>
+                                 <div className="grid grid-cols-2 gap-1 px-1">
+                                   <span className="text-slate-400 flex items-center">Textura:</span>
+                                   <select 
+                                     value={obj.texture_style || "neon"} 
+                                     onChange={(e) => setObjects(objects.map(o => o.id===obj.id ? {...o, texture_style: e.target.value} : o))}
+                                     className="w-full bg-slate-950 border border-white/5 text-white text-[9px]"
+                                   >
+                                     <option value="concrete">HORMIGÓN PBR</option>
+                                     <option value="neon">NEON MATRIX</option>
+                                     <option value="grid">VECTOR GRID</option>
+                                     <option value="metal">SCI-FI METAL</option>
+                                     <option value="lava">MOLTEN LAVA</option>
+                                     <option value="ruins">ANCIENT STONE</option>
+                                   </select>
+                                 </div>
+                               </>
                              )}
 
                              {obj.type === "nature" && (
