@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, CreditCard, Wifi, RefreshCw, Trash2, Bell, Palette, Globe, ChevronLeft, Save, Settings, Monitor } from 'lucide-react';
+import { User, Lock, CreditCard, Wifi, RefreshCw, Trash2, Bell, Palette, Globe, ChevronLeft, Save, Settings, Monitor, Download, Smartphone, Cpu, Gamepad2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { SupportEmailBox } from '../SupportEmailBox';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -8,7 +9,7 @@ interface SettingsViewProps {
 }
 
 export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
-  const [activeTab, setActiveTab] = useState<'account' | 'downloads' | 'privacy' | 'interface'>('account');
+  const [activeTab, setActiveTab] = useState<'interface' | 'notifications' | 'account' | 'privacy' | 'app' | 'games-hub' | 'nexus-ai' | 'pwa' | 'advanced'>('interface');
   const [toastMessage, setToastMessage] = useState('');
 
   const showToast = (msg: string) => {
@@ -93,34 +94,38 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="fixed inset-0 z-[100] bg-[#0a0b14]/95 backdrop-blur-2xl overflow-y-auto">
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="pt-24 px-4 sm:px-6 max-w-6xl mx-auto pb-16 min-h-[80vh]">
       {toastMessage && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-black px-6 py-3 rounded-full font-bold shadow-lg z-[110]">
           {toastMessage}
         </div>
       )}
       
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-[#0a0b14]/90 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between shadow-lg">
-        <button onClick={onBack} className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-xl transition-all border border-transparent hover:border-cyan-500/30">
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Volver al Perfil
-        </button>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-white/5 gap-4">
         <div className="flex items-center gap-3">
-          <Settings className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Configuración</h1>
+          <Settings className="w-8 h-8 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Configuración</h1>
         </div>
+        <button onClick={onBack} className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-xl transition-all border border-transparent hover:border-cyan-500/30">
+          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Volver
+        </button>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 pt-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-64 flex flex-col gap-2">
-            <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={User} label="Gestión de Cuenta" />
-            <TabButton active={activeTab === 'downloads'} onClick={() => setActiveTab('downloads')} icon={DownloadIcon} label="Descargas y Actualizaciones" />
-            <TabButton active={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} icon={Bell} label="Privacidad y Notificaciones" />
-            <TabButton active={activeTab === 'interface'} onClick={() => setActiveTab('interface')} icon={Palette} label="Preferencias de Interfaz" />
+      <div className="flex flex-col md:flex-row gap-8">
+          <div className="w-full md:w-64 flex flex-col gap-2 shrink-0">
+            <TabButton active={activeTab === 'interface'} onClick={() => setActiveTab('interface')} icon={Palette} label="Apariencia" />
+            <TabButton active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} icon={Bell} label="Notificaciones" />
+            <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={User} label="Cuenta" />
+            <TabButton active={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} icon={Lock} label="Privacidad" />
+            <TabButton active={activeTab === 'app'} onClick={() => setActiveTab('app')} icon={Monitor} label="Aplicación" />
+            <TabButton active={activeTab === 'games-hub'} onClick={() => setActiveTab('games-hub')} icon={Gamepad2} label="Games Hub" />
+            <TabButton active={activeTab === 'nexus-ai'} onClick={() => setActiveTab('nexus-ai')} icon={Cpu} label="Nexus AI" />
+            <TabButton active={activeTab === 'pwa'} onClick={() => setActiveTab('pwa')} icon={Smartphone} label="PWA / App" />
+            <TabButton active={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} icon={Settings} label="Avanzado y Soporte" />
           </div>
 
-          <div className="flex-1 glass-panel border border-white/5 rounded-3xl p-6 md:p-8">
+          <div className="flex-1 glass-panel border border-white/5 rounded-3xl p-6 md:p-8 min-h-[600px]">
             {activeTab === 'account' && (
               <div className="space-y-8 animate-in fade-in">
                 <div>
@@ -172,11 +177,11 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
               </div>
             )}
 
-            {activeTab === 'downloads' && (
+            {activeTab === 'app' && (
               <div className="space-y-8 animate-in fade-in">
                 <div>
                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-white"><Wifi className="w-5 h-5 text-cyan-400" /> Preferencia de Red</h3>
-                  <p className="text-gray-400 text-sm mb-4">Elige sobre qué red prefieres descargar e instalar contenido.</p>
+                  <p className="text-gray-400 text-sm mb-4">Elige sobre qué red prefieres descargar e instalar contenido de las apps.</p>
                   <select value={networkPref} onChange={(e) => setNetworkPref(e.target.value)} className="w-full bg-[#0a0b14] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-400 focus:outline-none">
                     <option value="any">Cualquier red</option>
                     <option value="wifi">Solo Wi-Fi</option>
@@ -188,7 +193,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                   <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                     <div>
                       <h4 className="font-bold text-white">Mantener aplicaciones actualizadas</h4>
-                      <p className="text-sm text-gray-400">Descarga e instala las actualizaciones automáticamente en segundo plano.</p>
+                      <p className="text-sm text-gray-400">Descarga e instala actualizaciones automáticamente en segundo plano.</p>
                     </div>
                     <ToggleSwitch isOn={autoUpdate} onToggle={() => setAutoUpdate(!autoUpdate)} />
                   </div>
@@ -204,6 +209,32 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                   <button onClick={clearSearchHistory} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-colors border border-red-500/20">
                     <Trash2 className="w-5 h-5" /> Borrar Historial
                   </button>
+                </div>
+                <div className="h-px bg-white/10" />
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-white"><Lock className="w-5 h-5 text-cyan-400" /> Telemetría</h3>
+                  <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <div>
+                      <h4 className="font-bold text-white">Enviar datos de uso</h4>
+                      <p className="text-sm text-gray-400">Permite recopilar datos anónimos para mejorar la plataforma.</p>
+                    </div>
+                    <ToggleSwitch isOn={false} onToggle={() => {}} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="space-y-8 animate-in fade-in">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-white"><Bell className="w-5 h-5 text-cyan-400" /> Alertas de la Comunidad</h3>
+                  <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+                    <div>
+                      <h4 className="font-bold text-white">Mensajes y Respuestas</h4>
+                      <p className="text-sm text-gray-400">Recibir alertas de la interacción en Nexus Hub.</p>
+                    </div>
+                    <ToggleSwitch isOn={true} onToggle={() => {}} />
+                  </div>
                 </div>
                 <div className="h-px bg-white/10" />
                 <div>
@@ -249,9 +280,37 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                 </div>
               </div>
             )}
+
+            {(activeTab === 'games-hub' || activeTab === 'nexus-ai' || activeTab === 'pwa') && (
+              <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in h-48">
+                <AlertCircle className="w-12 h-12 text-gray-500 mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Configuración Próximamente</h3>
+                <p className="text-gray-400">Sección en proceso. Aquí podrás configurar parámetros exclusivos para {activeTab.replace('-', ' ').toUpperCase()}.</p>
+              </div>
+            )}
+
+            {activeTab === 'advanced' && (
+              <div className="space-y-8 animate-in fade-in">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-white"><Settings className="w-5 h-5 text-cyan-400" /> Información del Sistema</h3>
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 text-sm text-gray-400">
+                     <div className="flex justify-between"><span className="text-gray-500">Versión del Cliente</span><span className="font-mono text-cyan-400">v2.1.0-build.884</span></div>
+                     <div className="flex justify-between"><span className="text-gray-500">Entorno</span><span className="font-mono text-green-400">PRODUCCIÓN</span></div>
+                     <div className="flex justify-between"><span className="text-gray-500">Motor de Renderizado</span><span className="font-mono">React 18 + Vite</span></div>
+                  </div>
+                </div>
+
+                <div className="h-px bg-white/10" />
+
+                <div className="flex flex-col">
+                   <h3 className="text-xl font-bold text-white mb-2">Soporte Técnico Especializado</h3>
+                   <p className="text-sm text-gray-400 mb-6">Usa nuestro correo oficial para resolver problemas de cuenta o problemas avanzados.</p>
+                   <SupportEmailBox category="Requerimiento Avanzado de Cuenta" />
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
     </motion.div>
   );
 }

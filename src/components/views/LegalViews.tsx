@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Send, CheckCircle, Mail, MessageSquare, Tag, User } from 'lucide-react';
 import { motion } from 'motion/react';
+import { SupportEmailBox } from '../SupportEmailBox';
 
 export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   return (
@@ -206,7 +207,8 @@ export function CookiePolicyView({ storeName, onBack }: { storeName: string; onB
 
       <section className="mb-8 p-6 bg-white/5 rounded-2xl border border-white/10">
         <h2 className="text-xl font-bold text-white mb-2">Contacto</h2>
-        <p>Si tienes alguna consulta adicional sobre cómo utilizamos cookies, por favor contacta a nuestro equipo de soporte a través de la sección correspondiente en la plataforma.</p>
+        <p>Si tienes alguna consulta adicional sobre cómo utilizamos cookies, por favor contactanos:</p>
+        <SupportEmailBox category="Dudas Cookies/Privacidad" />
       </section>
     </LegalPage>
   );
@@ -279,11 +281,17 @@ export function AboutView({ storeName, onBack }: { storeName: string; onBack: ()
         </div>
       </section>
 
-      <div className="text-center p-12 bg-cyan-950/20 rounded-3xl border border-cyan-900/30 shadow-[0_0_50px_rgba(34,211,238,0.05)]">
+      <div className="text-center p-12 bg-cyan-950/20 rounded-3xl border border-cyan-900/30 shadow-[0_0_50px_rgba(34,211,238,0.05)] mb-12">
         <h2 className="text-2xl font-bold text-white mb-4">El Futuro de {storeName}</h2>
         <p className="text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">
             Estamos creando algo más grande. Un ecosistema donde creativos y usuarios construyen juntos el siguiente paso de la distribución digital. ¡Gracias por ser parte de este viaje!
         </p>
+      </div>
+
+      <div className="flex flex-col items-center border-t border-white/10 pt-10">
+         <h2 className="text-2xl font-bold text-white mb-2">¿Quieres saber más?</h2>
+         <p className="text-gray-400 mb-6">Estamos aquí para responder tus dudas</p>
+         <SupportEmailBox category="Contacto Web" />
       </div>
 
     </motion.div>
@@ -386,13 +394,12 @@ export function ContactView({ onBack }: { onBack: () => void }) {
         )}
       </div>
 
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[ {title: 'Soporte General', desc: 'support@nexusplay.com'}, {title: 'Desarrolladores', desc: 'dev@nexusplay.com'}, {title: 'Legal/Privacidad', desc: 'legal@nexusplay.com'}].map(card => (
-            <div key={card.title} className="bg-white/5 p-6 rounded-2xl border border-white/5 text-center">
-                <h3 className="font-bold text-white mb-2">{card.title}</h3>
-                <p className="text-sm text-cyan-400 font-mono bg-cyan-900/20 py-1 px-2 rounded-md inline-block">{card.desc}</p>
-            </div>
-        ))}
+      <div className="mt-12">
+        <div className="text-center mb-6">
+           <h3 className="font-bold text-white mb-2 text-xl">¿Prefieres escribirnos directamente?</h3>
+           <p className="text-sm text-gray-400 font-medium">Usa nuestro correo oficial y obtén ayuda personalizada.</p>
+        </div>
+        <SupportEmailBox category="Soporte Técnico Formulario" />
       </div>
       <p className="text-center text-gray-500 mt-8 text-sm font-medium tracking-wide uppercase">Tiempo estimado de respuesta: 24 a 72 horas</p>
     </motion.div>
@@ -462,6 +469,12 @@ export function HelpView({ onBack }: { onBack: () => void }) {
             <p className="text-gray-400 leading-relaxed text-lg pl-11">{faq.a}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-16 border-t border-white/5 pt-12 flex flex-col items-center">
+         <h2 className="text-2xl font-bold text-white mb-2">¿Asistencia adicional?</h2>
+         <p className="text-gray-400 mb-6 text-center max-w-md">Si no encontraste la respuesta a tu problema en el centro de ayuda, contáctanos directamente de forma oficial.</p>
+         <SupportEmailBox category="Requerimiento de Soporte" />
       </div>
     </motion.div>
   );

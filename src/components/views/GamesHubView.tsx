@@ -22,11 +22,7 @@ interface GamesHubViewProps {
   onBack: () => void;
 }
 
-const COMMUNITY_GAMES: OfflineGame[] = [
-  { id: 'platformer', title: 'Platformer Retro Adventure', developer: '@retro_builder', category: 'Platformer', rating: 4.9 },
-  { id: 'arcade-shooter', title: 'Neon Galaxy Invaders', developer: '@pixel_voyager', category: 'Arcade Shooter', rating: 4.8 },
-  { id: 'idle-clicker', title: 'Pixel Cash Clicker 3D', developer: '@click_tycoon', category: 'Clicker / Idle', rating: 4.6 }
-];
+const COMMUNITY_GAMES: OfflineGame[] = [];
 
 export function GamesHubView({ onBack }: GamesHubViewProps) {
   const [activeTab, setActiveTab] = useState('explore');
@@ -203,47 +199,67 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                 <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
                    <Star className="w-5 h-5 text-yellow-400" /> Destacados de la Comunidad
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {COMMUNITY_GAMES.map((game) => {
-                    const isFav = favorites.some(f => f.id === game.id);
-                    return (
-                      <div key={game.id} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 group hover:border-cyan-500/30 transition-all hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                        <div className="aspect-video bg-[#1a1c24] relative overflow-hidden flex items-center justify-center">
-                          <Gamepad2 className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#12141c] to-transparent opacity-80"></div>
-                          <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                            <span className="text-[10px] font-black text-white uppercase tracking-wider">OFFLINE READY</span>
+                {COMMUNITY_GAMES.length === 0 ? (
+                  <div className="w-full bg-[#0d1017] rounded-3xl border border-cyan-500/20 p-12 flex flex-col items-center justify-center text-center shadow-[0_0_30px_rgba(6,182,212,0.1)] relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 blur-[100px] rounded-full"></div>
+                    
+                    <div className="w-20 h-20 bg-[#121620] border-2 border-cyan-500/30 rounded-2xl flex items-center justify-center mb-6 relative group-hover:border-cyan-400 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all">
+                       <Gamepad2 className="w-10 h-10 text-cyan-400" />
+                       <Sparkles className="w-5 h-5 text-fuchsia-400 absolute -top-2 -right-2 animate-bounce" />
+                    </div>
+                    
+                    <h3 className="text-2xl font-black text-white font-mono tracking-tight mb-2">Todavía no hay juegos publicados</h3>
+                    <p className="text-cyan-200/60 max-w-sm mx-auto mb-8 text-sm">El universo Nexus está esperando. ¡Crea el próximo gran éxito y compártelo con miles de jugadores!</p>
+                    
+                    <button onClick={() => setActiveTab('create')} className="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-black uppercase tracking-wider rounded-xl cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(34,211,238,0.4)] flex items-center gap-2">
+                      <Plus className="w-5 h-5" />
+                      Sé el primero en publicar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {COMMUNITY_GAMES.map((game) => {
+                      const isFav = favorites.some(f => f.id === game.id);
+                      return (
+                        <div key={game.id} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 group hover:border-cyan-500/30 transition-all hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                          <div className="aspect-video bg-[#1a1c24] relative overflow-hidden flex items-center justify-center">
+                            <Gamepad2 className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-500" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#12141c] to-transparent opacity-80"></div>
+                            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                              <span className="text-[10px] font-black text-white uppercase tracking-wider">OFFLINE READY</span>
+                            </div>
+                          </div>
+                          <div className="p-5">
+                            <div className="flex items-start justify-between gap-4 mb-4">
+                              <div>
+                                <h3 className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors truncate max-w-[200px] sm:max-w-xs">{game.title}</h3>
+                                <p className="text-gray-400 text-xs mt-1">Por {game.developer} • {game.category}</p>
+                              </div>
+                              <div className="bg-yellow-500/10 text-yellow-500 px-2 py-1.5 rounded-xl flex items-center gap-1 font-bold text-xs shrink-0 h-8">
+                                 <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" /> {game.rating}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                               <button onClick={() => handlePlayGame(game)} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                                 <Play className="w-5 h-5" /> Jugar Ahora
+                               </button>
+                               <button 
+                                 onClick={(e) => handleToggleFavorite(game, e)} 
+                                 className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors cursor-pointer ${
+                                   isFav ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                                 }`}
+                               >
+                                 <Heart className={`w-5 h-5 ${isFav ? 'fill-red-500' : ''}`} />
+                               </button>
+                            </div>
                           </div>
                         </div>
-                        <div className="p-5">
-                          <div className="flex items-start justify-between gap-4 mb-4">
-                            <div>
-                              <h3 className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors truncate max-w-[200px] sm:max-w-xs">{game.title}</h3>
-                              <p className="text-gray-400 text-xs mt-1">Por {game.developer} • {game.category}</p>
-                            </div>
-                            <div className="bg-yellow-500/10 text-yellow-500 px-2 py-1.5 rounded-xl flex items-center gap-1 font-bold text-xs shrink-0 h-8">
-                               <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" /> {game.rating}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                             <button onClick={() => handlePlayGame(game)} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
-                               <Play className="w-5 h-5" /> Jugar Ahora
-                             </button>
-                             <button 
-                               onClick={(e) => handleToggleFavorite(game, e)} 
-                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors cursor-pointer ${
-                                 isFav ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                               }`}
-                             >
-                               <Heart className={`w-5 h-5 ${isFav ? 'fill-red-500' : ''}`} />
-                             </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
             )}
 
@@ -400,16 +416,9 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                   <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase">IndexedDB Activo</span>
                 </div>
               </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                {[
                  { title: 'Crear desde cero 3D', icon: Sliders, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: 'Comienza con un lienzo limpio y herramientas 3D completas: biomas, físicas, scripts e importaciones.' },
-                 { title: 'Adventure 3D', icon: Compass, color: 'text-orange-400', bg: 'bg-orange-500/10', desc: 'Explora un bioma interactivo con diálogos de NPCs, llaves, cerraduras, monstruos y portales.' },
-                 { title: 'Shooter 3D', icon: Crosshair, color: 'text-red-400', bg: 'bg-red-500/10', desc: 'Combate en arena cibernética WebGL con físicas, retroceso y selector de armas real.' },
-                 { title: 'Zombie Survival 3D', icon: Play, color: 'text-green-400', bg: 'bg-green-500/10', desc: 'Sobrevive a peligrosos enemigos voxel en atmósfera de niebla 3D nocturna.' },
-                 { title: 'Racing 3D', icon: Search, color: 'text-yellow-400', bg: 'bg-yellow-500/10', desc: 'Prueba la velocidad conduciendo un bólido neón con físicas de drift y telemetría 3D.' },
-                 { title: 'Platformer 3D', icon: Gamepad2, color: 'text-purple-400', bg: 'bg-purple-500/10', desc: 'Plataformas flotantes en el cielo con gravedad, lava, checkpoints y doble salto.' },
-                 { title: 'Sandbox 3D', icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/10', desc: 'Físicas dinámicas en tiempo real donde puedes empujar, apilar y rebotar cuerpos rígidos.' },
-                 { title: 'Endless Runner', icon: Sparkles, color: 'text-indigo-400', bg: 'bg-indigo-500/10', desc: 'Obstáculos progresivos ultra rápidos y saltos acrobáticos automatizados.' },
                ].map((t, i) => (
                  <button 
                     key={i} 
@@ -433,6 +442,11 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                     <p className="text-xs text-gray-400 mt-2 font-medium leading-relaxed">{t.desc}</p>
                  </button>
                ))}
+            </div>
+            
+            <div className="mt-8 p-6 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-2xl text-center shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+              <Sparkles className="w-8 h-8 text-cyan-400 mx-auto mb-3 animate-pulse" />
+              <p className="text-cyan-100 font-bold tracking-wide font-mono text-sm max-w-md mx-auto">Muy pronto llegarán plantillas avanzadas totalmente funcionales para Games Studio.</p>
             </div>
             </div>
           </motion.div>

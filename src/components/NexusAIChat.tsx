@@ -9,6 +9,7 @@ interface Message {
   role: 'user' | 'model';
   text: string;
   recommendedApps?: AppItem[];
+  isError?: boolean;
 }
 
 interface NexusAIChatProps {
@@ -46,8 +47,10 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
     setQuery('');
     setIsTyping(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
-      // Prepare catalogue miniature to save payload size
       const catalogue = apps.map(a => ({
         id: a.id,
         name: a.name,
@@ -63,27 +66,44 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
       const res = await fetch('/api/nexus-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text, history, catalogue })
+        body: JSON.stringify({ prompt: text, history, catalogue }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "API Error");
 
       const responseText = data.text;
       
-      // Parse JSON from markdown
-      const jsonMatch = responseText.match(/\`\`\`json\n([\s\S]*?)\n\`\`\`/);
+      // Parse JSON from markdown or raw output safely
       let recommendedIds: string[] = [];
       let cleanText = responseText;
 
-      if (jsonMatch && jsonMatch[1]) {
-        try {
-          recommendedIds = JSON.parse(jsonMatch[1]);
-          cleanText = responseText.replace(jsonMatch[0], '').trim();
-        } catch(e) {
-          console.warn("Could not parse JSON blocks in AI response", e);
+      const jsonMarkdownMatch = responseText.match(/```(?:json)?\n?([\s\S]*?)\n?```/i);
+      const possibleJsonString = jsonMarkdownMatch ? jsonMarkdownMatch[1] : responseText;
+      
+      try {
+        const potentialJson = possibleJsonString.substring(possibleJsonString.indexOf('['), possibleJsonString.lastIndexOf(']') + 1) ||
+                              possibleJsonString.substring(possibleJsonString.indexOf('{'), possibleJsonString.lastIndexOf('}') + 1);
+        if (potentialJson) {
+           const parsed = JSON.parse(potentialJson);
+           if (Array.isArray(parsed)) {
+             recommendedIds = parsed;
+           } else if (parsed.recommendedIds && Array.isArray(parsed.recommendedIds)) {
+             recommendedIds = parsed.recommendedIds;
+           }
+           // Cleanup text: remove JSON
+           cleanText = responseText.replace(possibleJsonString, '').replace(/```(?:json)?/gi, '').trim();
         }
+      } catch (e) {
+        console.warn("Could not parse JSON blocks perfectly, text might contain raw json");
+        // As fallback, just strip markdown json blocks to avoid showing raw code if possible
+        cleanText = responseText.replace(/```(?:json)?\n?([\s\S]*?)\n?```/gi, '').trim() || "Aquí tienes algunas recomendaciones.";
       }
+
+      if (!cleanText.trim()) cleanText = "He analizado tus necesidades y aquí están las opciones ideales para ti:";
 
       const recommendedApps = apps.filter(a => recommendedIds.includes(a.id));
 
@@ -96,11 +116,19 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error: any) {
-      console.error(error);
+      console.error("AI Chat Error:", error);
+      let errorMsg = "Error temporal de conexión. Reintentando o intentalo de nuevo.";
+      if (error.name === 'AbortError') {
+        errorMsg = "El servidor está tardando demasiado en responder. Por favor, intenta de nuevo.";
+      } else if (error.message) {
+        errorMsg = "Hubo un error al procesar tu solicitud. Intenta nuevamente.";
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: "Hubo un error al procesar tu solicitud: " + error.message
+        text: errorMsg,
+        isError: true
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -203,10 +231,17 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                       <div className={`p-5 rounded-3xl ${
                         msg.role === 'user' 
                           ? 'bg-blue-600 text-white rounded-br-sm' 
-                          : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-bl-sm prose prose-invert prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700 max-w-none'
+                          : msg.isError 
+                            ? 'bg-red-950/50 text-red-200 border border-red-500/30 rounded-bl-sm'
+                            : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-bl-sm prose prose-invert prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700 max-w-none'
                       }`}>
                         {msg.role === 'user' ? (
                           <div className="text-[15px] leading-relaxed">{msg.text}</div>
+                        ) : msg.isError ? (
+                          <div className="flex items-center gap-3">
+                             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                             <span className="font-medium text-sm">{msg.text}</span>
+                          </div>
                         ) : (
                           <div className="markdown-body">
                             <Markdown>{msg.text}</Markdown>

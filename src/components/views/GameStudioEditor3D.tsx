@@ -3121,7 +3121,7 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                               }}
                               className="bg-white/5 hover:bg-cyan-500/10 active:bg-cyan-500/20 text-white hover:text-cyan-200 p-2.5 rounded-2xl text-[9px] font-mono flex flex-col items-center justify-center gap-1.5 cursor-pointer border border-white/5 transition-all w-full select-none"
                             >
-                              {item.type === 'wall' ? <Grid className="w-4 h-4 text-cyan-400"/> :
+                              {item.type === 'wall' ? <Square className="w-4 h-4 text-cyan-400"/> :
                                item.type === 'water' ? <Sparkles className="w-4 h-4 text-sky-400"/> :
                                item.type === 'pickup' ? <Zap className="w-4 h-4 text-yellow-400"/> :
                                item.type === 'checkpoint' ? <MapPin className="w-4 h-4 text-emerald-400"/> :

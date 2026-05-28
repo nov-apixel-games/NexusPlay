@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Edit2, Camera, X, Check, Shuffle, Upload } from 'lucide-react';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Edit2, Camera, X, Check, Shuffle, Upload, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AppGrid, { AppCard } from '../AppGrid';
 import { AppItem, Category } from '../../types';
@@ -64,18 +64,9 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
 
   const [activeTab, setActiveTab] = useState<'feed' | 'packs'>('feed');
 
-  // Mock social feed data
-  const feedItems = [
-    { id: 1, type: 'new_app', user: 'Nexus Devs', avatar: 'https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png', content: '¡Hemos lanzado una nueva actualización de la plataforma!', time: 'Hace 2 horas', likes: 124 },
-    { id: 2, type: 'pack', user: 'GamerPro99', avatar: '', content: 'He creado un nuevo Pack para celulares de gama baja. ¡Corre a 60fps asegurado!', time: 'Hace 5 horas', likes: 89, packName: 'Low-End Survival' },
-    { id: 3, type: 'community', user: 'IndieGames', avatar: '', content: 'Nuestra comunidad superó los 10,000 miembros. Únete si amas los juegos independientes.', time: 'Ayer', likes: 256 },
-  ];
-
-  // Mock packs
-  const packs = [
-    { id: '1', name: 'Pack Supervivencia', desc: 'Los mejores juegos de supervivencia offline', creator: 'NexusTeam', likes: 540, apps: apps.slice(0, 4), banner: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2800' },
-    { id: '2', name: 'Low-End Android', desc: 'Juegos súper ligeros para celulares de gama baja (< 1GB RAM)', creator: 'GamerPro99', likes: 320, apps: apps.slice(1, 5), banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=2800' },
-  ];
+  // Social feed will depend on a backend table in the future
+  const feedItems: any[] = [];
+  const packs: any[] = [];
 
   const trends = apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 4);
 
@@ -92,7 +83,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
       {activeTab === 'feed' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {feedItems.map(item => (
+            {feedItems.length > 0 ? feedItems.map(item => (
               <div key={item.id} className="glass-panel p-5 sm:p-6 rounded-3xl border-white/5 hover:border-cyan-500/30 transition-all bg-[#0a0c14]">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-cyan-900 flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
@@ -127,7 +118,13 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                   </button>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center bg-[#0a0c14] border border-white/5 rounded-3xl">
+                <Users className="w-12 h-12 text-gray-500 mb-4" />
+                <h3 className="text-xl font-bold text-white">No hay publicaciones todavía</h3>
+                <p className="text-gray-400 font-medium mt-2">Pronto la comunidad empezará a publicar.</p>
+              </div>
+            )}
           </div>
           
           <div className="space-y-6">
@@ -156,7 +153,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
         </div>
       ) : (
         <div className="space-y-12">
-          {packs.map(pack => (
+          {packs.length > 0 ? packs.map(pack => (
              <div key={pack.id} className="glass-panel rounded-[2rem] overflow-hidden border-white/5 shadow-2xl relative group">
                 <div className="h-48 sm:h-64 relative w-full overflow-hidden">
                    <img src={pack.banner} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
@@ -193,7 +190,13 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                    </div>
                 </div>
              </div>
-          ))}
+          )) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-[#0a0c14] border border-white/5 rounded-3xl">
+              <Layers className="w-12 h-12 text-gray-500 mb-4" />
+              <h3 className="text-xl font-bold text-white">No hay packs todavía</h3>
+              <p className="text-gray-400 font-medium mt-2">Crea tus propias colecciones pronto.</p>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -471,38 +471,40 @@ export default function Navbar({
       {/* Modal Moderno de Edición de Perfil (Estilo TapTap/Play Store) */}
       <AnimatePresence>
         {showEditProfileModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md">
             {/* Backdrop click blocker to dismiss modal */}
             <div className="absolute inset-0 cursor-default" onClick={() => setShowEditProfileModal(false)} />
             
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.3, type: "spring", stiffness: 350, damping: 28 }}
-              className="bg-[#0a0c16]/95 border border-white/10 rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col relative z-50 overflow-y-auto max-h-[92vh] no-scrollbar"
+              className="bg-[#0a0c16]/95 border border-white/10 rounded-[32px] max-w-lg w-full shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col relative z-50 overflow-hidden max-h-[100%] sm:max-h-[90vh]"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+              {/* Sticky Header */}
+              <div className="flex-none p-5 sm:p-6 pb-4 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
                     <Sparkles className="w-5 h-5 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">
+                    <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider leading-none">
                       Perfil Personalizado
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-0.5">Configura tu identidad en Nexus Hub</p>
+                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-1">Identidad en Nexus Hub</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowEditProfileModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto w-full p-5 sm:p-6 no-scrollbar relative min-h-0">
               {editError && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold mb-5 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-red-400 shrink-0" /> {editError}
@@ -510,43 +512,43 @@ export default function Navbar({
               )}
 
               {/* LIVE CARD PREVIEW (Amazing feature) */}
-              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#121422] to-[#0d0e1b] border border-white/5 shadow-inner relative overflow-hidden group">
+              <div className="mb-6 w-full p-4 rounded-2xl bg-gradient-to-br from-[#121422] to-[#0d0e1b] border border-white/5 shadow-inner relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-[30px] pointer-events-none" />
                 
                 <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-500/70 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/10">Vista Previa</span>
                 
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-white/10 overflow-hidden relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-white">
+                <div className="flex items-center gap-4 relative z-10 w-full">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-900 border border-white/10 overflow-visible relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-white">
                     {inputAvatar ? (
                       <img 
                         src={inputAvatar} 
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105 rounded-2xl" 
                         alt="Quick Preview" 
                         onError={(e) => {
                           e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(inputUsername || 'nexus')}`;
                         }}
                       />
                     ) : (
-                      <span>{(inputUsername || username).charAt(0).toUpperCase()}</span>
+                      <span className="text-2xl">{(inputUsername || username).charAt(0).toUpperCase()}</span>
                     )}
-                    <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-black rounded-full px-1.5 py-0.5 border border-slate-950 scale-90">
+                    <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black text-[10px] font-black rounded-full px-2 py-0.5 border-2 border-slate-950 shadow-lg z-20">
                       Lvl {level}
                     </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-white font-black text-base truncate font-mono">@{inputUsername || 'jugador_nexus'}</h4>
+                  <div className="min-w-0 flex-1 pl-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h4 className="text-white font-black text-base sm:text-lg truncate font-mono">@{inputUsername || 'jugador_nexus'}</h4>
                       <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">{roleName}</span>
                     </div>
-                    <p className="text-gray-400 text-xs truncate mt-0.5">{inputRealName || 'Tu Nombre o Alias'}</p>
+                    <p className="text-gray-400 text-xs truncate">{inputRealName || 'Tu Nombre o Alias'}</p>
                     <p className="text-gray-500 text-[10px] italic truncate mt-1">"{inputBio || 'Sin biografía establecida.'}"</p>
                   </div>
                 </div>
               </div>
 
               {/* PHOTO PICKER TABS */}
-              <div className="mb-5">
+              <div className="mb-6 w-full">
                 <div className="grid grid-cols-3 gap-1 bg-[#05060b] p-1 rounded-2xl border border-white/5 mb-4">
                   <button
                     type="button"
@@ -554,11 +556,11 @@ export default function Navbar({
                       const modeEl = document.getElementById('avatar-tab-upload');
                       if (modeEl) modeEl.click();
                     }}
-                    className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                    className={`py-2 px-1 text-[9px] sm:text-[10px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
                       !inputAvatar.includes('unsplash.com') && !inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
                     }`}
                   >
-                    📂 Subir Custom
+                    📂 Foto
                   </button>
                   <button
                     type="button"
@@ -566,11 +568,11 @@ export default function Navbar({
                       const modeEl = document.getElementById('avatar-tab-ai');
                       if (modeEl) modeEl.click();
                     }}
-                    className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                    className={`py-2 px-1 text-[9px] sm:text-[10px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
                       inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
                     }`}
                   >
-                    ⚡ Avatar IA
+                    ⚡ IA
                   </button>
                   <button
                     type="button"
@@ -578,7 +580,7 @@ export default function Navbar({
                       const modeEl = document.getElementById('avatar-tab-presets');
                       if (modeEl) modeEl.click();
                     }}
-                    className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                    className={`py-2 px-1 text-[9px] sm:text-[10px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
                       inputAvatar.includes('unsplash.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
                     }`}
                   >
@@ -589,7 +591,6 @@ export default function Navbar({
                 {/* HIDDEN INPUT TABS SWITCH CONTROLLER */}
                 <div className="hidden">
                   <button id="avatar-tab-upload" onClick={() => {
-                    // Just triggers a state clear to fall back to customized upload mode
                     if (inputAvatar.includes('unsplash.com') || inputAvatar.includes('api.dicebear.com')) {
                       setInputAvatar('');
                     }
@@ -645,22 +646,22 @@ export default function Navbar({
                     {uploadingImage ? (
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-7 h-7 text-cyan-400 animate-spin" />
-                        <span className="text-xs uppercase font-black tracking-widest text-cyan-400 animate-pulse">Subiendo a Cloudinary...</span>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-cyan-400 animate-pulse">Subiendo a Cloudinary...</span>
                       </div>
                     ) : inputAvatar ? (
                       <div className="absolute inset-0 flex items-center justify-center group">
                         <img src={inputAvatar} className="w-full h-full object-cover opacity-80" alt="Uploaded Profile" />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-white gap-1 uppercase">
-                          <Upload className="w-4 h-4 text-cyan-400" /> Cambiar Imagen
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-white gap-2 uppercase">
+                          <Upload className="w-5 h-5 text-cyan-400" /> Cambiar Imagen
                         </div>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <div className="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
+                        <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
                           <Camera className="w-5 h-5" />
                         </div>
-                        <p className="text-xs font-bold text-gray-200">Suelta tu imagen o Haz Clic para subir</p>
-                        <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-1">PNG, JPG, WEBP (SE GUARDA EN CLOUDINARY)</p>
+                        <p className="text-[11px] font-bold text-gray-200">Suelta o Clic para subir</p>
+                        <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">PNG, JPG, WEBP (Guardado Seguro)</p>
                       </div>
                     )}
                     <input 
@@ -675,7 +676,7 @@ export default function Navbar({
 
                 {/* TAB CONTENT: 2. AI AVATAR ENGINE */}
                 {inputAvatar.includes('api.dicebear.com') && (
-                  <div className="space-y-4 bg-[#05060a]/60 p-4 rounded-2xl border border-white/5">
+                  <div className="space-y-4 bg-[#05060a]/60 p-4 rounded-2xl border border-white/5 w-full">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-[#090b14] border border-white/10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center p-1.5 shadow-inner">
                         <img 
@@ -684,13 +685,13 @@ export default function Navbar({
                           alt="AI Generator Realtime Output" 
                         />
                       </div>
-                      <div>
-                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Generando por IA</span>
-                        <p className="text-xs font-bold text-white">Generación Dinámica Directa</p>
+                      <div className="min-w-0">
+                        <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">Generador IA</span>
+                        <p className="text-[11px] font-bold text-white truncate w-full">Creación Dinámica</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-4 gap-1.5 w-full">
                       {[
                         { id: 'bottts', label: 'Robots' },
                         { id: 'pixel-art', label: 'Pixeles' },
@@ -705,7 +706,7 @@ export default function Navbar({
                             const seed = aiPresetSeed || inputUsername || 'nexus';
                             setInputAvatar(`https://api.dicebear.com/7.x/${style.id}/svg?seed=${encodeURIComponent(seed)}`);
                           }}
-                          className={`py-2 px-1 text-[9px] uppercase tracking-wider font-extrabold rounded-lg transition-all border ${
+                          className={`py-2 px-1 text-[8px] sm:text-[9px] uppercase tracking-wider font-extrabold rounded-lg transition-all border ${
                             aiPresetStyle === style.id 
                               ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400' 
                               : 'bg-white/5 border-transparent text-gray-400 hover:text-white'
@@ -716,7 +717,7 @@ export default function Navbar({
                       ))}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full">
                       <div className="relative flex-1">
                         <input
                           type="text"
@@ -726,8 +727,8 @@ export default function Navbar({
                             setAiPresetSeed(val);
                             setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val || 'nexus')}`);
                           }}
-                          placeholder="Semilla (ej. Juan, Matrix, Cyberpunk)"
-                          className="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs font-mono outline-none focus:border-cyan-400"
+                          placeholder="Semilla creativa..."
+                          className="w-full bg-black/60 border border-white/10 rounded-xl px-3 sm:px-3.5 py-2 sm:py-2.5 text-white text-[11px] font-mono outline-none focus:border-cyan-400"
                         />
                       </div>
                       <button
@@ -737,7 +738,7 @@ export default function Navbar({
                           setAiPresetSeed(val);
                           setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val)}`);
                         }}
-                        className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                        className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
                         title="Randomizar semilla"
                       >
                         <Shuffle className="w-4 h-4" />
@@ -748,15 +749,15 @@ export default function Navbar({
 
                 {/* TAB CONTENT: 3. PREMIUM PRESETS */}
                 {inputAvatar.includes('unsplash.com') && (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-6 gap-2 bg-[#05060b]/60 p-3 rounded-2xl border border-white/5">
+                  <div className="space-y-2 w-full">
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 bg-[#05060b]/60 p-3 rounded-2xl border border-white/5">
                       {AVATAR_PRESETS.map((preset, index) => {
                         const isSelected = inputAvatar === preset.url;
                         return (
                           <div 
                             key={index} 
                             onClick={() => setInputAvatar(preset.url)}
-                            className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-transparent hover:scale-105'}`}
+                            className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_10px_rgba(34,211,238,0.4)] z-10' : 'border-transparent hover:scale-105'}`}
                             title={preset.name}
                           >
                             <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
@@ -774,15 +775,15 @@ export default function Navbar({
               </div>
 
               {/* Form - Inputs Configuration */}
-              <div className="space-y-4">
+              <div className="space-y-4 w-full pb-2">
                 {/* Username Input */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre de Usuario (ID único)</label>
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Id de Usuario</label>
                     {inputUsername.length >= 3 ? (
-                      <span className="text-[9px] uppercase font-mono text-green-400 font-black flex items-center gap-0.5">✓ VÁLIDO</span>
+                      <span className="text-[8px] uppercase font-mono text-green-400 font-black flex items-center gap-0.5">✓ VÁLIDO</span>
                     ) : (
-                      <span className="text-[9px] uppercase font-mono text-yellow-500 font-black">MIN 3 CARACT.</span>
+                      <span className="text-[8px] uppercase font-mono text-yellow-500 font-black">MIN 3</span>
                     )}
                   </div>
                   <input 
@@ -791,62 +792,68 @@ export default function Navbar({
                     onChange={e => setInputUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))} 
                     placeholder="jugador_nexus"
                     maxLength={15}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all font-mono"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all font-mono"
                   />
-                  <span className="text-[8px] text-gray-500 font-extrabold block mt-1.5 uppercase tracking-wider">Solo se permiten letras, números y guiones bajos (_).</span>
+                  <span className="text-[8px] text-gray-500 font-extrabold block mt-1.5 uppercase tracking-wider">Solo letras, números y guiños bajos (_).</span>
                 </div>
 
                 {/* Real name / display name Input */}
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 animate-pulse">Nombre Visible (Avatar o Alias)</label>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre Visible</label>
                   <input 
                     type="text" 
                     value={inputRealName} 
                     onChange={e => setInputRealName(e.target.value)} 
                     placeholder="Tu Nombre / Alias"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all"
                   />
                 </div>
 
                 {/* Description / Bio */}
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Biografía corta o Estado</label>
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Biografía corta</label>
                   <textarea 
                     value={inputBio} 
                     onChange={e => setInputBio(e.target.value)} 
                     placeholder="¡Hola! Bienvenidos a mi rincón de juegos..."
                     maxLength={100}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all resize-none shadow-inner"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all resize-none shadow-inner"
                   />
-                  <div className="flex justify-between text-[9px] text-gray-500 font-mono mt-1 font-extrabold">
-                    <span>MÁXIMO 100 CARACTERES</span>
+                  <div className="flex justify-between text-[8px] text-gray-500 font-mono mt-1 font-extrabold">
+                    <span>MÁXIMO 100 CAR.</span>
                     <span>{inputBio.length}/100</span>
                   </div>
                 </div>
+              </div>
+              
+              </div> {/* End Scrollable Content */}
 
-                {/* Buttons Action Footer */}
-                <div className="flex items-center gap-3 pt-4 border-t border-white/5">
-                  <button 
-                    onClick={handleSaveProfile} 
-                    disabled={isSaving || uploadingImage || inputUsername.length < 3} 
-                    className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-widest rounded-xl text-[11px] transition-all duration-300 shadow-[0_4px_15px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
-                      </>
-                    ) : 'Guardar Identidad'}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setShowEditProfileModal(false)} 
-                    disabled={isSaving || uploadingImage} 
-                    className="py-3 px-6 bg-white/5 hover:bg-white/15 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-[11px] transition-all cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                </div>
+              {/* Sticky Footer Buttons */}
+              <div className="flex-none p-5 sm:p-6 pt-4 border-t border-white/10 bg-[#0a0c16]/95 backdrop-blur flex items-center justify-end gap-3 z-20">
+                <button 
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)} 
+                  disabled={isSaving || uploadingImage} 
+                  className="py-3 px-5 sm:px-6 bg-white/5 hover:bg-white/15 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleSaveProfile} 
+                  disabled={isSaving || uploadingImage || inputUsername.length < 3} 
+                  className="flex-1 sm:flex-none py-3 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> <span className="hidden sm:inline">Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 hidden sm:inline" /> Guardar
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           </div>

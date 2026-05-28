@@ -1,6 +1,7 @@
 import { 
   ShieldCheck, FileText, Cookie, Info, Mail, HelpCircle, Heart, Phone
 } from 'lucide-react';
+import { SupportEmailBox } from './SupportEmailBox';
 
 export default function Footer({ onNavigate }: { onNavigate: (view: string) => void }) {
   return (
@@ -60,12 +61,19 @@ export default function Footer({ onNavigate }: { onNavigate: (view: string) => v
           <div className="space-y-4">
             <h4 className="font-bold text-white mb-4">Nexus AI</h4>
             <p className="text-sm text-gray-400 leading-relaxed mb-4">
-              Impulsado por motores de inteligencia artificial de última generación.
+              Impulsado por motores de inteligencia artificial.
             </p>
             <button onClick={() => onNavigate('nexus-ai')} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 transition-all">
               Probar Nexus AI
             </button>
           </div>
+        </div>
+
+        <div className="pt-8 mb-8">
+           <h4 className="font-bold text-white text-center mb-4">¿Necesitas ayuda?</h4>
+           <div className="max-w-md mx-auto">
+             <SupportEmailBox category="Contacto Sitio" />
+           </div>
         </div>
 
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
