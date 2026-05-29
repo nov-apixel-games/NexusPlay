@@ -1337,11 +1337,11 @@ function getProceduralTexture(type: string): THREE.Texture {
     return textureCache[type];
   }
 
-  const S = 4; // Scale factor for high res textures
+  const S = window.innerWidth < 768 ? 2 : 4; // Scale factor for high res textures
   const canvas = document.createElement('canvas');
   canvas.width = 128 * S;
   canvas.height = 128 * S;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d', { alpha: false })!;
   
   ctx.scale(S, S);
 

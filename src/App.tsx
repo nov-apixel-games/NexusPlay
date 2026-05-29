@@ -153,6 +153,8 @@ export default function App() {
 
 
   useEffect(() => {
+    let fallbackTimeout: any;
+    
     const runInit = async () => {
       try {
         if (isSupabaseConfigured) {
@@ -177,9 +179,20 @@ export default function App() {
         console.error("Initialization error:", err);
       } finally {
         setIsInitializing(false);
+        clearTimeout(fallbackTimeout);
       }
     };
+    
+    // Recovery system: Always force load after 6 seconds
+    fallbackTimeout = setTimeout(() => {
+      console.warn("Recovery mode activated: Forcing app initialization");
+      setIsInitializing(false);
+      setIsOffline(true);
+    }, 6000);
+    
     runInit();
+    
+    return () => clearTimeout(fallbackTimeout);
   }, [isSupabaseConfigured]);
 
   useEffect(() => {
@@ -208,13 +221,29 @@ export default function App() {
       };
     }
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id, session.user.email);
-        setShowAuthModal(false);
-      }
-    });
+    if (!navigator.onLine) {
+      // offline branch
+      try {
+        const cachedSession = localStorage.getItem('supabase.auth.token');
+        if (cachedSession) {
+          const parsed = JSON.parse(cachedSession);
+          if (parsed && parsed.currentSession) {
+            setSession(parsed.currentSession);
+            if (parsed.currentSession.user) fetchUserProfile(parsed.currentSession.user.id, parsed.currentSession.user.email);
+          }
+        }
+      } catch(e) {}
+    } else {
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+      Promise.race([sessionPromise, sessionTimeout]).then(({ data: { session } }: any) => {
+        setSession(session);
+        if (session?.user) {
+          fetchUserProfile(session.user.id, session.user.email);
+          setShowAuthModal(false);
+        }
+      }).catch(e => console.warn("getSession timeout/error", e));
+    }
 
     const {
       data: { subscription },
