@@ -56,10 +56,15 @@ export default function App() {
   const [webLogo, setWebLogo] = useState('https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
-  // Fetch Site Settings from Supabase
   const fetchSiteSettings = async () => {
     try {
-      const { data, error } = await supabase.from('site_settings').select('*').single();
+      if (!navigator.onLine) throw new Error("Offline");
+      
+      const fetchPromise = supabase.from('site_settings').select('*').single();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+      
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+
       if (!error && data) {
         if (data.platform_name) {
           setPlatformName(data.platform_name);
@@ -68,15 +73,15 @@ export default function App() {
         if (data.logo_url) setWebLogo(data.logo_url);
         if (data.maintenance_mode !== undefined) setMaintenanceMode(data.maintenance_mode);
       } else {
-        document.title = 'NexusPlay';
-        const localLogo = localStorage.getItem('nexus_web_logo');
-        if (localLogo) setWebLogo(localLogo);
-        const localMaintenance = localStorage.getItem('nexus_maintenance_mode') === 'true';
-        if (localMaintenance) setMaintenanceMode(localMaintenance);
+        throw new Error("No data or error");
       }
     } catch (e) {
-      console.warn("Settings fetch failed");
+      console.warn("Settings fetch failed, using local fallback");
       document.title = 'NexusPlay';
+      const localLogo = localStorage.getItem('nexus_web_logo');
+      if (localLogo) setWebLogo(localLogo);
+      const localMaintenance = localStorage.getItem('nexus_maintenance_mode') === 'true';
+      if (localMaintenance) setMaintenanceMode(localMaintenance);
     }
   };
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
@@ -250,13 +255,22 @@ export default function App() {
 
   const fetchUserProfile = async (userId: string, email?: string) => {
     try {
-      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      if (!navigator.onLine) {
+        throw new Error("Offline fetch profile fallback");
+      }
+      
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+      const { data: { session: freshSession } } = await Promise.race([sessionPromise, sessionTimeout]) as any;
+      
       const currentSession = freshSession || session;
       const finalEmail = email || currentSession?.user?.email || '';
       console.log("Intentando cargar perfil:", userId);
 
       // 1. Intentar obtener perfil existente
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+      const profilePromise = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+      const profileTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000));
+      const { data, error } = await Promise.race([profilePromise, profileTimeout]) as any;
       
       if (error) {
         console.warn("Error de red/permisos al cargar perfil:", error.message);
@@ -367,6 +381,8 @@ export default function App() {
       }
     } catch (e: any) {
       console.error("Fallo crítico en fetchUserProfile:", e);
+      // Fallback fallback to ensure we don't break the app offline
+      setUserProfile({ id: userId, email: email || 'offline@nexus.play', role: 'user', username: (email || 'Usuario').split('@')[0] });
     }
   };
 
@@ -404,7 +420,12 @@ export default function App() {
       if (!navigator.onLine) {
         throw new Error("Dispositivo sin conexión a internet");
       }
-      const { data, error } = await supabase.from('apps').select('*').order('created_at', { ascending: false });
+      
+      const fetchPromise = supabase.from('apps').select('*').order('created_at', { ascending: false });
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout de conexión al cargar juegos")), 8000));
+      
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+
       if (!error && data) {
         setApps(data.map(mapDbAppToAppItem));
         localStorage.setItem('nexus_cached_apps', JSON.stringify(data));

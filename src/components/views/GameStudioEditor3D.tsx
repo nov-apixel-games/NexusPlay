@@ -1337,13 +1337,18 @@ function getProceduralTexture(type: string): THREE.Texture {
     return textureCache[type];
   }
 
+  const S = 4; // Scale factor for high res textures
   const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
+  canvas.width = 128 * S;
+  canvas.height = 128 * S;
   const ctx = canvas.getContext('2d')!;
+  
+  ctx.scale(S, S);
 
   const createNoise = (opacity: number) => {
-    const imgData = ctx.getImageData(0, 0, 128, 128);
+    // Noise must be applied to the true pixel size
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    const imgData = ctx.getImageData(0, 0, 128 * S, 128 * S);
     const data = imgData.data;
     for (let i = 0; i < data.length; i += 4) {
       const noise = (Math.random() - 0.5) * opacity * 255;
@@ -1352,6 +1357,7 @@ function getProceduralTexture(type: string): THREE.Texture {
       data[i+2] = Math.max(0, Math.min(255, data[i+2] + noise));
     }
     ctx.putImageData(imgData, 0, 0);
+    ctx.scale(S, S); // restore scale for subsequent drawings if any
   };
 
   if (type === 'grass') {
@@ -1613,9 +1619,9 @@ function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId, updateObject, 
   const isGrid = obj.texture_style === 'grid';
   const isRuins = obj.texture_style === 'ruins';
   const isMetal = obj.texture_style === 'metal';
+  const textureType = obj.texture_style || 'concrete';
   const rot = obj.rotation || [0, 0, 0];
 
-  const textureType = isLava ? 'lava' : isRuins ? 'ruins' : isMetal ? 'metal' : isGrid ? 'grid' : isNeon ? 'neon' : 'grid';
   const baseTexture = getProceduralTexture(textureType);
 
   const customTexture = useMemo(() => {
@@ -1624,7 +1630,7 @@ function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId, updateObject, 
     tex.wrapT = THREE.RepeatWrapping;
     const sizeX = obj.scale[0] || 1;
     const sizeY = obj.scale[1] || 1;
-    tex.repeat.set(Math.max(1, Math.round(sizeX / 1.5)), Math.max(1, Math.round(sizeY / 1.5)));
+    tex.repeat.set(Math.max(1, Math.round(sizeX / 2)), Math.max(1, Math.round(sizeY / 2)));
     tex.needsUpdate = true;
     return tex;
   }, [baseTexture, obj.scale[0], obj.scale[1]]);
@@ -1632,11 +1638,13 @@ function DynamicShapeMesh({ obj, selectedId, mode, setSelectedId, updateObject, 
   const material = (
     <meshStandardMaterial 
       map={customTexture}
-      color={obj.color} 
-      roughness={isLava ? 0.9 : isNeon ? 0.05 : isRuins ? 0.8 : 0.2}
-      metalness={isRuins ? 0.05 : isNeon ? 0.95 : isMetal ? 0.9 : 0.5}
-      emissive={selectedId === obj.id ? '#22d3ee' : (isLava ? '#f97316' : isNeon ? obj.color : '#000000')}
-      emissiveIntensity={selectedId === obj.id ? 0.8 : (isLava ? 0.6 : isNeon ? 0.6 : 0)}
+      color={textureType === 'concrete' && !obj.texture_style ? "#ffffff" : obj.color} 
+      roughness={isLava ? 0.9 : isNeon ? 0.05 : isRuins ? 0.8 : 0.8}
+      metalness={isRuins ? 0.05 : isNeon ? 0.95 : isMetal ? 0.8 : 0.2}
+      emissive={selectedId === obj.id ? '#22d3ee' : (isLava ? '#ea580c' : isNeon ? obj.color : '#000000')}
+      emissiveIntensity={selectedId === obj.id ? 0.8 : (isLava ? 0.6 : isNeon ? 0.8 : 0)}
+      bumpMap={customTexture}
+      bumpScale={isRuins ? 0.15 : 0.05}
     />
   );
 
@@ -1865,7 +1873,7 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
     tex.repeat.set(isSurvival ? 120 : isRacing ? 80 : 100, isSurvival ? 120 : isRacing ? 80 : 100);
     tex.needsUpdate = true;
     return tex;
-  }, [floorBaseTexture, template]);
+  }, [floorBaseTexture, template, floorTextureType]);
 
   return (
     <>
@@ -1888,17 +1896,17 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
 
       {/* Beautiful glowing hemisphere light for real natural color blending */}
       <hemisphereLight 
-        color={skyPreset === 'sunset' ? '#ffedd5' : skyPreset === 'night' ? '#1e1b4b' : skyPreset === 'nuclear' ? '#4ade80' : '#f0f9ff'} 
-        groundColor={skyPreset === 'forest' ? '#15803d' : '#0f172a'} 
-        intensity={skyPreset === 'night' ? 0.25 : 0.8} 
+        color={skyPreset === 'sunset' ? '#ffedd5' : skyPreset === 'night' ? '#1e1b4b' : skyPreset === 'nuclear' ? '#9ca3af' : '#ffffff'} 
+        groundColor={skyPreset === 'forest' ? '#166534' : skyPreset === 'desert' ? '#b45309' : skyPreset === 'nuclear' ? '#475569' : skyPreset === 'night' ? '#0f172a' : '#94a3b8'} 
+        intensity={skyPreset === 'night' ? 0.5 : 1.2} 
       />
 
-      <ambientLight intensity={skyPreset === 'night' ? 0.2 : 0.75} />
+      <ambientLight intensity={skyPreset === 'night' ? 0.3 : 0.8} />
 
       {/* Advanced Directional Sun Light configured for soft crisp shadows */}
       <directionalLight 
         position={[25, 45, 20]} 
-        intensity={skyPreset === 'night' ? 0.3 : 1.7} 
+        intensity={skyPreset === 'night' ? 0.5 : 2.5} 
         castShadow={qualityMode !== 'low'} 
         shadow-bias={-0.0001}
         shadow-mapSize-width={qualityMode === 'high' ? 1024 : 512}
@@ -1936,9 +1944,36 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial 
           map={floorTexture}
-          color="#ffffff"
-          roughness={0.85} 
-          metalness={0.1}
+          color={
+            floorTextureType === 'grid' || floorTextureType === 'neon' ? '#000000' :
+            floorTextureType === 'lava' ? '#ff3300' :
+            floorTextureType === 'concrete' ? '#888888' :
+            '#ffffff'
+          }
+          emissive={floorTextureType === 'neon' ? '#a21caf' : floorTextureType === 'grid' ? '#0284c7' : floorTextureType === 'lava' ? '#ea580c' : '#000000'}
+          emissiveIntensity={floorTextureType === 'neon' ? 0.8 : floorTextureType === 'grid' ? 0.3 : floorTextureType === 'lava' ? 0.6 : 0}
+          roughness={
+            floorTextureType === 'rock' ? 0.7 :
+            floorTextureType === 'concrete' ? 0.9 :
+            floorTextureType === 'sand' ? 1.0 :
+            floorTextureType === 'dirt' ? 0.95 :
+            floorTextureType === 'snow' ? 0.6 :
+            floorTextureType === 'lava' ? 0.3 :
+            0.85
+          } 
+          metalness={
+            floorTextureType === 'neon' ? 0.8 :
+            floorTextureType === 'grid' ? 0.5 :
+            floorTextureType === 'rock' ? 0.1 :
+            0.05
+          }
+          bumpMap={floorTexture}
+          bumpScale={
+            floorTextureType === 'rock' ? 0.5 :
+            floorTextureType === 'sand' ? 0.1 :
+            floorTextureType === 'concrete' ? 0.05 :
+            0.08
+          }
         />
       </mesh>
       
@@ -2218,7 +2253,129 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
                 </group>
               );
             }
+            if (obj.type === 'prop') {
+              const propType = obj.prop_type || 'barrel';
+              const color = obj.color || '#475569';
+              return (
+                <group key={obj.id} position={obj.position} scale={obj.scale} rotation={obj.rotation || [0,0,0]} onClick={(e) => {
+                  if (mode === 'edit') {
+                    e.stopPropagation();
+                    setSelectedId(obj.id);
+                  }
+                }}>
+                  {propType === 'ruined_building' ? (
+                     <group>
+                        <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
+                           <boxGeometry args={[3, 3, 3]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                        <mesh position={[-0.5, 3.5, 0.5]} castShadow receiveShadow rotation={[0.05, 0, -0.05]}>
+                           <boxGeometry args={[2, 2, 2]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                        <mesh position={[0.5, 4.5, -0.5]} castShadow receiveShadow rotation={[-0.1, 0.05, 0]}>
+                           <boxGeometry args={[1, 1, 1]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                     </group>
+                  ) : propType === 'skyscraper' ? (
+                     <group>
+                        <mesh position={[0, 4, 0]} castShadow receiveShadow>
+                           <boxGeometry args={[4, 8, 4]} />
+                           <meshStandardMaterial color={color} roughness={0.2} metalness={0.8} />
+                        </mesh>
+                        {/* Fake windows using a grid or just stripes */}
+                        <mesh position={[0, 4, 2.05]}>
+                           <planeGeometry args={[3.8, 7.8]} />
+                           <meshBasicMaterial color="#0ea5e9" wireframe />
+                        </mesh>
+                        <mesh position={[0, 4, -2.05]} rotation={[0, Math.PI, 0]}>
+                           <planeGeometry args={[3.8, 7.8]} />
+                           <meshBasicMaterial color="#0ea5e9" wireframe />
+                        </mesh>
+                     </group>
+                  ) : propType === 'car_abandoned' ? (
+                     <group>
+                        <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
+                           <boxGeometry args={[1.2, 0.4, 2.4]} />
+                           <meshStandardMaterial color={color} roughness={0.9} metalness={0.2} />
+                        </mesh>
+                        <mesh position={[0, 0.7, -0.2]} castShadow receiveShadow>
+                           <boxGeometry args={[1.0, 0.4, 1.2]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                        {/* Wheels */}
+                        <mesh position={[0.6, 0.15, 0.8]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[0.2,0.2,0.2]}/><meshStandardMaterial color="#1e293b"/></mesh>
+                        <mesh position={[-0.6, 0.15, 0.8]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[0.2,0.2,0.2]}/><meshStandardMaterial color="#1e293b"/></mesh>
+                        <mesh position={[0.6, 0.15, -0.8]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[0.2,0.2,0.2]}/><meshStandardMaterial color="#1e293b"/></mesh>
+                        <mesh position={[-0.6, 0.15, -0.8]} rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[0.2,0.2,0.2]}/><meshStandardMaterial color="#1e293b"/></mesh>
+                     </group>
+                  ) : propType === 'street_light' ? (
+                     <group>
+                        <mesh position={[0, 2.5, 0]} castShadow>
+                           <cylinderGeometry args={[0.05, 0.1, 5]} />
+                           <meshStandardMaterial color="#334155" metalness={0.8} />
+                        </mesh>
+                        <mesh position={[0.5, 4.9, 0]} rotation={[0, 0, Math.PI/2]}>
+                           <cylinderGeometry args={[0.05, 0.05, 1]} />
+                           <meshStandardMaterial color="#334155" metalness={0.8} />
+                        </mesh>
+                        <mesh position={[1.0, 4.8, 0]}>
+                           <boxGeometry args={[0.4, 0.1, 0.2]} />
+                           <meshStandardMaterial emissive="#fde047" emissiveIntensity={1} color="#fde047" />
+                        </mesh>
+                     </group>
+                  ) : propType === 'cactus' ? (
+                     <group>
+                        <mesh position={[0, 1, 0]} castShadow>
+                           <capsuleGeometry args={[0.2, 1.5, 4, 8]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                        <mesh position={[0.3, 1.2, 0]} rotation={[0,0,Math.PI/6]} castShadow>
+                           <capsuleGeometry args={[0.15, 0.6, 4, 8]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                        <mesh position={[-0.3, 0.8, 0]} rotation={[0,0,-Math.PI/6]} castShadow>
+                           <capsuleGeometry args={[0.15, 0.5, 4, 8]} />
+                           <meshStandardMaterial color={color} roughness={0.9} />
+                        </mesh>
+                     </group>
+                  ) : propType === 'snow_pine' ? (
+                     <group>
+                        <mesh position={[0, 0.5, 0]} castShadow>
+                           <cylinderGeometry args={[0.2, 0.3, 1]} />
+                           <meshStandardMaterial color="#451a03" />
+                        </mesh>
+                        <mesh position={[0, 1.5, 0]} castShadow>
+                           <coneGeometry args={[1.2, 1.5, 6]} />
+                           <meshStandardMaterial color="#e2e8f0" roughness={0.8} />
+                        </mesh>
+                        <mesh position={[0, 2.5, 0]} castShadow>
+                           <coneGeometry args={[1.0, 1.5, 6]} />
+                           <meshStandardMaterial color="#f1f5f9" roughness={0.8} />
+                        </mesh>
+                        <mesh position={[0, 3.5, 0]} castShadow>
+                           <coneGeometry args={[0.7, 1.5, 6]} />
+                           <meshStandardMaterial color="#f8fafc" roughness={0.8} />
+                        </mesh>
+                     </group>
+                  ) : (
+                     <mesh castShadow receiveShadow>
+                        <boxGeometry args={[1, 1, 1]} />
+                        <meshStandardMaterial color={color} />
+                     </mesh>
+                  )}
+                  {selectedId === obj.id && mode === 'edit' && (
+                     <mesh position={[0, 2.0, 0]}>
+                        <boxGeometry args={[4, 8, 4]} />
+                        <meshBasicMaterial color="#22d3ee" wireframe transparent opacity={0.6} />
+                     </mesh>
+                  )}
+                </group>
+              );
+            }
             if (obj.type === 'npc') {
+
               const color = obj.color || '#f43f5e';
               const name = obj.npc_name || 'Droid';
               return (
@@ -2498,16 +2655,52 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
          newMapProps.fogColor = "#1f2937";
          newMapProps.fogDensity = 15;
          
-         const spread = 20;
-         for(let i=0; i<8; i++) {
+         const spread = 30;
+         // Generate broken road
+         for (let z = -spread; z <= spread; z += 15) {
             generatedObjects.push({
-               id: "ai_ruin_"+Date.now()+"_"+i,
+               id: "ai_road_"+Date.now()+"_"+z,
                type: "wall", shape: "cube",
-               position: [(Math.random()-0.5)*spread, 3, (Math.random()-0.5)*spread],
-               scale: [Math.random()*4+2, Math.random()*6+2, Math.random()*2+1],
-               rotation: [0, Math.random()*Math.PI, 0],
-               color: "#475569", label: "Muro Destruido", texture_style: "ruins"
+               position: [0, 0.1, z], scale: [8, 0.2, 14], rotation: [0, 0, 0],
+               color: "#334155", label: "Carretera Rota", texture_style: "ruins"
             });
+         }
+         // Generate ruined buildings and cars on the sides
+         for(let i=0; i<12; i++) {
+            const isLeft = Math.random() > 0.5;
+            const px = (isLeft ? -1 : 1) * (10 + Math.random() * 10);
+            const pz = (Math.random() - 0.5) * spread * 2;
+            
+            if (Math.random() > 0.3) {
+               generatedObjects.push({
+                  id: "ai_bldg_"+Date.now()+"_"+i,
+                  type: "prop", prop_type: "ruined_building",
+                  position: [px, 0, pz], scale: [1, 1, 1], rotation: [0, Math.random()*0.5, 0],
+                  color: "#475569", label: "Edificio Destruido"
+               });
+            } else {
+               generatedObjects.push({
+                  id: "ai_car_"+Date.now()+"_"+i,
+                  type: "prop", prop_type: "car_abandoned",
+                  position: [px, 0, pz], scale: [1.2, 1.2, 1.2], rotation: [0, Math.random()*3, 0],
+                  color: "#64748b", label: "Auto Destruido"
+               });
+            }
+            // Add toxic barrels
+            if (Math.random() > 0.4) {
+               generatedObjects.push({
+                 id: "ai_barrel_"+Date.now()+"_"+i, type: "wall", shape: "cylinder",
+                 position: [px + 2, 0.5, pz + 2], scale: [0.8, 1, 0.8], rotation: [0,0,0],
+                 color: "#ea580c", label: "Barril Tóxico", texture_style: "metal"
+               });
+            }
+         }
+         // Add some zombie enemies
+         for (let i=0; i<4; i++) {
+            generatedObjects.push({
+              id: "ai_zombie_"+Date.now()+"_"+i, type: "enemy", enemy_type: "zombie",
+              position: [(Math.random()-0.5)*15, 0, (Math.random()-0.5)*20], scale: [1,1,1], color: "#22c55e", label: "Zombie Oculto"
+            })
          }
          setShowNotification("Mundo desolado post-apocalíptico generado.");
          
@@ -2515,62 +2708,138 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
          newMapProps.skyPreset = "forest";
          newMapProps.floorTexture = "grass";
          newMapProps.fogColor = "#14532d";
-         newMapProps.fogDensity = 18;
+         newMapProps.fogDensity = 12;
          
-         const spread = 35;
-         for(let i=0; i<15; i++) {
+         const spread = 40;
+         // Generate clusters of trees
+         for(let i=0; i<25; i++) {
+            const px = (Math.random()-0.5)*spread;
+            const pz = (Math.random()-0.5)*spread;
+            const tScale = Math.random() * 0.8 + 0.8;
             generatedObjects.push({
-               id: "ai_tree_"+Date.now()+"_"+i,
-               type: "nature", nature_type: "tree",
+               id: "ai_tree_"+Date.now()+"_"+i, type: "nature", nature_type: "tree",
+               position: [px, 0, pz], scale: [tScale, tScale*1.2, tScale], color: "#16a34a", label: "Pino Grande"
+            });
+            // Adding a small bush next to some trees
+            if (Math.random() > 0.5) {
+               generatedObjects.push({
+                 id: "ai_bush_"+Date.now()+"_"+i, type: "prop", prop_type: "bush",
+                 position: [px + 1.5, 0, pz + 1.5], scale: [1, 1, 1], color: "#15803d", label: "Arbusto"
+               });
+            }
+         }
+         // Add some natural rocks
+         for(let i=0; i<10; i++) {
+            generatedObjects.push({
+               id: "ai_rock_"+Date.now()+"_"+i, type: "nature", nature_type: "rock",
                position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [Math.random()*0.5+0.8, Math.random()*0.8+1, Math.random()*0.5+0.8],
-               color: "#16a34a", label: "Árbol Generado"
+               scale: [Math.random()*2+1, Math.random()+0.5, Math.random()*2+1], color: "#94a3b8", label: "Roca Natural"
             });
          }
-         setShowNotification("Bosque frondoso generado.");
+         setShowNotification("Bosque frondoso y realista generado.");
          
       } else if (p.includes("ciudad") || p.includes("urbano") || p.includes("city")) {
          newMapProps.skyPreset = "sunset";
          newMapProps.floorTexture = "road";
          newMapProps.fogColor = "#0f172a";
-         newMapProps.fogDensity = 25;
+         newMapProps.fogDensity = 18;
          
-         for (let x = -20; x <= 20; x+= 10) {
-            for (let z = -20; z <= 20; z+= 15) {
-               if(Math.random() > 0.3) {
+         // Generate City Blocks
+         for (let x = -25; x <= 25; x += 12) {
+            for (let z = -25; z <= 25; z += 12) {
+               if(Math.abs(x) < 4 && Math.abs(z) < 4) continue; // leave center open
+               
+               const height = Math.random() * 8 + 6;
+               generatedObjects.push({
+                  id: "ai_skys_"+Date.now()+"_"+x+"_"+z,
+                  type: "prop", prop_type: "skyscraper",
+                  position: [x, 0, z], scale: [1, height/8, 1], rotation: [0,0,0],
+                  color: Math.random() > 0.5 ? "#1e293b" : "#334155", 
+                  label: "Rascacielos Moderno"
+               });
+               
+               // Street Lights
+               if (x % 2 !== 0) {
                   generatedObjects.push({
-                     id: "ai_bldg_"+Date.now()+"_"+x+"_"+z,
-                     type: "wall", shape: "cube",
-                     position: [x, Math.random()*5+5, z],
-                     scale: [6, Math.random()*10+8, 6],
-                     color: Math.random() > 0.5 ? "#1e293b" : "#475569", 
-                     label: "Edificio", texture_style: "metal"
+                     id: "ai_lamp_"+Date.now()+"_"+x+"_"+z, type: "prop", prop_type: "street_light",
+                     position: [x - 3, 0, z + 3], scale: [0.8, 0.8, 0.8], rotation: [0,Math.PI/2,0],
+                     color: "#fde047", label: "Farola"
+                  });
+               }
+               
+               // Neon accent on some buildings
+               if (Math.random() > 0.6) {
+                  generatedObjects.push({
+                     id: "ai_neon_"+Date.now()+"_"+x+"_"+z, type: "wall", shape: "cube",
+                     position: [x, height - 1, z+2.2], scale: [3, 1, 0.2], rotation: [0,0,0],
+                     color: Math.random() > 0.5 ? "#0ea5e9" : "#e11d48", label: "Letrero Neon", texture_style: "neon"
                   });
                }
             }
          }
-         setShowNotification("Zona urbana generada.");
+         setShowNotification("Distrito urbano y rascacielos generados.");
          
       } else if (p.includes("desierto") || p.includes("arena") || p.includes("desert") || p.includes("calor")) {
          newMapProps.skyPreset = "desert";
          newMapProps.floorTexture = "sand";
          newMapProps.fogColor = "#78350f";
+         newMapProps.fogDensity = 10;
+         
+         const spread = 50;
+         // Desert rocks and plateaus
+         for(let i=0; i<15; i++) {
+            generatedObjects.push({
+               id: "ai_d_rock_"+Date.now()+"_"+i, type: "nature", nature_type: "rock",
+               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
+               scale: [Math.random()*6+3, Math.random()*4+1, Math.random()*6+3],
+               color: "#b45309", label: "Formación Rocosa"
+            });
+         }
+         // Cactus
+         for(let i=0; i<15; i++) {
+            generatedObjects.push({
+               id: "ai_d_cactus_"+Date.now()+"_"+i, type: "prop", prop_type: "cactus",
+               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
+               scale: [1, 1 + Math.random()*0.5, 1], color: "#166534", label: "Cactus"
+            });
+         }
+         // Small dry bushes
+         for(let i=0; i<20; i++) {
+            generatedObjects.push({
+               id: "ai_d_bush_"+Date.now()+"_"+i, type: "prop", prop_type: "bush",
+               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
+               scale: [0.8, 0.6, 0.8], color: "#78350f", label: "Arbusto Seco"
+            });
+         }
+         // A hidden temple ruin
+         generatedObjects.push({ id: "ai_temple", type: "prop", prop_type: "ruined_building", position: [0, 0, -20], scale: [2, 2, 2], color: "#d97706", label: "Ruinas Antiguas" });
+         
+         setShowNotification("Desierto árido y ruinas generadas.");
+      } else if (p.includes("nieve") || p.includes("hielo") || p.includes("snow") || p.includes("invierno")) {
+         newMapProps.skyPreset = "noon";
+         newMapProps.floorTexture = "snow";
+         newMapProps.fogColor = "#e2e8f0";
          newMapProps.fogDensity = 15;
          
          const spread = 40;
-         for(let i=0; i<12; i++) {
+         for(let i=0; i<30; i++) {
             generatedObjects.push({
-               id: "ai_d_rock_"+Date.now()+"_"+i,
-               type: "nature", nature_type: "rock",
+               id: "ai_snowpine_"+Date.now()+"_"+i, type: "prop", prop_type: "snow_pine",
                position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [Math.random()*4+2, Math.random()*3+2, Math.random()*4+2],
-               color: "#9a3412", label: "Roca Desértica"
+               scale: [1 + Math.random()*0.5, 1 + Math.random()*0.5, 1 + Math.random()*0.5],
+               color: "#f8fafc", label: "Pino Nevado"
             });
          }
-         setShowNotification("Desierto árido generado.");
-         
+         for(let i=0; i<10; i++) {
+            generatedObjects.push({
+               id: "ai_ice_rock_"+Date.now()+"_"+i, type: "nature", nature_type: "rock",
+               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
+               scale: [Math.random()*3+1, Math.random()+0.5, Math.random()*3+1], color: "#cbd5e1", label: "Roca Congelada"
+            });
+         }
+         setShowNotification("Bioma nevado glacial generado.");
       } else {
-         generatedObjects.push({ id: "ai_"+Date.now(), type: "wall", shape: "cube", position: [0, 4, -10], scale: [8, 8, 8], color: "#475569", label: "Estructura AI", texture_style: "metal" });
+         generatedObjects.push({ id: "ai_"+Date.now(), type: "prop", prop_type: "skyscraper", position: [0, 0, -10], scale: [1, 2, 1], color: "#475569", label: "Estructura Base" });
          setShowNotification("Estructura base generada por IA.");
       }
       
@@ -3278,10 +3547,10 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
               {/* LEFT CATALOGUE DRAWER */}
               {leftSidebarOpen && (
-                <div className="absolute left-3 top-24 bottom-20 bg-[#090d16]/96 backdrop-blur-md border border-cyan-500/20 p-4 rounded-3xl w-72 md:w-80 shadow-2xl flex flex-col gap-3 overflow-hidden z-20 select-none border-solid text-white transition-all duration-300">
+                <div className="absolute left-3 right-3 md:right-auto md:w-80 top-24 bottom-20 bg-[#090d16]/96 backdrop-blur-md border border-cyan-500/20 p-4 rounded-3xl shadow-2xl flex flex-col gap-3 overflow-hidden z-20 select-none border-solid text-white transition-all duration-300">
                   <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <h3 className="text-cyan-400 font-extrabold font-mono text-xs tracking-wider flex items-center gap-1.5"><Sparkles className="w-4 h-4"/> BIBLIOTECA</h3>
-                    <button onClick={() => setLeftSidebarOpen(false)} className="text-gray-500 hover:text-white px-2 py-0.5 rounded font-black font-mono text-[9px] uppercase border border-white/5">Ocultar</button>
+                    <button onClick={() => setLeftSidebarOpen(false)} className="text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg font-black font-mono text-[9px] uppercase border border-white/10 active:scale-95 cursor-pointer">Cerrar</button>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto pr-1 select-none no-scrollbar space-y-3.5">
@@ -3301,23 +3570,23 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                                   rotation: [0, 0, 0],
                                   label: item.label || item.npc_name || "Elemento"
                                 };
-                                setObjects([...objects, newItem]);
+                                updateObjectsWithHistory([...objects, newItem]);
                                 setSelectedId(newId);
                                 setShowNotification(`¡Añadido ${item.label || item.npc_name || "Objeto"} en el centro del mapa!`);
                                 setTimeout(() => setShowNotification(null), 2500);
                               }}
-                              className="bg-white/5 hover:bg-cyan-500/10 active:bg-cyan-500/20 text-white hover:text-cyan-200 p-2.5 rounded-2xl text-[9px] font-mono flex flex-col items-center justify-center gap-1.5 cursor-pointer border border-white/5 transition-all w-full select-none"
+                              className="bg-black/40 hover:bg-cyan-500/10 active:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 p-3 rounded-2xl text-[10px] font-bold flex flex-col items-center justify-center gap-2 cursor-pointer border border-white/5 hover:border-cyan-500/30 transition-all w-full select-none"
                             >
-                              {item.type === 'wall' ? <Square className="w-4 h-4 text-cyan-400"/> :
-                               item.type === 'water' ? <Sparkles className="w-4 h-4 text-sky-400"/> :
-                               item.type === 'pickup' ? <Zap className="w-4 h-4 text-yellow-400"/> :
-                               item.type === 'checkpoint' ? <MapPin className="w-4 h-4 text-emerald-400"/> :
-                               item.type === 'vehicle' ? <Zap className="w-4 h-4 text-red-400"/> :
-                               item.type === 'light' ? <Eye className="w-4 h-4 text-cyan-300"/> :
-                               item.type === 'nature' ? <Info className="w-4 h-4 text-emerald-400"/> :
-                               item.type === 'enemy' ? <Shield className="w-4 h-4 text-red-500"/> :
-                               <UserCircle className="w-4 h-4 text-fuchsia-400"/>}
-                              <span className="text-center leading-tight truncate w-full">{item.label || item.npc_name || "Elemento"}</span>
+                              {item.type === 'wall' ? <Square className="w-5 h-5 text-cyan-400"/> :
+                               item.type === 'water' ? <Sparkles className="w-5 h-5 text-sky-400"/> :
+                               item.type === 'pickup' ? <Zap className="w-5 h-5 text-yellow-400"/> :
+                               item.type === 'checkpoint' ? <MapPin className="w-5 h-5 text-emerald-400"/> :
+                               item.type === 'vehicle' ? <Zap className="w-5 h-5 text-red-400"/> :
+                               item.type === 'light' ? <Eye className="w-5 h-5 text-cyan-300"/> :
+                               item.type === 'nature' ? <Info className="w-5 h-5 text-emerald-400"/> :
+                               item.type === 'enemy' ? <Shield className="w-5 h-5 text-red-500"/> :
+                               <UserCircle className="w-5 h-5 text-fuchsia-400"/>}
+                              <span className="text-center leading-tight truncate w-full" title={item.label || item.npc_name || "Elemento"}>{item.label || item.npc_name || "Elemento"}</span>
                             </button>
                           ))}
                         </div>
@@ -3340,17 +3609,17 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
 
               {/* RIGHT SETTINGS PANEL */}
               {rightSidebarOpen && (
-                <div className="absolute right-3 top-24 bottom-20 bg-[#090d16]/96 backdrop-blur-md border border-cyan-500/20 p-4 rounded-3xl w-72 md:w-80 shadow-2xl flex flex-col gap-3 overflow-hidden z-20 select-none border-solid text-white transition-all duration-300">
+                <div className="absolute left-3 right-3 md:left-auto md:right-3 md:w-80 top-24 bottom-20 bg-[#090d16]/96 backdrop-blur-md border border-cyan-500/20 p-4 rounded-3xl shadow-2xl flex flex-col gap-3 overflow-hidden z-20 select-none border-solid text-white transition-all duration-300">
                   <div className="flex items-center justify-between border-b border-white/5 pb-2 flex-shrink-0">
                     <h3 className="text-cyan-400 font-extrabold font-mono text-xs tracking-wider flex items-center gap-1.5"><Settings className="w-4 h-4"/> EDITOR</h3>
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => setSnapToggle(!snapToggle)} 
-                        className={snapToggle ? "text-[8px] px-2 py-0.5 rounded font-bold font-mono border transition-all bg-cyan-500/20 text-cyan-300 border-cyan-400/50" : "text-[8px] px-2 py-0.5 rounded font-bold font-mono border transition-all bg-slate-800 text-slate-500 border-white/5"}
+                        className={snapToggle ? "text-[9px] px-3 py-1.5 rounded-lg uppercase font-black font-mono border transition-all bg-cyan-500/20 text-cyan-300 border-cyan-400/50" : "text-[9px] px-3 py-1.5 rounded-lg uppercase font-black font-mono border transition-all bg-white/5 text-gray-400 border-white/10"}
                       >
                         SNAP: {snapToggle ? "ON" : "OFF"}
                       </button>
-                      <button onClick={() => setRightSidebarOpen(false)} className="text-gray-500 hover:text-white px-2 py-0.5 rounded font-black font-mono text-[9px] uppercase border border-white/5">Ocultar</button>
+                      <button onClick={() => setRightSidebarOpen(false)} className="text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg font-black font-mono text-[9px] uppercase border border-white/10 active:scale-95 cursor-pointer">Cerrar</button>
                     </div>
                   </div>
 
@@ -3409,6 +3678,8 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
                                { label: "Bosque Verde", prompt: "Bosque natural verde frondoso" },
                                { label: "Ciudad Urbana", prompt: "Ciudad urbana con edificios altos de acero" },
                                { label: "Desierto Árido", prompt: "Desierto cálido con dunas de arena rojiza" },
+                               { label: "Glacial Nevado", prompt: "Bioma de nieve e invierno" },
+                               { label: "Cyberpunk", prompt: "Ciudad estilo cyberpunk neon" },
                              ].map(b => (
                                <button 
                                  key={b.label}

@@ -5,9 +5,11 @@ import {
   Share2, MessageSquare, ExternalLink, Zap, Crosshair, Sparkles, Trash2, CheckCircle2,
   Compass, Sliders, Globe
 } from 'lucide-react';
-import { GameStudioEditor } from './GameStudioEditor';
-import { GameStudioEditor3D } from './GameStudioEditor3D';
+import { lazy, Suspense } from 'react';
 import PublishingWizard from '../PublishingWizard';
+
+const GameStudioEditor = lazy(() => import('./GameStudioEditor').then(m => ({ default: m.GameStudioEditor })));
+const GameStudioEditor3D = lazy(() => import('./GameStudioEditor3D').then(m => ({ default: m.GameStudioEditor3D })));
 import { 
   getOfflineGames, 
   saveOfflineGame, 
@@ -132,11 +134,19 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
   };
 
   if (editorTemplate?.includes('3D')) {
-    return <GameStudioEditor3D initialTemplate={editorTemplate} draftId={editorDraftId} onBack={() => { setEditorTemplate(null); setEditorDraftId(null); }} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#090b14] flex items-center justify-center text-cyan-400 font-mono text-sm animate-pulse">Iniciando Motor 3D...</div>}>
+         <GameStudioEditor3D initialTemplate={editorTemplate} draftId={editorDraftId} onBack={() => { setEditorTemplate(null); setEditorDraftId(null); }} />
+      </Suspense>
+    );
   }
 
   if (editorTemplate) {
-    return <GameStudioEditor initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#090b14] flex items-center justify-center text-cyan-400 font-mono text-sm animate-pulse">Iniciando Motor 2D...</div>}>
+         <GameStudioEditor initialTemplate={editorTemplate} onBack={() => setEditorTemplate(null)} />
+      </Suspense>
+    );
   }
 
   if (publishingDraftId) {
