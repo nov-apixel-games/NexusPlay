@@ -11,21 +11,23 @@ import Hero from './components/Hero';
 import CategorySection from './components/CategorySection';
 import AppGrid, { AppCard } from './components/AppGrid';
 import BottomNav from './components/BottomNav';
-import DeveloperPanel from './components/DeveloperPanel';
+import { lazy, Suspense } from 'react';
 import { AppItem, UserItem, AIConfig, DevRequest } from './types';
-import AdminPanel from './components/AdminPanel';
-import NexusAIChat from './components/NexusAIChat';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
-import { ShieldAlert, Heart, Menu, Search, Bell } from 'lucide-react';
+import { ShieldAlert, Heart, Menu, Search, Bell, DownloadCloud, UploadCloud } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Footer from './components/Footer';
 import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditionsView, CookiePolicyView, AboutView } from './components/views/LegalViews';
 import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
-import { GamesHubView } from './components/views/GamesHubView';
-import { AppDetailView } from './components/views/AppDetailView';
-import { SettingsView } from './components/views/SettingsView';
-import NexusHub from './components/NexusHub';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
+
+const NexusHub = lazy(() => import('./components/NexusHub'));
+const DeveloperPanel = lazy(() => import('./components/DeveloperPanel'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const NexusAIChat = lazy(() => import('./components/NexusAIChat'));
+const GamesHubView = lazy(() => import('./components/views/GamesHubView').then(m => ({ default: m.GamesHubView })));
+const AppDetailView = lazy(() => import('./components/views/AppDetailView').then(m => ({ default: m.AppDetailView })));
+const SettingsView = lazy(() => import('./components/views/SettingsView').then(m => ({ default: m.SettingsView })));
 import AuthModal from './components/AuthModal';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
@@ -61,7 +63,7 @@ export default function App() {
       if (!navigator.onLine) throw new Error("Offline");
       
       const fetchPromise = supabase.from('site_settings').select('*').single();
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
       
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
@@ -183,12 +185,12 @@ export default function App() {
       }
     };
     
-    // Recovery system: Always force load after 6 seconds
+    // Recovery system: Always force load after 2.5 seconds max
     fallbackTimeout = setTimeout(() => {
       console.warn("Recovery mode activated: Forcing app initialization");
       setIsInitializing(false);
-      setIsOffline(true);
-    }, 6000);
+      if (!navigator.onLine) setIsOffline(true);
+    }, 2500);
     
     runInit();
     
@@ -235,7 +237,7 @@ export default function App() {
       } catch(e) {}
     } else {
       const sessionPromise = supabase.auth.getSession();
-      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
       Promise.race([sessionPromise, sessionTimeout]).then(({ data: { session } }: any) => {
         setSession(session);
         if (session?.user) {
@@ -289,7 +291,7 @@ export default function App() {
       }
       
       const sessionPromise = supabase.auth.getSession();
-      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
       const { data: { session: freshSession } } = await Promise.race([sessionPromise, sessionTimeout]) as any;
       
       const currentSession = freshSession || session;
@@ -298,7 +300,7 @@ export default function App() {
 
       // 1. Intentar obtener perfil existente
       const profilePromise = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-      const profileTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000));
+      const profileTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
       const { data, error } = await Promise.race([profilePromise, profileTimeout]) as any;
       
       if (error) {
@@ -973,7 +975,9 @@ export default function App() {
 
       {isFullScreenView ? (
          <div className="flex-1 w-full h-screen">
-            <ActiveViewContent />
+            <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-[#0a0c16]">Cargando Módulo...</div>}>
+              <ActiveViewContent />
+            </Suspense>
          </div>
       ) : (
         <main className="max-w-7xl mx-auto flex-1 w-full relative z-10 flex flex-col">
@@ -986,7 +990,9 @@ export default function App() {
               transition={{ duration: 0.2 }}
               className="flex-1 w-full flex flex-col"
             >
-              <ActiveViewContent />
+              <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">Cargando Sección...</div>}>
+                <ActiveViewContent />
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>
@@ -997,13 +1003,15 @@ export default function App() {
       )}
 
       {showDevPanel && session && (
-        <DeveloperPanel 
-          userId={session.user.id}
-          userProfile={userProfile}
-          onAddApp={handleAddApp} 
-          onClose={() => setShowDevPanel(false)}
-          publishedApps={apps.filter(a => a.developerId === session.user.id || a.developer === userProfile?.username)} 
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 font-mono text-cyan-400 animate-pulse">Cargando Panel Dev...</div>}>
+          <DeveloperPanel 
+            userId={session.user.id}
+            userProfile={userProfile}
+            onAddApp={handleAddApp} 
+            onClose={() => setShowDevPanel(false)}
+            publishedApps={apps.filter(a => a.developerId === session.user.id || a.developer === userProfile?.username)} 
+          />
+        </Suspense>
       )}
 
       {!showAuthModal && activeView !== 'nexus-ai' && activeView !== 'admin-panel' && activeView !== 'nexus-hub' && (
