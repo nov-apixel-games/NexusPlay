@@ -8,25 +8,15 @@ import { supabase } from '../../lib/supabase';
 import { SystemMetrics } from './SystemMetrics';
 
 export function AdminDashboard({ apps, users }: { apps: AppItem[], users: UserItem[] }) {
-  const [cpu, setCpu] = useState(35);
-  const [ram, setRam] = useState(62);
-  const [io, setIo] = useState(25);
+  const [sysStats, setSysStats] = useState<any>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCpu(prev => Math.min(100, Math.max(10, prev + (Math.random() * 20 - 10))));
-      setRam(prev => Math.min(100, Math.max(20, prev + (Math.random() * 8 - 4))));
-      setIo(prev => Math.min(100, Math.max(5, prev + (Math.random() * 30 - 15))));
-    }, 2000);
-    return () => clearInterval(interval);
+    fetch('/api/system-stats').then(res => res.json()).then(json => {
+      if (json.success) setSysStats(json);
+    }).catch(e => console.error(e));
   }, []);
 
-  const totalDownloads = apps.reduce((acc, current) => {
-    // Fake parsing of "100M+" etc to number
-    const val = parseInt(current.downloads.replace(/[^0-9]/g, '')) || 0;
-    return acc + val;
-  }, 0);
-
+  const totalDownloads = apps.reduce((acc, current) => acc + (current.download_count || 0), 0);
   const pendingApps = apps.filter(a => a.status === 'pending').length;
   const publishedApps = apps.filter(a => a.status !== 'pending' && a.status !== 'rejected').length;
 
@@ -37,23 +27,19 @@ export function AdminDashboard({ apps, users }: { apps: AppItem[], users: UserIt
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard icon={Smartphone} title="Apps Publicadas" value={publishedApps} color="text-red-500" />
         <MetricCard icon={Users} title="Usuarios" value={users.length} color="text-rose-400" />
-        <MetricCard icon={Download} title="Descargas Totales" value={`${totalDownloads}M+`} color="text-red-400" />
+        <MetricCard icon={Download} title="Descargas Totales" value={totalDownloads} color="text-red-400" />
         <MetricCard icon={ShieldAlert} title="Apps Pendientes" value={pendingApps} color="text-yellow-500" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-red-500" /> Tráfico (Mock)</h3>
-          <div className="flex items-end gap-2 h-48 mt-4">
-            {[40, 70, 45, 90, 65, 120, 85].map((val, i) => (
-              <div key={i} className="flex-1 bg-red-500/20 hover:bg-red-500/50 rounded-t-lg transition-all relative group" style={{ height: `${(val / 120) * 100}%` }}>
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-2 py-1 rounded">{val}k</span>
-              </div>
-            ))}
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-red-500" /> Monitoreo de Recursos en Tiempo Real</h3>
+          <div className="mt-4 space-y-4">
+               <ProgressBar label="CPU System" value={sysStats ? Math.round((sysStats.systemInfo.loadAvg[0] / sysStats.systemInfo.cpuCores) * 100) : 0} color="bg-red-500" />
+               <ProgressBar label="RAM System" value={sysStats ? Math.round(((sysStats.systemInfo.totalMem - sysStats.systemInfo.freeMem) / sysStats.systemInfo.totalMem) * 100) : 0} color="bg-rose-500" />
+               <ProgressBar label="Server IO (Aprox)" value={sysStats ? 15 : 0} color="bg-red-900" />
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-500 font-medium">
-            <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
-          </div>
+          <p className="mt-6 text-xs text-center text-gray-500">Datos obtenidos de /api/system-stats (OS Module)</p>
         </div>
 
         <SystemMetrics />

@@ -333,6 +333,37 @@ ${JSON.stringify(catalogue, null, 2)}
     }
   });
 
+  // API Route: Nexus 3D Editor AI
+  app.post("/api/nexus-3d-ai", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      const systemInstruction = `Eres una IA experta en diseño de niveles 3D para una plataforma estilo Roblox/Three.js.
+Genera un array de objetos JSON para construir el escenario. Cada objeto debe tener:
+- id (string único)
+- type ("wall", "prop", "nature", "enemy")
+- shape ("cube", "sphere", "cylinder") si es wall
+- prop_type ("ruined_building", "car_abandoned", "bush", "tree", "rock", "skyscraper", "street_light", "cactus") si es prop o nature
+- position ([x, y, z])
+- scale ([x, y, z])
+- rotation ([x, y, z])
+- color (código hex)
+- label (nombre descriptivo)
+También puedes retornar un objeto de configuración del mapa si lo deseas.
+ESTRICTAMENTE devuelve SOLO UN ARREGLO JSON válido y envuélvelo en \`\`\`json y \`\`\`.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { systemInstruction: systemInstruction, temperature: 0.8 }
+      });
+      
+      res.json({ success: true, text: response.text });
+    } catch (error: any) {
+      console.error("[Nexus 3D AI Error]", error);
+      res.status(500).json({ error: error.message || "Error al procesar la generación 3D" });
+    }
+  });
+
   // Global Error Handler
   app.use((err: any, req: any, res: any, next: any) => {
     console.error("[Global Error Handled]", err);
@@ -430,6 +461,8 @@ ${JSON.stringify(catalogue, null, 2)}
          freeMem: os.freemem(),
          processUptime: process.uptime(),
          serverUptime: os.uptime(),
+         loadAvg: os.loadavg(),
+         vercelAvailable: !!process.env.VERCEL_TOKEN
        };
 
        res.json({ success: true, systemInfo, cloudinaryUsage });

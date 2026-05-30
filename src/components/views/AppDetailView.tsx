@@ -29,6 +29,7 @@ export function AppDetailView({
   const [realDownloads, setRealDownloads] = useState<string>(app.download_count?.toString() || app.downloads || '0');
   const [reviewStats, setReviewStats] = useState({ average: 0, total: 0, distribution: {1:0, 2:0, 3:0, 4:0, 5:0} });
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   
   // Track download version
   const downloadedVersion = localStorage.getItem(`nexus_app_version_${app.id}`);
@@ -45,6 +46,37 @@ export function AppDetailView({
 
     fetchReviews();
   }, [app.id]);
+
+  useEffect(() => {
+     if (userId) {
+        checkFavoriteStatus();
+     }
+  }, [userId, app.id]);
+
+  const checkFavoriteStatus = async () => {
+     try {
+        const { data, error } = await supabase.from('favorites').select('id').eq('user_id', userId).eq('app_id', app.id).maybeSingle();
+        if (data) setIsFavorited(true);
+     } catch(e) {}
+  };
+
+  const toggleFavorite = async () => {
+     if (!userId) {
+         alert('Debes iniciar sesión para añadir a favoritos.');
+         return;
+     }
+     try {
+        if (isFavorited) {
+           await supabase.from('favorites').delete().eq('user_id', userId).eq('app_id', app.id);
+           setIsFavorited(false);
+        } else {
+           await supabase.from('favorites').insert({ user_id: userId, app_id: app.id });
+           setIsFavorited(true);
+        }
+     } catch(e) {
+         console.warn("Favorites error", e);
+     }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -105,6 +137,9 @@ export function AppDetailView({
 
   const incrementDownloads = async () => {
     try {
+      const alreadyDownloaded = localStorage.getItem(`has_downloaded_${app.id}`);
+      if (alreadyDownloaded) return; // Prevent fake farming
+
       const currentCount = app.download_count || 0;
       const newCount = currentCount + 1;
       
@@ -114,6 +149,7 @@ export function AppDetailView({
       }
       
       setRealDownloads(newCount.toString());
+      localStorage.setItem(`has_downloaded_${app.id}`, 'true');
       
       const { error } = await supabase.from('apps').update({ 
         downloads: (numericDownloadsStr + 1).toString(),
@@ -205,10 +241,10 @@ export function AppDetailView({
           </button>
           
           <div className="flex items-center gap-3">
-             <button className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-red-500">
-               <Heart className="w-5 h-5" />
+             <button onClick={toggleFavorite} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-red-500 cursor-pointer">
+               <Heart className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
              </button>
-             <button className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-nexus-cyan">
+             <button className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-nexus-cyan cursor-pointer">
                <Share2 className="w-5 h-5" />
              </button>
           </div>

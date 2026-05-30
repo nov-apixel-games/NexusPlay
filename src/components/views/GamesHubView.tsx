@@ -23,39 +23,12 @@ import {
 
 interface GamesHubViewProps {
   onBack: () => void;
+  apps?: any[];
+  session?: any;
+  userProfile?: any;
 }
 
-const COMMUNITY_GAMES: OfflineGame[] = [
-  {
-    id: "pub_1",
-    title: "Neon Cyber Racer",
-    developer: "ZeroDev",
-    category: "Racing 3D",
-    rating: 4.9,
-    description: "Carreras futuristas con multijugador asíncrono y leaderboards mundiales.",
-    playCount: 15420
-  },
-  {
-    id: "pub_2",
-    title: "Zombie Last Stand Outpost",
-    developer: "NexusTeam",
-    category: "Zombie Survival 3D",
-    rating: 4.8,
-    description: "Defiende tu base el mayor tiempo posible con mecánicas de supervivencia y looteo avanzado.",
-    playCount: 8900
-  },
-  {
-    id: "pub_3",
-    title: "Skyborne Platformer HD",
-    developer: "Artisan3D",
-    category: "Platformer 3D",
-    rating: 4.6,
-    description: "Un mundo vibrante PBR con físicas precisas y checkpoints en nubes.",
-    playCount: 4200
-  }
-];
-
-export function GamesHubView({ onBack }: GamesHubViewProps) {
+export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesHubViewProps) {
   const [activeTab, setActiveTab] = useState('explore');
   const [editorTemplate, setEditorTemplate] = useState<string | null>(null);
   const [editorDraftId, setEditorDraftId] = useState<string | null>(null);
@@ -296,7 +269,7 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                 <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
                    <Star className="w-5 h-5 text-yellow-400" /> Destacados de la Comunidad
                 </h2>
-                {COMMUNITY_GAMES.length === 0 ? (
+                {apps.length === 0 ? (
                   <div className="w-full bg-[#0d1017] rounded-3xl border border-cyan-500/20 p-12 flex flex-col items-center justify-center text-center shadow-[0_0_30px_rgba(6,182,212,0.1)] relative overflow-hidden group">
                     <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none"></div>
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 blur-[100px] rounded-full"></div>
@@ -316,12 +289,17 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {COMMUNITY_GAMES.map((game) => {
+                    {apps.map((game) => {
+                      // Usar favorite states. A future update can use actual user favorites.
                       const isFav = favorites.some(f => f.id === game.id);
                       return (
-                        <div key={game.id} onClick={() => setSelectedGamePage(game)} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 group hover:border-cyan-500/30 transition-all hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer">
+                        <div key={game.id} onClick={() => setSelectedGamePage(game as any)} className="bg-[#12141c] rounded-[24px] overflow-hidden border border-white/5 group hover:border-cyan-500/30 transition-all hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer">
                           <div className="aspect-video bg-[#1a1c24] relative overflow-hidden flex items-center justify-center">
-                            <Gamepad2 className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-500" />
+                            {game.banner_url ? (
+                               <img src={game.banner_url} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            ) : (
+                               <Gamepad2 className="w-12 h-12 text-white/10 group-hover:scale-110 transition-transform duration-500" />
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-[#12141c] to-transparent opacity-80"></div>
                             <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full flex items-center gap-1.5">
                               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
@@ -335,15 +313,15 @@ export function GamesHubView({ onBack }: GamesHubViewProps) {
                                 <p className="text-gray-400 text-xs mt-1">Por {game.developer} • {game.category}</p>
                               </div>
                               <div className="bg-yellow-500/10 text-yellow-500 px-2 py-1.5 rounded-xl flex items-center gap-1 font-bold text-xs shrink-0 h-8">
-                                 <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" /> {game.rating}
+                                 <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" /> {game.rating || '0.0'}
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                               <button onClick={(e) => { e.stopPropagation(); handlePlayGame(game); }} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                               <button onClick={(e) => { e.stopPropagation(); handlePlayGame(game as any); }} className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
                                  <Play className="w-5 h-5" /> Jugar Ahora
                                </button>
                                <button 
-                                 onClick={(e) => { e.stopPropagation(); handleToggleFavorite(game, e); }} 
+                                 onClick={(e) => { e.stopPropagation(); handleToggleFavorite(game as any, e); }} 
                                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors cursor-pointer ${
                                    isFav ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
                                  }`}

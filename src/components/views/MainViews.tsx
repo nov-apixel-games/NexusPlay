@@ -63,9 +63,48 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
   };
 
   const [activeTab, setActiveTab] = useState<'feed' | 'packs'>('feed');
+  const [feedItems, setFeedItems] = useState<any[]>([]);
 
-  // Social feed will depend on a backend table in the future
-  const feedItems: any[] = [];
+  useEffect(() => {
+    const fetchFeed = async () => {
+      // Fetch recent reviews
+      const { data: reviews } = await supabase.from('reviews').select('*, profiles(username, avatar_url)').order('created_at', { ascending: false }).limit(10);
+      
+      let items: any[] = [];
+      if (reviews) {
+         items = reviews.map(r => {
+            const relApp = apps.find(a => a.id === r.app_id);
+            return {
+               id: r.id,
+               type: 'review',
+               user: r.profiles?.username || r.user_name || 'Anónimo',
+               avatar: r.profiles?.avatar_url || null,
+               time: new Date(r.created_at).toLocaleDateString(),
+               content: `Dejó una reseña de ${r.rating} estrellas en ${relApp?.title || 'una app'}: "${r.comment}"`,
+               image: null
+            };
+         });
+      }
+
+      // Add recent apps to feed
+      const recentApps = [...apps].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice(0, 5);
+      const appItems = recentApps.map(a => ({
+         id: a.id,
+         type: 'new_app',
+         user: a.developer,
+         avatar: null,
+         time: new Date(a.created_at || 0).toLocaleDateString(),
+         content: `¡Ha publicado un nuevo juego: ${a.title}! Ya puedes jugarlo en el catálogo.`,
+         image: a.banner_url || a.icon
+      }));
+
+      const combined = [...items, ...appItems].sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      setFeedItems(combined);
+    };
+    
+    fetchFeed();
+  }, [apps]);
+
   const packs: any[] = [];
 
   const trends = apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 4);

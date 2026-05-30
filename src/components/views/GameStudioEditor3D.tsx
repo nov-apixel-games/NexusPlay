@@ -1337,7 +1337,9 @@ function getProceduralTexture(type: string): THREE.Texture {
     return textureCache[type];
   }
 
-  const S = window.innerWidth < 768 ? 2 : 4; // Scale factor for high res textures
+  // Extreme optimization for mobile mid-tier devices (Samsung A23)
+  const isMobile = window.innerWidth < 768;
+  const S = isMobile ? 1 : 2; // Scale factor for high res textures
   const canvas = document.createElement('canvas');
   canvas.width = 128 * S;
   canvas.height = 128 * S;
@@ -2643,213 +2645,86 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
   // Stats for the live Speed HUD
   const [racingHUD, setRacingHUD] = useState({ speed: 0, lap: 1, best: 99.9 });
 
-  const handleAIGeneration = () => {
+  const handleAIGeneration = async () => {
     if(!nexusAIPrompt.trim()) return;
     setShowNotification("Analizando prompt con Nexus AI...");
     
-    setTimeout(() => {
-      const p = nexusAIPrompt.toLowerCase();
-      let generatedObjects: GameObject3D[] = [...objects];
-      let newMapProps = { ...mapProps };
-      
-      if (p.includes("desolado") || p.includes("apocal") || p.includes("ruin") || p.includes("destruido")) {
-         newMapProps.skyPreset = "nuclear";
-         newMapProps.floorTexture = "concrete";
-         newMapProps.fogColor = "#1f2937";
-         newMapProps.fogDensity = 15;
-         
-         const spread = 30;
-         // Generate broken road
-         for (let z = -spread; z <= spread; z += 15) {
-            generatedObjects.push({
-               id: "ai_road_"+Date.now()+"_"+z,
-               type: "wall", shape: "cube",
-               position: [0, 0.1, z], scale: [8, 0.2, 14], rotation: [0, 0, 0],
-               color: "#334155", label: "Carretera Rota", texture_style: "ruins"
-            });
-         }
-         // Generate ruined buildings and cars on the sides
-         for(let i=0; i<12; i++) {
-            const isLeft = Math.random() > 0.5;
-            const px = (isLeft ? -1 : 1) * (10 + Math.random() * 10);
-            const pz = (Math.random() - 0.5) * spread * 2;
-            
-            if (Math.random() > 0.3) {
-               generatedObjects.push({
-                  id: "ai_bldg_"+Date.now()+"_"+i,
-                  type: "prop", prop_type: "ruined_building",
-                  position: [px, 0, pz], scale: [1, 1, 1], rotation: [0, Math.random()*0.5, 0],
-                  color: "#475569", label: "Edificio Destruido"
-               });
-            } else {
-               generatedObjects.push({
-                  id: "ai_car_"+Date.now()+"_"+i,
-                  type: "prop", prop_type: "car_abandoned",
-                  position: [px, 0, pz], scale: [1.2, 1.2, 1.2], rotation: [0, Math.random()*3, 0],
-                  color: "#64748b", label: "Auto Destruido"
-               });
-            }
-            // Add toxic barrels
-            if (Math.random() > 0.4) {
-               generatedObjects.push({
-                 id: "ai_barrel_"+Date.now()+"_"+i, type: "wall", shape: "cylinder",
-                 position: [px + 2, 0.5, pz + 2], scale: [0.8, 1, 0.8], rotation: [0,0,0],
-                 color: "#ea580c", label: "Barril Tóxico", texture_style: "metal"
-               });
-            }
-         }
-         // Add some zombie enemies
-         for (let i=0; i<4; i++) {
-            generatedObjects.push({
-              id: "ai_zombie_"+Date.now()+"_"+i, type: "enemy", enemy_type: "zombie",
-              position: [(Math.random()-0.5)*15, 0, (Math.random()-0.5)*20], scale: [1,1,1], color: "#22c55e", label: "Zombie Oculto"
-            })
-         }
-         setShowNotification("Mundo desolado post-apocalíptico generado.");
-         
-      } else if (p.includes("bosque") || p.includes("naturaleza") || p.includes("verde") || p.includes("forest")) {
-         newMapProps.skyPreset = "forest";
-         newMapProps.floorTexture = "grass";
-         newMapProps.fogColor = "#14532d";
-         newMapProps.fogDensity = 12;
-         
-         const spread = 40;
-         // Generate clusters of trees
-         for(let i=0; i<25; i++) {
-            const px = (Math.random()-0.5)*spread;
-            const pz = (Math.random()-0.5)*spread;
-            const tScale = Math.random() * 0.8 + 0.8;
-            generatedObjects.push({
-               id: "ai_tree_"+Date.now()+"_"+i, type: "nature", nature_type: "tree",
-               position: [px, 0, pz], scale: [tScale, tScale*1.2, tScale], color: "#16a34a", label: "Pino Grande"
-            });
-            // Adding a small bush next to some trees
-            if (Math.random() > 0.5) {
-               generatedObjects.push({
-                 id: "ai_bush_"+Date.now()+"_"+i, type: "prop", prop_type: "bush",
-                 position: [px + 1.5, 0, pz + 1.5], scale: [1, 1, 1], color: "#15803d", label: "Arbusto"
-               });
-            }
-         }
-         // Add some natural rocks
-         for(let i=0; i<10; i++) {
-            generatedObjects.push({
-               id: "ai_rock_"+Date.now()+"_"+i, type: "nature", nature_type: "rock",
-               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [Math.random()*2+1, Math.random()+0.5, Math.random()*2+1], color: "#94a3b8", label: "Roca Natural"
-            });
-         }
-         setShowNotification("Bosque frondoso y realista generado.");
-         
-      } else if (p.includes("ciudad") || p.includes("urbano") || p.includes("city")) {
-         newMapProps.skyPreset = "sunset";
-         newMapProps.floorTexture = "road";
-         newMapProps.fogColor = "#0f172a";
-         newMapProps.fogDensity = 18;
-         
-         // Generate City Blocks
-         for (let x = -25; x <= 25; x += 12) {
-            for (let z = -25; z <= 25; z += 12) {
-               if(Math.abs(x) < 4 && Math.abs(z) < 4) continue; // leave center open
-               
-               const height = Math.random() * 8 + 6;
-               generatedObjects.push({
-                  id: "ai_skys_"+Date.now()+"_"+x+"_"+z,
-                  type: "prop", prop_type: "skyscraper",
-                  position: [x, 0, z], scale: [1, height/8, 1], rotation: [0,0,0],
-                  color: Math.random() > 0.5 ? "#1e293b" : "#334155", 
-                  label: "Rascacielos Moderno"
-               });
-               
-               // Street Lights
-               if (x % 2 !== 0) {
-                  generatedObjects.push({
-                     id: "ai_lamp_"+Date.now()+"_"+x+"_"+z, type: "prop", prop_type: "street_light",
-                     position: [x - 3, 0, z + 3], scale: [0.8, 0.8, 0.8], rotation: [0,Math.PI/2,0],
-                     color: "#fde047", label: "Farola"
-                  });
-               }
-               
-               // Neon accent on some buildings
-               if (Math.random() > 0.6) {
-                  generatedObjects.push({
-                     id: "ai_neon_"+Date.now()+"_"+x+"_"+z, type: "wall", shape: "cube",
-                     position: [x, height - 1, z+2.2], scale: [3, 1, 0.2], rotation: [0,0,0],
-                     color: Math.random() > 0.5 ? "#0ea5e9" : "#e11d48", label: "Letrero Neon", texture_style: "neon"
-                  });
-               }
-            }
-         }
-         setShowNotification("Distrito urbano y rascacielos generados.");
-         
-      } else if (p.includes("desierto") || p.includes("arena") || p.includes("desert") || p.includes("calor")) {
-         newMapProps.skyPreset = "desert";
-         newMapProps.floorTexture = "sand";
-         newMapProps.fogColor = "#78350f";
-         newMapProps.fogDensity = 10;
-         
-         const spread = 50;
-         // Desert rocks and plateaus
-         for(let i=0; i<15; i++) {
-            generatedObjects.push({
-               id: "ai_d_rock_"+Date.now()+"_"+i, type: "nature", nature_type: "rock",
-               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [Math.random()*6+3, Math.random()*4+1, Math.random()*6+3],
-               color: "#b45309", label: "Formación Rocosa"
-            });
-         }
-         // Cactus
-         for(let i=0; i<15; i++) {
-            generatedObjects.push({
-               id: "ai_d_cactus_"+Date.now()+"_"+i, type: "prop", prop_type: "cactus",
-               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [1, 1 + Math.random()*0.5, 1], color: "#166534", label: "Cactus"
-            });
-         }
-         // Small dry bushes
-         for(let i=0; i<20; i++) {
-            generatedObjects.push({
-               id: "ai_d_bush_"+Date.now()+"_"+i, type: "prop", prop_type: "bush",
-               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [0.8, 0.6, 0.8], color: "#78350f", label: "Arbusto Seco"
-            });
-         }
-         // A hidden temple ruin
-         generatedObjects.push({ id: "ai_temple", type: "prop", prop_type: "ruined_building", position: [0, 0, -20], scale: [2, 2, 2], color: "#d97706", label: "Ruinas Antiguas" });
-         
-         setShowNotification("Desierto árido y ruinas generadas.");
-      } else if (p.includes("nieve") || p.includes("hielo") || p.includes("snow") || p.includes("invierno")) {
-         newMapProps.skyPreset = "noon";
-         newMapProps.floorTexture = "snow";
-         newMapProps.fogColor = "#e2e8f0";
-         newMapProps.fogDensity = 15;
-         
-         const spread = 40;
-         for(let i=0; i<30; i++) {
-            generatedObjects.push({
-               id: "ai_snowpine_"+Date.now()+"_"+i, type: "prop", prop_type: "snow_pine",
-               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [1 + Math.random()*0.5, 1 + Math.random()*0.5, 1 + Math.random()*0.5],
-               color: "#f8fafc", label: "Pino Nevado"
-            });
-         }
-         for(let i=0; i<10; i++) {
-            generatedObjects.push({
-               id: "ai_ice_rock_"+Date.now()+"_"+i, type: "nature", nature_type: "rock",
-               position: [(Math.random()-0.5)*spread, 0, (Math.random()-0.5)*spread],
-               scale: [Math.random()*3+1, Math.random()+0.5, Math.random()*3+1], color: "#cbd5e1", label: "Roca Congelada"
-            });
-         }
-         setShowNotification("Bioma nevado glacial generado.");
-      } else {
-         generatedObjects.push({ id: "ai_"+Date.now(), type: "prop", prop_type: "skyscraper", position: [0, 0, -10], scale: [1, 2, 1], color: "#475569", label: "Estructura Base" });
-         setShowNotification("Estructura base generada por IA.");
-      }
-      
-      setMapProps(newMapProps);
-      updateObjectsWithHistory(generatedObjects);
-      setNexusAIPrompt("");
-    }, 1500);
+    try {
+        const res = await fetch('/api/nexus-3d-ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: nexusAIPrompt })
+        });
+        const json = await res.json();
+        
+        if (json.success && json.text) {
+             let generated;
+             const match = json.text.match(/```(?:json)?\n([\s\S]*?)\n```/i);
+             try {
+                if (match) {
+                    generated = JSON.parse(match[1]);
+                } else {
+                    // Try to parse the entire string if it didn't use backticks
+                    generated = JSON.parse(json.text);
+                }
+             } catch (e) {
+                 setShowNotification("Error: Formato JSON inválido desde IA.");
+                 return;
+             }
+             
+             if (generated) {
+                 const newObjects = Array.isArray(generated) ? generated : [generated];
+                 
+                 // Process missing IDs/rotations/scales
+                 const processedObjects = newObjects.filter(o => o.type).map(o => ({
+                     id: o.id || "ai_" + Date.now() + "_" + Math.floor(Math.random()*1000),
+                     type: o.type,
+                     shape: o.shape || (o.type === 'wall' ? 'cube' : undefined),
+                     nature_type: o.nature_type || (o.type === 'nature' ? 'tree' : undefined),
+                     prop_type: o.prop_type || (o.type === 'prop' ? 'skyscraper' : undefined),
+                     position: o.position || [0,0,0],
+                     scale: o.scale || [1,1,1],
+                     rotation: o.rotation || [0,0,0],
+                     color: o.color || "#ffffff",
+                     label: o.label || "Objeto AI"
+                 }));
+
+                 const keywords = aiPrompt.toLowerCase();
+                 let newTerrain = mapProps?.floorTexture || 'grid';
+                 let newSky = mapProps?.skyPreset || 'day';
+                 
+                 if (keywords.includes('nieve') || keywords.includes('snow') || keywords.includes('invierno')) {
+                    newTerrain = 'snow'; newSky = 'sunset';
+                 } else if (keywords.includes('ciudad') || keywords.includes('city') || keywords.includes('asfalto') || keywords.includes('calle')) {
+                    newTerrain = 'concrete'; newSky = 'night';
+                 } else if (keywords.includes('desierto') || keywords.includes('arena') || keywords.includes('duna')) {
+                    newTerrain = 'sand'; newSky = 'sunset';
+                 } else if (keywords.includes('bosque') || keywords.includes('forest') || keywords.includes('césped') || keywords.includes('isla')) {
+                    newTerrain = 'grass'; newSky = 'day';
+                 } else if (keywords.includes('lava') || keywords.includes('volcan')) {
+                    newTerrain = 'lava'; newSky = 'night';
+                 } else if (keywords.includes('roca') || keywords.includes('montaña') || keywords.includes('barro') || keywords.includes('dirt')) {
+                    newTerrain = 'rock'; 
+                 } else if (keywords.includes('espacio') || keywords.includes('sci-fi') || keywords.includes('laboratorio')) {
+                    newTerrain = 'neon'; newSky = 'night';
+                 }
+                 
+                 setMapProps({ ...mapProps, floorTexture: newTerrain, skyPreset: newSky });
+
+                 updateObjectsWithHistory([...objects, ...processedObjects]);
+                 setShowNotification("Escenario generado por IA exitosamente.");
+             } else {
+                 setShowNotification("Error: Formato JSON inválido desde IA.");
+             }
+        } else {
+             setShowNotification("Error al contactar IA.");
+        }
+    } catch (e) {
+        console.error(e);
+        setShowNotification("Error en generación 3D");
+    } finally {
+        setNexusAIPrompt("");
+    }
   };
 
   useEffect(() => {
@@ -3343,7 +3218,12 @@ export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3
             </div>
           )}
 
-          <Canvas shadows={qualityMode !== 'low'} camera={{ position: [0, 6, 14], fov: 70 }}>
+          <Canvas 
+            shadows={qualityMode !== 'low' && window.innerWidth > 768} 
+            dpr={window.innerWidth < 768 ? 1 : [1, 2]} 
+            gl={{ powerPreference: "high-performance", antialias: window.innerWidth > 768, stencil: false, depth: true }} 
+            camera={{ position: [0, 6, 14], fov: 70 }}
+          >
             <color 
               attach="background" 
               args={[

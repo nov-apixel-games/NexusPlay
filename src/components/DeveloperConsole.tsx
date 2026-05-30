@@ -27,7 +27,6 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
   const [stats, setStats] = useState({
     totalDownloads: 0,
     avgRating: 0,
-    activeInstalls: 0,
     appCount: 0
   });
 
@@ -54,7 +53,6 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
         setStats({
           totalDownloads: downloads,
           avgRating: parseFloat(avg.toFixed(1)),
-          activeInstalls: Math.floor(downloads * 0.7), // Mock calculation
           appCount: data.length
         });
       }
@@ -217,12 +215,11 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
                     {activeTab === 'dashboard' && (
                       <div className="space-y-8 lg:space-y-12">
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
                           {[
                             { label: 'Aplicaciones', value: stats.appCount, icon: Package, color: 'text-cyan-400', bg: 'bg-cyan-500/5' },
                             { label: 'Descargas Totales', value: stats.totalDownloads, icon: Download, color: 'text-purple-400', bg: 'bg-purple-500/5' },
                             { label: 'Rating', value: stats.avgRating, icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-500/5' },
-                            { label: 'Instalaciones', value: stats.activeInstalls, icon: Activity, color: 'text-green-400', bg: 'bg-green-500/5' },
                           ].map((stat, idx) => (
                             <div key={idx} className={`${stat.bg} p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-white/5 space-y-4 hover:border-white/10 transition-all hover:translate-y-[-4px]`}>
                                <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl ${stat.bg} border border-white/5 flex items-center justify-center ${stat.color}`}>

@@ -749,7 +749,7 @@ export default function App() {
       case 'games':
         return <GamesView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'games-hub':
-        return <GamesHubView onBack={() => setActiveView('home')} />;
+        return <GamesHubView onBack={() => setActiveView('home')} apps={publishedApps} session={session} userProfile={userProfile} />;
       case 'explore':
         return <ExploreView apps={publishedApps} onAppClick={handleAppClick} onAction={(action) => setActiveView(action)} />;
       case 'ranking':

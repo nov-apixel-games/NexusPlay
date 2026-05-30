@@ -884,37 +884,47 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   {nodeStats && (
                   <div className={`p-6 md:p-8 rounded-3xl border bg-slate-900/40 border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] relative overflow-hidden group col-span-1 md:col-span-2 backdrop-blur-sm`}>
                      <Server className={`w-12 h-12 mb-4 text-purple-500/80`} />
-                     <h4 className="text-2xl font-black text-white mb-2">Host Server (Vercel Node)</h4>
+                     <h4 className="text-2xl font-black text-white mb-2">Host Server (Vercel)</h4>
                      <p className="text-gray-400 text-sm max-w-sm mb-6">Métricas en tiempo real del entorno anfitrión y uso de recursos.</p>
                      
                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-6">
-                       <div>
-                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Uptime Nodo</p>
-                         <p className="text-xl font-mono text-white">{Math.floor(nodeStats.processUptime / 60)} min</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Plataforma</p>
-                         <p className="text-xl font-mono text-white max-w-[120px] truncate">{nodeStats.osPlatform}</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Total RAM</p>
-                         <p className="text-xl font-mono text-white">{(nodeStats.totalMem / 1024 / 1024 / 1024).toFixed(2)} GB</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">RAM Libre</p>
-                         <p className="text-xl font-mono text-white">{(nodeStats.freeMem / 1024 / 1024 / 1024).toFixed(2)} GB</p>
-                       </div>
+                       {nodeStats.vercelAvailable ? (
+                         <>
+                           <div>
+                             <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Uptime Nodo</p>
+                             <p className="text-xl font-mono text-white">{Math.floor(nodeStats.processUptime / 60)} min</p>
+                           </div>
+                           <div>
+                             <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Plataforma</p>
+                             <p className="text-xl font-mono text-white max-w-[120px] truncate">{nodeStats.osPlatform}</p>
+                           </div>
+                           <div>
+                             <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Total RAM</p>
+                             <p className="text-xl font-mono text-white">{(nodeStats.totalMem / 1024 / 1024 / 1024).toFixed(2)} GB</p>
+                           </div>
+                           <div>
+                             <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">RAM Libre</p>
+                             <p className="text-xl font-mono text-white">{(nodeStats.freeMem / 1024 / 1024 / 1024).toFixed(2)} GB</p>
+                           </div>
+                         </>
+                       ) : (
+                         <div className="col-span-4 p-4 border border-white/5 rounded-xl bg-black/40 text-center">
+                            <p className="text-gray-500 font-mono">Dato no disponible. API Token no configurado.</p>
+                         </div>
+                       )}
                      </div>
                      
-                     <div className="mt-6 border-t border-white/10 pt-6">
-                        <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-widest mb-2">
-                           <span>Uso CPU (Promedio Core)</span>
-                           <span className="text-purple-400">{nodeStats.cpuCores} Cores Activos</span>
-                        </div>
-                        <div className="w-full bg-black/50 rounded-full h-1.5 border border-white/10 overflow-hidden">
-                           <div className={`h-1.5 rounded-full bg-purple-500`} style={{ width: `70%` }}></div>
-                        </div>
-                     </div>
+                     {nodeStats.vercelAvailable && (
+                       <div className="mt-6 border-t border-white/10 pt-6">
+                          <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+                             <span>Uso CPU (Promedio Core)</span>
+                             <span className="text-purple-400">{nodeStats.cpuCores} Cores Activos</span>
+                          </div>
+                          <div className="w-full bg-black/50 rounded-full h-1.5 border border-white/10 overflow-hidden">
+                             <div className={`h-1.5 rounded-full bg-purple-500`} style={{ width: `70%` }}></div>
+                          </div>
+                       </div>
+                     )}
                   </div>
                   )}
                 </div>

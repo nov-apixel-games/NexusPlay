@@ -601,23 +601,25 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
         
         // AI Integration
         if (textContent.startsWith('!ia ')) {
-           setTimeout(async () => {
-              const aiResponses = [
-                 "¡Hola! Soy Nexus AI. Estoy aquí para ayudarte a descubrir contenido, recomendar apps y moderar la comunidad.",
-                 "Esa es una gran pregunta. ¿Sabías que puedes crear tus propias apps usando nuestra plataforma?",
-                 "¡Excelente tema de conversación! Te sugiero visitar el canal #media para compartir capturas.",
-                 "NexusPlay está evolucionando. Mantente atento para más novedades sobre juegos y herramientas.",
-                 "He detectado que te gusta este tema. ¡Prueba algunas de las nuevas web apps disponibles!"
-              ];
-              const randomRes = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-              const aiMessage = `[NEXUS AI] ${randomRes}`;
-              
-              await supabase.from('messages').insert([{
-                 community_id: community.id,
-                 user_id: session.user.id, // we use the same user, but format [NEXUS AI] will render it as bot
-                 content: serializeMessageContent(aiMessage, activeChannel, null),
-              }]);
-           }, 1500);
+           try {
+               const prompt = textContent.replace('!ia ', '').trim();
+               const res = await fetch('/api/nexus-ai', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({ prompt, history: [], catalogue: [] })
+               });
+               const json = await res.json();
+               if (json.success && json.text) {
+                   const aiMessage = `[NEXUS AI] ${json.text.replace(/```json\n\[.*\]\n```/s, '')}`; // strip JSON for regular chat
+                   await supabase.from('messages').insert([{
+                      community_id: community.id,
+                      user_id: session.user.id, 
+                      content: serializeMessageContent(aiMessage, activeChannel, null),
+                   }]);
+               }
+           } catch (e) {
+               console.error("AI Response error in NexusHub", e);
+           }
         }
       }
     } catch (err: any) {
