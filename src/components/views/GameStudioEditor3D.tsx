@@ -1605,6 +1605,9 @@ function getProceduralTexture(type: string): THREE.Texture {
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.repeat.set(1, 1);
   textureCache[type] = texture;
   return texture;
@@ -2564,7 +2567,7 @@ const libraryCategories = [
 
 export function GameStudioEditor3D({ initialTemplate, draftId, onBack }: Editor3DProps) {
   const [qualityMode, setQualityMode] = useState<'high' | 'medium' | 'low'>(() => {
-    return (localStorage.getItem('nexus_render_quality') as any) || 'medium';
+    return (localStorage.getItem('nexus_render_quality') as any) || (window.innerWidth < 768 ? 'low' : 'medium');
   });
   const [mode, setMode] = useState<'edit' | 'play'>('edit');
   const [isPublishing, setIsPublishing] = useState(false);

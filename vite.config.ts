@@ -14,7 +14,19 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2,ttf,glb,gltf,mp3,wav}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2,ttf}'],
+          globIgnores: [
+            '**/node_modules/**/*',
+            'assets/AdminPanel*.js',
+            'assets/three-core*.js',
+            'assets/three-fiber*.js',
+            'assets/GameStudioEditor3D*.js',
+            'assets/NexusAIChat*.js',
+            '**/*.glb',
+            '**/*.gltf',
+            '**/*.mp3',
+            '**/*.wav'
+          ],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
           navigateFallback: '/index.html',
           runtimeCaching: [
@@ -83,7 +95,8 @@ export default defineConfig(({mode}) => {
             'three-fiber': ['@react-three/fiber', '@react-three/drei'],
             'react-vendor': ['react', 'react-dom'],
             'lucide': ['lucide-react'],
-            'supabase': ['@supabase/supabase-js']
+            'supabase': ['@supabase/supabase-js'],
+            'recharts': ['recharts']
           }
         }
       }
