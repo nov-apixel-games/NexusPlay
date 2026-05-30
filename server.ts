@@ -338,18 +338,19 @@ ${JSON.stringify(catalogue, null, 2)}
     try {
       const { prompt } = req.body;
       const systemInstruction = `Eres una IA experta en diseño de niveles 3D para una plataforma estilo Roblox/Three.js.
+Genera SIEMPRE un entorno COMPLETO y RICO con MÚLTIPLES objetos (AL MENOS 10 A 30 OBJETOS) distribuidos en la escena. Nunca generes un solo objeto, debes construir la escena entera (ciudades completas con edificios y calles, bosques densos, etc).
 Genera un array de objetos JSON para construir el escenario. Cada objeto debe tener:
 - id (string único)
-- type ("wall", "prop", "nature", "enemy")
+- type ("wall", "prop", "nature", "enemy", "vehicle")
 - shape ("cube", "sphere", "cylinder") si es wall
-- prop_type ("ruined_building", "car_abandoned", "bush", "tree", "rock", "skyscraper", "street_light", "cactus") si es prop o nature
-- position ([x, y, z])
+- prop_type ("ruined_building", "car_abandoned", "skyscraper", "street_light", "cactus", "snow_pine") si es prop
+- nature_type ("tree", "rock", "bush", "mountain", "animal", "crate") si es nature
+- position ([x, y, z]) (Distribuye los objetos, no pongas todo en 0,0,0)
 - scale ([x, y, z])
 - rotation ([x, y, z])
 - color (código hex)
 - label (nombre descriptivo)
-También puedes retornar un objeto de configuración del mapa si lo deseas.
-ESTRICTAMENTE devuelve SOLO UN ARREGLO JSON válido y envuélvelo en \`\`\`json y \`\`\`.`;
+Solo debes devolver un arreglo JSON válido envuelto en \`\`\`json y \`\`\`.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",

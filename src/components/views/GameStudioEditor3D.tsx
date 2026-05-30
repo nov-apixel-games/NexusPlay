@@ -1948,6 +1948,7 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial 
+          key={floorTextureType}
           map={floorTexture}
           color={
             floorTextureType === 'grid' || floorTextureType === 'neon' ? '#000000' :
@@ -2432,6 +2433,62 @@ function LevelEnvironment({ objects, setObjects, mode, selectedId, setSelectedId
                   )}
                 </mesh>
               );
+            }
+            if (obj.type === 'enemy') {
+              const eType = obj.enemy_type || 'zombie';
+              return (
+                <group key={obj.id} position={obj.position} scale={obj.scale} rotation={obj.rotation || [0,0,0]} onClick={(e) => {
+                  if (mode === 'edit') {
+                    e.stopPropagation();
+                    setSelectedId(obj.id);
+                  }
+                }}>
+                   {/* Visual Placeholder for Enemy in Edit Mode */}
+                   <mesh position={[0, 0.75, 0]} castShadow>
+                      <capsuleGeometry args={[0.4, 0.7, 4, 12]} />
+                      <meshStandardMaterial color={obj.color || (eType === 'cyborg' ? '#6d28d9' : eType === 'boss' ? '#b91c1c' : '#047857')} roughness={0.7} />
+                   </mesh>
+                   {/* Head indicator */ }
+                   <mesh position={[0, 1.5, 0.2]}>
+                      <boxGeometry args={[0.6, 0.15, 0.2]} />
+                      <meshBasicMaterial color="#ef4444" />
+                   </mesh>
+                   <Text position={[0, 2.2, 0]} fontSize={0.3} color="#ffffff" anchorX="center" anchorY="middle">
+                     {obj.label || eType}
+                   </Text>
+                   {selectedId === obj.id && mode === 'edit' && (
+                     <lineSegments>
+                       <edgesGeometry args={[new THREE.BoxGeometry(1.2, 2.0, 1.2)]} />
+                       <lineBasicMaterial color="#22d3ee" linewidth={4} />
+                     </lineSegments>
+                   )}
+                </group>
+              )
+            }
+            if (obj.type === 'pickup') {
+              return (
+                <group key={obj.id} position={obj.position} scale={obj.scale} rotation={obj.rotation || [0,0,0]} onClick={(e) => {
+                  if (mode === 'edit') {
+                    e.stopPropagation();
+                    setSelectedId(obj.id);
+                  }
+                }}>
+                   <mesh position={[0, 0.5, 0]} castShadow>
+                     {obj.pickup_type === 'health' || obj.pickup_type === 'ammo' ? (
+                       <boxGeometry args={[0.8, 0.6, 0.8]} />
+                     ) : (
+                       <dodecahedronGeometry args={[0.5, 0]} />
+                     )}
+                     <meshStandardMaterial color={obj.color || "#fbbf24"} metalness={0.8} roughness={0.2} emissive={obj.color || "#fbbf24"} emissiveIntensity={0.4} />
+                   </mesh>
+                   {selectedId === obj.id && mode === 'edit' && (
+                     <lineSegments>
+                       <edgesGeometry args={[new THREE.BoxGeometry(1.2, 1.2, 1.2)]} />
+                       <lineBasicMaterial color="#22d3ee" linewidth={4} />
+                     </lineSegments>
+                   )}
+                </group>
+              )
             }
             if (obj.type === 'light') {
               return (
