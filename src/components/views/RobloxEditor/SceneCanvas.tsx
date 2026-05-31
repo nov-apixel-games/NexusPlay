@@ -1,4 +1,4 @@
-import React, { Suspense, useRef, useEffect } from 'react';
+import React, { Suspense, useRef, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Sky, OrbitControls, Grid, TransformControls, Box, Sphere, Cylinder, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -6,9 +6,10 @@ import { useEditorStore } from './store';
 import { SceneObject } from './editorTypes';
 
 const RenderObject = ({ obj }: { obj: SceneObject }) => {
-  const { selectedId, setSelectedId } = useEditorStore();
+  const { selectedId, setSelectedId, transformMode, updateObject } = useEditorStore();
   const isSelected = selectedId === obj.id;
-  const ref = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Group>(null);
+  const controlRef = useRef<any>(null);
 
   // Position, scaling and rotation from Zustand
   const { x: px, y: py, z: pz } = obj.position;
@@ -104,97 +105,68 @@ const RenderObject = ({ obj }: { obj: SceneObject }) => {
     }
   };
 
-  return (
-    <group 
-      ref={ref}
-      position={[px, py, pz]}
-      rotation={[rx, ry, rz]}
-      scale={[sx, sy, sz]}
-      onClick={handleClick}
-      visible={obj.visible}
-    >
-      {getGeometryAndMaterial()}
-      
-      {/* Highlighting selection */}
-      {isSelected && (
-         <mesh>
-           <boxGeometry args={[1.05, 1.05, 1.05]} />
-           <meshBasicMaterial color="#3b82f6" wireframe />
-         </mesh>
-      )}
-    </group>
-  );
-};
-
-// Transform Controls integration
-const TransformManager = ({ setIsDragging }: { setIsDragging: (v: boolean) => void }) => {
-  const { objects, selectedId, transformMode, updateObject } = useEditorStore();
-  const selectedObj = objects.find(o => o.id === selectedId);
-  const controlRef = useRef<any>(null);
-
+  // Sync back to Zustand ONLY when drag ends. This avoids infinite update loops that result in NaN and black screen.
   useEffect(() => {
-    if (controlRef.current && selectedObj) {
-      // Small trick to bind transform controls to our standalone proxy object
-      // Actually @react-three/drei TransformControls is better used wrapping the object,
-      // but since we want to sync state back to Zustand, we listen to its onChange event.
-      const handleDrag = (e: any) => {
-        // We get the object that is being transformed
-        const obj = controlRef.current.object;
-        if (obj) {
-          updateObject(selectedId, {
-            position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
-            rotation: { x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z },
-            scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },
+    if (isSelected && controlRef.current) {
+      const controls = controlRef.current;
+      
+      const onDragChange = (event: any) => {
+        // event.value is true when dragging starts, false when it ends
+        if (!event.value && meshRef.current) {
+          const mesh = meshRef.current;
+          
+          // Safety check against NaN
+          if (isNaN(mesh.position.x) || isNaN(mesh.scale.x)) {
+             console.error("TransformControls generated null/NaN values. Reverting.");
+             return;
+          }
+
+          updateObject(obj.id, {
+            position: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
+            rotation: { x: mesh.rotation.x, y: mesh.rotation.y, z: mesh.rotation.z },
+            scale: { x: mesh.scale.x, y: mesh.scale.y, z: mesh.scale.z },
           });
         }
       };
 
-      const ctrl = controlRef.current;
-      ctrl.addEventListener('dragging-changed', (e: any) => {
-        setIsDragging(e.value);
-      });
-      
-      ctrl.addEventListener('change', handleDrag);
-
-      return () => {
-        ctrl.removeEventListener('change', handleDrag);
-      };
+      controls.addEventListener('dragging-changed', onDragChange);
+      return () => controls.removeEventListener('dragging-changed', onDragChange);
     }
-  }, [selectedObj, selectedId, updateObject]);
-
-  if (!selectedObj) return null;
+  }, [isSelected, obj.id, updateObject]);
 
   return (
-    <TransformControls
-      ref={controlRef}
-      object={selectedObj ? undefined : undefined}
-      mode={transformMode}
-      position={[selectedObj.position.x, selectedObj.position.y, selectedObj.position.z]}
-      rotation={[selectedObj.rotation.x, selectedObj.rotation.y, selectedObj.rotation.z]}
-      scale={[selectedObj.scale.x, selectedObj.scale.y, selectedObj.scale.z]}
-      onObjectChange={(e: any) => {
-         // Syncing back on frame update
-         // @ts-ignore
-         if(e?.target?.object) {
-           updateObject(selectedId, {
-              // @ts-ignore
-              position: { x: e.target.object.position.x, y: e.target.object.position.y, z: e.target.object.position.z },
-              // @ts-ignore
-              rotation: { x: e.target.object.rotation.x, y: e.target.object.rotation.y, z: e.target.object.rotation.z },
-              // @ts-ignore
-              scale: { x: e.target.object.scale.x, y: e.target.object.scale.y, z: e.target.object.scale.z },
-           });
-         }
-      }}
-    >
-      <group />
-    </TransformControls>
+    <>
+      {isSelected && (
+        <TransformControls 
+          ref={controlRef}
+          object={meshRef} 
+          mode={transformMode} 
+        />
+      )}
+      <group 
+        ref={meshRef}
+        position={[px, py, pz]}
+        rotation={[rx, ry, rz]}
+        scale={[sx, sy, sz]}
+        onClick={handleClick}
+        visible={obj.visible}
+      >
+        {getGeometryAndMaterial()}
+        
+        {/* Highlighting selection */}
+        {isSelected && (
+           <mesh>
+             <boxGeometry args={[1.05, 1.05, 1.05]} />
+             <meshBasicMaterial color="#3b82f6" wireframe />
+           </mesh>
+        )}
+      </group>
+    </>
   );
 };
 
 export const SceneCanvas = () => {
   const { objects, setSelectedId } = useEditorStore();
-  const [isDragging, setIsDragging] = React.useState(false);
 
   return (
     <div className="flex-1 w-full h-full bg-[#111827] relative" onClick={() => setSelectedId(null)}>
@@ -222,10 +194,9 @@ export const SceneCanvas = () => {
             {objects.map((obj) => (
               <RenderObject key={obj.id} obj={obj} />
             ))}
-            <TransformManager setIsDragging={setIsDragging} />
           </group>
 
-          <OrbitControls makeDefault enabled={!isDragging} />
+          <OrbitControls makeDefault />
         </Suspense>
       </Canvas>
       <div className="absolute top-4 left-4 pointer-events-none text-white/50 text-xs font-mono">
