@@ -75,7 +75,13 @@ export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onEx
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       
-      const jsonStr = data.text.match(/```json\n([\s\S]*?)\n```/)?.[1] || data.text;
+      // Extract JSON if it is wrapped in markdown
+      let jsonStr = data.text;
+      const match = data.text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (match) {
+         jsonStr = match[1];
+      }
+      
       const parsed = JSON.parse(jsonStr);
 
       const items = Array.isArray(parsed) ? parsed : [];
@@ -105,12 +111,13 @@ export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onEx
       });
       
       // Merge with current objects
+      console.log('Mapped objects generated:', mappedObjects);
       loadProject([...objects, ...mappedObjects]);
 
       setAiPrompt('');
-    } catch(err) {
-      console.error(err);
-      alert('Error generando con IA');
+    } catch(err: any) {
+      console.error("AI Generation Error: ", err);
+      alert('Error generando con IA: ' + err.message);
     } finally {
       setLoading(false);
     }

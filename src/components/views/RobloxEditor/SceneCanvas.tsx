@@ -9,13 +9,20 @@ const RenderObject = ({ obj }: { obj: SceneObject }) => {
   const { selectedId, setSelectedId, transformMode, updateObject, setIsDragging } = useEditorStore();
   const isSelected = selectedId === obj.id;
   
-  const [target, setTarget] = useState<THREE.Group | null>(null);
+  const meshRef = useRef<THREE.Group>(null);
   const controlRef = useRef<any>(null);
+  const isDraggingLocal = useRef(false);
 
-  // Position, scaling and rotation from Zustand
-  const { x: px, y: py, z: pz } = obj.position;
-  const { x: rx, y: ry, z: rz } = obj.rotation;
-  const { x: sx, y: sy, z: sz } = obj.scale;
+  // Sync position from Zustand to THREE.js manually, ONLY IF not dragging.
+  // This prevents R3F from overriding TransformControls during re-renders,
+  // which caused the NaN and black screen glitches.
+  useEffect(() => {
+    if (meshRef.current && !isDraggingLocal.current) {
+      meshRef.current.position.set(obj.position.x, obj.position.y, obj.position.z);
+      meshRef.current.rotation.set(obj.rotation.x, obj.rotation.y, obj.rotation.z);
+      meshRef.current.scale.set(obj.scale.x, obj.scale.y, obj.scale.z);
+    }
+  }, [obj.position, obj.rotation, obj.scale]);
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -108,24 +115,28 @@ const RenderObject = ({ obj }: { obj: SceneObject }) => {
 
   // Sync back to Zustand ONLY when drag ends. This avoids infinite update loops that result in NaN and black screen.
   useEffect(() => {
-    if (isSelected && controlRef.current && target) {
+    if (isSelected && controlRef.current && meshRef.current) {
       const controls = controlRef.current;
       
       const onDragChange = (event: any) => {
+        isDraggingLocal.current = event.value;
         setIsDragging(event.value);
         // event.value is true when dragging starts, false when it ends
         if (!event.value) {
+          const targetObj = meshRef.current;
           // Safety check against NaN
-          if (isNaN(target.position.x) || isNaN(target.scale.x)) {
+          if (targetObj && (isNaN(targetObj.position.x) || isNaN(targetObj.scale.x))) {
              console.error("TransformControls generated null/NaN values. Reverting.");
              return;
           }
 
-          updateObject(obj.id, {
-            position: { x: target.position.x, y: target.position.y, z: target.position.z },
-            rotation: { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z },
-            scale: { x: target.scale.x, y: target.scale.y, z: target.scale.z },
-          });
+          if (targetObj) {
+            updateObject(obj.id, {
+              position: { x: targetObj.position.x, y: targetObj.position.y, z: targetObj.position.z },
+              rotation: { x: targetObj.rotation.x, y: targetObj.rotation.y, z: targetObj.rotation.z },
+              scale: { x: targetObj.scale.x, y: targetObj.scale.y, z: targetObj.scale.z },
+            });
+          }
         }
       };
 
@@ -134,22 +145,19 @@ const RenderObject = ({ obj }: { obj: SceneObject }) => {
          controls.removeEventListener('dragging-changed', onDragChange);
       };
     }
-  }, [isSelected, obj.id, target, updateObject, setIsDragging]);
+  }, [isSelected, obj.id, updateObject, setIsDragging]);
 
   return (
     <>
-      {isSelected && target && (
+      {isSelected && (
         <TransformControls 
           ref={controlRef}
-          object={target} 
+          object={meshRef} 
           mode={transformMode} 
         />
       )}
       <group 
-        ref={setTarget}
-        position={[px, py, pz]}
-        rotation={[rx, ry, rz]}
-        scale={[sx, sy, sz]}
+        ref={meshRef}
         onClick={handleClick}
         visible={obj.visible}
       >

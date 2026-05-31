@@ -353,7 +353,7 @@ Genera un array de objetos JSON para construir el escenario. Cada objeto debe te
 Solo debes devolver un arreglo JSON válido envuelto en \`\`\`json y \`\`\`.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.0-flash",
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: { systemInstruction: systemInstruction, temperature: 0.8 }
       });
