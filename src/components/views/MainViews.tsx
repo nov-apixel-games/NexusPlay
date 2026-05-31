@@ -80,22 +80,22 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                user: r.profiles?.username || r.user_name || 'Anónimo',
                avatar: r.profiles?.avatar_url || null,
                time: new Date(r.created_at).toLocaleDateString(),
-               content: `Dejó una reseña de ${r.rating} estrellas en ${relApp?.title || 'una app'}: "${r.comment}"`,
+               content: `Dejó una reseña de ${r.rating} estrellas en ${relApp?.name || 'una app'}: "${r.comment}"`,
                image: null
             };
          });
       }
 
       // Add recent apps to feed
-      const recentApps = [...apps].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()).slice(0, 5);
+      const recentApps = [...apps].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()).slice(0, 5);
       const appItems = recentApps.map(a => ({
          id: a.id,
          type: 'new_app',
          user: a.developer,
          avatar: null,
-         time: new Date(a.created_at || 0).toLocaleDateString(),
-         content: `¡Ha publicado un nuevo juego: ${a.title}! Ya puedes jugarlo en el catálogo.`,
-         image: a.banner_url || a.icon
+         time: new Date(a.date || 0).toLocaleDateString(),
+         content: `¡Ha publicado un nuevo juego: ${a.name}! Ya puedes jugarlo en el catálogo.`,
+         image: a.icon
       }));
 
       const combined = [...items, ...appItems].sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime());
