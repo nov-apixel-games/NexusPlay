@@ -13,6 +13,7 @@ import {
   Mountain,
   MousePointer2,
   Trash2,
+  Copy,
   Sparkles
 } from 'lucide-react';
 import { useEditorStore } from './store';
@@ -21,7 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ObjectType } from './editorTypes';
 
 export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onExit: () => void }) => {
-  const { transformMode, setTransformMode, addObject, removeObject, selectedId, objects, loadProject } = useEditorStore();
+  const { transformMode, setTransformMode, addObject, removeObject, duplicateObject, selectedId, objects, loadProject } = useEditorStore();
   const [loading, setLoading] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
 
@@ -165,9 +166,14 @@ export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onEx
         </button>
 
         {selectedId && (
-          <button onClick={() => removeObject(selectedId)} className="p-2 hover:bg-red-900/50 rounded flex gap-2 items-center text-red-500 text-sm ml-2 shrink-0" title="Eliminar Seleccionado">
-            <Trash2 size={18} />
-          </button>
+          <>
+            <button onClick={() => duplicateObject(selectedId)} className="p-2 hover:bg-green-900/50 rounded flex gap-2 items-center text-green-500 text-sm ml-2 shrink-0" title="Duplicar Seleccionado">
+              <Copy size={18} />
+            </button>
+            <button onClick={() => removeObject(selectedId)} className="p-2 hover:bg-red-900/50 rounded flex gap-2 items-center text-red-500 text-sm shrink-0" title="Eliminar Seleccionado">
+              <Trash2 size={18} />
+            </button>
+          </>
         )}
       </div>
 

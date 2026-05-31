@@ -6,9 +6,10 @@ import { useEditorStore } from './store';
 import { SceneObject } from './editorTypes';
 
 const RenderObject = ({ obj }: { obj: SceneObject }) => {
-  const { selectedId, setSelectedId, transformMode, updateObject } = useEditorStore();
+  const { selectedId, setSelectedId, transformMode, updateObject, setIsDragging } = useEditorStore();
   const isSelected = selectedId === obj.id;
-  const meshRef = useRef<THREE.Group>(null);
+  
+  const [target, setTarget] = useState<THREE.Group | null>(null);
   const controlRef = useRef<any>(null);
 
   // Position, scaling and rotation from Zustand
@@ -107,44 +108,45 @@ const RenderObject = ({ obj }: { obj: SceneObject }) => {
 
   // Sync back to Zustand ONLY when drag ends. This avoids infinite update loops that result in NaN and black screen.
   useEffect(() => {
-    if (isSelected && controlRef.current) {
+    if (isSelected && controlRef.current && target) {
       const controls = controlRef.current;
       
       const onDragChange = (event: any) => {
+        setIsDragging(event.value);
         // event.value is true when dragging starts, false when it ends
-        if (!event.value && meshRef.current) {
-          const mesh = meshRef.current;
-          
+        if (!event.value) {
           // Safety check against NaN
-          if (isNaN(mesh.position.x) || isNaN(mesh.scale.x)) {
+          if (isNaN(target.position.x) || isNaN(target.scale.x)) {
              console.error("TransformControls generated null/NaN values. Reverting.");
              return;
           }
 
           updateObject(obj.id, {
-            position: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
-            rotation: { x: mesh.rotation.x, y: mesh.rotation.y, z: mesh.rotation.z },
-            scale: { x: mesh.scale.x, y: mesh.scale.y, z: mesh.scale.z },
+            position: { x: target.position.x, y: target.position.y, z: target.position.z },
+            rotation: { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z },
+            scale: { x: target.scale.x, y: target.scale.y, z: target.scale.z },
           });
         }
       };
 
       controls.addEventListener('dragging-changed', onDragChange);
-      return () => controls.removeEventListener('dragging-changed', onDragChange);
+      return () => {
+         controls.removeEventListener('dragging-changed', onDragChange);
+      };
     }
-  }, [isSelected, obj.id, updateObject]);
+  }, [isSelected, obj.id, target, updateObject, setIsDragging]);
 
   return (
     <>
-      {isSelected && (
+      {isSelected && target && (
         <TransformControls 
           ref={controlRef}
-          object={meshRef} 
+          object={target} 
           mode={transformMode} 
         />
       )}
       <group 
-        ref={meshRef}
+        ref={setTarget}
         position={[px, py, pz]}
         rotation={[rx, ry, rz]}
         scale={[sx, sy, sz]}
@@ -166,11 +168,11 @@ const RenderObject = ({ obj }: { obj: SceneObject }) => {
 };
 
 export const SceneCanvas = () => {
-  const { objects, setSelectedId } = useEditorStore();
+  const { objects, setSelectedId, isDragging } = useEditorStore();
 
   return (
-    <div className="flex-1 w-full h-full bg-[#111827] relative" onClick={() => setSelectedId(null)}>
-      <Canvas shadows camera={{ position: [15, 15, 15], fov: 50 }}>
+    <div className="flex-1 w-full h-full bg-[#111827] relative">
+      <Canvas shadows camera={{ position: [15, 15, 15], fov: 50 }} onPointerMissed={() => setSelectedId(null)}>
         <Suspense fallback={null}>
           <Sky sunPosition={[100, 20, 100]} turbidity={0.1} rayleigh={0.5} />
           <ambientLight intensity={0.4} />
@@ -196,7 +198,7 @@ export const SceneCanvas = () => {
             ))}
           </group>
 
-          <OrbitControls makeDefault />
+          <OrbitControls makeDefault enabled={!isDragging} />
         </Suspense>
       </Canvas>
       <div className="absolute top-4 left-4 pointer-events-none text-white/50 text-xs font-mono">

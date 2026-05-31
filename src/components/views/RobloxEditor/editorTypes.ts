@@ -31,10 +31,13 @@ export interface RobloxEditorState {
   objects: SceneObject[];
   selectedId: string | null;
   transformMode: TransformMode;
+  isDragging: boolean;
   addObject: (obj: Omit<SceneObject, 'id'>) => void;
   updateObject: (id: string, updates: Partial<SceneObject>) => void;
   removeObject: (id: string) => void;
+  duplicateObject: (id: string) => void;
   setSelectedId: (id: string | null) => void;
   setTransformMode: (mode: TransformMode) => void;
+  setIsDragging: (isDragging: boolean) => void;
   loadProject: (projectData: SceneObject[]) => void;
 }
