@@ -9,7 +9,7 @@ import { lazy, Suspense } from 'react';
 import PublishingWizard from '../PublishingWizard';
 
 const GameStudioEditor = lazy(() => import('./GameStudioEditor').then(m => ({ default: m.GameStudioEditor })));
-const GameStudioEditor3D = lazy(() => import('./RobloxEditor/EditorMain').then(m => ({ default: m.RobloxEditor3D })));
+const NexusStudio = lazy(() => import('./NexusStudio/NexusStudio'));
 import { 
   getOfflineGames, 
   saveOfflineGame, 
@@ -109,7 +109,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
   if (editorTemplate?.includes('3D')) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-[#090b14] flex items-center justify-center text-cyan-400 font-mono text-sm animate-pulse">Iniciando Motor 3D...</div>}>
-         <GameStudioEditor3D initialTemplate={editorTemplate} draftId={editorDraftId} onBack={() => { setEditorTemplate(null); setEditorDraftId(null); }} />
+         <NexusStudio onBack={() => { setEditorTemplate(null); setEditorDraftId(null); }} />
       </Suspense>
     );
   }
