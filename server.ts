@@ -345,16 +345,20 @@ Genera un array de objetos JSON para construir el escenario. Cada objeto debe te
 - label (nombre descriptivo)
 Solo debes devolver un arreglo JSON válido envuelto en \`\`\`json y \`\`\`.`;
 
+    const modelName = "gemini-3-flash-preview";
+    console.log("Modelo Gemini:", modelName);
+
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: modelName,
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { systemInstruction: systemInstruction, temperature: 0.8 }
     });
     
+    console.log("Respuesta Gemini OK");
     res.json({ success: true, text: response.text });
   } catch (error: any) {
-    console.error("[Nexus 3D AI Error]", error);
-    res.status(500).json({ error: error.message || "Error al procesar la generación 3D" });
+    console.error("Error Gemini:", error);
+    res.status(500).json({ success: false, error: "Modelo Gemini no disponible" });
   }
 });
 

@@ -1,0 +1,10 @@
+HTTP/1.1 500 Internal Server Error
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 275
+ETag: W/"113-UA9BF+wDTRuQfvudfI2z8D0qX9k"
+Date: Mon, 01 Jun 2026 07:50:30 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"error":"{\"error\":{\"code\":404,\"message\":\"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods.\",\"status\":\"NOT_FOUND\"}}"}

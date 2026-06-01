@@ -76,7 +76,8 @@ export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onEx
       const rawResponse = await res.text();
       console.log("URL:", res.url);
       console.log("STATUS:", res.status);
-      console.log("RESPONSE:", rawResponse);
+      console.log("CONTENT-TYPE:", res.headers.get("content-type"));
+      console.log("RAW RESPONSE:", rawResponse);
 
       let data;
       try {
