@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Toolbar } from './Toolbar';
-import { SceneCanvas } from './SceneCanvas';
+import { SceneCanvas } from './sceneCanvas';
 import { ExplorerPanel } from './ExplorerPanel';
 import { PropertiesPanel } from './PropertiesPanel';
 import { useEditorStore } from './store';
