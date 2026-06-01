@@ -72,7 +72,29 @@ export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onEx
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt })
       });
-      const data = await res.json();
+
+      const rawResponse = await res.text();
+      console.log("Raw Response received:", rawResponse);
+
+      let data;
+      try {
+        data = JSON.parse(rawResponse);
+      } catch(e) {
+        console.error("JSON parse error from the following raw response: ", rawResponse);
+        console.error("HTTP Status: ", res.status);
+        throw new Error("El servidor devolvió algo que no es JSON. Mira la consola.");
+      }
+
+      // Check for backend 500 error passing down the AI API error
+      // Express sends status 500 when it hits the catch block
+      if (!res.ok) {
+        const errorMsg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+        if (errorMsg && (errorMsg.includes('quota') || errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED'))) {
+           throw new Error("Límite de cuota excedido para la IA (Error 429 de Gemini). Por favor, intenta de nuevo o usa una cuenta diferente.");
+        }
+        throw new Error(`Error en el servidor: ${res.status}. Detalles: ${errorMsg}`);
+      }
+
       if (!data.success) throw new Error(data.error);
       
       // Extract JSON if it is wrapped in markdown
