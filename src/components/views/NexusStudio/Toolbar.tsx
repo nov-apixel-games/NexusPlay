@@ -47,7 +47,7 @@ export const Toolbar = ({ projectId, onExit }: { projectId?: string | null, onEx
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(objects, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "roblox_studio_project.json");
+    dlAnchorElem.setAttribute("download", "nexus_studio_project.json");
     dlAnchorElem.click();
   };
 

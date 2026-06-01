@@ -9,7 +9,7 @@ import { lazy, Suspense } from 'react';
 import PublishingWizard from '../PublishingWizard';
 
 const GameStudioEditor = lazy(() => import('./GameStudioEditor').then(m => ({ default: m.GameStudioEditor })));
-const GameStudioEditor3D = lazy(() => import('./RobloxEditor/EditorMain').then(m => ({ default: m.RobloxEditor3D })));
+const GameStudioEditor3D = lazy(() => import('./NexusStudio/EditorMain').then(m => ({ default: m.NexusStudio3D })));
 import { 
   getOfflineGames, 
   saveOfflineGame, 
