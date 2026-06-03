@@ -1,14 +1,46 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useStudioStore, Entity, Entity3D, Entity2D } from '../store/useStudioStore';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sky, Grid, TransformControls, useGLTF } from '@react-three/drei';
 import { Physics, RigidBody } from '@react-three/rapier';
 import Phaser from 'phaser';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
-const ModelParams = ({ url }: { url?: string }) => {
-  if (!url) return null;
+const GLTFModel = ({ url }: { url: string }) => {
   const { scene } = useGLTF(url);
   return <primitive object={scene.clone()} />;
+};
+
+const FBXModel = ({ url }: { url: string }) => {
+  const fbx = useLoader(FBXLoader as any, url);
+  return <primitive object={(fbx as any).clone()} />;
+};
+
+const OBJModel = ({ url }: { url: string }) => {
+  const obj = useLoader(OBJLoader as any, url);
+  return <primitive object={(obj as any).clone()} />;
+};
+
+const ModelParams = ({ url, entityName }: { url?: string, entityName: string }) => {
+  React.useEffect(() => {
+    if (!url) {
+      console.warn(`[Nexus Studio] Asset incompleto: El modelo '${entityName}' no tiene un modelUrl válido.`);
+    }
+  }, [url, entityName]);
+
+  if (!url) return null;
+  
+  const extension = url.split('.').pop()?.split('?')[0]?.toLowerCase();
+
+  try {
+    if (extension === 'fbx') return <FBXModel url={url} />;
+    if (extension === 'obj') return <OBJModel url={url} />;
+    return <GLTFModel url={url} />;
+  } catch (err) {
+    console.error(`[Nexus Studio] Error cargando modelo ${entityName}:`, err);
+    return null;
+  }
 };
 
 const Entity3DNode = ({ entity, isPlayMode }: { entity: Entity3D, isPlayMode: boolean }) => {
@@ -42,20 +74,50 @@ const Entity3DNode = ({ entity, isPlayMode }: { entity: Entity3D, isPlayMode: bo
         </mesh>
       )}
       {entity.type === 'model' && (
-         <React.Suspense fallback={<group><mesh><boxGeometry/><meshStandardMaterial color="hotpink" wireframe/></mesh></group>}>
-            <ModelParams url={entity.modelUrl} />
+         <React.Suspense fallback={null}>
+            <ModelParams url={entity.modelUrl} entityName={entity.name} />
          </React.Suspense>
       )}
-      {isSelected && !isPlayMode && (
+      {entity.type === 'terrain' && (
+         <mesh rotation={[-Math.PI/2, 0, 0]}>
+           <planeGeometry args={[100, 100, 32, 32]} />
+           <meshStandardMaterial color={entity.color || '#44aa44'} roughness={entity.roughness || 0.8} metalness={entity.metalness || 0.1} />
+         </mesh>
+      )}
+      {entity.type === 'pointLight' && (
+         <>
+           <pointLight color={entity.color || '#ffffff'} intensity={entity.intensity ?? 1} distance={entity.distance ?? 0} decay={entity.decay ?? 2} />
+           {!isPlayMode && <mesh><sphereGeometry args={[0.2, 8, 8]}/><meshBasicMaterial color={entity.color || '#ffffff'} wireframe/></mesh>}
+         </>
+      )}
+      {entity.type === 'directionalLight' && (
+         <>
+           <directionalLight color={entity.color || '#ffffff'} intensity={entity.intensity ?? 1} />
+           {!isPlayMode && <mesh><cylinderGeometry args={[0, 0.2, 0.5, 8]}/><meshBasicMaterial color={entity.color || '#ffffff'} wireframe/></mesh>}
+         </>
+      )}
+      {entity.type === 'spotLight' && (
+         <>
+           <spotLight color={entity.color || '#ffffff'} intensity={entity.intensity ?? 1} distance={entity.distance ?? 0} angle={entity.angle ?? Math.PI/4} penumbra={entity.penumbra ?? 0.5} decay={entity.decay ?? 2} />
+           {!isPlayMode && <mesh><coneGeometry args={[0.2, 0.5, 8]}/><meshBasicMaterial color={entity.color || '#ffffff'} wireframe/></mesh>}
+         </>
+      )}
+      {entity.type === 'ambientLight' && (
+         <>
+           <ambientLight color={entity.color || '#ffffff'} intensity={entity.intensity ?? 0.2} />
+           {!isPlayMode && <mesh><octahedronGeometry args={[0.2]} /><meshBasicMaterial color={entity.color || '#ffffff'} wireframe/></mesh>}
+         </>
+      )}
+      {isSelected && !isPlayMode && !entity.type.includes('Light') && (
         <mesh>
           <boxGeometry args={[1.05, 1.05, 1.05]} />
-          <meshBasicMaterial color="#3b82f6" wireframe visible={entity.type !== 'model'} />
+          <meshBasicMaterial color="#3b82f6" wireframe visible={entity.type !== 'model' && entity.type !== 'terrain'} />
         </mesh>
       )}
     </group>
   );
 
-  if (isPlayMode && entity.type !== 'model' && entity.type !== 'light') {
+  if (isPlayMode && !entity.type.includes('Light') && entity.type !== 'model' && entity.type !== 'terrain') {
      return (
        <RigidBody type={entity.position[1] < 0 ? "fixed" : "dynamic"} colliders={entity.type === 'cube' ? "cuboid" : "ball"} position={entity.position} rotation={entity.rotation}>
          {content}
@@ -129,22 +191,31 @@ const ScriptRunner = () => {
 };
 
 const Viewport3D = () => {
-  const { entities, selectEntity, appState } = useStudioStore();
-  const entities3D = entities.filter(e => e.is3D) as Entity3D[];
+  const { entities, selectEntity, appState, activeSceneId } = useStudioStore();
+  const entities3D = entities.filter(e => e.is3D && e.sceneId === activeSceneId) as Entity3D[];
   const isPlayMode = appState === 'play';
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <Canvas 
       camera={{ position: [5, 5, 5], fov: 50 }} 
       onPointerMissed={() => { if (!isPlayMode) selectEntity(null); }}
       className="w-full h-full outline-none"
-      shadows
+      shadows={!isMobile} // Disabled on mobile for performance
+      dpr={isMobile ? [1, 1.5] : [1, 2]} // Lower Max DPR on mobile for performance
     >
       <Sky sunPosition={[100, 20, 100]} />
       <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+      <directionalLight position={[10, 10, 10]} intensity={1} castShadow={!isMobile} shadow-mapSize={[isMobile ? 512 : 2048, isMobile ? 512 : 2048]} />
       
-      {!isPlayMode && <Grid infiniteGrid fadeDistance={40} sectionColor="#444444" cellColor="#222222" />}
+      {!isPlayMode && <Grid infiniteGrid fadeDistance={isMobile ? 20 : 40} sectionColor="#444444" cellColor="#222222" />}
 
       <ScriptRunner />
 
@@ -155,7 +226,7 @@ const Viewport3D = () => {
           ))}
           {/* Ground Plane for Play Mode */}
           <RigidBody type="fixed" colliders="cuboid" position={[0, -0.5, 0]}>
-             <mesh receiveShadow>
+             <mesh receiveShadow={!isMobile}>
                <boxGeometry args={[100, 1, 100]} />
                <meshStandardMaterial color="#333333" />
              </mesh>
@@ -167,15 +238,21 @@ const Viewport3D = () => {
         ))
       )}
 
-      <OrbitControls makeDefault />
+      <OrbitControls 
+        makeDefault 
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        enableDamping={true}
+      />
     </Canvas>
   );
 };
 
 const Viewport2D = () => {
   const gameRef = useRef<HTMLDivElement>(null);
-  const { entities, selectEntity, appState } = useStudioStore();
-  const entities2D = entities.filter(e => !e.is3D) as Entity2D[];
+  const { entities, selectEntity, appState, activeSceneId } = useStudioStore();
+  const entities2D = entities.filter(e => !e.is3D && e.sceneId === activeSceneId) as Entity2D[];
 
   useEffect(() => {
     if (!gameRef.current) return;
@@ -220,6 +297,39 @@ const Viewport2D = () => {
                gameObject.y = dragY;
                // Need to sync back to Zustand in a real impl via events
            });
+
+           // Pan camera with 2 fingers or right click / middle click
+           this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+             if (!pointer.isDown) return;
+             // Check if it's a pan action (pointer2 down means pinch/pan on mobile; or right button on desktop)
+             if (this.input.pointer2.isDown || pointer.rightButtonDown() || pointer.middleButtonDown()) {
+               this.cameras.main.scrollX -= (pointer.x - pointer.prevPosition.x) / this.cameras.main.zoom;
+               this.cameras.main.scrollY -= (pointer.y - pointer.prevPosition.y) / this.cameras.main.zoom;
+             }
+           });
+
+           // Enable pinch zoom for mobile
+           let baseZoom = 1;
+           this.input.on('pointerdown', () => {
+             if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
+               baseZoom = this.cameras.main.zoom;
+             }
+           });
+           
+           this.input.on('pointermove', () => {
+             if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
+               const p1 = this.input.pointer1;
+               const p2 = this.input.pointer2;
+               
+               const currentDist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
+               const prevDist = Phaser.Math.Distance.Between(p1.prevPosition.x, p1.prevPosition.y, p2.prevPosition.x, p2.prevPosition.y);
+               
+               if (prevDist > 0) {
+                 const scale = currentDist / prevDist;
+                 this.cameras.main.zoom = Phaser.Math.Clamp(this.cameras.main.zoom * scale, 0.1, 10);
+               }
+             }
+           });
          }
        }
        update() {
@@ -258,9 +368,44 @@ const Viewport2D = () => {
 
 export const Viewport = () => {
   const engineMode = useStudioStore(s => s.engineMode);
+  const addEntity = useStudioStore(s => s.addEntity);
   
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const dataStr = e.dataTransfer.getData('text/plain');
+    if (!dataStr) return;
+    try {
+      const data = JSON.parse(dataStr);
+      // Need a way to project unproject the mouse coords into 3D, 
+      // but for simplicity we'll just put it at 0,0,0
+      addEntity({
+        name: data.name,
+        type: data.type || (engineMode === '3D' ? 'cube' : 'rect'),
+        is3D: engineMode === '3D',
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+        x: 400,
+        y: 300,
+        width: 100,
+        height: 100,
+        visible: true,
+        locked: false,
+        color: '#aaaaaa',
+        assetType: data.assetType,
+        modelUrl: data.modelUrl
+      });
+    } catch(err) {
+      console.error("Drop parse error", err);
+    }
+  };
+
   return (
-    <div className="flex-1 relative bg-black overflow-hidden flex">
+    <div 
+      className="flex-1 relative bg-black overflow-hidden flex"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleDrop}
+    >
       {engineMode === '3D' ? <Viewport3D /> : <Viewport2D />}
       
       <div className="absolute top-4 left-4 z-10 pointer-events-none">
