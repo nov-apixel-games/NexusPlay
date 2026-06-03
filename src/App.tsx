@@ -619,7 +619,7 @@ export default function App() {
 
   const publishedApps = apps.filter(a => a.status === 'published');
 
-  const ActiveViewContent = () => {
+  const renderActiveView = () => {
     if (activeView.startsWith('app/')) {
       const appId = activeView.split('/')[1];
       const app = apps.find(a => a.id === appId);
@@ -976,7 +976,7 @@ export default function App() {
       {isFullScreenView ? (
          <div className="flex-1 w-full h-screen">
             <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-[#0a0c16]">Cargando Módulo...</div>}>
-              <ActiveViewContent />
+              {renderActiveView()}
             </Suspense>
          </div>
       ) : (
@@ -991,7 +991,7 @@ export default function App() {
               className="flex-1 w-full flex flex-col"
             >
               <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">Cargando Sección...</div>}>
-                <ActiveViewContent />
+                {renderActiveView()}
               </Suspense>
             </motion.div>
           </AnimatePresence>

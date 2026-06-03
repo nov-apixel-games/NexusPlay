@@ -474,3 +474,29 @@ CREATE TRIGGER on_favorite_change
   AFTER INSERT OR DELETE ON public.favorites
   FOR EACH ROW EXECUTE PROCEDURE public.update_favorites_count();
 
+-- ==========================================
+-- STUDIO ASSETS
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.studio_assets (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT,
+    type TEXT,
+    modelUrl TEXT,
+    thumbnail TEXT,
+    polyCount INTEGER DEFAULT 0,
+    fileSize TEXT,
+    optimizedForMobile BOOLEAN DEFAULT true,
+    assetType TEXT,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.studio_assets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read their own studio assets" ON public.studio_assets;
+CREATE POLICY "Users can read their own studio assets" ON public.studio_assets FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert their own studio assets" ON public.studio_assets;
+CREATE POLICY "Users can insert their own studio assets" ON public.studio_assets FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete their own studio assets" ON public.studio_assets;
+CREATE POLICY "Users can delete their own studio assets" ON public.studio_assets FOR DELETE USING (auth.uid() = user_id);
+

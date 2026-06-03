@@ -1,7 +1,6 @@
-
 const compressImage = async (file: File): Promise<File> => {
-  if (!file.type.startsWith('image/')) return file;
-  
+  if (!file.type.startsWith("image/")) return file;
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -24,22 +23,26 @@ const compressImage = async (file: File): Promise<File> => {
           }
         }
 
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
           return resolve(file);
         }
         ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (!blob) return resolve(file);
-          const compressedFile = new File([blob], file.name, {
-            type: 'image/jpeg',
-            lastModified: Date.now(),
-          });
-          resolve(compressedFile);
-        }, 'image/jpeg', 0.8);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            const compressedFile = new File([blob], file.name, {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          "image/jpeg",
+          0.8,
+        );
       };
       img.onerror = () => resolve(file); // fallback to original
     };
@@ -48,57 +51,92 @@ const compressImage = async (file: File): Promise<File> => {
 };
 
 export const uploadToCloudinary = async (file: File, folder: string) => {
-  const processedFile = await compressImage(file);
-  
+  const isImage =
+    file.type.startsWith("image/") &&
+    !file.name.match(/\.(glb|gltf|fbx|obj)$/i);
+  const processedFile = isImage ? await compressImage(file) : file;
+
+  // Decide resource_type
+  let resourceType = "auto"; // Cloudinary can auto-detect mostly, but for 3D models 'raw' or 'auto' works. Let's use 'auto' or 'image' for images.
+  if (!isImage) {
+    if (file.name.match(/\.(glb|gltf|fbx|obj|zip)$/i)) resourceType = "raw";
+    else if (file.type.startsWith("video/")) resourceType = "video";
+  } else {
+    resourceType = "image";
+  }
+
   // Try signed upload first
   try {
-    const sigResponse = await fetch(`/api/cloudinary-signature?folder=${encodeURIComponent(folder || 'avatars')}`);
+    const sigResponse = await fetch(
+      `/api/cloudinary-signature?folder=${encodeURIComponent(folder || "avatars")}`,
+    );
     if (sigResponse.ok) {
       const sigData = await sigResponse.json();
       if (sigData && sigData.signature) {
-        console.log("[Cloudinary] Realizando subida firmada mediante backend...");
+        console.log(
+          "[Cloudinary] Realizando subida firmada mediante backend...",
+        );
         const formData = new FormData();
-        formData.append('file', processedFile);
-        formData.append('api_key', sigData.api_key);
-        formData.append('timestamp', sigData.timestamp.toString());
-        formData.append('signature', sigData.signature);
-        formData.append('folder', sigData.folder);
+        formData.append("file", processedFile);
+        formData.append("api_key", sigData.api_key);
+        formData.append("timestamp", sigData.timestamp.toString());
+        formData.append("signature", sigData.signature);
+        formData.append("folder", sigData.folder);
 
-        const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloud_name}/image/upload`, {
-          method: 'POST',
-          body: formData
-        });
+        const uploadResponse = await fetch(
+          `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/${resourceType}/upload`,
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
 
         if (uploadResponse.ok) {
           const resJson = await uploadResponse.json();
-          console.log("[Cloudinary] Subida firmada exitosa:", resJson.secure_url || resJson.url);
+          console.log(
+            "[Cloudinary] Subida firmada exitosa:",
+            resJson.secure_url || resJson.url,
+          );
           return resJson;
         } else {
           const errData = await uploadResponse.json();
-          console.warn("[Cloudinary] Intento de subida firmada falló, reintentando de forma no firmada...", errData);
+          console.warn(
+            "[Cloudinary] Intento de subida firmada falló, reintentando de forma no firmada...",
+            errData,
+          );
         }
       }
     }
   } catch (sigErr) {
-    console.warn("[Cloudinary] No se pudo obtener firma del backend, usando fallback no firmado:", sigErr);
+    console.warn(
+      "[Cloudinary] No se pudo obtener firma del backend, usando fallback no firmado:",
+      sigErr,
+    );
   }
 
   // Fallback to unsigned upload
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dnpnmhmht';
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'nexus_unsigned';
-  
-  console.log("[Cloudinary] Realizando subida no firmada usando preset:", uploadPreset);
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dnpnmhmht";
+  const uploadPreset =
+    import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "nexus_unsigned";
+
+  console.log(
+    "[Cloudinary] Realizando subida no firmada usando preset:",
+    uploadPreset,
+  );
   const formData = new FormData();
-  formData.append('file', processedFile);
-  formData.append('upload_preset', uploadPreset);
+  formData.append("file", processedFile);
+  formData.append("upload_preset", uploadPreset);
   if (folder) {
-    formData.append('folder', folder);
+    formData.append("folder", folder);
   }
 
-  const uploadResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: 'POST',
-    body: formData
-  });
+  const uploadResponse = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 
   if (!uploadResponse.ok) {
     const errData = await uploadResponse.json();
@@ -112,10 +150,10 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
 
 export const deleteFromCloudinary = async (publicId: string) => {
   try {
-    const response = await fetch('/api/delete-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ public_id: publicId })
+    const response = await fetch("/api/delete-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ public_id: publicId }),
     });
     const result = await response.json();
     return result.success;
@@ -127,10 +165,10 @@ export const deleteFromCloudinary = async (publicId: string) => {
 
 export const deleteFolderFromCloudinary = async (folder: string) => {
   try {
-    const response = await fetch('/api/delete-folder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder })
+    const response = await fetch("/api/delete-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folder }),
     });
     const result = await response.json();
     return result.success;

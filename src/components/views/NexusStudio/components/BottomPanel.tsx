@@ -16,6 +16,10 @@ import {
 import { useStudioStore, Entity, BuiltInAsset } from "../store/useStudioStore";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from "@react-three/drei";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../../../../lib/cloudinary";
 
 const BUILT_IN_CATEGORIES = [
   "Mis Assets",
@@ -316,12 +320,15 @@ export const BottomPanel = ({
   >("assets");
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingAsset, setIsUploadingAsset] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
   const {
     addEntity,
     setEngineMode,
     customAssets,
     addCustomAsset,
+    removeCustomAsset,
     loadCustomAssets,
   } = useStudioStore();
 
@@ -520,55 +527,102 @@ export const BottomPanel = ({
                     {searchQuery ? "Resultados de búsqueda" : assetCat}
                   </span>
                 </div>
-                <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-sm cursor-pointer flex items-center gap-2 transition-colors">
-                  <Upload size={16} /> Subir Asset
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.ogg,.glb,.gltf,.fbx,.obj,.zip"
-                    multiple
-                    onChange={async (e) => {
-                      if (e.target.files) {
-                        Array.from(e.target.files).forEach((f) => {
-                          const url = URL.createObjectURL(f);
-                          const isGLB = f.name.toLowerCase().endsWith(".glb");
-                          const isGLTF = f.name.toLowerCase().endsWith(".gltf");
-                          const isFBX = f.name.toLowerCase().endsWith(".fbx");
-                          const isOBJ = f.name.toLowerCase().endsWith(".obj");
+                <div className="flex flex-col items-end gap-1">
+                  <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-sm cursor-pointer flex items-center gap-2 transition-colors relative overflow-hidden">
+                    {isUploadingAsset ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />{" "}
+                        {uploadStatus}
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={16} /> Subir Asset
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.ogg,.glb,.gltf,.fbx,.obj,.zip"
+                      multiple
+                      disabled={isUploadingAsset}
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setIsUploadingAsset(true);
 
-                          if (isGLB || isGLTF || isFBX || isOBJ) {
-                            addCustomAsset({
-                              id: `upload-${Date.now()}-${f.name}`,
-                              name: f.name,
-                              category: "Mis Assets",
-                              thumbnail: "/thumbnails/box.webp", // Generic thumbnail
-                              modelUrl: url,
-                              type: "model",
-                              assetType: "prop",
-                              fileSize:
-                                (f.size / 1024 / 1024).toFixed(2) + " MB",
-                              polyCount:
-                                Math.floor(Math.random() * 5000) + 1000,
-                              optimizedForMobile: true,
-                              file: f,
-                            });
-                          } else {
-                            addCustomAsset({
-                              id: `upload-${Date.now()}-${f.name}`,
-                              name: f.name,
-                              category: "Mis Assets",
-                              thumbnail: url,
-                              type: "asset",
-                              fileSize:
-                                (f.size / 1024 / 1024).toFixed(2) + " MB",
-                              file: f,
-                            });
+                          for (let i = 0; i < e.target.files.length; i++) {
+                            const file = e.target.files[i];
+                            setUploadStatus(
+                              `Subiendo ${i + 1}/${e.target.files.length}`,
+                            );
+
+                            const uploadAttempt = async (
+                              retryCount = 0,
+                            ): Promise<void> => {
+                              try {
+                                console.log(
+                                  `[Upload] Iniciando subida de ${file.name}`,
+                                );
+                                const result = await uploadToCloudinary(
+                                  file,
+                                  "NexusStudio/assets",
+                                );
+                                const isModel = file.name.match(
+                                  /\.(glb|gltf|fbx|obj|zip)$/i,
+                                );
+                                const secureUrl =
+                                  result.secure_url || result.url;
+
+                                console.log(
+                                  `[Upload] Subida exitosa: ${secureUrl}`,
+                                );
+
+                                await addCustomAsset({
+                                  id: `cloudinary|${result.public_id || Date.now()}`,
+                                  name: file.name,
+                                  category: "Mis Assets",
+                                  thumbnail: isModel
+                                    ? "/thumbnails/box.webp"
+                                    : secureUrl,
+                                  modelUrl: secureUrl,
+                                  type: isModel ? "model" : "asset",
+                                  assetType: "prop",
+                                  fileSize:
+                                    (file.size / 1024 / 1024).toFixed(2) +
+                                    " MB",
+                                  polyCount: isModel
+                                    ? Math.floor(Math.random() * 5000) + 1000
+                                    : 0,
+                                  optimizedForMobile: true,
+                                });
+                              } catch (err: any) {
+                                console.error(
+                                  `[Upload] Error al subir ${file.name}:`,
+                                  err,
+                                );
+                                if (retryCount < 1) {
+                                  console.log(
+                                    `[Upload] Reintentando ${file.name}...`,
+                                  );
+                                  setUploadStatus(
+                                    `Reintentando ${file.name}...`,
+                                  );
+                                  await uploadAttempt(retryCount + 1);
+                                }
+                              }
+                            };
+
+                            await uploadAttempt();
                           }
-                        });
-                      }
-                    }}
-                  />
-                </label>
+
+                          setIsUploadingAsset(false);
+                          setUploadStatus("");
+                          setAssetCat("Mis Assets");
+                        }
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div
@@ -763,6 +817,24 @@ export const BottomPanel = ({
                         >
                           Insertar en Escena
                         </button>
+                        {previewAsset.category === "Mis Assets" && (
+                          <button
+                            onClick={async () => {
+                              const pId = previewAsset.id.split("|")[1];
+                              if (pId) {
+                                console.log(
+                                  `[Delete] Solicitando eliminación de Cloudinary para: ${pId}`,
+                                );
+                                await deleteFromCloudinary(pId);
+                              }
+                              removeCustomAsset(previewAsset.id);
+                              setPreviewAsset(null);
+                            }}
+                            className="w-full py-2 text-red-500 hover:bg-red-900/30 text-sm rounded font-bold transition-colors"
+                          >
+                            Eliminar Asset
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

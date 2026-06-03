@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 import * as idb from "idb-keyval";
 import { BuiltInAsset } from "../components/BottomPanel";
+import { supabase } from "../../../../lib/supabase";
 
 export type EngineMode = "2D" | "3D";
 export type AppState = "edit" | "play";
@@ -103,6 +104,7 @@ interface StudioState {
   saveLocal: () => void;
   loadLocal: () => void;
   addCustomAsset: (asset: BuiltInAsset) => void;
+  removeCustomAsset: (id: string) => void;
   loadCustomAssets: () => Promise<void>;
   activeMobilePanel:
     | "explorer"
@@ -277,24 +279,86 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
   addCustomAsset: async (asset) => {
     set((state) => ({ customAssets: [...state.customAssets, asset] }));
-    const currentState = get().customAssets;
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase.from("studio_assets").insert({
+          id: asset.id,
+          name: asset.name,
+          category: asset.category,
+          type: asset.type,
+          modelUrl: asset.modelUrl,
+          thumbnail: asset.thumbnail,
+          polyCount: asset.polyCount || 0,
+          fileSize: asset.fileSize,
+          optimizedForMobile: asset.optimizedForMobile,
+          assetType: asset.assetType,
+          user_id: session.user.id,
+        });
+      }
+
+      const currentState = get().customAssets;
       await idb.set("nexus_custom_assets", currentState);
     } catch (e) {
-      console.error("Failed to save to idb", e);
+      console.error("Failed to save to Supabase/idb", e);
+    }
+  },
+  removeCustomAsset: async (id) => {
+    set((state) => ({
+      customAssets: state.customAssets.filter((a) => a.id !== id),
+    }));
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase
+          .from("studio_assets")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", session.user.id);
+      }
+      const currentState = get().customAssets;
+      await idb.set("nexus_custom_assets", currentState);
+    } catch (e) {
+      console.error("Failed to delete asset", e);
     }
   },
   loadCustomAssets: async () => {
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { data, error } = await supabase
+          .from("studio_assets")
+          .select("*")
+          .eq("user_id", session.user.id);
+        if (data && !error) {
+          const mapped = data.map((d) => ({
+            ...d,
+          })) as BuiltInAsset[];
+          set({ customAssets: mapped });
+          await idb.set("nexus_custom_assets", mapped);
+          return;
+        }
+      }
+
+      // Fallback a IDB si no estamos autenticados o falla la red
       const savedAssets = await idb.get<BuiltInAsset[]>("nexus_custom_assets");
       if (savedAssets) {
-        // Because File and Blob can't natively keep object URLs on reload,
-        // we might need to recreate URLs if they are stored as raw Blobs/Files in indexedDb.
-        // idb-keyval supports storing raw File/Blob objects natively!
         const restoredAssets = savedAssets.map((asset) => {
-          if (asset.file) {
+          if (asset.file && !asset.modelUrl?.startsWith("http")) {
             const url = URL.createObjectURL(asset.file);
-            return { ...asset, modelUrl: url, thumbnail: url };
+            return {
+              ...asset,
+              modelUrl: url,
+              thumbnail: asset.thumbnail?.startsWith("blob:")
+                ? url
+                : asset.thumbnail,
+            };
           }
           return asset;
         });
