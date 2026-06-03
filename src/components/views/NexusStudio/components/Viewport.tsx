@@ -1,13 +1,67 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useStudioStore, Entity, Entity3D, Entity2D } from '../store/useStudioStore';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Sky, Grid, TransformControls, useGLTF } from '@react-three/drei';
+import { OrbitControls, Sky, Grid, TransformControls, useGLTF, Html } from '@react-three/drei';
 import { Physics, RigidBody } from '@react-three/rapier';
 import Phaser from 'phaser';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
+class ModelErrorBoundary extends React.Component<{ url: string, entityName: string, children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    const ext = this.props.url.split('.').pop()?.split('?')[0]?.toLowerCase();
+    
+    console.error(`[Nexus Studio Diagnostics] =======================================`);
+    console.error(`[Nexus Studio Diagnostics] MODEL LOAD ERROR`);
+    console.error(`[Nexus Studio Diagnostics] Entity Name: ${this.props.entityName}`);
+    console.error(`[Nexus Studio Diagnostics] URL: ${this.props.url}`);
+    console.error(`[Nexus Studio Diagnostics] Detected Extension: ${ext}`);
+    console.error(`[Nexus Studio Diagnostics] Error details:`, error);
+    console.error(`[Nexus Studio Diagnostics] =======================================`);
+    
+    // Attempting a quick fetch to check if the file is reachable and check its headers
+    fetch(this.props.url, { method: "HEAD" }).then(res => {
+      console.log(`[Nexus Studio Diagnostics] HEAD request to URL status: ${res.status}`);
+      console.log(`[Nexus Studio Diagnostics] Content-Type: ${res.headers.get("Content-Type")}`);
+    }).catch(e => {
+      console.error(`[Nexus Studio Diagnostics] Validation HEAD fetch failed:`, e);
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <group>
+          <mesh>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="red" wireframe />
+          </mesh>
+          <Html center>
+            <div className="bg-red-900/90 text-white p-3 rounded-lg border border-red-500 w-64 text-xs font-mono break-all pointer-events-none">
+              <strong className="block mb-1 text-red-300">Model Load Error</strong>
+              <div>Ext: {this.props.url.split('.').pop()?.split('?')[0]}</div>
+              <div className="mt-1 font-semibold text-red-200">{this.state.error?.message}</div>
+              <div className="mt-2 text-[10px] break-all">{this.props.url.substring(0, 100)}...</div>
+            </div>
+          </Html>
+        </group>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const GLTFModel = ({ url }: { url: string }) => {
+
   const { scene } = useGLTF(url);
   return <primitive object={scene.clone()} />;
 };
@@ -74,9 +128,11 @@ const Entity3DNode = ({ entity, isPlayMode }: { entity: Entity3D, isPlayMode: bo
         </mesh>
       )}
       {entity.type === 'model' && (
-         <React.Suspense fallback={null}>
-            <ModelParams url={entity.modelUrl} entityName={entity.name} />
-         </React.Suspense>
+         <ModelErrorBoundary url={entity.modelUrl as string} entityName={entity.name}>
+           <React.Suspense fallback={null}>
+              <ModelParams url={entity.modelUrl} entityName={entity.name} />
+           </React.Suspense>
+         </ModelErrorBoundary>
       )}
       {entity.type === 'terrain' && (
          <mesh rotation={[-Math.PI/2, 0, 0]}>
