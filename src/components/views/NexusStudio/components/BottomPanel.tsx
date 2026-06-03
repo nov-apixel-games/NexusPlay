@@ -322,6 +322,8 @@ export const BottomPanel = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAsset, setIsUploadingAsset] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const [uploadDiagnostic, setUploadDiagnostic] = useState<any>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const {
     addEntity,
@@ -424,9 +426,39 @@ export const BottomPanel = ({
   };
 
   return (
-    <div
-      className={`${mobile ? "h-full flex-1" : "h-64"} bg-neutral-900 border-t border-neutral-800 flex flex-col text-neutral-300`}
-    >
+    <>
+      {uploadDiagnostic && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80">
+          <div className="bg-neutral-900 border border-neutral-700 p-4 rounded max-w-[90vw] w-full max-h-[90vh] overflow-y-auto text-xs font-mono text-neutral-300">
+            <h3 className="text-red-400 font-bold text-base mb-2">Diagnóstico de Fallo en Subida</h3>
+            <div className="space-y-2">
+              <p><strong className="text-white">Archivo:</strong> {uploadDiagnostic.fileName}</p>
+              <p><strong className="text-white">Cloud Name:</strong> {uploadDiagnostic.cloudName || 'N/A'}</p>
+              <p><strong className="text-white">Upload Preset:</strong> {uploadDiagnostic.uploadPreset || 'N/A'}</p>
+              <p><strong className="text-white">URL:</strong> <span className="break-all">{uploadDiagnostic.url || 'N/A'}</span></p>
+              <p><strong className="text-white">Route:</strong> {uploadDiagnostic.route || 'N/A'}</p>
+              <p><strong className="text-white">Status HTTP:</strong> {uploadDiagnostic.status || 'N/A'} {uploadDiagnostic.statusText || ''}</p>
+              <p><strong className="text-white">Supabase Insert:</strong> {uploadDiagnostic.supabaseResult || 'No ejecutado'}</p>
+              <p><strong className="text-white">Error Message:</strong> <span className="text-red-300">{uploadDiagnostic.message || 'N/A'}</span></p>
+              <div>
+                <strong className="text-white">JSON Devuelto:</strong>
+                <pre className="bg-black/50 p-2 mt-1 rounded overflow-x-auto text-[10px] break-all whitespace-pre-wrap">
+                  {JSON.stringify(uploadDiagnostic.json || uploadDiagnostic, null, 2)}
+                </pre>
+              </div>
+            </div>
+            <button 
+              onClick={() => setUploadDiagnostic(null)}
+              className="mt-4 w-full bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded font-bold"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+      <div
+        className={`${mobile ? "h-full flex-1" : "h-64"} bg-neutral-900 border-t border-neutral-800 flex flex-col text-neutral-300`}
+      >
       {!mobile && (
         <div className="flex items-center gap-1 p-1 border-b border-neutral-800 text-sm">
           <button
@@ -528,6 +560,9 @@ export const BottomPanel = ({
                   </span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
+                  {uploadError && (
+                     <span className="text-red-500 text-xs max-w-xs text-right mb-1">{uploadError}</span>
+                  )}
                   <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-sm cursor-pointer flex items-center gap-2 transition-colors relative overflow-hidden">
                     {isUploadingAsset ? (
                       <>
@@ -547,73 +582,55 @@ export const BottomPanel = ({
                       disabled={isUploadingAsset}
                       onChange={async (e) => {
                         if (e.target.files && e.target.files.length > 0) {
+                          setUploadError("");
                           setIsUploadingAsset(true);
 
                           for (let i = 0; i < e.target.files.length; i++) {
                             const file = e.target.files[i];
-                            setUploadStatus(
-                              `Subiendo ${i + 1}/${e.target.files.length}`,
-                            );
+                            setUploadStatus(`Subiendo ${i + 1}/${e.target.files.length}`);
 
-                            const uploadAttempt = async (
-                              retryCount = 0,
-                            ): Promise<void> => {
+                            let retryCount = 0;
+                            let success = false;
+                            while (retryCount <= 1 && !success) {
                               try {
-                                console.log(
-                                  `[Upload] Iniciando subida de ${file.name}`,
-                                );
-                                const result = await uploadToCloudinary(
-                                  file,
-                                  "NexusStudio/assets",
-                                );
-                                const isModel = file.name.match(
-                                  /\.(glb|gltf|fbx|obj|zip)$/i,
-                                );
-                                const secureUrl =
-                                  result.secure_url || result.url;
-
-                                console.log(
-                                  `[Upload] Subida exitosa: ${secureUrl}`,
-                                );
+                                console.log(`[Upload Panel Diagnostics] Intento ${retryCount + 1}: Iniciando subida de ${file.name}`);
+                                
+                                const result = await uploadToCloudinary(file, "NexusStudio/assets");
+                                
+                                const isModel = file.name.match(/\.(glb|gltf|fbx|obj|zip)$/i);
+                                const secureUrl = result.secure_url || result.url;
+                                console.log(`[Upload Panel Diagnostics] Subida a Cloudinary exitosa para ${file.name}. secureUrl: ${secureUrl}`);
 
                                 await addCustomAsset({
                                   id: `cloudinary|${result.public_id || Date.now()}`,
                                   name: file.name,
                                   category: "Mis Assets",
-                                  thumbnail: isModel
-                                    ? "/thumbnails/box.webp"
-                                    : secureUrl,
+                                  thumbnail: isModel ? "/thumbnails/box.webp" : secureUrl,
                                   modelUrl: secureUrl,
                                   type: isModel ? "model" : "asset",
                                   assetType: "prop",
-                                  fileSize:
-                                    (file.size / 1024 / 1024).toFixed(2) +
-                                    " MB",
-                                  polyCount: isModel
-                                    ? Math.floor(Math.random() * 5000) + 1000
-                                    : 0,
+                                  fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                                  polyCount: isModel ? Math.floor(Math.random() * 5000) + 1000 : 0,
                                   optimizedForMobile: true,
                                 });
+                                
+                                console.log(`[Upload Panel Diagnostics] Custom asset agregado al store para ${file.name}`);
+                                success = true;
                               } catch (err: any) {
-                                console.error(
-                                  `[Upload] Error al subir ${file.name}:`,
-                                  err,
-                                );
+                                console.error(`[Upload Panel Diagnostics] catch block para ${file.name} en intento ${retryCount + 1}:`, err);
                                 if (retryCount < 1) {
-                                  console.log(
-                                    `[Upload] Reintentando ${file.name}...`,
-                                  );
-                                  setUploadStatus(
-                                    `Reintentando ${file.name}...`,
-                                  );
-                                  await uploadAttempt(retryCount + 1);
+                                  retryCount++;
+                                  console.log(`[Upload Panel Diagnostics] Incrementando retryCount a ${retryCount}`);
+                                  setUploadStatus(`Reintentando ${file.name}...`);
+                                } else {
+                                  console.error(`[Upload Panel Diagnostics] Límite de reintentos alcanzado para ${file.name}.`);
+                                  setUploadError(`Error al subir ${file.name}: ${err.message || 'Desconocido'}`);
+                                  break;
                                 }
                               }
-                            };
-
-                            await uploadAttempt();
+                            }
                           }
-
+                          
                           setIsUploadingAsset(false);
                           setUploadStatus("");
                           setAssetCat("Mis Assets");
@@ -912,5 +929,6 @@ export const BottomPanel = ({
         )}
       </div>
     </div>
+    </>
   );
 };

@@ -51,10 +51,17 @@ const compressImage = async (file: File): Promise<File> => {
 };
 
 export const uploadToCloudinary = async (file: File, folder: string) => {
+  console.log(`[Cloudinary Diagnostics] === INICIO DE UPLOAD ===`);
+  console.log(`[Cloudinary Diagnostics] Archivo: ${file.name}, Tamaño: ${file.size} bytes, Tipo: ${file.type}`);
+
   const isImage =
     file.type.startsWith("image/") &&
     !file.name.match(/\.(glb|gltf|fbx|obj)$/i);
+    
+  console.log(`[Cloudinary Diagnostics] isImage detectado: ${isImage}`);
+  
   const processedFile = isImage ? await compressImage(file) : file;
+  console.log(`[Cloudinary Diagnostics] Procesamiento inicial completado. Tamaño resultante: ${processedFile.size} bytes`);
 
   // Decide resource_type
   let resourceType = "auto"; // Cloudinary can auto-detect mostly, but for 3D models 'raw' or 'auto' works. Let's use 'auto' or 'image' for images.
@@ -64,17 +71,24 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   } else {
     resourceType = "image";
   }
+  
+  console.log(`[Cloudinary Diagnostics] resourceType final: ${resourceType}`);
 
   // Try signed upload first
   try {
-    const sigResponse = await fetch(
-      `/api/cloudinary-signature?folder=${encodeURIComponent(folder || "avatars")}`,
-    );
+    const sigURL = `/api/cloudinary-signature?folder=${encodeURIComponent(folder || "avatars")}`;
+    console.log(`[Cloudinary Diagnostics] Fetching signature from: ${sigURL}`);
+    const sigResponse = await fetch(sigURL);
+    
+    console.log(`[Cloudinary Diagnostics] Signature fetch response status: ${sigResponse.status}`);
+    
     if (sigResponse.ok) {
       const sigData = await sigResponse.json();
+      console.log(`[Cloudinary Diagnostics] Signature data received:`, sigData);
+      
       if (sigData && sigData.signature) {
         console.log(
-          "[Cloudinary] Realizando subida firmada mediante backend...",
+          `[Cloudinary Diagnostics] Realizando subida firmada mediante backend a cloud_name: ${sigData.cloud_name}...`
         );
         const formData = new FormData();
         formData.append("file", processedFile);
@@ -83,33 +97,57 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
         formData.append("signature", sigData.signature);
         formData.append("folder", sigData.folder);
 
-        const uploadResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/${resourceType}/upload`,
-          {
+        const signedUploadURL = `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/${resourceType}/upload`;
+        console.log(`[Cloudinary Diagnostics] Endpoint final Cloudinary: ${signedUploadURL}`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
+        console.log(`[Cloudinary Diagnostics] Iniciando fetch() a Cloudinary (timeout de 30s)...`);
+        const startTime = Date.now();
+        
+        try {
+          const uploadResponse = await fetch(signedUploadURL, {
             method: "POST",
             body: formData,
-          },
-        );
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          console.log(`[Cloudinary Diagnostics] Fin de fetch(). Tiempo transcurrido: ${Date.now() - startTime}ms`);
+          console.log(`[Cloudinary Diagnostics] response.status: ${uploadResponse.status} ${uploadResponse.statusText}, ok: ${uploadResponse.ok}`);
 
-        if (uploadResponse.ok) {
-          const resJson = await uploadResponse.json();
-          console.log(
-            "[Cloudinary] Subida firmada exitosa:",
-            resJson.secure_url || resJson.url,
-          );
-          return resJson;
-        } else {
-          const errData = await uploadResponse.json();
-          console.warn(
-            "[Cloudinary] Intento de subida firmada falló, reintentando de forma no firmada...",
-            errData,
-          );
+          if (uploadResponse.ok) {
+            const resJson = await uploadResponse.json();
+            console.log(
+              `[Cloudinary Diagnostics] Subida firmada exitosa, JSON de respuesta completo:`,
+              resJson
+            );
+            return resJson;
+          } else {
+            const errData = await uploadResponse.json();
+            console.warn(
+              `[Cloudinary Diagnostics] Intento de subida firmada falló (status ${uploadResponse.status}), JSON:`,
+              errData,
+            );
+          }
+        } catch (fetchErr: any) {
+           clearTimeout(timeoutId);
+           if (fetchErr.name === 'AbortError') {
+               console.error(`[Cloudinary Diagnostics] Timeout de 30 segundos alcanzado durante fetch() firmado!`);
+               throw new Error("Cloudinary request timeout");
+           }
+           console.error(`[Cloudinary Diagnostics] fetchErr en subida firmada:`, fetchErr);
+           throw fetchErr;
         }
+      } else {
+        console.warn(`[Cloudinary Diagnostics] sigResponse ok pero no hubo firma:`, sigData);
       }
+    } else {
+      console.warn(`[Cloudinary Diagnostics] sigResponse NOT ok: ${sigResponse.statusText}`);
     }
   } catch (sigErr) {
     console.warn(
-      "[Cloudinary] No se pudo obtener firma del backend, usando fallback no firmado:",
+      `[Cloudinary Diagnostics] throw catch al obtener firma del backend:`,
       sigErr,
     );
   }
@@ -118,10 +156,10 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dnpnmhmht";
   const uploadPreset =
     import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "nexus_unsigned";
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
   console.log(
-    "[Cloudinary] Realizando subida no firmada usando preset:",
-    uploadPreset,
+    `[Cloudinary Diagnostics] Realizando subida no firmada para ${file.name}. Endpoint final Cloudinary: ${url}, cloudName utilizado: ${cloudName}, uploadPreset utilizado: ${uploadPreset}, resourceType: ${resourceType}`
   );
   const formData = new FormData();
   formData.append("file", processedFile);
@@ -130,22 +168,54 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
     formData.append("folder", folder);
   }
 
-  const uploadResponse = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-    {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
+  console.log(`[Cloudinary Diagnostics] Iniciando fetch() a Cloudinary (timeout de 30s)...`);
+  const startTime = Date.now();
+
+  try {
+    const uploadResponse = await fetch(url, {
       method: "POST",
       body: formData,
-    },
-  );
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    console.log(`[Cloudinary Diagnostics] Fin de fetch(). Tiempo transcurrido: ${Date.now() - startTime}ms`);
+    console.log(`[Cloudinary Diagnostics] response.status: ${uploadResponse.status} ${uploadResponse.statusText}, ok: ${uploadResponse.ok}`);
 
-  if (!uploadResponse.ok) {
-    const errData = await uploadResponse.json();
-    const errorMsg = errData.error?.message || "Error al subir a Cloudinary";
-    console.error("Cloudinary Unsigned Upload Error Details:", errData);
-    throw new Error(errorMsg);
+    if (!uploadResponse.ok) {
+      let errData: any;
+      try {
+        errData = await uploadResponse.json();
+      } catch(e) {
+        errData = await uploadResponse.text();
+      }
+      const errorMsg = errData?.error?.message || (typeof errData === 'string' ? errData : "Error al subir a Cloudinary");
+      console.error("[Cloudinary Diagnostics] Unsigned Upload Error Details JSON/Text:", errData);
+      const error: any = new Error(`Cloudinary Error HTTP ${uploadResponse.status}: ${errorMsg}`);
+      error.diagnostic = { cloudName, uploadPreset, url, status: uploadResponse.status, statusText: uploadResponse.statusText, json: errData, route: "unsigned" };
+      throw error;
+    }
+
+    const json = await uploadResponse.json();
+    console.log(`[Cloudinary Diagnostics] Subida no firmada exitosa, JSON de respuesta completo:`, json);
+    return json;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+       console.error(`[Cloudinary Diagnostics] Timeout de 30 segundos alcanzado durante fetch() no firmado!`);
+       const errToThrow: any = new Error("Cloudinary request timeout");
+       errToThrow.diagnostic = { timeout: true, route: "unsigned", cloudName, uploadPreset, url };
+       throw errToThrow;
+    }
+    console.error(`[Cloudinary Diagnostics] Error devuelto por catch completo para ${file.name}:`, err);
+    if (!err.diagnostic) {
+       err.diagnostic = { route: "unsigned catch", message: err.message, cloudName, uploadPreset, url };
+    }
+    throw err;
   }
-
-  return await uploadResponse.json();
 };
 
 export const deleteFromCloudinary = async (publicId: string) => {

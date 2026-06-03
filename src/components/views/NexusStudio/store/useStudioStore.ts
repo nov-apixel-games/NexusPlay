@@ -103,7 +103,7 @@ interface StudioState {
   exportProject: () => void;
   saveLocal: () => void;
   loadLocal: () => void;
-  addCustomAsset: (asset: BuiltInAsset) => void;
+  addCustomAsset: (asset: BuiltInAsset) => Promise<string>;
   removeCustomAsset: (id: string) => void;
   loadCustomAssets: () => Promise<void>;
   activeMobilePanel:
@@ -278,13 +278,16 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     }
   },
   addCustomAsset: async (asset) => {
+    let supabaseDiagnostic = "No user session";
+    console.log(`[Store Diagnostics] addCustomAsset iniciado para: ${asset.name}, id: ${asset.id}`);
     set((state) => ({ customAssets: [...state.customAssets, asset] }));
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user?.id) {
-        await supabase.from("studio_assets").insert({
+        console.log(`[Store Diagnostics] Usuario auth detectado (${session.user.id}), intentando insertar en Supabase studio_assets...`);
+        const { error: insertError } = await supabase.from("studio_assets").insert({
           id: asset.id,
           name: asset.name,
           category: asset.category,
@@ -297,12 +300,24 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           assetType: asset.assetType,
           user_id: session.user.id,
         });
+        if (insertError) {
+          console.error(`[Store Diagnostics] Error al insertar en Supabase:`, insertError);
+          supabaseDiagnostic = `Error Supabase: ${insertError.message}`;
+        } else {
+          console.log(`[Store Diagnostics] Inserción en Supabase exitosa para: ${asset.name}`);
+          supabaseDiagnostic = "Exitoso";
+        }
+      } else {
+        console.warn(`[Store Diagnostics] No hay sesión activa. No se insertó en Supabase.`);
       }
 
       const currentState = get().customAssets;
       await idb.set("nexus_custom_assets", currentState);
-    } catch (e) {
-      console.error("Failed to save to Supabase/idb", e);
+      console.log(`[Store Diagnostics] idb.set completado para customAssets.`);
+      return supabaseDiagnostic;
+    } catch (e: any) {
+      console.error("[Store Diagnostics] Failed to save to Supabase/idb catch block:", e);
+      return `Catch error: ${e.message}`;
     }
   },
   removeCustomAsset: async (id) => {
