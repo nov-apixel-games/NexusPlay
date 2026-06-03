@@ -54,15 +54,20 @@ export interface BuiltInAsset {
   id: string;
   name: string;
   category: string;
-  thumbnail: string;
+  type: string;
+  assetType?: string;
+  fileSize?: string;
+  storagePath?: string;
+  publicUrl?: string; // used for Supabase
+  thumbnailUrl?: string; // used for Supabase
+
+  // Legacy mappings for backwards compatibility in UI components:
+  thumbnail?: string; 
   modelUrl?: string;
   polyCount?: number;
   optimizedForMobile?: boolean;
   tags?: string[];
-  type: string;
-  assetType?: string;
   props?: any;
-  fileSize?: string;
   file?: File;
 }
 
@@ -280,7 +285,15 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   addCustomAsset: async (asset) => {
     let supabaseDiagnostic = "No user session";
     console.log(`[Store Diagnostics] addCustomAsset iniciado para: ${asset.name}, id: ${asset.id}`);
-    set((state) => ({ customAssets: [...state.customAssets, asset] }));
+    
+    // Normalize references for UI
+    const finalAsset = {
+      ...asset,
+      thumbnail: asset.thumbnail || asset.thumbnailUrl,
+      modelUrl: asset.modelUrl || asset.publicUrl
+    };
+
+    set((state) => ({ customAssets: [...state.customAssets, finalAsset] }));
     try {
       const {
         data: { session },
@@ -292,12 +305,11 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           name: asset.name,
           category: asset.category,
           type: asset.type,
-          modelUrl: asset.modelUrl,
-          thumbnail: asset.thumbnail,
-          polyCount: asset.polyCount || 0,
-          fileSize: asset.fileSize,
-          optimizedForMobile: asset.optimizedForMobile,
           assetType: asset.assetType,
+          fileSize: asset.fileSize,
+          storagePath: asset.storagePath,
+          publicUrl: asset.publicUrl || asset.modelUrl,
+          thumbnailUrl: asset.thumbnailUrl || asset.thumbnail,
           user_id: session.user.id,
         });
         if (insertError) {
@@ -321,6 +333,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     }
   },
   removeCustomAsset: async (id) => {
+    // We will do optimistic UI delete
     set((state) => ({
       customAssets: state.customAssets.filter((a) => a.id !== id),
     }));
@@ -328,6 +341,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      
       if (session?.user?.id) {
         await supabase
           .from("studio_assets")
@@ -335,10 +349,11 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           .eq("id", id)
           .eq("user_id", session.user.id);
       }
+      
       const currentState = get().customAssets;
       await idb.set("nexus_custom_assets", currentState);
     } catch (e) {
-      console.error("Failed to delete asset", e);
+      console.error("Failed to delete asset from DB", e);
     }
   },
   loadCustomAssets: async () => {
@@ -354,6 +369,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         if (data && !error) {
           const mapped = data.map((d) => ({
             ...d,
+            // Maps for backwards compat with UI
+            thumbnail: d.thumbnailUrl || d.thumbnail,
+            modelUrl: d.publicUrl || d.modelUrl
           })) as BuiltInAsset[];
           set({ customAssets: mapped });
           await idb.set("nexus_custom_assets", mapped);

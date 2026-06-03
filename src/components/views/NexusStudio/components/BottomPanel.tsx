@@ -17,9 +17,9 @@ import { useStudioStore, Entity, BuiltInAsset } from "../store/useStudioStore";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from "@react-three/drei";
 import {
-  uploadToCloudinary,
-  deleteFromCloudinary,
-} from "../../../../lib/cloudinary";
+  uploadToSupabaseWithProgress,
+  deleteAssetFromStorage,
+} from "../../../../lib/storage";
 
 const BUILT_IN_CATEGORIES = [
   "Mis Assets",
@@ -595,18 +595,23 @@ export const BottomPanel = ({
                               try {
                                 console.log(`[Upload Panel Diagnostics] Intento ${retryCount + 1}: Iniciando subida de ${file.name}`);
                                 
-                                const result = await uploadToCloudinary(file, "NexusStudio/assets");
+                                const result = await uploadToSupabaseWithProgress(file, "assets", (progress) => {
+                                  const percent = Math.round((progress.loaded / progress.total) * 100);
+                                  const speedMB = (progress.speed / 1024 / 1024).toFixed(1);
+                                  setUploadStatus(`Subiendo ${file.name} (${percent}%) - ${speedMB} MB/s`);
+                                });
                                 
                                 const isModel = file.name.match(/\.(glb|gltf|fbx|obj|zip)$/i);
-                                const secureUrl = result.secure_url || result.url;
-                                console.log(`[Upload Panel Diagnostics] Subida a Cloudinary exitosa para ${file.name}. secureUrl: ${secureUrl}`);
+                                const secureUrl = result.url;
+                                console.log(`[Upload Panel Diagnostics] Subida a Supabase exitosa para ${file.name}. URL: ${secureUrl}`);
 
-                                await addCustomAsset({
-                                  id: `cloudinary|${result.public_id || Date.now()}`,
+                                const supabaseDiagnostic = await addCustomAsset({
+                                  id: `supabase|${Date.now()}_${Math.random().toString(36).substring(7)}`,
                                   name: file.name,
                                   category: "Mis Assets",
-                                  thumbnail: isModel ? "/thumbnails/box.webp" : secureUrl,
-                                  modelUrl: secureUrl,
+                                  thumbnailUrl: isModel ? "/thumbnails/box.webp" : secureUrl,
+                                  publicUrl: secureUrl,
+                                  storagePath: result.path,
                                   type: isModel ? "model" : "asset",
                                   assetType: "prop",
                                   fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
@@ -614,10 +619,16 @@ export const BottomPanel = ({
                                   optimizedForMobile: true,
                                 });
                                 
-                                console.log(`[Upload Panel Diagnostics] Custom asset agregado al store para ${file.name}`);
+                                console.log(`[Upload Panel Diagnostics] Custom asset agregado al store para ${file.name}. Resultado Supabase: ${supabaseDiagnostic}`);
                                 success = true;
                               } catch (err: any) {
                                 console.error(`[Upload Panel Diagnostics] catch block para ${file.name} en intento ${retryCount + 1}:`, err);
+                                setUploadDiagnostic({
+                                  fileName: file.name,
+                                  message: err.message,
+                                  route: 'Supabase Storage Upload',
+                                  rawError: err,
+                                });
                                 if (retryCount < 1) {
                                   retryCount++;
                                   console.log(`[Upload Panel Diagnostics] Incrementando retryCount a ${retryCount}`);
@@ -837,12 +848,19 @@ export const BottomPanel = ({
                         {previewAsset.category === "Mis Assets" && (
                           <button
                             onClick={async () => {
-                              const pId = previewAsset.id.split("|")[1];
-                              if (pId) {
-                                console.log(
-                                  `[Delete] Solicitando eliminación de Cloudinary para: ${pId}`,
-                                );
-                                await deleteFromCloudinary(pId);
+                              try {
+                                if (previewAsset.storagePath) {
+                                  console.log(
+                                    `[Delete] Solicitando eliminación de Supabase para: ${previewAsset.storagePath}`,
+                                  );
+                                  await deleteAssetFromStorage(previewAsset.storagePath);
+                                } else if (previewAsset.id.includes("cloudinary|") || previewAsset.id.includes("supabase|")) {
+                                  // Retrocompatibility: If it doesn't have storagePath but feels like it was uploaded, just try removing from local DB, because we can't reliably delete without storagePath.
+                                  console.log("[Delete] No storage path found, only removing from local DB.");
+                                }
+                              } catch(e: any) {
+                                console.error("[Delete Error]", e);
+                                alert(`Error al eliminar: ${e.message}`);
                               }
                               removeCustomAsset(previewAsset.id);
                               setPreviewAsset(null);
