@@ -26,29 +26,29 @@ export default function OfflineFallback({ onBack, onGoToGames, title, descriptio
         </div>
       </div>
 
-      <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-4">
+      <h2 className="text-2xl sm:text-3xl font-black text-nexus-text tracking-tight mb-4">
         {title || 'Modo Offline Activado'}
       </h2>
-      <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-10 max-w-sm">
+      <p className="text-nexus-text-sec text-sm sm:text-base leading-relaxed mb-10 max-w-sm">
         {description || 'Esta función requiere conexión activa a internet para sincronizarse con el servidor central. ¡Pero puedes seguir explorando las aplicaciones precargadas o divertirte en nuestra sección de juegos!'}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
         <button
           onClick={onBack}
-          className="flex items-center justify-center gap-2 bg-[#12141c] hover:bg-[#1a1c24] border border-white/5 text-gray-300 font-bold px-6 py-3.5 rounded-2xl transition-all w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 bg-nexus-card hover:bg-nexus-card border border-nexus-border text-nexus-text font-bold px-6 py-3.5 rounded-2xl transition-all w-full sm:w-auto"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-400" /> Volver al Inicio
+          <ArrowLeft className="w-5 h-5 text-nexus-text-sec" /> Volver al Inicio
         </button>
         <button
           onClick={onGoToGames}
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-black px-6 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-nexus-text font-black px-6 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-nexus-glow w-full sm:w-auto"
         >
           <Gamepad2 className="w-5 h-5" /> Entrar al Games Hub
         </button>
       </div>
 
-      <div className="mt-8 pt-6 border-t border-white/5 w-full flex items-center justify-center gap-2 text-xs text-gray-500 font-mono">
+      <div className="mt-8 pt-6 border-t border-nexus-border w-full flex items-center justify-center gap-2 text-xs text-nexus-text-sec font-mono">
         <Layers className="w-4 h-4 text-cyan-400/60" /> Servidores locales listos • Cache local activa
       </div>
     </motion.div>

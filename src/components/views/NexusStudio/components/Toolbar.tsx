@@ -10,22 +10,22 @@ export const Toolbar = () => {
       <div className="flex items-center gap-2">
         <div className="flex bg-neutral-800 rounded p-1">
           <button 
-            className={`p-1.5 rounded ${toolMode === 'select' ? 'bg-neutral-700 text-white' : 'hover:bg-neutral-700'}`}
+            className={`p-1.5 rounded ${toolMode === 'select' ? 'bg-neutral-700 text-nexus-text' : 'hover:bg-neutral-700'}`}
             onClick={() => setToolMode('select')} title="Select">
             <MousePointer2 size={16} />
           </button>
           <button 
-            className={`p-1.5 rounded ${toolMode === 'translate' ? 'bg-neutral-700 text-white' : 'hover:bg-neutral-700'}`}
+            className={`p-1.5 rounded ${toolMode === 'translate' ? 'bg-neutral-700 text-nexus-text' : 'hover:bg-neutral-700'}`}
             onClick={() => setToolMode('translate')} title="Translate">
             <Move size={16} />
           </button>
           <button 
-            className={`p-1.5 rounded ${toolMode === 'rotate' ? 'bg-neutral-700 text-white' : 'hover:bg-neutral-700'}`}
+            className={`p-1.5 rounded ${toolMode === 'rotate' ? 'bg-neutral-700 text-nexus-text' : 'hover:bg-neutral-700'}`}
             onClick={() => setToolMode('rotate')} title="Rotate">
             <RotateCcw size={16} />
           </button>
           <button 
-            className={`p-1.5 rounded ${toolMode === 'scale' ? 'bg-neutral-700 text-white' : 'hover:bg-neutral-700'}`}
+            className={`p-1.5 rounded ${toolMode === 'scale' ? 'bg-neutral-700 text-nexus-text' : 'hover:bg-neutral-700'}`}
             onClick={() => setToolMode('scale')} title="Scale">
             <Maximize2 size={16} />
           </button>
@@ -39,10 +39,10 @@ export const Toolbar = () => {
           <option value="3D">Motor 3D (Three.js)</option>
           <option value="2D">Motor 2D (Phaser)</option>
         </select>
-        <button className="flex items-center gap-1 hover:text-white px-2 py-1" onClick={() => useStudioStore.getState().saveLocal()}>
+        <button className="flex items-center gap-1 hover:text-nexus-text px-2 py-1" onClick={() => useStudioStore.getState().saveLocal()}>
           <Save size={16} /> Guardar
         </button>
-        <button className="flex items-center gap-1 hover:text-white px-2 py-1" onClick={() => useStudioStore.getState().exportProject()}>
+        <button className="flex items-center gap-1 hover:text-nexus-text px-2 py-1" onClick={() => useStudioStore.getState().exportProject()}>
           <Download size={16} /> Exportar
         </button>
       </div>
@@ -51,13 +51,13 @@ export const Toolbar = () => {
         {appState === 'edit' ? (
           <button 
             onClick={() => setAppState('play')}
-            className="flex items-center gap-2 px-6 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded font-bold text-sm">
+            className="flex items-center gap-2 px-6 py-1.5 bg-green-600 hover:bg-green-500 text-nexus-text rounded font-bold text-sm">
             <Play size={16} fill="currentColor" /> EJECUTAR
           </button>
         ) : (
           <button 
             onClick={() => setAppState('edit')}
-            className="flex items-center gap-2 px-6 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded font-bold text-sm">
+            className="flex items-center gap-2 px-6 py-1.5 bg-red-600 hover:bg-red-500 text-nexus-text rounded font-bold text-sm">
             <Square size={16} fill="currentColor" /> DETENER
           </button>
         )}

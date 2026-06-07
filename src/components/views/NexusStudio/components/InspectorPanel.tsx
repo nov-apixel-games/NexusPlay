@@ -25,13 +25,13 @@ export const InspectorPanel = ({ mobile }: { mobile?: boolean }) => {
     handleChange(field, newVec);
   };
 
-  const inputClass = mobile ? "w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-3 text-base outline-none focus:border-blue-500 text-white" : "w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 text-white";
-  const vecClass = mobile ? "w-full bg-neutral-800 border border-neutral-700 mx-0 px-2 py-3 text-base outline-none focus:border-blue-500 text-white text-center" : "w-full bg-neutral-800 border border-neutral-700 mx-0 px-1 py-1 text-sm outline-none focus:border-blue-500 text-white text-center";
+  const inputClass = mobile ? "w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-3 text-base outline-none focus:border-blue-500 text-nexus-text" : "w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 text-nexus-text";
+  const vecClass = mobile ? "w-full bg-neutral-800 border border-neutral-700 mx-0 px-2 py-3 text-base outline-none focus:border-blue-500 text-nexus-text text-center" : "w-full bg-neutral-800 border border-neutral-700 mx-0 px-1 py-1 text-sm outline-none focus:border-blue-500 text-nexus-text text-center";
 
   return (
     <div className={`${mobile ? 'w-full' : 'w-72'} bg-neutral-900 border-l border-neutral-800 flex flex-col h-full text-neutral-300`}>
       {!mobile && (
-        <div className="p-2 border-b border-neutral-800 font-semibold text-sm text-white flex justify-between items-center">
+        <div className="p-2 border-b border-neutral-800 font-semibold text-sm text-nexus-text flex justify-between items-center">
           <span>Inspector</span>
           <span className="text-xs text-neutral-500">{selectedEntity.type}</span>
         </div>
@@ -92,9 +92,9 @@ export const InspectorPanel = ({ mobile }: { mobile?: boolean }) => {
                  {/* COMPONENT SYSTEM MOCK */}
                  <div className="space-y-2 pt-4 border-t border-neutral-800">
                     <span className="text-xs font-bold text-neutral-500 uppercase">Componentes (Simulado)</span>
-                    <button className="bg-neutral-800 hover:bg-neutral-700 text-white text-xs w-full py-2 rounded border border-neutral-700">+ Añadir Componente</button>
+                    <button className="bg-neutral-800 hover:bg-neutral-700 text-nexus-text text-xs w-full py-2 rounded border border-neutral-700">+ Añadir Componente</button>
                     <div className="bg-neutral-900 border border-neutral-800 p-2 rounded text-xs text-neutral-400">
-                       <div className="flex justify-between items-center mb-1"><strong className="text-white">Rigidbody</strong> <button className="text-red-500">X</button></div>
+                       <div className="flex justify-between items-center mb-1"><strong className="text-nexus-text">Rigidbody</strong> <button className="text-red-500">X</button></div>
                        Mass: 1.0 <br/> Use Gravity: true
                     </div>
                  </div>

@@ -51,7 +51,7 @@ export default function OfflineIndicator() {
         className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2"
       >
         {isOffline && (
-          <div className="bg-red-500/95 backdrop-blur-md border border-red-500/30 text-white rounded-xl px-4 py-3 shadow-[0_5px_20px_rgba(239,68,68,0.4)] flex items-center gap-4 animate-bounce-short">
+          <div className="bg-red-500/95 backdrop-blur-md border border-red-500/30 text-nexus-text rounded-xl px-4 py-3 shadow-[0_5px_20px_rgba(239,68,68,0.4)] flex items-center gap-4 animate-bounce-short">
             <WifiOff className="w-5 h-5 shrink-0" />
             <div className="flex flex-col">
               <span className="text-xs font-black uppercase tracking-wider">Modo Offline Activo</span>
@@ -61,7 +61,7 @@ export default function OfflineIndicator() {
         )}
 
         {offlineReady && !isOffline && (
-          <div className="bg-emerald-500/95 backdrop-blur-md border border-emerald-500/30 text-white rounded-xl px-4 py-2 shadow-[0_5px_20px_rgba(16,185,129,0.3)] flex items-center gap-3">
+          <div className="bg-emerald-500/95 backdrop-blur-md border border-emerald-500/30 text-nexus-text rounded-xl px-4 py-2 shadow-[0_5px_20px_rgba(16,185,129,0.3)] flex items-center gap-3">
             <Database className="w-5 h-5 shrink-0" />
             <div className="flex flex-col">
               <span className="text-xs font-black tracking-wider uppercase">Offline Ready</span>
@@ -69,7 +69,7 @@ export default function OfflineIndicator() {
             </div>
             <button 
               onClick={() => setOfflineReady(false)}
-              className="ml-2 bg-white/20 hover:bg-white/30 rounded-md p-1.5 transition-colors cursor-pointer"
+              className="ml-2 bg-nexus-card hover:bg-nexus-card rounded-md p-1.5 transition-colors cursor-pointer"
             >
               ✕
             </button>
@@ -77,7 +77,7 @@ export default function OfflineIndicator() {
         )}
 
         {needRefresh && (
-          <div className="bg-blue-500/95 backdrop-blur-md border border-blue-500/30 text-white rounded-xl px-4 py-2 shadow-[0_5px_20px_rgba(59,130,246,0.3)] flex items-center gap-3">
+          <div className="bg-blue-500/95 backdrop-blur-md border border-blue-500/30 text-nexus-text rounded-xl px-4 py-2 shadow-[0_5px_20px_rgba(59,130,246,0.3)] flex items-center gap-3">
             <RefreshCw className="w-5 h-5 animate-spin shrink-0" />
             <div className="flex flex-col">
               <span className="text-xs font-black tracking-wider uppercase">Actualización</span>
@@ -85,7 +85,7 @@ export default function OfflineIndicator() {
             </div>
             <button 
               onClick={() => updateServiceWorker(true)}
-              className="bg-white/20 hover:bg-white/30 rounded-md px-3 py-1.5 text-[10px] ml-2 cursor-pointer transition-all uppercase font-bold"
+              className="bg-nexus-card hover:bg-nexus-card rounded-md px-3 py-1.5 text-[10px] ml-2 cursor-pointer transition-all uppercase font-bold"
             >
               Recargar
             </button>

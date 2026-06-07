@@ -1,3 +1,4 @@
+import { useAppStore } from '../store/useAppStore';
 import { useState, useRef } from 'react';
 import { 
   Upload, X, Check, Loader2, Package, Image as ImageIcon, Smartphone, 
@@ -16,6 +17,8 @@ interface PublishingWizardProps {
 type Step = 'info' | 'resources' | 'apk' | 'config' | 'preview';
 
 export default function PublishingWizard({ developerId, onSuccess, onCancel }: PublishingWizardProps) {
+  const { t } = useAppStore();
+
   const [currentStep, setCurrentStep] = useState<Step>('info');
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState(0);
@@ -219,30 +222,30 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#030712] overflow-hidden">
+    <div className="flex flex-col h-full bg-nexus-card overflow-hidden">
       {/* Header With Steps */}
-      <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-4 border-b border-white/5 bg-black/20 shrink-0">
+      <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-4 border-b border-nexus-border bg-nexus-surface shrink-0">
         <div className="flex items-center justify-between mb-6 lg:mb-8">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-cyan-500 rounded-lg lg:rounded-xl flex items-center justify-center shrink-0">
-              <Layout className="w-5 h-5 lg:w-6 lg:h-6 text-black" />
+              <Layout className="w-5 h-5 lg:w-6 lg:h-6 text-nexus-bg" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg lg:text-2xl font-black text-white uppercase tracking-tighter truncate">
+              <h2 className="text-lg lg:text-2xl font-black text-nexus-text uppercase tracking-tighter truncate">
                 Lanzamiento
               </h2>
-              <p className="text-[8px] lg:text-[10px] text-gray-500 font-bold uppercase tracking-widest truncate">Panel Automatizado</p>
+              <p className="text-[8px] lg:text-[10px] text-nexus-text-sec font-bold uppercase tracking-widest truncate">Panel Automatizado</p>
             </div>
           </div>
           
-          <button onClick={onCancel} className="p-2 hover:bg-white/5 rounded-full transition-colors shrink-0">
-            <X className="w-6 h-6 text-gray-500" />
+          <button onClick={onCancel} className="p-2 hover:bg-nexus-card rounded-full transition-colors shrink-0">
+            <X className="w-6 h-6 text-nexus-text-sec" />
           </button>
         </div>
 
         <div className="flex items-center justify-between max-w-2xl mx-auto relative px-2">
           {/* Connector Line */}
-          <div className="absolute top-1/2 left-0 w-full h-[1px] lg:h-[2px] bg-white/5 -translate-y-1/2 z-0" />
+          <div className="absolute top-1/2 left-0 w-full h-[1px] lg:h-[2px] bg-nexus-card -translate-y-1/2 z-0" />
           
           {steps.map((step, idx) => {
             const Icon = step.icon;
@@ -255,12 +258,12 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                   onClick={() => !isPublishing && steps.findIndex(s => s.id === step.id) <= steps.findIndex(s => s.id === currentStep) && setCurrentStep(step.id)}
                   className={`
                     w-8 h-8 lg:w-12 lg:h-12 rounded-lg lg:rounded-2xl flex items-center justify-center transition-all duration-300
-                    ${isCompleted ? 'bg-cyan-500 text-black' : isActive ? 'bg-white text-black scale-110 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-[#0f172a] text-gray-500 border border-white/5'}
+                    ${isCompleted ? 'bg-cyan-500 text-nexus-bg' : isActive ? 'bg-white text-nexus-bg scale-110 shadow-lg' : 'bg-nexus-card text-nexus-text-sec border border-nexus-border'}
                   `}
                 >
                   {isCompleted ? <Check className="w-4 h-4 lg:w-6 lg:h-6" /> : <Icon className="w-4 h-4 lg:w-5 lg:h-5" />}
                 </button>
-                <span className={`text-[8px] lg:text-[10px] font-black uppercase tracking-widest hidden sm:block ${isActive ? 'text-white' : 'text-gray-600'}`}>{step.label}</span>
+                <span className={`text-[8px] lg:text-[10px] font-black uppercase tracking-widest hidden sm:block ${isActive ? 'text-nexus-text' : 'text-gray-600'}`}>{step.label}</span>
               </div>
             );
           })}
@@ -297,22 +300,22 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                     
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del Proyecto</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Nombre del Proyecto</label>
                         <input 
                           type="text" 
                           placeholder="Nombre oficial de la aplicación"
-                          className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all"
+                          className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                           value={formData.app_name}
                           onChange={e => setFormData({...formData, app_name: e.target.value})}
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Estudio / Compañía</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Estudio / Compañía</label>
                         <input 
                           type="text" 
                           placeholder="Nombre de tu estudio de desarrollo"
-                          className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all"
+                          className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                           value={formData.company_name}
                           onChange={e => setFormData({...formData, company_name: e.target.value})}
                         />
@@ -320,13 +323,13 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Categoría</label>
+                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Categoría</label>
                           <select 
-                            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all appearance-none"
+                            className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all appearance-none"
                             value={formData.category}
                             onChange={e => setFormData({...formData, category: e.target.value})}
                           >
-                            <option value="Juegos">Juegos</option>
+                            <option value="Juegos">{t('nav.games')}</option>
                             <option value="Herramientas">Herramientas</option>
                             <option value="Social">Social</option>
                             <option value="Productividad">Productividad</option>
@@ -334,11 +337,11 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                           </select>
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Versión</label>
+                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Versión</label>
                           <input 
                             type="text" 
                             placeholder="Ej: 1.2.0"
-                            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all"
+                            className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                             value={formData.version}
                             onChange={e => setFormData({...formData, version: e.target.value})}
                           />
@@ -352,22 +355,22 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                     
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Breve Resumen</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Breve Resumen</label>
                         <input 
                           type="text" 
                           placeholder="Lo que verá el usuario en el listado principal"
-                          className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all"
+                          className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                           value={formData.short_description}
                           onChange={e => setFormData({...formData, short_description: e.target.value})}
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Descripción Completa</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Descripción Completa</label>
                         <textarea 
                           rows={6}
                           placeholder="Explica detalladamente las funciones principales de tu app..."
-                          className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all resize-none"
+                          className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all resize-none"
                           value={formData.full_description}
                           onChange={e => setFormData({...formData, full_description: e.target.value})}
                         />
@@ -382,18 +385,18 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-4">
                       <h3 className="text-xl font-black text-cyan-400 uppercase">Icono Principal</h3>
-                      <p className="text-gray-500 text-xs">Aparecerá en el launcher y en la tienda. Recomendado 512x512 PNG/JPG.</p>
+                      <p className="text-nexus-text-sec text-xs">Aparecerá en el launcher y en la tienda. Recomendado 512x512 PNG/JPG.</p>
                       
                       <div className="relative group aspect-square w-48 mx-auto md:mx-0">
                         {isUploadingIcon ? (
-                          <div className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-white/10 rounded-3xl bg-white/5">
+                          <div className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-nexus-border rounded-3xl bg-nexus-card">
                             <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-2" />
-                            <span className="text-[10px] font-black text-gray-500 uppercase">Subiendo...</span>
+                            <span className="text-[10px] font-black text-nexus-text-sec uppercase">Subiendo...</span>
                           </div>
                         ) : !files.iconUrl ? (
-                          <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-white/10 rounded-3xl cursor-pointer hover:bg-white/5 hover:border-cyan-500/50 transition-all">
+                          <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-nexus-border rounded-3xl cursor-pointer hover:bg-nexus-card hover:border-cyan-500/50 transition-all">
                             <Upload className="w-8 h-8 text-gray-600 mb-2" />
-                            <span className="text-[10px] font-black text-gray-500 uppercase">Cargar Icono</span>
+                            <span className="text-[10px] font-black text-nexus-text-sec uppercase">Cargar Icono</span>
                             <input type="file" className="hidden" accept="image/*" onChange={e => {
                               if(e.target.files?.[0]) {
                                 uploadIcon(e.target.files[0]);
@@ -406,7 +409,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                             <img src={files.iconUrl} alt="Icon" className="w-full h-full rounded-3xl object-cover shadow-2xl" />
                             <button 
                               onClick={() => setFiles(prev => ({ ...prev, icon: null, iconUrl: '', iconPublicId: '' }))}
-                              className="absolute -top-2 -right-2 p-2 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-2 -right-2 p-2 bg-red-500 text-nexus-text rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -418,24 +421,24 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                     <div className="md:col-span-2 space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xl font-black text-cyan-400 uppercase">Capturas de Pantalla</h3>
-                        <span className="text-[10px] font-black text-gray-500">{files.screenshots.length}/4</span>
+                        <span className="text-[10px] font-black text-nexus-text-sec">{files.screenshots.length}/4</span>
                       </div>
-                      <p className="text-gray-500 text-xs mb-4">Sube entre 1 y 4 capturas que muestren la interfaz o gameplay real.</p>
+                      <p className="text-nexus-text-sec text-xs mb-4">Sube entre 1 y 4 capturas que muestren la interfaz o gameplay real.</p>
                       
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {files.screenshots.map((ss) => (
-                          <div key={ss.id} className="relative aspect-[9/16] group rounded-2xl overflow-hidden border border-white/5">
+                          <div key={ss.id} className="relative aspect-[9/16] group rounded-2xl overflow-hidden border border-nexus-border">
                             <img src={ss.url} alt="Screenshot" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="absolute inset-0 bg-nexus-surface opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <button 
                                 onClick={() => removeScreenshot(ss.id, ss.publicId)}
-                                className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform"
+                                className="p-3 bg-red-500 text-nexus-text rounded-full hover:scale-110 transition-transform"
                               >
                                 <Trash2 className="w-5 h-5" />
                               </button>
                             </div>
                             {!ss.publicId && (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                              <div className="absolute inset-0 bg-nexus-surface flex items-center justify-center">
                                 <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
                               </div>
                             )}
@@ -443,7 +446,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         ))}
                         
                         {files.screenshots.length < 4 && (
-                          <label className="aspect-[9/16] border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-cyan-500/50 transition-all text-gray-500">
+                          <label className="aspect-[9/16] border-2 border-dashed border-nexus-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-nexus-surface hover:border-cyan-500/50 transition-all text-nexus-text-sec">
                             <Plus className="w-8 h-8 mb-2" />
                             <span className="text-[10px] font-black uppercase">Añadir</span>
                             <input type="file" className="hidden" accept="image/*" onChange={e => {
@@ -464,20 +467,20 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                 <div className="space-y-6">
                   <h3 className="text-lg lg:text-xl font-black text-cyan-400 uppercase">Enlace de Descarga APK</h3>
                   
-                  <div className="p-8 lg:p-12 border-2 border-dashed border-white/10 rounded-2xl lg:rounded-[3rem] bg-white/[0.02] flex flex-col items-center justify-center text-center gap-4 lg:gap-6">
-                    <div className="w-16 h-16 lg:w-24 lg:h-24 bg-white/5 rounded-full flex items-center justify-center text-gray-500">
+                  <div className="p-8 lg:p-12 border-2 border-dashed border-nexus-border rounded-2xl lg:rounded-[3rem] bg-nexus-surface/50 flex flex-col items-center justify-center text-center gap-4 lg:gap-6">
+                    <div className="w-16 h-16 lg:w-24 lg:h-24 bg-nexus-card rounded-full flex items-center justify-center text-nexus-text-sec">
                       <Globe className="w-8 h-8 lg:w-12 lg:h-12" />
                     </div>
                     <div>
-                      <p className="text-lg lg:text-xl font-black text-white uppercase tracking-tight mb-2">NexusPlay actualmente no almacena APKs directamente.</p>
-                      <p className="text-gray-500 text-[10px] lg:text-sm max-w-lg mx-auto">Debes subir tu APK a un servicio externo (como MediaFire, Mega, Dropbox o Google Drive) y pegar aquí el enlace público de descarga.</p>
+                      <p className="text-lg lg:text-xl font-black text-nexus-text uppercase tracking-tight mb-2">NexusPlay actualmente no almacena APKs directamente.</p>
+                      <p className="text-nexus-text-sec text-[10px] lg:text-sm max-w-lg mx-auto">Debes subir tu APK a un servicio externo (como MediaFire, Mega, Dropbox o Google Drive) y pegar aquí el enlace público de descarga.</p>
                     </div>
                     
                     <div className="w-full max-w-xl mt-4">
                       <input 
                         type="url" 
                         placeholder="https://mega.nz/file/... o https://mediafire.com/..."
-                        className="w-full bg-white/5 border border-white/10 p-4 lg:p-5 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all text-sm lg:text-base text-center"
+                        className="w-full bg-nexus-surface border border-nexus-border p-4 lg:p-5 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all text-sm lg:text-base text-center"
                         value={formData.apk_url}
                         onChange={e => setFormData({...formData, apk_url: e.target.value})}
                       />
@@ -490,8 +493,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         <Globe className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white uppercase mb-1 tracking-wider">Alojamiento Externo</p>
-                        <p className="text-[10px] text-gray-500 font-medium">Recomendamos usar hosting confiable sin límite de descargas para que tu app siempre esté disponible.</p>
+                        <p className="text-xs font-black text-nexus-text uppercase mb-1 tracking-wider">Alojamiento Externo</p>
+                        <p className="text-[10px] text-nexus-text-sec font-medium">Recomendamos usar hosting confiable sin límite de descargas para que tu app siempre esté disponible.</p>
                       </div>
                     </div>
                     <div className="p-4 bg-purple-500/5 border border-purple-500/20 rounded-2xl flex gap-4">
@@ -499,8 +502,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         <ShieldCheck className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white uppercase mb-1 tracking-wider">Verificación de URL</p>
-                        <p className="text-[10px] text-gray-500 font-medium">Asegúrate de que el enlace proporcionado sea público y no requiera cuenta para descargar.</p>
+                        <p className="text-xs font-black text-nexus-text uppercase mb-1 tracking-wider">Verificación de URL</p>
+                        <p className="text-[10px] text-nexus-text-sec font-medium">Asegúrate de que el enlace proporcionado sea público y no requiera cuenta para descargar.</p>
                       </div>
                     </div>
                   </div>
@@ -514,9 +517,9 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                       
                       <div className="space-y-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Mínimo Android Requerido</label>
+                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Mínimo Android Requerido</label>
                           <select 
-                            className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white"
+                            className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text"
                             value={formData.min_android}
                             onChange={e => setFormData({...formData, min_android: e.target.value})}
                           >
@@ -528,8 +531,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                           </select>
                         </div>
 
-                        <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
-                           <h4 className="text-xs font-black text-white uppercase mb-4 tracking-widest">Permisos Detectados</h4>
+                        <div className="p-6 bg-nexus-card rounded-3xl border border-nexus-border">
+                           <h4 className="text-xs font-black text-nexus-text uppercase mb-4 tracking-widest">Permisos Detectados</h4>
                            <div className="space-y-3">
                               {[
                                 { id: 'internet', label: 'Acceso a Internet', desc: 'android.permission.INTERNET' },
@@ -541,8 +544,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                                       <Check className="w-3 h-3" />
                                    </div>
                                    <div>
-                                      <p className="text-[10px] font-black text-white uppercase tracking-wider">{perm.label}</p>
-                                      <p className="text-[8px] text-gray-500 font-mono">{perm.desc}</p>
+                                      <p className="text-[10px] font-black text-nexus-text uppercase tracking-wider">{perm.label}</p>
+                                      <p className="text-[8px] text-nexus-text-sec font-mono">{perm.desc}</p>
                                    </div>
                                 </div>
                               ))}
@@ -555,11 +558,11 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                       <h3 className="text-xl font-black text-cyan-400 uppercase">Qué hay de nuevo</h3>
                       <div className="space-y-4">
                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Cambios de la Versión {formData.version}</label>
+                            <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Cambios de la Versión {formData.version}</label>
                             <textarea 
                               rows={5}
                               placeholder="Ej: - Mejoras de rendimiento\n- Nueva interfaz oscura\n- Errores corregidos"
-                              className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl focus:border-cyan-500 outline-none text-white transition-all resize-none"
+                              className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all resize-none"
                               value={formData.whats_new}
                               onChange={e => setFormData({...formData, whats_new: e.target.value})}
                             />
@@ -568,8 +571,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                          <div className="flex items-center gap-3 p-4 bg-green-500/5 border border-green-500/20 rounded-2xl">
                             <ShieldCheck className="w-6 h-6 text-green-500" />
                             <div className="flex-1">
-                               <p className="text-[10px] font-black text-white uppercase">Publicación Automática</p>
-                               <p className="text-[9px] text-gray-500">Tu aplicación será publicada inmediatamente después de finalizar el proceso.</p>
+                               <p className="text-[10px] font-black text-nexus-text uppercase">Publicación Automática</p>
+                               <p className="text-[9px] text-nexus-text-sec">Tu aplicación será publicada inmediatamente después de finalizar el proceso.</p>
                             </div>
                             <div className="w-12 h-6 bg-cyan-500 rounded-full relative p-1 cursor-pointer">
                                <div className="w-4 h-4 bg-black rounded-full absolute right-1" />
@@ -584,48 +587,48 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                 <div className="space-y-8">
                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                      <h3 className="text-xl font-black text-cyan-400 uppercase">Vista previa</h3>
-                     <p className="text-gray-500 text-[8px] lg:text-xs font-bold">ASÍ SE VERÁ TU APP EN NEXUS PLAY</p>
+                     <p className="text-nexus-text-sec text-[8px] lg:text-xs font-bold">ASÍ SE VERÁ TU APP EN NEXUS PLAY</p>
                    </div>
 
-                   <div className="relative bg-[#0a0f1a] rounded-3xl lg:rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
+                   <div className="relative bg-nexus-card rounded-3xl lg:rounded-[3rem] border border-nexus-border overflow-hidden shadow-2xl">
                      <div className="p-6 lg:p-12 space-y-8 lg:space-y-12">
                         {/* App Header Preview */}
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center lg:items-start text-center lg:text-left">
-                           <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 rounded-2xl sm:rounded-[2.5rem] bg-white/5 p-1 bg-gradient-to-br from-cyan-500/20 to-transparent shrink-0">
+                           <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 rounded-2xl sm:rounded-[2.5rem] bg-nexus-card p-1 bg-gradient-to-br from-cyan-500/20 to-transparent shrink-0">
                              <img src={files.iconUrl || 'https://via.placeholder.com/200'} className="w-full h-full rounded-2xl sm:rounded-[2.2rem] object-cover shadow-2xl" />
                            </div>
                            <div className="flex-1 space-y-4 w-full">
                              <div>
-                               <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-white uppercase tracking-tighter leading-none">{formData.app_name || 'Nombre app'}</h1>
+                               <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-nexus-text uppercase tracking-tighter leading-none">{formData.app_name || 'Nombre app'}</h1>
                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 lg:gap-4 mt-2 lg:mt-3">
                                   <span className="text-cyan-400 font-black uppercase text-[10px] sm:text-sm">{formData.company_name || 'Compañía'}</span>
-                                  <div className="w-1 h-1 rounded-full bg-white/10" />
-                                  <span className="text-gray-500 font-bold text-[10px] sm:text-sm uppercase">{formData.category}</span>
+                                  <div className="w-1 h-1 rounded-full bg-nexus-card-hover" />
+                                  <span className="text-nexus-text-sec font-bold text-[10px] sm:text-sm uppercase">{formData.category}</span>
                                </div>
                              </div>
 
                              <div className="grid grid-cols-3 gap-2 lg:flex lg:flex-wrap lg:items-center lg:justify-start">
-                               <div className="px-3 lg:px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase mb-0.5">Versión</p>
-                                 <p className="text-[10px] lg:text-sm font-black text-white leading-none tracking-tight">{formData.version}</p>
+                               <div className="px-3 lg:px-4 py-2 bg-nexus-card rounded-xl border border-nexus-border">
+                                 <p className="text-[8px] lg:text-[10px] font-black text-nexus-text-sec uppercase mb-0.5">Versión</p>
+                                 <p className="text-[10px] lg:text-sm font-black text-nexus-text leading-none tracking-tight">{formData.version}</p>
                                </div>
-                               <div className="px-3 lg:px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase mb-0.5">Link</p>
+                               <div className="px-3 lg:px-4 py-2 bg-nexus-card rounded-xl border border-nexus-border">
+                                 <p className="text-[8px] lg:text-[10px] font-black text-nexus-text-sec uppercase mb-0.5">Link</p>
                                  <p className="text-[10px] lg:text-sm font-black text-cyan-400 leading-none tracking-tight flex items-center gap-1">
                                    <Globe className="w-3 h-3" /> Externo
                                  </p>
                                </div>
-                               <div className="px-3 lg:px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                                 <p className="text-[8px] lg:text-[10px] font-black text-gray-500 uppercase mb-0.5">Min</p>
-                                 <p className="text-[10px] lg:text-sm font-black text-white leading-none tracking-tight">{formData.min_android.split(' ')[1] || '8.0'}</p>
+                               <div className="px-3 lg:px-4 py-2 bg-nexus-card rounded-xl border border-nexus-border">
+                                 <p className="text-[8px] lg:text-[10px] font-black text-nexus-text-sec uppercase mb-0.5">Min</p>
+                                 <p className="text-[10px] lg:text-sm font-black text-nexus-text leading-none tracking-tight">{formData.min_android.split(' ')[1] || '8.0'}</p>
                                </div>
                              </div>
 
                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                                <button className="flex-1 px-8 py-4 lg:py-5 bg-white text-black font-black uppercase rounded-xl lg:rounded-2xl shadow-[0_0_40px_rgba(255,255,255,0.1)] text-xs lg:text-base">
+                                <button className="flex-1 px-8 py-4 lg:py-5 bg-white text-nexus-bg font-black uppercase rounded-xl lg:rounded-2xl shadow-lg text-xs lg:text-base">
                                   INSTALAR
                                 </button>
-                                <button className="p-4 lg:p-5 bg-white/5 rounded-xl lg:rounded-2xl text-white flex justify-center">
+                                <button className="p-4 lg:p-5 bg-nexus-card rounded-xl lg:rounded-2xl text-nexus-text flex justify-center">
                                   <Share2 className="w-5 h-5 lg:w-6 lg:h-6" />
                                 </button>
                              </div>
@@ -634,12 +637,12 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
                         {/* Screenshots Preview */}
                         <div className="space-y-4">
-                           <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Preview</h4>
+                           <h4 className="text-[10px] font-black text-nexus-text-sec uppercase tracking-[0.2em] ml-1">Preview</h4>
                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6 lg:mx-0 lg:px-0">
                              {files.screenshots.length > 0 ? files.screenshots.map((ss, idx) => (
-                               <img key={idx} src={ss.url} className="h-64 sm:h-96 lg:h-[400px] rounded-2xl lg:rounded-3xl object-cover border border-white/5 shadow-xl shrink-0" />
+                               <img key={idx} src={ss.url} className="h-64 sm:h-96 lg:h-[400px] rounded-2xl lg:rounded-3xl object-cover border border-nexus-border shadow-xl shrink-0" />
                              )) : (
-                               <div className="h-64 sm:h-96 w-44 sm:w-56 bg-white/5 rounded-2xl lg:rounded-3xl border border-dashed border-white/10 flex items-center justify-center text-gray-700 italic text-[10px] shrink-0">
+                               <div className="h-64 sm:h-96 w-44 sm:w-56 bg-nexus-card rounded-2xl lg:rounded-3xl border border-dashed border-nexus-border flex items-center justify-center text-gray-700 italic text-[10px] shrink-0">
                                  Sin capturas
                                </div>
                              )}
@@ -647,28 +650,28 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         </div>
 
                         {/* Description Preview */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 pt-8 border-t border-white/5">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 pt-8 border-t border-nexus-border">
                            <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-                              <h4 className="text-2xl font-black text-white uppercase tracking-tight">Sobre esta aplicación</h4>
-                              <p className="text-gray-400 text-lg leading-relaxed whitespace-pre-wrap">{formData.full_description || 'Descripción completa de la aplicación...'}</p>
+                              <h4 className="text-2xl font-black text-nexus-text uppercase tracking-tight">Sobre esta aplicación</h4>
+                              <p className="text-nexus-text-sec text-lg leading-relaxed whitespace-pre-wrap">{formData.full_description || 'Descripción completa de la aplicación...'}</p>
                            </div>
                            <div className="space-y-8">
                               <div>
-                                <h4 className="text-sm font-black text-white uppercase tracking-widest mb-4">Lo nuevo</h4>
-                                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 text-xs text-gray-400 leading-relaxed italic">
+                                <h4 className="text-sm font-black text-nexus-text uppercase tracking-widest mb-4">Lo nuevo</h4>
+                                <div className="p-5 bg-nexus-card rounded-2xl border border-nexus-border text-xs text-nexus-text-sec leading-relaxed italic">
                                   {formData.whats_new || 'No hay notas de cambios para esta versión.'}
                                 </div>
                               </div>
                               <div>
-                                <h4 className="text-sm font-black text-white uppercase tracking-widest mb-4">Detalles</h4>
+                                <h4 className="text-sm font-black text-nexus-text uppercase tracking-widest mb-4">Detalles</h4>
                                 <div className="space-y-4">
-                                  <div className="flex justify-between border-b border-white/5 pb-2">
-                                     <span className="text-[10px] text-gray-500 font-bold uppercase">Actualizado</span>
-                                     <span className="text-[10px] text-white font-black uppercase">Hoy</span>
+                                  <div className="flex justify-between border-b border-nexus-border pb-2">
+                                     <span className="text-[10px] text-nexus-text-sec font-bold uppercase">Actualizado</span>
+                                     <span className="text-[10px] text-nexus-text font-black uppercase">Hoy</span>
                                   </div>
-                                  <div className="flex justify-between border-b border-white/5 pb-2">
-                                     <span className="text-[10px] text-gray-500 font-bold uppercase">Proveedor</span>
-                                     <span className="text-[10px] text-white font-black uppercase">{formData.company_name}</span>
+                                  <div className="flex justify-between border-b border-nexus-border pb-2">
+                                     <span className="text-[10px] text-nexus-text-sec font-bold uppercase">Proveedor</span>
+                                     <span className="text-[10px] text-nexus-text font-black uppercase">{formData.company_name}</span>
                                   </div>
                                 </div>
                               </div>
@@ -684,12 +687,12 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
       </div>
 
       {/* Footer Controls */}
-      <div className="px-4 lg:px-8 py-4 lg:py-6 border-t border-white/5 bg-black/40 backdrop-blur-xl shrink-0">
+      <div className="px-4 lg:px-8 py-4 lg:py-6 border-t border-nexus-border bg-nexus-surface backdrop-blur-xl shrink-0">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
            <button 
              onClick={handleBack}
              disabled={currentStep === 'info' || isPublishing}
-             className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 font-black text-[10px] uppercase transition-all rounded-xl ${currentStep === 'info' || isPublishing ? 'hidden' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+             className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 font-black text-[10px] uppercase transition-all rounded-xl ${currentStep === 'info' || isPublishing ? 'hidden' : 'text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card'}`}
            >
              <ArrowLeft className="w-4 h-4" /> Anterior
            </button>
@@ -701,11 +704,11 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                     <span className="truncate max-w-[70%]">{status}</span>
                     <span>{publishProgress}%</span>
                   </div>
-                  <div className="w-full h-1 lg:h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="w-full h-1 lg:h-1.5 bg-nexus-card rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${publishProgress}%` }}
-                      className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+                      className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-nexus-glow"
                     />
                   </div>
                </div>
@@ -716,7 +719,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
              <button 
                onClick={handlePublish}
                disabled={isPublishing}
-               className={`w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-cyan-500 text-black font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl shadow-xl shadow-cyan-500/20 active:scale-95 transition-all ${isPublishing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cyan-400 hover:shadow-cyan-400/40'}`}
+               className={`w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-cyan-500 text-nexus-bg font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl shadow-xl shadow-cyan-500/20 active:scale-95 transition-all ${isPublishing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cyan-400 hover:shadow-cyan-400/40'}`}
              >
                {isPublishing ? (
                  <> <Loader2 className="w-5 h-5 animate-spin" /> PROCESANDO...</>
@@ -727,7 +730,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
            ) : (
              <button 
                onClick={handleNext}
-               className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-white text-black font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl hover:bg-cyan-400 active:scale-95 transition-all shadow-xl shadow-white/5"
+               className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-white text-nexus-bg font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl hover:bg-cyan-400 active:scale-95 transition-all shadow-xl shadow-white/5"
              >
                SIGUIENTE <ArrowRight className="w-5 h-5" />
              </button>

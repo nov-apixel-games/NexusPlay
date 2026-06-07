@@ -1,3 +1,4 @@
+import { useAppStore } from '../../../../store/useAppStore';
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import {
@@ -315,6 +316,7 @@ export const BottomPanel = ({
   mobile?: boolean;
   forcedTab?: "console" | "scripts" | "ai" | "assets" | null;
 }) => {
+  const { t } = useAppStore();
   const [activeTab, setActiveTab] = useState<
     "console" | "scripts" | "ai" | "assets"
   >("assets");
@@ -428,28 +430,28 @@ export const BottomPanel = ({
   return (
     <>
       {uploadDiagnostic && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-nexus-surface">
           <div className="bg-neutral-900 border border-neutral-700 p-4 rounded max-w-[90vw] w-full max-h-[90vh] overflow-y-auto text-xs font-mono text-neutral-300">
             <h3 className="text-red-400 font-bold text-base mb-2">Diagnóstico de Fallo en Subida</h3>
             <div className="space-y-2">
-              <p><strong className="text-white">Archivo:</strong> {uploadDiagnostic.fileName}</p>
-              <p><strong className="text-white">Cloud Name:</strong> {uploadDiagnostic.cloudName || 'N/A'}</p>
-              <p><strong className="text-white">Upload Preset:</strong> {uploadDiagnostic.uploadPreset || 'N/A'}</p>
-              <p><strong className="text-white">URL:</strong> <span className="break-all">{uploadDiagnostic.url || 'N/A'}</span></p>
-              <p><strong className="text-white">Route:</strong> {uploadDiagnostic.route || 'N/A'}</p>
-              <p><strong className="text-white">Status HTTP:</strong> {uploadDiagnostic.status || 'N/A'} {uploadDiagnostic.statusText || ''}</p>
-              <p><strong className="text-white">Supabase Insert:</strong> {uploadDiagnostic.supabaseResult || 'No ejecutado'}</p>
-              <p><strong className="text-white">Error Message:</strong> <span className="text-red-300">{uploadDiagnostic.message || 'N/A'}</span></p>
+              <p><strong className="text-nexus-text">Archivo:</strong> {uploadDiagnostic.fileName}</p>
+              <p><strong className="text-nexus-text">Cloud Name:</strong> {uploadDiagnostic.cloudName || 'N/A'}</p>
+              <p><strong className="text-nexus-text">Upload Preset:</strong> {uploadDiagnostic.uploadPreset || 'N/A'}</p>
+              <p><strong className="text-nexus-text">URL:</strong> <span className="break-all">{uploadDiagnostic.url || 'N/A'}</span></p>
+              <p><strong className="text-nexus-text">Route:</strong> {uploadDiagnostic.route || 'N/A'}</p>
+              <p><strong className="text-nexus-text">Status HTTP:</strong> {uploadDiagnostic.status || 'N/A'} {uploadDiagnostic.statusText || ''}</p>
+              <p><strong className="text-nexus-text">Supabase Insert:</strong> {uploadDiagnostic.supabaseResult || 'No ejecutado'}</p>
+              <p><strong className="text-nexus-text">Error Message:</strong> <span className="text-red-300">{uploadDiagnostic.message || 'N/A'}</span></p>
               <div>
-                <strong className="text-white">JSON Devuelto:</strong>
-                <pre className="bg-black/50 p-2 mt-1 rounded overflow-x-auto text-[10px] break-all whitespace-pre-wrap">
+                <strong className="text-nexus-text">JSON Devuelto:</strong>
+                <pre className="bg-nexus-surface p-2 mt-1 rounded overflow-x-auto text-[10px] break-all whitespace-pre-wrap">
                   {JSON.stringify(uploadDiagnostic.json || uploadDiagnostic, null, 2)}
                 </pre>
               </div>
             </div>
             <button 
               onClick={() => setUploadDiagnostic(null)}
-              className="mt-4 w-full bg-neutral-700 hover:bg-neutral-600 text-white py-2 rounded font-bold"
+              className="mt-4 w-full bg-neutral-700 hover:bg-neutral-600 text-nexus-text py-2 rounded font-bold"
             >
               Cerrar
             </button>
@@ -463,19 +465,19 @@ export const BottomPanel = ({
         <div className="flex items-center gap-1 p-1 border-b border-neutral-800 text-sm">
           <button
             onClick={() => setActiveTab("assets")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded ${activeTab === "assets" ? "bg-neutral-800 text-white" : "hover:bg-neutral-800 text-neutral-500"}`}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded ${activeTab === "assets" ? "bg-neutral-800 text-nexus-text" : "hover:bg-neutral-800 text-neutral-500"}`}
           >
             <FolderOpen size={14} /> Assets
           </button>
           <button
             onClick={() => setActiveTab("console")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded ${activeTab === "console" ? "bg-neutral-800 text-white" : "hover:bg-neutral-800 text-neutral-500"}`}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded ${activeTab === "console" ? "bg-neutral-800 text-nexus-text" : "hover:bg-neutral-800 text-neutral-500"}`}
           >
             <Terminal size={14} /> Consola
           </button>
           <button
             onClick={() => setActiveTab("scripts")}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded ${activeTab === "scripts" ? "bg-neutral-800 text-white" : "hover:bg-neutral-800 text-neutral-500"}`}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded ${activeTab === "scripts" ? "bg-neutral-800 text-nexus-text" : "hover:bg-neutral-800 text-neutral-500"}`}
           >
             <Code size={14} /> Scripts
           </button>
@@ -503,17 +505,17 @@ export const BottomPanel = ({
                   placeholder="Buscar en Store..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded pl-7 pr-2 py-1.5 text-xs text-white outline-none focus:border-blue-500"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded pl-7 pr-2 py-1.5 text-xs text-nexus-text outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2 mb-2 px-2 text-neutral-400 hover:text-white cursor-pointer group">
+              <div className="flex items-center gap-2 mb-2 px-2 text-neutral-400 hover:text-nexus-text cursor-pointer group">
                 <Clock size={14} className="group-hover:text-amber-400" />{" "}
                 <span className="text-xs">Recientes</span>
               </div>
-              <div className="flex items-center gap-2 mb-4 px-2 text-neutral-400 hover:text-white cursor-pointer group">
+              <div className="flex items-center gap-2 mb-4 px-2 text-neutral-400 hover:text-nexus-text cursor-pointer group">
                 <Heart size={14} className="group-hover:text-red-400" />{" "}
-                <span className="text-xs">Favoritos</span>
+                <span className="text-xs">{t('nav.favorites')}</span>
               </div>
 
               <span className="text-[10px] font-bold text-neutral-500 uppercase px-2 mb-1 tracking-wider">
@@ -554,7 +556,7 @@ export const BottomPanel = ({
                 <div className="flex items-center gap-2">
                   <FolderOpen className="text-blue-500" size={20} />
                   <span
-                    className={`${mobile ? "text-lg" : "text-base"} font-bold text-white`}
+                    className={`${mobile ? "text-lg" : "text-base"} font-bold text-nexus-text`}
                   >
                     {searchQuery ? "Resultados de búsqueda" : assetCat}
                   </span>
@@ -563,7 +565,7 @@ export const BottomPanel = ({
                   {uploadError && (
                      <span className="text-red-500 text-xs max-w-xs text-right mb-1">{uploadError}</span>
                   )}
-                  <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-sm cursor-pointer flex items-center gap-2 transition-colors relative overflow-hidden">
+                  <label className="bg-blue-600 hover:bg-blue-500 text-nexus-text px-3 py-1.5 rounded text-sm cursor-pointer flex items-center gap-2 transition-colors relative overflow-hidden">
                     {isUploadingAsset ? (
                       <>
                         <Loader2 size={16} className="animate-spin" />{" "}
@@ -682,12 +684,12 @@ export const BottomPanel = ({
                         alt={asset.name}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                       />
-                      <div className="absolute top-2 right-2 bg-black/60 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                        <Orbit size={12} className="text-white" />
+                      <div className="absolute top-2 right-2 bg-nexus-surface p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                        <Orbit size={12} className="text-nexus-text" />
                       </div>
                     </div>
                     <div className="p-2 flex flex-col">
-                      <span className="text-xs font-bold text-white truncate">
+                      <span className="text-xs font-bold text-nexus-text truncate">
                         {asset.name}
                       </span>
                       <span className="text-[10px] text-neutral-400 capitalize">
@@ -713,7 +715,7 @@ export const BottomPanel = ({
                   <div className="bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl flex flex-col md:flex-row w-full max-w-4xl max-h-full overflow-hidden relative">
                     <button
                       onClick={() => setPreviewAsset(null)}
-                      className="absolute top-4 right-4 z-[110] text-neutral-400 hover:text-white bg-black/50 p-2 rounded-full backdrop-blur"
+                      className="absolute top-4 right-4 z-[110] text-neutral-400 hover:text-nexus-text bg-nexus-surface p-2 rounded-full backdrop-blur"
                     >
                       <X size={20} />
                     </button>
@@ -755,7 +757,7 @@ export const BottomPanel = ({
                             </span>
                           </div>
                         ) : previewAsset.type === "cube" ? (
-                          <div className="w-16 h-16 md:w-24 md:h-24 bg-white/80 rounded rotate-12 flex items-center justify-center text-black font-bold">
+                          <div className="w-16 h-16 md:w-24 md:h-24 bg-nexus-surface rounded rotate-12 flex items-center justify-center text-nexus-bg font-bold">
                             Box
                           </div>
                         ) : previewAsset.type === "particles" ? (
@@ -764,14 +766,14 @@ export const BottomPanel = ({
                             className="text-amber-500 animate-pulse"
                           />
                         ) : (
-                          <Orbit size={64} className="text-white" />
+                          <Orbit size={64} className="text-nexus-text" />
                         )}
                       </div>
                     </div>
 
                     <div className="w-full md:w-[320px] bg-neutral-900 p-6 flex flex-col z-20 md:border-l border-t md:border-t-0 border-neutral-800 overflow-y-auto">
                       <div className="mb-6 pr-8">
-                        <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
+                        <h2 className="text-2xl font-bold text-nexus-text mb-2 leading-tight">
                           {previewAsset.name}
                         </h2>
                         <span className="px-2.5 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-md text-[10px] font-bold uppercase tracking-widest">
@@ -784,7 +786,7 @@ export const BottomPanel = ({
                           <span className="text-neutral-500 text-[10px] uppercase font-bold tracking-wider mb-1">
                             Tipo de Asset
                           </span>
-                          <span className="text-white capitalize">
+                          <span className="text-nexus-text capitalize">
                             {previewAsset.type}
                           </span>
                         </div>
@@ -792,7 +794,7 @@ export const BottomPanel = ({
                           <span className="text-neutral-500 text-[10px] uppercase font-bold tracking-wider mb-1">
                             Impacto Memoria
                           </span>
-                          <span className="text-white">
+                          <span className="text-nexus-text">
                             {previewAsset.fileSize || "Desconocido"}{" "}
                             <span className="text-neutral-500 text-xs ml-1"></span>
                           </span>
@@ -802,7 +804,7 @@ export const BottomPanel = ({
                             <span className="text-neutral-500 text-[10px] uppercase font-bold tracking-wider mb-1">
                               Polígonos (Tris)
                             </span>
-                            <span className="text-white font-mono">
+                            <span className="text-nexus-text font-mono">
                               {previewAsset.polyCount.toLocaleString()}{" "}
                               <span className="text-neutral-500 text-xs ml-1"></span>
                             </span>
@@ -835,13 +837,13 @@ export const BottomPanel = ({
                       <div className="mt-6 flex flex-col gap-2 shrink-0 pb-4">
                         <button
                           onClick={() => {}}
-                          className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white text-sm rounded font-medium flex items-center justify-center gap-2 transition-colors border border-neutral-700"
+                          className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-nexus-text text-sm rounded font-medium flex items-center justify-center gap-2 transition-colors border border-neutral-700"
                         >
                           <Heart size={16} /> Añadir a Favoritos
                         </button>
                         <button
                           onClick={() => handleAssetDropToScene(previewAsset)}
-                          className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold shadow-[0_0_15px_rgba(37,99,235,0.3)] transition-colors"
+                          className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-nexus-text rounded font-bold shadow-[0_0_15px_rgba(37,99,235,0.3)] transition-colors"
                         >
                           Insertar en Escena
                         </button>
@@ -915,7 +917,7 @@ export const BottomPanel = ({
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`p-3 rounded ${msg.startsWith("Usuario") ? "bg-neutral-800 text-white" : msg.includes("Error") ? "bg-red-900/20 text-red-400 border border-red-800/30" : "bg-blue-900/20 text-blue-300 border border-blue-800/30"}`}
+                  className={`p-3 rounded ${msg.startsWith("Usuario") ? "bg-neutral-800 text-nexus-text" : msg.includes("Error") ? "bg-red-900/20 text-red-400 border border-red-800/30" : "bg-blue-900/20 text-blue-300 border border-blue-800/30"}`}
                 >
                   {msg}
                 </div>
@@ -928,12 +930,12 @@ export const BottomPanel = ({
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
                 placeholder="Ej: Genera una ciudad postapocalíptica..."
-                className={`flex-1 bg-neutral-800 border border-neutral-700 rounded px-4 ${mobile ? "py-3 text-base" : "py-2 text-sm"} outline-none focus:border-blue-500 text-white`}
+                className={`flex-1 bg-neutral-800 border border-neutral-700 rounded px-4 ${mobile ? "py-3 text-base" : "py-2 text-sm"} outline-none focus:border-blue-500 text-nexus-text`}
               />
               <button
                 onClick={handleGenerate}
                 disabled={isLoading}
-                className={`bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-4 ${mobile ? "py-3 text-base" : "py-2 text-sm"} rounded font-bold flex items-center justify-center gap-2`}
+                className={`bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-nexus-text px-4 ${mobile ? "py-3 text-base" : "py-2 text-sm"} rounded font-bold flex items-center justify-center gap-2`}
               >
                 {isLoading ? (
                   <Loader2 className="animate-spin" size={18} />

@@ -106,11 +106,11 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-black text-white flex items-center gap-2">
+      <h2 className="text-2xl font-black text-nexus-text flex items-center gap-2">
         <Smartphone className="w-6 h-6 text-red-500" /> Gestión de Apps
       </h2>
       
-      <div className="glass-panel rounded-3xl overflow-hidden border-red-900/20 bg-[#120505]/50">
+      <div className="glass-panel rounded-3xl overflow-hidden border-red-900/20 bg-nexus-card/80">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-red-950/30 text-red-200/60 font-semibold uppercase text-xs">
@@ -129,7 +129,7 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                     <div className="flex items-center gap-3">
                       <img src={app.icon} alt="" className="w-10 h-10 rounded-lg object-cover bg-red-900/20 border border-red-900/20" referrerPolicy="no-referrer" />
                       <div>
-                        <div className="font-bold text-white">{app.name}</div>
+                        <div className="font-bold text-nexus-text">{app.name}</div>
                         <div className="text-xs text-red-200/50">{app.category} • {app.downloads}</div>
                       </div>
                     </div>
@@ -147,7 +147,7 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => toggleHighlight(app.id)}
-                      className={`p-2 rounded-xl transition-colors ${app.featured ? 'bg-yellow-500/20 text-yellow-400' : 'text-gray-600 hover:bg-white/5 hover:text-white'}`}
+                      className={`p-2 rounded-xl transition-colors ${app.featured ? 'bg-yellow-500/20 text-yellow-400' : 'text-gray-600 hover:bg-nexus-card hover:text-nexus-text'}`}
                       title="Destacar App"
                     >
                       <Star className={`w-4 h-4 ${app.featured ? 'fill-yellow-400' : ''}`} />
@@ -161,7 +161,7 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                           <button onClick={() => updateStatus(app.id, 'rejected')} className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 shadow-sm"><X className="w-4 h-4" /></button>
                         </>
                       )}
-                      <button className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-200 hover:bg-red-900/30 hover:text-white transition-colors"><Edit className="w-4 h-4" /></button>
+                      <button className="p-2 rounded-xl bg-red-950/30 border border-red-900/20 text-red-200 hover:bg-red-900/30 hover:text-nexus-text transition-colors"><Edit className="w-4 h-4" /></button>
                       <button 
                         onClick={(e) => {
                           e.preventDefault();
@@ -171,7 +171,7 @@ export function AdminAppsList({ apps, setApps, addToast }: { apps: AppItem[], se
                           deleteApp(app.id);
                         }}
                         disabled={isDeleting === app.id}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-black font-black uppercase text-xs transition-all active:scale-95 shadow-lg disabled:opacity-50 border-2 border-white/20"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-nexus-text hover:bg-black font-black uppercase text-xs transition-all active:scale-95 shadow-lg disabled:opacity-50 border-2 border-nexus-border"
                       >
                         {isDeleting === app.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

@@ -24,7 +24,7 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
             initial={{ opacity: 0, x: 50, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-            className={`pointer-events-auto glass-panel border p-4 rounded-2xl flex items-center gap-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] ${
+            className={`pointer-events-auto glass-panel border p-4 rounded-2xl flex items-center gap-3 shadow-lg ${
               t.type === 'success' ? 'border-green-500/30' :
               t.type === 'error' ? 'border-red-500/30' :
               'border-cyan-500/30'
@@ -34,11 +34,11 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
             {t.type === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
             {t.type === 'info' && <Info className="w-5 h-5 text-cyan-400" />}
             
-            <span className="font-medium text-sm text-white pr-4">{t.message}</span>
+            <span className="font-medium text-sm text-nexus-text pr-4">{t.message}</span>
             
             <button 
               onClick={() => removeToast(t.id)} 
-              className="ml-auto hover:bg-white/10 p-1.5 rounded-full text-gray-400 hover:text-white transition-colors"
+              className="ml-auto hover:bg-nexus-card-hover p-1.5 rounded-full text-nexus-text-sec hover:text-nexus-text transition-colors"
             >
                <X className="w-4 h-4" />
             </button>

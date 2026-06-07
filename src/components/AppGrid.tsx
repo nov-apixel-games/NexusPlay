@@ -11,7 +11,7 @@ export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: (
       className="flex flex-col gap-3 group cursor-pointer"
       onClick={onClick}
     >
-      <div className="relative aspect-square w-full rounded-[24px] overflow-hidden bg-[#121422] border border-white/5 shadow-md group-hover:shadow-[0_15px_30px_rgba(34,211,238,0.2)] group-hover:border-cyan-500/40 transition-all duration-300">
+      <div className="relative aspect-square w-full rounded-[24px] overflow-hidden bg-nexus-card border border-nexus-border shadow-md group-hover:shadow-nexus-glow group-hover:border-cyan-500/40 transition-all duration-300">
         <img 
           src={app.icon} 
           alt={app.name} 
@@ -26,25 +26,25 @@ export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: (
         {/* Soft inner glow */}
         <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent group-hover:from-cyan-900/40 transition-colors pointer-events-none"></div>
         {/* Fallback image cover for depth */}
-        <div className="absolute inset-0 shadow-inner rounded-[24px] pointer-events-none border border-white/10 group-hover:border-white/20 transition-colors"></div>
+        <div className="absolute inset-0 shadow-inner rounded-[24px] pointer-events-none border border-nexus-border group-hover:border-nexus-border transition-colors"></div>
 
         {app.id === 'minecraft' && (
-          <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black px-2 py-1 rounded-[8px] uppercase tracking-widest shadow-[0_5px_15px_rgba(249,115,22,0.4)] z-20 flex items-center gap-1">
+          <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-red-500 text-nexus-text text-[10px] font-black px-2 py-1 rounded-[8px] uppercase tracking-widest shadow-[0_5px_15px_rgba(249,115,22,0.4)] z-20 flex items-center gap-1">
             <TrendingUp size={10} /> TOP
           </div>
         )}
       </div>
 
       <div className="flex flex-col px-1">
-        <h3 className="font-black text-[15px] text-white truncate leading-tight mb-1 group-hover:text-cyan-400 transition-colors drop-shadow-sm">{app.name}</h3>
+        <h3 className="font-black text-[15px] text-nexus-text truncate leading-tight mb-1 group-hover:text-cyan-400 transition-colors drop-shadow-sm">{app.name}</h3>
         <p className="text-[12px] text-cyan-500 font-bold truncate mb-1.5 opacity-80">{app.developer}</p>
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-black tracking-wide">
+        <div className="flex items-center gap-1.5 text-[11px] text-nexus-text-sec font-black tracking-wide">
           <div className="flex items-center gap-0.5 bg-yellow-500/10 text-yellow-400 px-1.5 py-0.5 rounded-md border border-yellow-500/20">
              <Star className="w-3 h-3 fill-yellow-400" />
              <span>{app.rating}</span>
           </div>
           <span className="text-gray-600">•</span>
-          <div className="flex items-center gap-0.5 bg-white/5 px-1.5 py-0.5 rounded-md">
+          <div className="flex items-center gap-0.5 bg-nexus-card px-1.5 py-0.5 rounded-md">
              <Download className="w-3 h-3" />
              <span>{app.download_count?.toString() || app.downloads || '0'}</span>
           </div>
@@ -60,40 +60,40 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      className="flex flex-col sm:flex-row bg-[#080a14] border border-white/5 hover:border-cyan-500/40 rounded-[28px] overflow-hidden group cursor-pointer transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_15px_40px_rgba(34,211,238,0.15)] w-[320px] sm:w-[480px] shrink-0"
+      className="flex flex-col sm:flex-row bg-nexus-card border border-nexus-border hover:border-cyan-500/40 rounded-[28px] overflow-hidden group cursor-pointer transition-all duration-300 shadow-nexus-glow w-[320px] sm:w-[480px] shrink-0"
       onClick={onClick}
     >
       {/* Banner/Screenshot Image area */}
-      <div className="h-[160px] sm:h-auto sm:w-[200px] sm:shrink-0 relative overflow-hidden bg-black/50">
+      <div className="h-[160px] sm:h-auto sm:w-[200px] sm:shrink-0 relative overflow-hidden bg-nexus-surface">
          {app.screenshots && app.screenshots.length > 0 ? (
            <img src={app.screenshots[0]} alt="Screenshot preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-100" />
          ) : (
            <img src={app.icon} alt="Fallback banner" className="w-full h-full object-cover blur-xl group-hover:scale-110 transition-transform duration-700 opacity-30 group-hover:opacity-50" />
          )}
          {/* Gradient Overlay to fade into card on desktop, top to bottom on mobile */}
-         <div className="hidden sm:block absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#080a14] to-transparent"></div>
-         <div className="sm:hidden absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#080a14] to-transparent"></div>
+         <div className="hidden sm:block absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-nexus-bg to-transparent"></div>
+         <div className="sm:hidden absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-nexus-bg to-transparent"></div>
          
-         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 flex items-center gap-1.5 shadow-lg">
+         <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1.5 shadow-lg">
            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
-           <span className="text-[10px] font-black text-white tracking-widest uppercase">Popular</span>
+           <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">Popular</span>
          </div>
       </div>
 
       <div className="p-5 flex-1 flex flex-col relative z-10 -mt-8 sm:mt-0">
         <div className="flex gap-4">
            {/* Floating App Icon */}
-           <div className="w-16 h-16 rounded-[18px] overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.5)] border-2 border-[#080a14] shrink-0 bg-[#121422]">
+           <div className="w-16 h-16 rounded-[18px] overflow-hidden shadow-lg border-2 border-nexus-border shrink-0 bg-nexus-card">
              <img src={app.icon} alt={app.name} className="w-full h-full object-cover" />
            </div>
            
            <div className="flex-1 mt-6 sm:mt-0 min-w-0">
-             <h3 className="font-black text-lg text-white truncate drop-shadow-md group-hover:text-cyan-400 transition-colors">{app.name}</h3>
+             <h3 className="font-black text-lg text-nexus-text truncate drop-shadow-md group-hover:text-cyan-400 transition-colors">{app.name}</h3>
              <p className="text-[12px] font-bold text-cyan-500 uppercase tracking-widest truncate opacity-90">{app.category}</p>
            </div>
         </div>
 
-        <p className="text-[13px] text-gray-400 font-medium line-clamp-2 mt-4 leading-relaxed flex-1">
+        <p className="text-[13px] text-nexus-text-sec font-medium line-clamp-2 mt-4 leading-relaxed flex-1">
           {app.description}
         </p>
 
@@ -102,7 +102,7 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
              <div className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-2 py-1 rounded-[8px] text-[11px] font-black">
                 <Star className="w-3.5 h-3.5 fill-yellow-400" /> {app.rating}
              </div>
-             <div className="flex items-center gap-1 bg-white/5 text-gray-300 px-2 py-1 rounded-[8px] text-[11px] font-black">
+             <div className="flex items-center gap-1 bg-nexus-card text-nexus-text px-2 py-1 rounded-[8px] text-[11px] font-black">
                 <Download className="w-3.5 h-3.5" /> {app.download_count?.toString() || app.downloads || '0'}
              </div>
            </div>
@@ -125,13 +125,13 @@ export default function AppGrid({ apps = DEMO_APPS, onAppClick }: { apps?: AppIt
   return (
     <section className="pb-16 -mx-6 px-6 overflow-hidden">
       {apps.length === 0 ? (
-        <div className="glass-panel p-10 rounded-[32px] border-white/5 flex flex-col items-center justify-center text-center mt-6 shadow-2xl relative overflow-hidden bg-[#0d0f1a]">
+        <div className="glass-panel p-10 rounded-[32px] border-nexus-border flex flex-col items-center justify-center text-center mt-6 shadow-2xl relative overflow-hidden bg-nexus-card">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.05)_0%,transparent_70%)]"></div>
-          <div className="w-20 h-20 bg-[#121422] rounded-[24px] border border-white/5 flex items-center justify-center mb-5 shadow-inner">
+          <div className="w-20 h-20 bg-nexus-card rounded-[24px] border border-nexus-border flex items-center justify-center mb-5 shadow-inner">
             <Sparkles className="w-10 h-10 text-cyan-500/50" />
           </div>
-          <h3 className="text-xl font-black text-white mb-2 tracking-tight">El universo digital está vacío</h3>
-          <p className="text-gray-400 text-[15px] max-w-md font-medium leading-relaxed">
+          <h3 className="text-xl font-black text-nexus-text mb-2 tracking-tight">El universo digital está vacío</h3>
+          <p className="text-nexus-text-sec text-[15px] max-w-md font-medium leading-relaxed">
             Se el primer desarrollador en lanzar tu app en NexusPlay y marca el inicio de una nueva era.
           </p>
         </div>

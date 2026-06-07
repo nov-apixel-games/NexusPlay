@@ -1,3 +1,4 @@
+import { useAppStore } from '../store/useAppStore';
 import { useState } from 'react';
 import { Upload, X, Check, Loader2, Package, Image as ImageIcon, Smartphone, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,6 +11,7 @@ interface AppUploadFormProps {
 }
 
 export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppUploadFormProps) {
+  const { t } = useAppStore();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [status, setStatus] = useState<string>('');
@@ -201,36 +203,36 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-black text-white">Detalles de la Publicación</h1>
-            <p className="text-gray-400 text-sm mt-1">Sube tu APK y nosotros nos encargamos del alojamiento global.</p>
+            <h1 className="text-2xl font-black text-nexus-text">Detalles de la Publicación</h1>
+            <p className="text-nexus-text-sec text-sm mt-1">Sube tu APK y nosotros nos encargamos del alojamiento global.</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Información Básica */}
-          <div className="glass-panel p-5 rounded-2xl border-white/5 space-y-4 bg-white/5">
+          <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
             <h3 className="font-bold text-sm flex items-center gap-2 mb-2 uppercase tracking-wider text-cyan-400 opacity-80"><Info className="w-4 h-4" /> Información General</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Nombre de la App</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Nombre de la App</label>
                 <input 
                   required
                   type="text" 
                   value={formData.app_name}
                   onChange={e => setFormData({...formData, app_name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl focus:border-cyan-500 outline-none text-white text-sm"
+                  className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text text-sm"
                   placeholder="Ej: Nexus Survival"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Compañía / Estudio</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Compañía / Estudio</label>
                 <input 
                   required
                   type="text" 
                   value={formData.company_name}
                   onChange={e => setFormData({...formData, company_name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl focus:border-cyan-500 outline-none text-white text-sm"
+                  className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text text-sm"
                   placeholder="Ej: Nov-Pixel Games"
                 />
               </div>
@@ -238,24 +240,24 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Versión</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Versión</label>
                 <input 
                   required
                   type="text" 
                   value={formData.version}
                   onChange={e => setFormData({...formData, version: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl focus:border-cyan-500 outline-none text-white text-sm"
+                  className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text text-sm"
                   placeholder="Ej: 1.0.0"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Categoría</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Categoría</label>
                 <select 
                   value={formData.category}
                   onChange={e => setFormData({...formData, category: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl focus:border-cyan-500 outline-none text-white text-sm"
+                  className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text text-sm"
                 >
-                  <option className="bg-nexus-bg" value="Juegos">Juegos</option>
+                  <option className="bg-nexus-bg" value="Juegos">{t('nav.games')}</option>
                   <option className="bg-nexus-bg" value="Herramientas">Herramientas</option>
                   <option className="bg-nexus-bg" value="Productividad">Productividad</option>
                   <option className="bg-nexus-bg" value="Redes Sociales">Redes Sociales</option>
@@ -265,13 +267,13 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Descripción</label>
+              <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Descripción</label>
               <textarea 
                 required
                 rows={3}
                 value={formData.description}
                 onChange={e => setFormData({...formData, description: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 p-2.5 rounded-xl focus:border-cyan-500 outline-none text-white resize-none text-sm"
+                className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text resize-none text-sm"
                 placeholder="Describe tu aplicación..."
               />
             </div>
@@ -280,21 +282,21 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           {/* Archivos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* APK */}
-            <div className="glass-panel p-5 rounded-2xl border-white/5 space-y-4 bg-white/5">
+            <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
               <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-orange-400 opacity-80"><Package className="w-4 h-4" /> Archivo APK</h3>
               {!files.apk ? (
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:bg-white/5 transition-colors">
-                  <Upload className="w-6 h-6 text-gray-500 mb-2" />
-                  <span className="text-xs font-bold text-gray-400">Subir APK</span>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-nexus-border rounded-2xl cursor-pointer hover:bg-nexus-card transition-colors">
+                  <Upload className="w-6 h-6 text-nexus-text-sec mb-2" />
+                  <span className="text-xs font-bold text-nexus-text-sec">Subir APK</span>
                   <input type="file" accept=".apk" onChange={e => handleFileChange(e, 'apk')} className="hidden" />
                 </label>
               ) : (
-                <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-nexus-surface border border-nexus-border rounded-xl">
                   <div className="flex items-center gap-3">
                     <Package className="w-8 h-8 text-orange-500" />
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-white truncate max-w-[120px]">{files.apk.name}</p>
-                      <p className="text-[8px] text-gray-500 uppercase">{(files.apk.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      <p className="text-xs font-bold text-nexus-text truncate max-w-[120px]">{files.apk.name}</p>
+                      <p className="text-[8px] text-nexus-text-sec uppercase">{(files.apk.size / (1024 * 1024)).toFixed(2)} MB</p>
                     </div>
                   </div>
                   <button type="button" onClick={() => removeFile('apk')} className="p-1.5 hover:bg-red-500/10 text-red-400 rounded-lg">
@@ -305,19 +307,19 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
             </div>
 
             {/* Icono */}
-            <div className="glass-panel p-5 rounded-2xl border-white/5 space-y-4 bg-white/5">
+            <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
               <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-cyan-400 opacity-80"><Smartphone className="w-4 h-4" /> Icono</h3>
               {!files.icon ? (
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:bg-white/5 transition-colors">
-                  <ImageIcon className="w-6 h-6 text-gray-500 mb-2" />
-                  <span className="text-xs font-bold text-gray-400">Subir Icono</span>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-nexus-border rounded-2xl cursor-pointer hover:bg-nexus-card transition-colors">
+                  <ImageIcon className="w-6 h-6 text-nexus-text-sec mb-2" />
+                  <span className="text-xs font-bold text-nexus-text-sec">Subir Icono</span>
                   <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'icon')} className="hidden" />
                 </label>
               ) : (
-                <div className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-xl">
+                <div className="flex items-center justify-between p-2 bg-nexus-surface border border-nexus-border rounded-xl">
                   <div className="flex items-center gap-3">
                     <img src={URL.createObjectURL(files.icon)} className="w-10 h-10 rounded-lg object-cover" />
-                    <p className="text-xs font-bold text-white truncate max-w-[120px]">{files.icon.name}</p>
+                    <p className="text-xs font-bold text-nexus-text truncate max-w-[120px]">{files.icon.name}</p>
                   </div>
                   <button type="button" onClick={() => removeFile('icon')} className="p-1.5 hover:bg-red-500/10 text-red-400 rounded-lg">
                     <X className="w-3 h-3" />
@@ -328,23 +330,23 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           </div>
 
           {/* Capturas de Pantalla */}
-          <div className="glass-panel p-5 rounded-2xl border-white/5 space-y-4 bg-white/5">
+          <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
             <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-purple-400 opacity-80"><ImageIcon className="w-4 h-4" /> Capturas de Pantalla (Máx 8)</h3>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
               {files.screenshots.map((file, idx) => (
-                <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden bg-white/5 border border-white/10">
+                <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden bg-nexus-card border border-nexus-border">
                    <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
                    <button 
                     type="button"
                     onClick={() => removeFile('screenshots', idx)} 
-                    className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-red-500/80 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+                    className="absolute top-1 right-1 p-1 bg-nexus-surface hover:bg-red-500/80 text-nexus-text rounded opacity-0 group-hover:opacity-100 transition-all"
                    >
                      <X className="w-2 h-2" />
                    </button>
                 </div>
               ))}
               {files.screenshots.length < 8 && (
-                <label className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-cyan-500/50 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all text-gray-500 hover:text-cyan-400">
+                <label className="aspect-square rounded-lg border-2 border-dashed border-nexus-border hover:border-cyan-500/50 flex flex-col items-center justify-center cursor-pointer hover:bg-nexus-card transition-all text-nexus-text-sec hover:text-cyan-400">
                   <Upload className="w-4 h-4" />
                   <input type="file" accept="image/*" multiple onChange={e => handleFileChange(e, 'screenshots')} className="hidden" />
                 </label>
@@ -367,7 +369,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
                    </span>
                    <span>{uploadProgress}%</span>
                 </div>
-                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-nexus-surface rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${uploadProgress}%` }}
@@ -382,7 +384,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           <button 
             type="submit"
             disabled={isUploading}
-            className={`w-full py-4 rounded-xl font-black text-md transition-all flex items-center justify-center gap-3 ${isUploading ? 'bg-white/10 text-gray-500 cursor-not-allowed' : 'bg-cyan-500 text-black hover:bg-cyan-400 hover:scale-[1.01] shadow-xl shadow-cyan-500/20'}`}
+            className={`w-full py-4 rounded-xl font-black text-md transition-all flex items-center justify-center gap-3 ${isUploading ? 'bg-nexus-card-hover text-nexus-text-sec cursor-not-allowed' : 'bg-cyan-500 text-nexus-bg hover:bg-cyan-400 hover:scale-[1.01] shadow-xl shadow-cyan-500/20'}`}
           >
             {isUploading ? (
               <>

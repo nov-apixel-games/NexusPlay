@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import { useAppStore } from '../store/useAppStore';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -36,6 +37,8 @@ export default function Navbar({
   platformName = 'NexusPlay',
   webLogo
 }: NavbarProps) {
+  const { t } = useAppStore();
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -224,7 +227,7 @@ export default function Navbar({
   const progressPercent = (currentLevelXp / 1000) * 100;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-[80px] bg-[#030407]/70 backdrop-blur-3xl border-b border-white/5 flex items-center justify-between px-6 sm:px-10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 h-[80px] bg-nexus-card/80 backdrop-blur-3xl border-b border-nexus-border flex items-center justify-between px-6 sm:px-10 shadow-lg">
       <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
       
       <div className="flex items-center">
@@ -254,18 +257,18 @@ export default function Navbar({
         onClick={onSearchClick}
       >
         <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none"></div>
-        <div className="relative flex items-center bg-[#0a0c16]/80 backdrop-blur-xl border border-white/10 group-hover:border-cyan-500/40 rounded-full pr-4 transition-all duration-300 shadow-inner group-hover:bg-[#0d0f1a]/80 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+        <div className="relative flex items-center bg-nexus-card/80 backdrop-blur-xl border border-nexus-border group-hover:border-cyan-500/40 rounded-full pr-4 transition-all duration-300 shadow-inner group-hover:bg-nexus-card-hover/90 group-hover:shadow-nexus-glow">
           <div className="pl-5 pr-3 py-3">
-             <Search className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 transition-colors" />
+             <Search className="w-4 h-4 text-nexus-text-sec group-hover:text-cyan-400 transition-colors" />
           </div>
           <input 
             type="text" 
-            placeholder="Buscar juegos, comunidades, eventos..." 
+            placeholder={t('nav.search')} 
             readOnly
-            className="w-full bg-transparent text-[14px] text-white placeholder-gray-500 focus:outline-none cursor-pointer py-3"
+            className="w-full bg-transparent text-[14px] text-nexus-text placeholder-gray-500 focus:outline-none cursor-pointer py-3"
           />
-          <div className="bg-white/5 border border-white/10 text-[10px] uppercase font-black text-gray-400 px-2.5 py-1 rounded-[8px] tracking-widest shadow-sm">
-            Buscar
+          <div className="bg-nexus-surface border border-nexus-border text-[10px] uppercase font-black text-nexus-text-sec px-2.5 py-1 rounded-[8px] tracking-widest shadow-sm">
+            /
           </div>
         </div>
       </div>
@@ -273,7 +276,7 @@ export default function Navbar({
       <div className="flex items-center gap-4 sm:gap-6 relative">
         <button 
           onClick={onSearchClick}
-          className="md:hidden p-2 text-gray-400 hover:text-cyan-400 transition-colors"
+          className="md:hidden p-2 text-nexus-text-sec hover:text-cyan-400 transition-colors"
         >
           <Search className="w-6 h-6" />
         </button>
@@ -283,11 +286,11 @@ export default function Navbar({
               <div className="relative" ref={notifRef}>
                 <button 
                    onClick={() => setShowNotifications(!showNotifications)}
-                   className="relative w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/5 text-gray-300 hover:text-cyan-400 transition-all group"
+                   className="relative w-10 h-10 rounded-full flex items-center justify-center bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text hover:text-cyan-400 transition-all group"
                 >
                   <Bell className="w-5 h-5 group-hover:animate-[wiggle_0.5s_ease-in-out_infinite]" />
                   {unreadCount > 0 && (
-                     <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#030407] shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
+                     <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-nexus-border shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
                   )}
                 </button>
 
@@ -298,27 +301,27 @@ export default function Navbar({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-                      className="absolute right-0 top-14 w-80 sm:w-96 bg-[#0a0c16]/95 backdrop-blur-2xl border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-50"
+                      className="absolute right-0 top-14 w-80 sm:w-96 bg-nexus-card/80 backdrop-blur-2xl border border-nexus-border rounded-[24px] shadow-lg overflow-hidden z-50"
                     >
-                       <div className="p-5 border-b border-white/5 flex items-center justify-between">
-                         <h3 className="font-black text-white text-[15px] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-400" /> Notificaciones</h3>
+                       <div className="p-5 border-b border-nexus-border flex items-center justify-between">
+                         <h3 className="font-black text-nexus-text text-[15px] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-400" /> Notificaciones</h3>
                          {unreadCount > 0 && <span className="text-[10px] font-black tracking-widest bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-lg uppercase border border-cyan-500/20">{unreadCount} Nuevas</span>}
                        </div>
                        <div className="max-h-80 overflow-y-auto no-scrollbar">
                          {notifications.length === 0 ? (
                            <div className="p-10 text-center flex flex-col items-center gap-3">
                              <Sparkles className="w-8 h-8 text-gray-600" />
-                             <span className="text-gray-500 text-[13px] font-medium tracking-wide">Todo está al día</span>
+                             <span className="text-nexus-text-sec text-[13px] font-medium tracking-wide">Todo está al día</span>
                            </div>
                          ) : (
                            notifications.map(notif => (
                              <div 
                                 key={notif.id} 
                                 onClick={() => markAsRead(notif.id)}
-                                className={`p-4 sm:p-5 border-b border-white/5 cursor-pointer transition-colors ${notif.read ? 'opacity-50 hover:bg-white/5 hover:opacity-100' : 'bg-cyan-900/10 hover:bg-cyan-900/20 border-l-[3px] border-l-cyan-500'}`}
+                                className={`p-4 sm:p-5 border-b border-nexus-border cursor-pointer transition-colors ${notif.read ? 'opacity-50 hover:bg-nexus-card hover:opacity-100' : 'bg-cyan-900/10 hover:bg-cyan-900/20 border-l-[3px] border-l-cyan-500'}`}
                              >
-                                 <div className="font-black text-[13px] text-white mb-1 drop-shadow-sm">{notif.title}</div>
-                                 <div className="text-[12px] text-gray-400 leading-relaxed font-medium">{notif.message}</div>
+                                 <div className="font-black text-[13px] text-nexus-text mb-1 drop-shadow-sm">{notif.title}</div>
+                                 <div className="text-[12px] text-nexus-text-sec leading-relaxed font-medium">{notif.message}</div>
                              </div>
                            ))
                          )}
@@ -329,9 +332,9 @@ export default function Navbar({
               </div>
 
               {/* Menú de Perfil de Usuario Desplegable (Estilo Play Store / TapTap) */}
-              <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/10 relative" ref={profileMenuRef}>
+              <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-nexus-border relative" ref={profileMenuRef}>
                  <div className="hidden lg:block text-right select-none">
-                   <div className="text-[14px] font-black text-white leading-tight truncate max-w-[120px]">{username}</div>
+                   <div className="text-[14px] font-black text-nexus-text leading-tight truncate max-w-[120px]">{username}</div>
                    <div className="text-[10px] font-black uppercase tracking-widest text-cyan-500">{userProfile?.role || 'User'}</div>
                  </div>
                  
@@ -343,7 +346,7 @@ export default function Navbar({
                    }}
                  >
                     <div className="absolute inset-0 bg-cyan-400 rounded-full blur-[10px] opacity-0 group-hover:opacity-40 transition-opacity"></div>
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#121420] border-2 border-white/10 group-hover:border-cyan-400 flex items-center justify-center text-sm font-black text-white uppercase relative z-10 transition-all overflow-hidden shadow-lg animate-fade-in">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-nexus-card border-2 border-nexus-border group-hover:border-cyan-400 flex items-center justify-center text-sm font-black text-nexus-text uppercase relative z-10 transition-all overflow-hidden shadow-lg animate-fade-in">
                        {userProfile?.avatar_url ? (
                          <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar" onError={(e) => { e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`; }} />
                        ) : (
@@ -360,41 +363,41 @@ export default function Navbar({
                        animate={{ opacity: 1, y: 0, scale: 1 }}
                        exit={{ opacity: 0, y: 15, scale: 0.95 }}
                        transition={{ duration: 0.25, type: "spring", stiffness: 350, damping: 26 }}
-                       className="absolute right-0 top-14 w-[310px] sm:w-[350px] bg-[#0d0f1a]/95 backdrop-blur-3xl border border-white/10 rounded-[28px] shadow-[0_24px_60px_rgba(0,0,0,0.85)] z-50 overflow-hidden p-6 flex flex-col"
+                       className="absolute right-0 top-14 w-[310px] sm:w-[350px] bg-nexus-card/80 backdrop-blur-3xl border border-nexus-border rounded-[28px] shadow-lg z-50 overflow-hidden p-6 flex flex-col"
                      >
                         {/* Cabecera del Usuario */}
-                        <div className="flex flex-col items-center text-center pb-5 border-b border-white/5 relative">
+                        <div className="flex flex-col items-center text-center pb-5 border-b border-nexus-border relative">
                           <div className="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-xl relative mb-3">
-                            <div className="w-full h-full rounded-full bg-[#0d0f1a] overflow-hidden flex items-center justify-center font-black text-2xl text-white">
+                            <div className="w-full h-full rounded-full bg-nexus-card overflow-hidden flex items-center justify-center font-black text-2xl text-nexus-text">
                               {userProfile?.avatar_url ? (
                                 <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar Grande" onError={(e) => { e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`; }} />
                               ) : (
                                 username?.charAt(0)
                               )}
                             </div>
-                            <div className="absolute -bottom-1 -right-1 bg-[#121422] rounded-full p-1 border border-white/10">
-                              <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-black font-black text-[10px]" title="Nivel del Jugador">
+                            <div className="absolute -bottom-1 -right-1 bg-nexus-card rounded-full p-1 border border-nexus-border">
+                              <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-nexus-bg font-black text-[10px]" title="Nivel del Jugador">
                                 Lvl {level}
                               </div>
                             </div>
                           </div>
 
-                          <h4 className="text-[17px] font-black text-white leading-tight drop-shadow-sm flex items-center gap-1.5 justify-center">
+                          <h4 className="text-[17px] font-black text-nexus-text leading-tight drop-shadow-sm flex items-center gap-1.5 justify-center">
                             {userRealName || username}
                           </h4>
-                          <span className="text-[11px] font-bold text-gray-500 tracking-wider font-mono mt-0.5">{`@${username}`}</span>
-                          <span className="text-[11px] text-gray-400 mt-1 flex items-center gap-1.5 truncate max-w-[220px]">
+                          <span className="text-[11px] font-bold text-nexus-text-sec tracking-wider font-mono mt-0.5">{`@${username}`}</span>
+                          <span className="text-[11px] text-nexus-text-sec mt-1 flex items-center gap-1.5 truncate max-w-[220px]">
                             <Mail className="w-3.5 h-3.5 text-cyan-400" /> {userEmail}
                           </span>
 
                           {/* XP progressive meter */}
                           <div className="w-full mt-3 px-1">
-                            <div className="flex justify-between items-center text-[9px] uppercase font-bold text-gray-400 mb-1 font-mono tracking-wider">
+                            <div className="flex justify-between items-center text-[9px] uppercase font-bold text-nexus-text-sec mb-1 font-mono tracking-wider">
                               <span>Progreso Nivel</span>
                               <span className="text-yellow-500 font-extrabold">{currentLevelXp} / 1000 XP</span>
                             </div>
-                            <div className="w-full h-1.5 bg-[#090b14] border border-white/5 rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-[#ef4444] bg-gradient-to-r from-cyan-400 via-blue-500 to-yellow-500 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+                            <div className="w-full h-1.5 bg-nexus-card border border-nexus-border rounded-full overflow-hidden shadow-inner">
+                              <div className="h-full bg-nexus-card bg-gradient-to-r from-cyan-400 via-blue-500 to-yellow-500 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
                             </div>
                           </div>
 
@@ -403,7 +406,7 @@ export default function Navbar({
                           </div>
 
                           {userBio && (
-                            <p className="text-[12px] text-gray-400 italic max-w-[2400px] mt-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/5 line-clamp-2">
+                            <p className="text-[12px] text-nexus-text-sec italic max-w-[2400px] mt-3 bg-nexus-card px-4 py-2 rounded-2xl border border-nexus-border line-clamp-2">
                               "{userBio}"
                             </p>
                           )}
@@ -417,9 +420,9 @@ export default function Navbar({
                                e.stopPropagation();
                                handleOpenEditProfile();
                              }}
-                             className="w-full py-3 px-4 bg-white/5 hover:bg-cyan-500/15 border border-white/10 hover:border-cyan-500/30 rounded-2xl text-white hover:text-cyan-400 text-[13px] font-black transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-sm group"
+                             className="w-full py-3 px-4 bg-nexus-card hover:bg-cyan-500/15 border border-nexus-border hover:border-cyan-500/30 rounded-2xl text-nexus-text hover:text-cyan-400 text-[13px] font-black transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-sm group"
                            >
-                             <Edit2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Editar Perfil
+                             <Edit2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> {t('nav.editProfile')}
                            </button>
 
                            {/* Botón Mi Cuenta */}
@@ -429,13 +432,13 @@ export default function Navbar({
                                setShowProfileMenu(false);
                                if (onProfileClick) onProfileClick();
                              }}
-                             className="w-full py-3 px-4 bg-transparent hover:bg-white/5 rounded-2xl text-gray-300 hover:text-white text-[13px] font-bold transition-colors flex items-center gap-3 text-left"
+                             className="w-full py-3 px-4 bg-transparent hover:bg-nexus-card rounded-2xl text-nexus-text hover:text-nexus-text text-[13px] font-bold transition-colors flex items-center gap-3 text-left"
                            >
-                              <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-gray-400">
+                              <div className="w-8 h-8 rounded-xl bg-nexus-card flex items-center justify-center text-nexus-text-sec">
                                 <User className="w-4 h-4" />
                               </div>
-                              <span className="flex-1">Mi Cuenta</span>
-                              <span className="text-[10px] uppercase font-bold tracking-widest text-gray-500">Ir</span>
+                              <span className="flex-1">{t('nav.myAccount')}</span>
+                              <span className="text-[10px] uppercase font-bold tracking-widest text-nexus-text-sec">Ir</span>
                            </button>
 
                            {/* Botón Cerrar Sesión */}
@@ -450,7 +453,7 @@ export default function Navbar({
                               <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
                                 <LogOut className="w-4 h-4" />
                               </div>
-                              <span className="flex-1 uppercase tracking-wider text-[11px]">Cerrar Sesión</span>
+                              <span className="flex-1 uppercase tracking-wider text-[11px]">{t('nav.logout')}</span>
                            </button>
                         </div>
                      </motion.div>
@@ -461,9 +464,9 @@ export default function Navbar({
         ) : (
           <button 
              onClick={onLoginClick}
-             className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-5 sm:px-6 py-2 sm:py-2.5 rounded-[12px] sm:rounded-[14px] text-[13px] sm:text-[14px] uppercase tracking-widest font-black transition-all text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] active:scale-95"
+             className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-5 sm:px-6 py-2 sm:py-2.5 rounded-[12px] sm:rounded-[14px] text-[13px] sm:text-[14px] uppercase tracking-widest font-black transition-all text-nexus-text shadow-nexus-glow hover:shadow-nexus-glow active:scale-95"
           >
-             <LogIn className="w-4 h-4"/> <span className="hidden sm:inline">Iniciar Sesión</span>
+             <LogIn className="w-4 h-4"/> <span className="hidden sm:inline">{t('auth.login')}</span>
           </button>
         )}
       </div>
@@ -471,7 +474,7 @@ export default function Navbar({
       {/* Modal Moderno de Edición de Perfil (Estilo TapTap/Play Store) */}
       <AnimatePresence>
         {showEditProfileModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-nexus-surface backdrop-blur-md">
             {/* Backdrop click blocker to dismiss modal */}
             <div className="absolute inset-0 cursor-default" onClick={() => setShowEditProfileModal(false)} />
             
@@ -480,24 +483,24 @@ export default function Navbar({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.3, type: "spring", stiffness: 350, damping: 28 }}
-              className="bg-[#0a0c16]/95 border border-white/10 rounded-[32px] max-w-lg w-full shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col relative z-50 overflow-hidden max-h-[100%] sm:max-h-[90vh]"
+              className="bg-nexus-card/80 border border-nexus-border rounded-[32px] max-w-lg w-full shadow-lg flex flex-col relative z-50 overflow-hidden max-h-[100%] sm:max-h-[90vh]"
             >
               {/* Sticky Header */}
-              <div className="flex-none p-5 sm:p-6 pb-4 border-b border-white/10 flex items-center justify-between">
+              <div className="flex-none p-5 sm:p-6 pb-4 border-b border-nexus-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400">
                     <Sparkles className="w-5 h-5 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider leading-none">
+                    <h3 className="text-base sm:text-lg font-black text-nexus-text uppercase tracking-wider leading-none">
                       Perfil Personalizado
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-1">Identidad en Nexus Hub</p>
+                    <p className="text-[10px] text-nexus-text-sec font-medium uppercase tracking-widest mt-1">Identidad en Nexus Hub</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowEditProfileModal(false)}
-                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-nexus-card hover:bg-nexus-card-hover text-nexus-text-sec hover:text-nexus-text flex items-center justify-center transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -512,14 +515,14 @@ export default function Navbar({
               )}
 
               {/* LIVE CARD PREVIEW (Amazing feature) */}
-              <div className="mb-6 w-full p-4 rounded-2xl bg-gradient-to-br from-[#121422] to-[#0d0e1b] border border-white/5 shadow-inner relative overflow-hidden group">
+              <div className="mb-6 w-full p-4 rounded-2xl bg-gradient-to-br from-nexus-bg to-nexus-bg border border-nexus-border shadow-inner relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-[30px] pointer-events-none" />
                 
                 <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-500/70 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/10">Vista Previa</span>
                 
                 <div className="flex items-center gap-4 relative z-10 w-full">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-900 border border-white/10 overflow-visible relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-white">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-nexus-card border border-nexus-border overflow-visible relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-nexus-text">
                     {inputAvatar ? (
                       <img 
                         src={inputAvatar} 
@@ -532,24 +535,24 @@ export default function Navbar({
                     ) : (
                       <span className="text-2xl">{(inputUsername || username).charAt(0).toUpperCase()}</span>
                     )}
-                    <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black text-[10px] font-black rounded-full px-2 py-0.5 border-2 border-slate-950 shadow-lg z-20">
+                    <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-nexus-bg text-[10px] font-black rounded-full px-2 py-0.5 border-2 border-slate-950 shadow-lg z-20">
                       Lvl {level}
                     </div>
                   </div>
                   <div className="min-w-0 flex-1 pl-2">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <h4 className="text-white font-black text-base sm:text-lg truncate font-mono">@{inputUsername || 'jugador_nexus'}</h4>
+                      <h4 className="text-nexus-text font-black text-base sm:text-lg truncate font-mono">@{inputUsername || 'jugador_nexus'}</h4>
                       <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">{roleName}</span>
                     </div>
-                    <p className="text-gray-400 text-xs truncate">{inputRealName || 'Tu Nombre o Alias'}</p>
-                    <p className="text-gray-500 text-[10px] italic truncate mt-1">"{inputBio || 'Sin biografía establecida.'}"</p>
+                    <p className="text-nexus-text-sec text-xs truncate">{inputRealName || 'Tu Nombre o Alias'}</p>
+                    <p className="text-nexus-text-sec text-[10px] italic truncate mt-1">"{inputBio || 'Sin biografía establecida.'}"</p>
                   </div>
                 </div>
               </div>
 
               {/* PHOTO PICKER TABS */}
               <div className="mb-6 w-full">
-                <div className="grid grid-cols-3 gap-1 bg-[#05060b] p-1 rounded-2xl border border-white/5 mb-4">
+                <div className="grid grid-cols-3 gap-1 bg-nexus-card p-1 rounded-2xl border border-nexus-border mb-4">
                   <button
                     type="button"
                     onClick={() => {
@@ -557,7 +560,7 @@ export default function Navbar({
                       if (modeEl) modeEl.click();
                     }}
                     className={`py-2 px-1 text-[9px] sm:text-[10px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
-                      !inputAvatar.includes('unsplash.com') && !inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                      !inputAvatar.includes('unsplash.com') && !inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-nexus-bg font-black shadow-nexus-glow' : 'text-nexus-text-sec hover:text-nexus-text'
                     }`}
                   >
                     📂 Foto
@@ -569,7 +572,7 @@ export default function Navbar({
                       if (modeEl) modeEl.click();
                     }}
                     className={`py-2 px-1 text-[9px] sm:text-[10px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
-                      inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                      inputAvatar.includes('api.dicebear.com') ? 'bg-cyan-500 text-nexus-bg font-black shadow-nexus-glow' : 'text-nexus-text-sec hover:text-nexus-text'
                     }`}
                   >
                     ⚡ IA
@@ -581,7 +584,7 @@ export default function Navbar({
                       if (modeEl) modeEl.click();
                     }}
                     className={`py-2 px-1 text-[9px] sm:text-[10px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
-                      inputAvatar.includes('unsplash.com') ? 'bg-cyan-500 text-black font-black shadow-[0_0_12px_rgba(34,211,238,0.25)]' : 'text-gray-400 hover:text-white'
+                      inputAvatar.includes('unsplash.com') ? 'bg-cyan-500 text-nexus-bg font-black shadow-nexus-glow' : 'text-nexus-text-sec hover:text-nexus-text'
                     }`}
                   >
                     💎 PRESETS
@@ -639,8 +642,8 @@ export default function Navbar({
                     }}
                     className={`relative w-full h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer overflow-hidden ${
                       isDragActive 
-                        ? 'border-cyan-400 bg-cyan-950/20 shadow-[0_0_20px_rgba(34,211,238,0.25)]' 
-                        : 'border-white/10 hover:border-cyan-400/50 bg-[#05060a]/40 hover:bg-[#080a13]'
+                        ? 'border-cyan-400 bg-cyan-950/20 shadow-nexus-glow' 
+                        : 'border-nexus-border hover:border-cyan-400/50 bg-nexus-card/80 hover:bg-nexus-card'
                     }`}
                   >
                     {uploadingImage ? (
@@ -651,7 +654,7 @@ export default function Navbar({
                     ) : inputAvatar ? (
                       <div className="absolute inset-0 flex items-center justify-center group">
                         <img src={inputAvatar} className="w-full h-full object-cover opacity-80" alt="Uploaded Profile" />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-white gap-2 uppercase">
+                        <div className="absolute inset-0 bg-nexus-surface opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-nexus-text gap-2 uppercase">
                           <Upload className="w-5 h-5 text-cyan-400" /> Cambiar Imagen
                         </div>
                       </div>
@@ -661,7 +664,7 @@ export default function Navbar({
                           <Camera className="w-5 h-5" />
                         </div>
                         <p className="text-[11px] font-bold text-gray-200">Suelta o Clic para subir</p>
-                        <p className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">PNG, JPG, WEBP (Guardado Seguro)</p>
+                        <p className="text-[8px] text-nexus-text-sec uppercase tracking-widest mt-1">PNG, JPG, WEBP (Guardado Seguro)</p>
                       </div>
                     )}
                     <input 
@@ -676,9 +679,9 @@ export default function Navbar({
 
                 {/* TAB CONTENT: 2. AI AVATAR ENGINE */}
                 {inputAvatar.includes('api.dicebear.com') && (
-                  <div className="space-y-4 bg-[#05060a]/60 p-4 rounded-2xl border border-white/5 w-full">
+                  <div className="space-y-4 bg-nexus-surface/80 p-4 rounded-2xl border border-nexus-border w-full">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-[#090b14] border border-white/10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center p-1.5 shadow-inner">
+                      <div className="w-12 h-12 bg-nexus-card border border-nexus-border rounded-xl shrink-0 overflow-hidden flex items-center justify-center p-1.5 shadow-inner">
                         <img 
                           src={inputAvatar} 
                           className="w-full h-full object-contain" 
@@ -687,7 +690,7 @@ export default function Navbar({
                       </div>
                       <div className="min-w-0">
                         <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">Generador IA</span>
-                        <p className="text-[11px] font-bold text-white truncate w-full">Creación Dinámica</p>
+                        <p className="text-[11px] font-bold text-nexus-text truncate w-full">Creación Dinámica</p>
                       </div>
                     </div>
 
@@ -709,7 +712,7 @@ export default function Navbar({
                           className={`py-2 px-1 text-[8px] sm:text-[9px] uppercase tracking-wider font-extrabold rounded-lg transition-all border ${
                             aiPresetStyle === style.id 
                               ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400' 
-                              : 'bg-white/5 border-transparent text-gray-400 hover:text-white'
+                              : 'bg-nexus-card border-transparent text-nexus-text-sec hover:text-nexus-text'
                           }`}
                         >
                           {style.label}
@@ -728,7 +731,7 @@ export default function Navbar({
                             setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val || 'nexus')}`);
                           }}
                           placeholder="Semilla creativa..."
-                          className="w-full bg-black/60 border border-white/10 rounded-xl px-3 sm:px-3.5 py-2 sm:py-2.5 text-white text-[11px] font-mono outline-none focus:border-cyan-400"
+                          className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-3.5 py-2 sm:py-2.5 text-nexus-text text-[11px] font-mono outline-none focus:border-cyan-400"
                         />
                       </div>
                       <button
@@ -738,7 +741,7 @@ export default function Navbar({
                           setAiPresetSeed(val);
                           setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val)}`);
                         }}
-                        className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                        className="p-2 sm:p-2.5 bg-nexus-surface hover:bg-nexus-card-hover border border-nexus-border rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
                         title="Randomizar semilla"
                       >
                         <Shuffle className="w-4 h-4" />
@@ -750,14 +753,14 @@ export default function Navbar({
                 {/* TAB CONTENT: 3. PREMIUM PRESETS */}
                 {inputAvatar.includes('unsplash.com') && (
                   <div className="space-y-2 w-full">
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 bg-[#05060b]/60 p-3 rounded-2xl border border-white/5">
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 bg-nexus-card/80 p-3 rounded-2xl border border-nexus-border">
                       {AVATAR_PRESETS.map((preset, index) => {
                         const isSelected = inputAvatar === preset.url;
                         return (
                           <div 
                             key={index} 
                             onClick={() => setInputAvatar(preset.url)}
-                            className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-[0_0_10px_rgba(34,211,238,0.4)] z-10' : 'border-transparent hover:scale-105'}`}
+                            className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-nexus-glow z-10' : 'border-transparent hover:scale-105'}`}
                             title={preset.name}
                           >
                             <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
@@ -779,7 +782,7 @@ export default function Navbar({
                 {/* Username Input */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Id de Usuario</label>
+                    <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest">Id de Usuario</label>
                     {inputUsername.length >= 3 ? (
                       <span className="text-[8px] uppercase font-mono text-green-400 font-black flex items-center gap-0.5">✓ VÁLIDO</span>
                     ) : (
@@ -792,35 +795,35 @@ export default function Navbar({
                     onChange={e => setInputUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))} 
                     placeholder="jugador_nexus"
                     maxLength={15}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all font-mono"
+                    className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-nexus-text text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all font-mono"
                   />
-                  <span className="text-[8px] text-gray-500 font-extrabold block mt-1.5 uppercase tracking-wider">Solo letras, números y guiños bajos (_).</span>
+                  <span className="text-[8px] text-nexus-text-sec font-extrabold block mt-1.5 uppercase tracking-wider">Solo letras, números y guiños bajos (_).</span>
                 </div>
 
                 {/* Real name / display name Input */}
                 <div>
-                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Nombre Visible</label>
+                  <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5">Nombre Visible</label>
                   <input 
                     type="text" 
                     value={inputRealName} 
                     onChange={e => setInputRealName(e.target.value)} 
                     placeholder="Tu Nombre / Alias"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all"
+                    className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-nexus-text text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all"
                   />
                 </div>
 
                 {/* Description / Bio */}
                 <div>
-                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Biografía corta</label>
+                  <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5">Biografía corta</label>
                   <textarea 
                     value={inputBio} 
                     onChange={e => setInputBio(e.target.value)} 
                     placeholder="¡Hola! Bienvenidos a mi rincón de juegos..."
                     maxLength={100}
                     rows={2}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-white text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all resize-none shadow-inner"
+                    className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-nexus-text text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all resize-none shadow-inner"
                   />
-                  <div className="flex justify-between text-[8px] text-gray-500 font-mono mt-1 font-extrabold">
+                  <div className="flex justify-between text-[8px] text-nexus-text-sec font-mono mt-1 font-extrabold">
                     <span>MÁXIMO 100 CAR.</span>
                     <span>{inputBio.length}/100</span>
                   </div>
@@ -830,19 +833,19 @@ export default function Navbar({
               </div> {/* End Scrollable Content */}
 
               {/* Sticky Footer Buttons */}
-              <div className="flex-none p-5 sm:p-6 pt-4 border-t border-white/10 bg-[#0a0c16]/95 backdrop-blur flex items-center justify-end gap-3 z-20">
+              <div className="flex-none p-5 sm:p-6 pt-4 border-t border-nexus-border bg-nexus-surface/80 backdrop-blur flex items-center justify-end gap-3 z-20">
                 <button 
                   type="button"
                   onClick={() => setShowEditProfileModal(false)} 
                   disabled={isSaving || uploadingImage} 
-                  className="py-3 px-5 sm:px-6 bg-white/5 hover:bg-white/15 border border-white/10 disabled:opacity-50 text-gray-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all cursor-pointer"
+                  className="py-3 px-5 sm:px-6 bg-nexus-surface hover:bg-nexus-card border border-nexus-border disabled:opacity-50 text-nexus-text hover:text-nexus-text font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleSaveProfile} 
                   disabled={isSaving || uploadingImage || inputUsername.length < 3} 
-                  className="flex-1 sm:flex-none py-3 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-black font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 sm:flex-none py-3 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-nexus-bg font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all duration-300 shadow-nexus-glow flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isSaving ? (
                     <>

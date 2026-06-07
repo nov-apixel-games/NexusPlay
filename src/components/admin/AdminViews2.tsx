@@ -24,13 +24,13 @@ export function AdminModeration({ reports, setReports, addToast }: any) {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <h2 className="text-2xl font-black text-white flex items-center gap-2"><ShieldAlert className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> Centro de Moderación</h2>
+      <h2 className="text-2xl font-black text-nexus-text flex items-center gap-2"><ShieldAlert className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> Centro de Moderación</h2>
       
-      <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50 space-y-4 shadow-[0_0_30px_rgba(220,38,38,0.03)]">
+      <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-nexus-card/80 space-y-4 shadow-[0_0_30px_rgba(220,38,38,0.03)]">
         <h3 className="font-bold border-b border-red-900/20 pb-2 mb-4 text-red-100">Reportes Activos ({activeReports.length})</h3>
         
         {activeReports.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No hay reportes pendientes</div>
+          <div className="text-center py-8 text-nexus-text-sec">No hay reportes pendientes</div>
         ) : (
           <div className="space-y-3">
             {activeReports.map((report: any) => (
@@ -40,7 +40,7 @@ export function AdminModeration({ reports, setReports, addToast }: any) {
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="font-bold text-white">{report.target}</div>
+                    <div className="font-bold text-nexus-text">{report.target}</div>
                     <div className="text-xs text-red-200/50 mt-0.5">Razón: <span className="text-red-200">{report.reason}</span> • Reportado por: {report.user}</div>
                   </div>
                 </div>
@@ -69,7 +69,7 @@ export function AdminAds({ config, setConfig, addToast }: any) {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <h2 className="text-2xl font-black text-white flex items-center gap-2"><MonitorPlay className="w-6 h-6 text-red-500" /> Ads & Monetización</h2>
+      <h2 className="text-2xl font-black text-nexus-text flex items-center gap-2"><MonitorPlay className="w-6 h-6 text-red-500" /> Ads & Monetización</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <AdSection title="Ads Generales" active={config.general} onToggle={() => toggleAd('general')} />
@@ -78,12 +78,12 @@ export function AdminAds({ config, setConfig, addToast }: any) {
         <AdSection title="Ads Recompensados" active={config.rewarded} onToggle={() => toggleAd('rewarded')} description="Ads para obtener acciones premium." />
       </div>
 
-      <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50 mt-8">
+      <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-nexus-card/80 mt-8">
         <h3 className="text-lg font-bold mb-4 text-red-100">AdSense Config</h3>
         <div className="space-y-4">
           <div>
             <label className="text-xs font-bold text-red-300/50 uppercase px-1">Publisher ID</label>
-            <input type="text" defaultValue={config.publisherId} onChange={(e) => setConfig({ ...config, publisherId: e.target.value })} className="w-full h-12 bg-black/40 border border-red-900/30 rounded-xl px-4 text-sm mt-1 text-white focus:border-red-500 outline-none transition-colors" />
+            <input type="text" defaultValue={config.publisherId} onChange={(e) => setConfig({ ...config, publisherId: e.target.value })} className="w-full h-12 bg-nexus-surface border border-red-900/30 rounded-xl px-4 text-sm mt-1 text-nexus-text focus:border-red-500 outline-none transition-colors" />
           </div>
           <div>
             <label className="text-xs font-bold text-red-300/50 uppercase px-1">Global Ad Rate Limit</label>
@@ -98,15 +98,15 @@ export function AdminAds({ config, setConfig, addToast }: any) {
 
 function AdSection({ title, active, onToggle, description = "Modifica la visibilidad de estos anuncios en la app." }: any) {
   return (
-    <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50 flex flex-col justify-between hover:border-red-500/20 transition-all">
+    <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-nexus-surface/80 flex flex-col justify-between hover:border-red-500/20 transition-all">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h4 className="font-bold text-white">{title}</h4>
+          <h4 className="font-bold text-nexus-text">{title}</h4>
           <button 
             onClick={onToggle}
-            className={`w-12 h-6 rounded-full transition-colors relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] ${active ? 'bg-red-600' : 'bg-red-950/50 border border-red-900/30'}`}
+            className={`w-12 h-6 rounded-full transition-colors relative shadow-lg ${active ? 'bg-red-600' : 'bg-red-950/50 border border-red-900/30'}`}
           >
-            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${active ? 'left-7 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]' : 'left-1'}`} />
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${active ? 'left-7 drop-shadow-lg' : 'left-1'}`} />
           </button>
         </div>
         <p className="text-xs text-red-200/50 leading-relaxed">{description}</p>
@@ -171,22 +171,22 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <h2 className="text-2xl font-black text-white flex items-center gap-2"><Settings className="w-6 h-6 text-red-400" /> Configuración General</h2>
+      <h2 className="text-2xl font-black text-nexus-text flex items-center gap-2"><Settings className="w-6 h-6 text-red-400" /> Configuración General</h2>
       
-      <div className="glass-panel p-8 rounded-3xl border-red-900/20 bg-[#120505]/50 space-y-6">
+      <div className="glass-panel p-8 rounded-3xl border-red-900/20 bg-nexus-card/80 space-y-6">
         <div>
           <h3 className="text-lg font-bold mb-4 border-b border-red-900/20 pb-2 text-red-100">Branding</h3>
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center gap-6 border-b border-red-900/10 pb-6">
                <div className="shrink-0 flex flex-col items-center gap-3">
-                 <div className="w-24 h-24 bg-black/60 rounded-2xl border border-red-900/30 flex items-center justify-center p-2 shadow-inner relative overflow-hidden group">
+                 <div className="w-24 h-24 bg-nexus-surface rounded-2xl border border-red-900/30 flex items-center justify-center p-2 shadow-inner relative overflow-hidden group">
                    {localSettings.logoUrl ? (
                      <img src={localSettings.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
                    ) : (
                      <Sparkles className="w-8 h-8 text-red-500/30" />
                    )}
-                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                     <button onClick={() => fileInputRef.current?.click()} className="text-white hover:text-red-400 transition-colors">
+                   <div className="absolute inset-0 bg-nexus-surface opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                     <button onClick={() => fileInputRef.current?.click()} className="text-nexus-text hover:text-red-400 transition-colors">
                        <Upload className="w-6 h-6" />
                      </button>
                    </div>
@@ -194,7 +194,7 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
                  {isUploadingLogo ? (
                    <span className="text-xs text-red-400 font-bold animate-pulse">Subiendo...</span>
                  ) : (
-                   <button onClick={() => fileInputRef.current?.click()} className="text-xs font-bold text-red-400 hover:text-white uppercase tracking-wider transition-colors border border-red-900/50 bg-red-950/30 px-3 py-1.5 rounded-lg active:scale-95">
+                   <button onClick={() => fileInputRef.current?.click()} className="text-xs font-bold text-red-400 hover:text-nexus-text uppercase tracking-wider transition-colors border border-red-900/50 bg-red-950/30 px-3 py-1.5 rounded-lg active:scale-95">
                      Cambiar Logo
                    </button>
                  )}
@@ -209,11 +209,11 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
 
             <div className="flex flex-col gap-1.5 pt-2">
               <label className="text-xs font-bold text-red-300/50 uppercase">Nombre de la Tienda</label>
-              <input type="text" value={localSettings.storeName} onChange={(e) => setLocalSettings({...localSettings, storeName: e.target.value})} className="w-full h-12 bg-black/40 border border-red-900/30 rounded-xl px-4 text-sm focus:border-red-500 outline-none text-white transition-colors" />
+              <input type="text" value={localSettings.storeName} onChange={(e) => setLocalSettings({...localSettings, storeName: e.target.value})} className="w-full h-12 bg-nexus-surface border border-red-900/30 rounded-xl px-4 text-sm focus:border-red-500 outline-none text-nexus-text transition-colors" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-red-300/50 uppercase">Slogan</label>
-              <input type="text" value={localSettings.slogan} onChange={(e) => setLocalSettings({...localSettings, slogan: e.target.value})} className="w-full h-12 bg-black/40 border border-red-900/30 rounded-xl px-4 text-sm focus:border-red-500 outline-none text-white transition-colors" />
+              <input type="text" value={localSettings.slogan} onChange={(e) => setLocalSettings({...localSettings, slogan: e.target.value})} className="w-full h-12 bg-nexus-surface border border-red-900/30 rounded-xl px-4 text-sm focus:border-red-500 outline-none text-nexus-text transition-colors" />
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
             <div>
               <h4 className="font-bold text-red-400">Modo Mantenimiento {localSettings.maintenanceMode && '(Activo)'}</h4>
               <p className="text-sm text-red-200/50 mt-1 mb-3">Si activas esto, nadie salvo los administradores podrán acceder a la plataforma.</p>
-              <button onClick={toggleMaintenance} className={`px-4 py-2 font-bold rounded-xl text-sm transition-colors active:scale-95 ${localSettings.maintenanceMode ? 'bg-red-950 hover:bg-black text-red-500 border border-red-900/50' : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]'}`}>
+              <button onClick={toggleMaintenance} className={`px-4 py-2 font-bold rounded-xl text-sm transition-colors active:scale-95 ${localSettings.maintenanceMode ? 'bg-red-950 hover:bg-black text-red-500 border border-red-900/50' : 'bg-red-600 hover:bg-red-500 text-nexus-text shadow-[0_0_15px_rgba(220,38,38,0.4)]'}`}>
                 {localSettings.maintenanceMode ? 'Desactivar Modo Seguro' : 'Activar Modo Seguro'}
               </button>
             </div>
@@ -233,7 +233,7 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
         </div>
         
         <div className="pt-4 border-t border-red-900/20">
-          <button onClick={save} className="w-full h-12 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+          <button onClick={save} className="w-full h-12 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-nexus-text font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
             Guardar Cambios
           </button>
         </div>
@@ -444,19 +444,19 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
             <BrainCircuit className="w-7 h-7 text-nexus-cyan" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-white italic tracking-tighter">
+            <h2 className="text-xl md:text-2xl font-black text-nexus-text italic tracking-tighter">
               NEXUS <span className="text-nexus-cyan uppercase">AI CORE</span>
             </h2>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse outline outline-4 outline-green-500/20" />
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nivel de Acceso: Root Admin</span>
+              <span className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Nivel de Acceso: Root Admin</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
            <button 
              onClick={() => setShowConfig(!showConfig)} 
-             className={`p-2.5 rounded-xl transition-all border ${showConfig ? 'bg-nexus-cyan text-black border-nexus-cyan' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-nexus-cyan/50'}`}
+             className={`p-2.5 rounded-xl transition-all border ${showConfig ? 'bg-nexus-cyan text-nexus-bg border-nexus-cyan' : 'bg-nexus-surface text-nexus-text-sec border-nexus-border hover:border-nexus-cyan/50'}`}
              title="Configuración IA"
            >
              <Settings className="w-5 h-5" />
@@ -466,7 +466,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
 
       <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden pb-24 lg:pb-0">
         {/* Main Interface */}
-        <div className="flex-1 bg-black/60 border border-white/5 rounded-[2rem] flex flex-col overflow-hidden backdrop-blur-xl shadow-2xl relative">
+        <div className="flex-1 bg-nexus-surface border border-nexus-border rounded-[2rem] flex flex-col overflow-hidden backdrop-blur-xl shadow-2xl relative">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(0,229,255,0.03),_transparent_70%)] pointer-events-none" />
           
           <div 
@@ -478,8 +478,8 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                 <div className="w-24 h-24 bg-nexus-cyan/5 border border-nexus-cyan/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
                   <Fingerprint className="w-12 h-12 text-nexus-cyan/30" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-300 mb-2">Sistema listo</h3>
-                <p className="text-xs text-slate-500 max-w-sm leading-relaxed uppercase tracking-widest font-black opacity-50">
+                <h3 className="text-xl font-bold text-nexus-text-sec mb-2">Sistema listo</h3>
+                <p className="text-xs text-nexus-text-sec max-w-sm leading-relaxed uppercase tracking-widest font-black opacity-50">
                   Esperando instrucciones directas del administrador
                 </p>
                 <div className="grid grid-cols-2 gap-2 mt-10 w-full max-w-md px-4">
@@ -487,10 +487,10 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                     <button 
                       key={idx}
                       onClick={() => handleQuickAction(qa.cmd)}
-                      className="flex items-center gap-3 p-3 bg-white/5 border border-white/5 rounded-2xl hover:border-nexus-cyan/50 hover:bg-nexus-cyan/5 text-left transition-all group"
+                      className="flex items-center gap-3 p-3 bg-nexus-card border border-nexus-border rounded-2xl hover:border-nexus-cyan/50 hover:bg-nexus-cyan/5 text-left transition-all group"
                     >
                       <qa.icon className="w-4 h-4 text-nexus-cyan group-hover:scale-110 transition-transform" />
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-nexus-cyan">{qa.label}</span>
+                      <span className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest group-hover:text-nexus-cyan">{qa.label}</span>
                     </button>
                   ))}
                 </div>
@@ -513,7 +513,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
 
                   return (
                     <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`group relative max-w-[90%] sm:max-w-[80%] rounded-[1.5rem] p-4 sm:p-5 ${m.role === 'user' ? 'bg-nexus-cyan/10 border border-nexus-cyan/30 text-white rounded-tr-sm shadow-[0_0_20px_rgba(0,229,255,0.05)]' : 'bg-slate-900/80 border border-white/5 text-slate-200 rounded-tl-sm shadow-xl'}`}>
+                      <div className={`group relative max-w-[90%] sm:max-w-[80%] rounded-[1.5rem] p-4 sm:p-5 ${m.role === 'user' ? 'bg-nexus-cyan/10 border border-nexus-cyan/30 text-nexus-text rounded-tr-sm shadow-[0_0_20px_rgba(0,229,255,0.05)]' : 'bg-nexus-card/80 border border-nexus-border text-nexus-text rounded-tl-sm shadow-xl'}`}>
                         {m.role === 'assistant' && (
                            <button 
                              onClick={() => copyToClipboard(displayContent)}
@@ -527,16 +527,16 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                         </div>
 
                         {commandObj && !m.cmdExecuted && !m.isCancelled && (
-                          <div className="mt-4 bg-black/60 border border-nexus-cyan/20 rounded-2xl p-4 sm:p-5 overflow-hidden">
+                          <div className="mt-4 bg-nexus-surface border border-nexus-cyan/20 rounded-2xl p-4 sm:p-5 overflow-hidden">
                              <div className="flex items-center gap-3 mb-4">
                                 <AlertTriangle className="w-5 h-5 text-yellow-500" />
                                 <span className="text-[10px] font-black uppercase text-yellow-500 tracking-widest">Confirmación Requerida</span>
                              </div>
-                             <p className="text-sm font-bold text-white mb-4">{commandObj.message}</p>
+                             <p className="text-sm font-bold text-nexus-text mb-4">{commandObj.message}</p>
                              <div className="flex gap-2">
                                <button 
                                  onClick={() => executeCommand(commandObj, i)}
-                                 className="flex-1 bg-nexus-cyan hover:bg-cyan-400 text-black font-black uppercase tracking-tighter py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] active:scale-95 flex items-center justify-center gap-2"
+                                 className="flex-1 bg-nexus-cyan hover:bg-cyan-400 text-nexus-bg font-black uppercase tracking-tighter py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] active:scale-95 flex items-center justify-center gap-2"
                                >
                                   <Zap className="w-4 h-4" /> Confirmar
                                </button>
@@ -567,7 +567,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                 })}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="bg-nexus-card border border-nexus-border rounded-2xl p-4 flex items-center gap-3">
                        <div className="flex gap-1.5">
                           <div className="w-1.5 h-1.5 bg-nexus-cyan rounded-full animate-bounce [animation-delay:-0.3s]" />
                           <div className="w-1.5 h-1.5 bg-nexus-cyan rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -583,14 +583,14 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
           </div>
 
           {/* Fixed Input Bar for AI Admin */}
-          <div className="p-4 bg-black/80 backdrop-blur-2xl border-t border-white/10 shrink-0 absolute bottom-0 left-0 right-0 z-20">
+          <div className="p-4 bg-nexus-overlay backdrop-blur-2xl border-t border-nexus-border shrink-0 absolute bottom-0 left-0 right-0 z-20">
             <div className="max-w-4xl mx-auto flex flex-col gap-3">
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {quickActions.map((qa, idx) => (
                   <button 
                     key={idx}
                     onClick={() => handleQuickAction(qa.cmd)}
-                    className="shrink-0 flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-nexus-cyan hover:border-nexus-cyan/30 transition-all"
+                    className="shrink-0 flex items-center gap-2 px-3 py-2 bg-nexus-card border border-nexus-border rounded-xl text-[9px] font-black text-nexus-text-sec uppercase tracking-widest hover:text-nexus-cyan hover:border-nexus-cyan/30 transition-all"
                   >
                     <qa.icon className="w-3 h-3" /> {qa.label}
                   </button>
@@ -608,7 +608,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Comando directo..."
-                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 text-white text-sm focus:border-nexus-cyan transition-all outline-none placeholder:text-slate-600 shadow-inner"
+                    className="w-full h-12 bg-nexus-surface border border-nexus-border rounded-xl pl-10 pr-4 text-nexus-text text-sm focus:border-nexus-cyan transition-all outline-none placeholder:text-slate-600 shadow-inner"
                   />
                   <Terminal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
                 </div>
@@ -616,7 +616,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                   <button 
                     type="button"
                     onClick={() => setMessages([])} 
-                    className="h-12 w-12 flex items-center justify-center bg-white/5 border border-white/5 rounded-xl text-slate-500 hover:text-red-500 transition-all active:scale-95"
+                    className="h-12 w-12 flex items-center justify-center bg-nexus-card border border-nexus-border rounded-xl text-nexus-text-sec hover:text-red-500 transition-all active:scale-95"
                     title="Limpiar"
                   >
                     <RotateCcw className="w-5 h-5" />
@@ -624,7 +624,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                   <button 
                     disabled={isLoading || !input.trim()}
                     type="submit"
-                    className="h-12 px-6 bg-nexus-cyan disabled:opacity-30 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] active:scale-95 flex items-center justify-center gap-2 group uppercase tracking-tighter text-xs"
+                    className="h-12 px-6 bg-nexus-cyan disabled:opacity-30 text-nexus-bg font-black rounded-xl transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] active:scale-95 flex items-center justify-center gap-2 group uppercase tracking-tighter text-xs"
                   >
                     Enviar
                     <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -637,17 +637,17 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
 
         {/* Global Config Sidebar (Desktop) */}
         {showConfig && (
-          <div className="w-full lg:w-72 shrink-0 bg-slate-900/50 border border-white/10 rounded-[2rem] p-6 space-y-6 animate-in slide-in-from-right duration-300 backdrop-blur-xl">
+          <div className="w-full lg:w-72 shrink-0 bg-nexus-card/50 border border-nexus-border rounded-[2rem] p-6 space-y-6 animate-in slide-in-from-right duration-300 backdrop-blur-xl">
              <div>
-                <h3 className="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-black text-nexus-text uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-nexus-cyan" /> Motor AI
                 </h3>
                 <div className="space-y-4">
-                   <div className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/5">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Estado</span>
+                   <div className="flex items-center justify-between p-3 bg-nexus-surface rounded-xl border border-nexus-border">
+                      <span className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Estado</span>
                       <button 
                         onClick={() => setLocalConfig({...localConfig, enabled: !localConfig.enabled})}
-                        className={`w-10 h-5 rounded-full relative transition-colors ${localConfig.enabled ? 'bg-nexus-cyan shadow-[0_0_10px_rgba(0,229,255,0.3)]' : 'bg-slate-700'}`}
+                        className={`w-10 h-5 rounded-full relative transition-colors ${localConfig.enabled ? 'bg-nexus-cyan shadow-[0_0_10px_rgba(0,229,255,0.3)]' : 'bg-nexus-card-hover'}`}
                       >
                          <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${localConfig.enabled ? 'left-6' : 'left-1'}`} />
                       </button>
@@ -657,20 +657,20 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
 
              <div className="space-y-4">
                 <div>
-                   <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Gemini API Key</label>
+                   <label className="text-[9px] font-black text-nexus-text-sec uppercase tracking-widest ml-1">Gemini API Key</label>
                    <input 
                      type="password" 
                      value={localConfig.apiKey}
                      onChange={(e) => setLocalConfig({...localConfig, apiKey: e.target.value})}
-                     className="w-full h-10 bg-black/40 border border-white/10 rounded-lg px-3 text-xs mt-1 focus:border-nexus-cyan outline-none text-white transition-colors font-mono"
+                     className="w-full h-10 bg-nexus-surface border border-nexus-border rounded-lg px-3 text-xs mt-1 focus:border-nexus-cyan outline-none text-nexus-text transition-colors font-mono"
                    />
                 </div>
                 <div>
-                   <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Modelo</label>
+                   <label className="text-[9px] font-black text-nexus-text-sec uppercase tracking-widest ml-1">Modelo</label>
                    <select 
                      value={localConfig.model}
                      onChange={(e) => setLocalConfig({...localConfig, model: e.target.value})}
-                     className="w-full h-10 bg-black/40 border border-white/10 rounded-lg px-3 text-xs mt-1 focus:border-nexus-cyan outline-none text-white transition-colors appearance-none"
+                     className="w-full h-10 bg-nexus-surface border border-nexus-border rounded-lg px-3 text-xs mt-1 focus:border-nexus-cyan outline-none text-nexus-text transition-colors appearance-none"
                    >
                      <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                      <option value="gemini-2.0-pro">Gemini 2.0 Pro</option>
@@ -681,13 +681,13 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
              <div className="pt-4 flex flex-col gap-2">
                 <button 
                   onClick={save}
-                  className="w-full py-3 bg-nexus-cyan hover:bg-cyan-400 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 text-[10px]"
+                  className="w-full py-3 bg-nexus-cyan hover:bg-cyan-400 text-nexus-bg font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 text-[10px]"
                 >
                   Guardar
                 </button>
                 <button 
                   onClick={() => setShowConfig(false)}
-                  className="w-full py-3 bg-white/5 hover:bg-white/10 text-slate-500 font-bold rounded-xl transition-all text-[10px] uppercase tracking-widest"
+                  className="w-full py-3 bg-nexus-surface hover:bg-nexus-surface-hover text-nexus-text-sec font-bold rounded-xl transition-all text-[10px] uppercase tracking-widest"
                 >
                   Cerrar
                 </button>

@@ -27,11 +27,11 @@ export default function CategorySection({ apps = [], onCategoryClick, onSeeAll }
     <section className="mb-12 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between mb-6 relative">
-          <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2 text-white tracking-tight drop-shadow-md">
-             <Zap className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]" />
+          <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2 text-nexus-text tracking-tight drop-shadow-md">
+             <Zap className="w-6 h-6 text-cyan-400 drop-shadow-nexus-glow" />
              Explorar Categorías
           </h2>
-          <button onClick={onSeeAll} className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-400 font-bold text-xs tracking-wide transition-all border border-cyan-500/10 hover:border-cyan-500/30 shadow-sm hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] group">
+          <button onClick={onSeeAll} className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-nexus-card hover:bg-nexus-card-hover text-cyan-400 font-bold text-xs tracking-wide transition-all border border-cyan-500/10 hover:border-cyan-500/30 shadow-sm hover:shadow-nexus-glow group">
              Ver Catálogo <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -46,25 +46,25 @@ export default function CategorySection({ apps = [], onCategoryClick, onSeeAll }
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.05, 0.5), duration: 0.4 }}
                 onClick={() => onCategoryClick?.(cat.name)}
-                className="group relative flex items-center gap-3 p-3 sm:p-4 rounded-[1.25rem] bg-[#0a0c14]/80 backdrop-blur-md border border-white/5 hover:border-cyan-500/40 hover:bg-white/5 transition-all duration-300 shadow-sm hover:shadow-[0_8px_20px_rgba(34,211,238,0.15)] text-left"
+                className="group relative flex items-center gap-3 p-3 sm:p-4 rounded-[1.25rem] bg-nexus-card/80 backdrop-blur-md border border-nexus-border hover:border-cyan-500/40 hover:bg-nexus-card transition-all duration-300 shadow-sm hover:shadow-nexus-glow text-left"
               >
                 {/* Background Glow / Glassmorphism effect */}
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none ${cat.color} blur-xl rounded-[1.25rem]`}></div>
                 
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl relative overflow-hidden flex items-center justify-center shrink-0 border border-white/5 shadow-inner transition-transform duration-300 group-hover:scale-110`}>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl relative overflow-hidden flex items-center justify-center shrink-0 border border-nexus-border shadow-inner transition-transform duration-300 group-hover:scale-110`}>
                    <div className={`absolute inset-0 ${cat.color} opacity-20 group-hover:opacity-40 transition-opacity duration-300`}></div>
-                   <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-md z-10 relative" />
+                   <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-nexus-text drop-shadow-md z-10 relative" />
                 </div>
                 
                 <div className="flex-1 min-w-0 z-10 relative">
-                  <h3 className="text-sm sm:text-base font-bold text-gray-200 group-hover:text-white transition-colors tracking-tight truncate">{cat.name}</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-200 group-hover:text-nexus-text transition-colors tracking-tight truncate">{cat.name}</h3>
                 </div>
               </motion.button>
             );
           })}
         </div>
         
-        <button onClick={onSeeAll} className="w-full sm:hidden mt-6 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-400 font-black text-xs uppercase tracking-widest transition-all border border-cyan-500/10 active:scale-[0.98]">
+        <button onClick={onSeeAll} className="w-full sm:hidden mt-6 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-nexus-card hover:bg-nexus-card-hover text-cyan-400 font-black text-xs uppercase tracking-widest transition-all border border-cyan-500/10 active:scale-[0.98]">
             Ver todas las áreas <ChevronRight className="w-4 h-4" />
         </button>
       </div>

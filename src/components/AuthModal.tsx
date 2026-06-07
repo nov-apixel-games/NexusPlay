@@ -140,13 +140,13 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-nexus-overlay backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="relative w-full max-w-md bg-[#090b14] overflow-hidden rounded-[2rem] border border-cyan-500/20 shadow-[0_0_50px_-12px_rgba(6,182,212,0.15)]"
+        className="relative w-full max-w-md bg-nexus-card overflow-hidden rounded-[2rem] border border-cyan-500/20 shadow-nexus-glow"
       >
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
@@ -156,16 +156,16 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
         <div className="relative p-8">
           <button 
             onClick={onClose} 
-            className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
+            className="absolute top-6 right-6 p-2 bg-nexus-card hover:bg-nexus-card-hover rounded-full transition-colors text-nexus-text-sec hover:text-nexus-text"
           >
             <X className="w-5 h-5" />
           </button>
           
           <div className="mb-8">
-            <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
+            <h2 className="text-3xl font-black text-nexus-text mb-2 tracking-tight">
               {isLogin ? 'Bienvenido a Nexus' : 'Crear Cuenta'}
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className="text-nexus-text-sec text-sm">
               {isLogin ? 'Inicia sesión para continuar tu aventura.' : 'Únete a la plataforma digital de nueva generación.'}
             </p>
           </div>
@@ -204,30 +204,30 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                 className="space-y-4"
               >
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Usuario</label>
+                  <label className="text-xs font-bold text-nexus-text-sec uppercase tracking-wider px-1">Usuario</label>
                   <div className="relative group">
-                    <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                    <User className="absolute left-4 top-3.5 w-5 h-5 text-nexus-text-sec group-focus-within:text-cyan-400 transition-colors" />
                     <input 
                       type="text" 
                       required
                       value={username}
                       onChange={e => setUsername(e.target.value)}
-                      className="w-full h-12 bg-[#0d111c] border border-white/5 rounded-xl pl-12 pr-4 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-white outline-none" 
+                      className="w-full h-12 bg-nexus-surface border border-nexus-border rounded-xl pl-12 pr-4 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-nexus-text outline-none" 
                       placeholder="Tu nombre de usuario"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Nombre Real</label>
+                  <label className="text-xs font-bold text-nexus-text-sec uppercase tracking-wider px-1">Nombre Real</label>
                   <div className="relative group">
-                    <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                    <User className="absolute left-4 top-3.5 w-5 h-5 text-nexus-text-sec group-focus-within:text-cyan-400 transition-colors" />
                     <input 
                       type="text" 
                       required
                       value={realName}
                       onChange={e => setRealName(e.target.value)}
-                      className="w-full h-12 bg-[#0d111c] border border-white/5 rounded-xl pl-12 pr-4 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-white outline-none" 
+                      className="w-full h-12 bg-nexus-surface border border-nexus-border rounded-xl pl-12 pr-4 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-nexus-text outline-none" 
                       placeholder="Ej. Juan Pérez"
                     />
                   </div>
@@ -236,15 +236,15 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Email</label>
+              <label className="text-xs font-bold text-nexus-text-sec uppercase tracking-wider px-1">Email</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                <Mail className="absolute left-4 top-3.5 w-5 h-5 text-nexus-text-sec group-focus-within:text-cyan-400 transition-colors" />
                 <input 
                   type="email" 
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full h-12 bg-[#0d111c] border border-white/5 rounded-xl pl-12 pr-4 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-white outline-none" 
+                  className="w-full h-12 bg-nexus-surface border border-nexus-border rounded-xl pl-12 pr-4 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-nexus-text outline-none" 
                   placeholder="tu@email.com"
                 />
               </div>
@@ -252,7 +252,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
             
             <div className="space-y-1.5">
               <div className="flex justify-between items-center px-1">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contraseña</label>
+                <label className="text-xs font-bold text-nexus-text-sec uppercase tracking-wider">Contraseña</label>
                 {isLogin && (
                   <button type="button" className="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
                     ¿Olvidaste tu contraseña?
@@ -260,19 +260,19 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                 )}
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-nexus-text-sec group-focus-within:text-cyan-400 transition-colors" />
                 <input 
                   type={showPassword ? "text" : "password"} 
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full h-12 bg-[#0d111c] border border-white/5 rounded-xl pl-12 pr-12 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-white outline-none" 
+                  className="w-full h-12 bg-nexus-surface border border-nexus-border rounded-xl pl-12 pr-12 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-nexus-text outline-none" 
                   placeholder="••••••••"
                 />
                 <button 
                   type="button" 
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 text-gray-500 hover:text-white transition-colors"
+                  className="absolute right-4 top-3.5 text-nexus-text-sec hover:text-nexus-text transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -281,21 +281,21 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
 
             {!isLogin && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Confirmar Contraseña</label>
+                <label className="text-xs font-bold text-nexus-text-sec uppercase tracking-wider px-1">Confirmar Contraseña</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                  <Lock className="absolute left-4 top-3.5 w-5 h-5 text-nexus-text-sec group-focus-within:text-cyan-400 transition-colors" />
                   <input 
                     type={showConfirmPassword ? "text" : "password"} 
                     required
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
-                    className="w-full h-12 bg-[#0d111c] border border-white/5 rounded-xl pl-12 pr-12 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-white outline-none" 
+                    className="w-full h-12 bg-nexus-surface border border-nexus-border rounded-xl pl-12 pr-12 text-sm focus:border-cyan-500 focus:bg-cyan-500/5 transition-all text-nexus-text outline-none" 
                     placeholder="••••••••"
                   />
                   <button 
                     type="button" 
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-3.5 text-gray-500 hover:text-white transition-colors"
+                    className="absolute right-4 top-3.5 text-nexus-text-sec hover:text-nexus-text transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -308,9 +308,9 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                 <input 
                   type="checkbox" 
                   id="remember" 
-                  className="w-4 h-4 rounded bg-[#0d111c] border-white/10 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-[#090b14]"
+                  className="w-4 h-4 rounded bg-nexus-surface border-nexus-border text-cyan-500 focus:ring-cyan-500 focus:ring-offset-nexus-bg"
                 />
-                <label htmlFor="remember" className="ml-2 text-sm text-gray-400 cursor-pointer">
+                <label htmlFor="remember" className="ml-2 text-sm text-nexus-text-sec cursor-pointer">
                   Recordarme en este dispositivo
                 </label>
               </div>
@@ -323,9 +323,9 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                   id="terms" 
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="w-4 h-4 rounded bg-[#0d111c] border-white/10 text-cyan-500 focus:ring-cyan-500"
+                  className="w-4 h-4 rounded bg-nexus-surface border-nexus-border text-cyan-500 focus:ring-cyan-500"
                 />
-                <label htmlFor="terms" className="text-sm text-gray-400">
+                <label htmlFor="terms" className="text-sm text-nexus-text-sec">
                   He leído y acepto los {' '}
                   <button type="button" onClick={() => onNavigate('terms')} className="text-cyan-400 font-bold hover:underline">
                     Términos y Condiciones
@@ -341,7 +341,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full h-12 mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-black uppercase tracking-wider text-sm rounded-xl transition-all disabled:opacity-50 flex items-center justify-center shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)]"
+              className="w-full h-12 mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-nexus-bg font-black uppercase tracking-wider text-sm rounded-xl transition-all disabled:opacity-50 flex items-center justify-center shadow-nexus-glow"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Entrar a Nexus' : 'Completar Registro')}
             </button>
@@ -350,9 +350,9 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
           {/* Botón de Google Oauth */}
           <div className="relative my-6 flex items-center justify-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/5"></div>
+              <div className="w-full border-t border-nexus-border"></div>
             </div>
-            <span className="relative bg-[#090b14] px-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+            <span className="relative bg-nexus-card px-4 text-[10px] font-bold uppercase tracking-widest text-nexus-text-sec">
               O CONTINUAR CON
             </span>
           </div>
@@ -361,7 +361,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full h-12 bg-white hover:bg-neutral-100 text-[#090b14] font-extrabold uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_-5px_rgba(255,255,255,0.25)] border border-white/10 active:scale-[0.98]"
+            className="w-full h-12 bg-white hover:bg-neutral-100 text-[#090b14] font-extrabold uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg border border-nexus-border active:scale-[0.98]"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12.24 10.285V14.4h6.887C18.2 16.56 15.645 18 12.24 18 8.445 18 5.385 15.3 5.385 12c0-3.3 3.06-6 6.855-6 1.8 0 3.465.72 4.68 1.89l3.24-3.24C18.24 2.835 15.42 1.8 12.24 1.8 6.57 1.8 1.8 6.57 1.8 12.24s4.77 10.44 10.44 10.44c6.3 0 10.71-4.275 10.71-10.44 0-.765-.09-1.35-.225-1.95H12.24z"/>
@@ -369,15 +369,15 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
             Continuar con Google
           </button>
 
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <div className="mt-8 pt-6 border-t border-nexus-border text-center">
             <button 
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm font-medium text-gray-400 hover:text-cyan-400 transition-colors"
+              className="text-sm font-medium text-nexus-text-sec hover:text-cyan-400 transition-colors"
             >
               {isLogin ? (
-                <span>¿No tienes cuenta? <span className="text-white">Regístrate aquí</span></span>
+                <span>¿No tienes cuenta? <span className="text-nexus-text">Regístrate aquí</span></span>
               ) : (
-                <span>¿Ya tienes cuenta? <span className="text-white">Inicia sesión</span></span>
+                <span>¿Ya tienes cuenta? <span className="text-nexus-text">Inicia sesión</span></span>
               )}
             </button>
           </div>

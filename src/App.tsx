@@ -32,6 +32,8 @@ import AuthModal from './components/AuthModal';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
 
+import { useAppStore } from './store/useAppStore';
+
 export const DEFAULT_SETTINGS = {
   storeName: 'NexusPlay',
   slogan: 'La plataforma digital de nueva generación',
@@ -39,6 +41,7 @@ export const DEFAULT_SETTINGS = {
 };
 
 export default function App() {
+  const { t } = useAppStore();
   const [isInitializing, setIsInitializing] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('home');
@@ -440,6 +443,7 @@ export default function App() {
     downloads: d.downloads,
     price: d.price,
     date: d.created_at,
+    updated_at: d.updated_at,
     download_count: d.download_count || 0,
     view_count: d.view_count || 0,
     favorites_count: d.favorites_count || 0,
@@ -657,11 +661,70 @@ export default function App() {
             <div className="max-w-7xl mx-auto px-6 w-full mb-16 relative">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
-                  <div className="w-1.5 h-8 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+                  <div className="w-1.5 h-8 bg-cyan-400 rounded-full shadow-nexus-glow"></div>
                   Destacados
                 </h2>
               </div>
               <AppGrid apps={publishedApps.length > 0 ? (publishedApps.filter(a => a.featured).length > 0 ? publishedApps.filter(a => a.featured) : publishedApps.sort((a,b) => b.rating - a.rating).slice(0, 10)) : []} onAppClick={handleAppClick} />
+            </div>
+
+            {/* Novedades */}
+            <div className="max-w-7xl mx-auto px-6 w-full mb-16 relative">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                  {t('home.news')}
+                </h2>
+                <button onClick={() => setActiveView('games')} className="text-emerald-400 text-[13px] font-black hover:text-emerald-300 transition-colors uppercase tracking-widest hidden sm:block">
+                  {t('home.seeAll')}
+                </button>
+              </div>
+              <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-8 pt-4 snap-x snap-mandatory no-scrollbar w-full relative flex-nowrap pl-6 -ml-6 pr-6">
+                {publishedApps.length > 0 ? [...publishedApps].sort((a, b) => new Date(b.updated_at || b.date || 0).getTime() - new Date(a.updated_at || a.date || 0).getTime()).slice(0, 8).map(app => {
+                  const isUpdate = app.updated_at && new Date(app.updated_at).getTime() > new Date(app.date || 0).getTime() + 86400000;
+                  return (
+                    <div key={app.id} className="snap-start shrink-0">
+                      <div 
+                        onClick={() => handleAppClick(app)}
+                        className="flex flex-col overflow-hidden bg-nexus-card border border-nexus-border hover:border-emerald-500/40 rounded-[24px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_15px_40px_rgba(52,211,153,0.15)] w-[260px] sm:w-[320px] group"
+                      >
+                         <div className="h-[140px] relative overflow-hidden bg-nexus-surface">
+                           {app.screenshots && app.screenshots.length > 0 ? (
+                             <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
+                           ) : (
+                             <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" />
+                           )}
+                           <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent"></div>
+                           <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1.5 shadow-lg">
+                             <div className={`w-2 h-2 rounded-full animate-pulse ${isUpdate ? 'bg-blue-400' : 'bg-emerald-400'}`}></div>
+                             <span className={`text-[9px] font-black tracking-widest uppercase ${isUpdate ? 'text-blue-400' : 'text-emerald-400'}`}>
+                               {isUpdate ? t('home.news.update') : t('home.news.new')}
+                             </span>
+                           </div>
+                           <div className="absolute top-3 right-3 bg-nexus-surface/90 backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center shadow-lg">
+                             <span className="text-[9px] font-mono tracking-widest uppercase text-nexus-text-sec flex items-center gap-1">
+                               v{app.version || '1.0'} 
+                               <span className={(!app.version_code || app.version_code < 10) ? "text-emerald-400" : "text-blue-400"}>({app.version_code || 1})</span>
+                               <span className="ml-1 opacity-70">
+                                 {(!app.version_code || app.version_code < 10) ? 'Menor' : 'Mayor'}
+                               </span>
+                             </span>
+                           </div>
+                         </div>
+                         <div className="p-4 sm:p-5 flex items-start gap-4 -mt-8 relative z-10">
+                           <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-nexus-surface border border-nexus-border group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" />
+                           <div className="flex-1 min-w-0 pt-8">
+                             <h3 className="font-black text-lg text-nexus-text truncate group-hover:text-emerald-400 transition-colors">{app.name}</h3>
+                             <p className="text-xs text-nexus-text-sec truncate font-medium">{app.developer}</p>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <div className="text-nexus-text-sec text-sm w-full text-center py-6">{t('home.news.empty')}</div>
+                )}
+              </div>
             </div>
 
             {/* Popular Grid Vertical -> Changed to Horizontal */}
@@ -682,31 +745,31 @@ export default function App() {
                     <div key={app.id} className="snap-start shrink-0">
                       <div 
                         onClick={() => handleAppClick(app)}
-                        className="flex flex-col overflow-hidden bg-[#0a0c16] border border-white/5 hover:border-purple-500/40 rounded-[24px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_15px_40px_rgba(168,85,247,0.15)] w-[260px] sm:w-[320px] group"
+                        className="flex flex-col overflow-hidden bg-nexus-card border border-nexus-border hover:border-purple-500/40 rounded-[24px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_15px_40px_rgba(168,85,247,0.15)] w-[260px] sm:w-[320px] group"
                       >
-                         <div className="h-[140px] relative overflow-hidden bg-black/40">
+                         <div className="h-[140px] relative overflow-hidden bg-nexus-surface">
                            {app.screenshots && app.screenshots.length > 0 ? (
                              <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
                            ) : (
                              <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" />
                            )}
-                           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c16] to-transparent"></div>
-                           <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 flex items-center gap-1 shadow-lg">
+                           <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent"></div>
+                           <div className="absolute top-3 right-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1 shadow-lg">
                              <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                             <span className="text-[10px] font-black text-white tracking-widest uppercase">Hot</span>
+                             <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">Hot</span>
                            </div>
                          </div>
                          <div className="p-4 sm:p-5 flex items-start gap-4 -mt-8 relative z-10">
-                           <img src={app.icon} className="w-14 h-14 rounded-2xl shadow-[0_5px_15px_rgba(0,0,0,0.5)] border-2 border-[#0a0c16] bg-[#121422] shrink-0" />
+                           <img src={app.icon} className="w-14 h-14 rounded-2xl shadow-lg border-2 border-nexus-border bg-nexus-card shrink-0" />
                            <div className="flex-1 min-w-0 pt-8">
-                             <h3 className="font-black text-white text-[16px] truncate group-hover:text-purple-400 transition-colors">{app.name}</h3>
-                             <p className="text-[12px] text-gray-400 font-medium truncate mt-0.5">{app.developer}</p>
+                             <h3 className="font-black text-nexus-text text-[16px] truncate group-hover:text-purple-400 transition-colors">{app.name}</h3>
+                             <p className="text-[12px] text-nexus-text-sec font-medium truncate mt-0.5">{app.developer}</p>
                            </div>
                          </div>
                       </div>
                     </div>
                  )) : (
-                    <div className="py-10 text-center text-gray-500 font-medium w-full">Cargando tendencias...</div>
+                    <div className="py-10 text-center text-nexus-text-sec font-medium w-full">Cargando tendencias...</div>
                  )}
                </div>
             </div>
@@ -725,15 +788,15 @@ export default function App() {
                     <div key={app.id} className="snap-start shrink-0">
                       <div 
                         onClick={() => handleAppClick(app)}
-                        className="flex flex-row items-center overflow-hidden bg-white/5 border border-white/10 hover:border-blue-500/40 rounded-[20px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)] group hover:bg-[#0d0f1a] p-4 w-[280px] sm:w-[340px]"
+                        className="flex flex-row items-center overflow-hidden bg-nexus-card border border-nexus-border hover:border-blue-500/40 rounded-[20px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)] group hover:bg-nexus-card p-4 w-[280px] sm:w-[340px]"
                       >
-                         <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-black/40 group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" />
+                         <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-nexus-surface group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" />
                          <div className="ml-4 flex-1 min-w-0">
-                            <h4 className="text-[15px] font-black text-white truncate group-hover:text-blue-400 transition-colors">{app.name}</h4>
+                            <h4 className="text-[15px] font-black text-nexus-text truncate group-hover:text-blue-400 transition-colors">{app.name}</h4>
                             <p className="text-[11px] font-bold tracking-widest uppercase text-blue-500/80 truncate mt-1">{app.category}</p>
                             <div className="flex items-center gap-2 mt-2">
                                <div className="flex items-center gap-1.5 opacity-80">
-                                 <span className="text-[10px] text-gray-400 font-black tracking-widest">{app.rating}</span>
+                                 <span className="text-[10px] text-nexus-text-sec font-black tracking-widest">{app.rating}</span>
                                  <span className="text-yellow-400 text-[10px]">★</span>
                                </div>
                                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-md border border-blue-500/20">Nuevo</span>
@@ -852,10 +915,10 @@ export default function App() {
         return (
           <div className="pt-32 px-6 min-h-[60vh] flex flex-col items-center justify-center text-center">
             <h1 className="text-4xl font-black neon-text-gradient mb-4 uppercase tracking-tighter">404</h1>
-            <p className="text-gray-400">Página no encontrada o en desarrollo.</p>
+            <p className="text-nexus-text-sec">Página no encontrada o en desarrollo.</p>
             <button 
               onClick={() => setActiveView('home')}
-              className="mt-8 px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-nexus-cyan/10 hover:text-nexus-cyan transition-all"
+              className="mt-8 px-6 py-2 bg-nexus-card border border-nexus-border rounded-xl hover:bg-nexus-cyan/10 hover:text-nexus-cyan transition-all"
             >
               Volver al inicio
             </button>
@@ -868,7 +931,7 @@ export default function App() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-[#090b14] text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-nexus-card text-nexus-text flex flex-col items-center justify-center p-6 text-center">
         <div className="flex flex-col items-center">
           {/* Pulsing and spinning neon loader */}
           <div className="relative w-20 h-20 mb-6">
@@ -878,7 +941,7 @@ export default function App() {
             <div className="absolute top-2 left-2 right-2 bottom-2 border-4 border-b-emerald-400 border-t-transparent border-r-transparent border-l-transparent rounded-full animate-spin [animation-direction:reverse] [animation-duration:1.5s]"></div>
           </div>
           <h2 className="text-sm font-bold tracking-widest text-cyan-400/85 animate-pulse uppercase">Cargando NexusPlay</h2>
-          <p className="text-[10px] text-gray-500 mt-2 font-mono uppercase tracking-widest">Sincronizando servicios</p>
+          <p className="text-[10px] text-nexus-text-sec mt-2 font-mono uppercase tracking-widest">Sincronizando servicios</p>
         </div>
       </div>
     );
@@ -886,20 +949,20 @@ export default function App() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen bg-[#090b14] text-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md bg-white/5 border border-white/10 p-8 rounded-2xl shadow-2xl backdrop-blur-md">
+      <div className="min-h-screen bg-nexus-card text-nexus-text flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md bg-nexus-card border border-nexus-border p-8 rounded-2xl shadow-2xl backdrop-blur-md">
           <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20 animate-bounce">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-black mb-2 uppercase tracking-tight text-white">Supabase no configurado</h1>
-          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+          <h1 className="text-2xl font-black mb-2 uppercase tracking-tight text-nexus-text">Supabase no configurado</h1>
+          <p className="text-nexus-text-sec text-sm mb-6 leading-relaxed">
             La aplicación no se ha podido conectar a Supabase. 
             <br/><br/>
             Si estás en <strong>Vercel</strong>, debes ir a la configuración de tu proyecto: <br/>
-            <span className="text-white">Settings &gt; Environment Variables</span><br/>
-            y añadir <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_URL</code> y <code className="bg-white/10 text-white font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_ANON_KEY</code>.
+            <span className="text-nexus-text">Settings &gt; Environment Variables</span><br/>
+            y añadir <code className="bg-nexus-card-hover text-nexus-text font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_URL</code> y <code className="bg-nexus-card-hover text-nexus-text font-bold px-1 py-0.5 rounded text-xs font-mono">VITE_SUPABASE_ANON_KEY</code>.
             Luego, vuelve a hacer un deploy (Redeploy).
           </p>
         </div>
@@ -908,7 +971,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-white font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
+    <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-nexus-text font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
       <GoogleAdSense />
       <OfflineIndicator />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
@@ -975,7 +1038,7 @@ export default function App() {
 
       {isFullScreenView ? (
          <div className="flex-1 w-full h-screen">
-            <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-[#0a0c16]">Cargando Módulo...</div>}>
+            <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-nexus-card">Cargando Módulo...</div>}>
               {renderActiveView()}
             </Suspense>
          </div>
@@ -1003,7 +1066,7 @@ export default function App() {
       )}
 
       {showDevPanel && session && (
-        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 font-mono text-cyan-400 animate-pulse">Cargando Panel Dev...</div>}>
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-nexus-surface font-mono text-cyan-400 animate-pulse">Cargando Panel Dev...</div>}>
           <DeveloperPanel 
             userId={session.user.id}
             userProfile={userProfile}

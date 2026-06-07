@@ -44,7 +44,7 @@ export function SystemMetrics() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Gráfica 1: System Memory & Cloudinary */}
-            <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50 relative overflow-hidden group">
+            <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-nexus-card/80 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-red-500 uppercase tracking-widest">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" /> Live Status
@@ -56,7 +56,7 @@ export function SystemMetrics() {
                         <Database className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white leading-none">Recursos del Servidor</h3>
+                        <h3 className="text-lg font-bold text-nexus-text leading-none">Recursos del Servidor</h3>
                         <p className="text-xs text-red-200/40 mt-1">Memoria Servidor (%) & Almacenamiento Cloudinary (MB)</p>
                     </div>
                 </div>
@@ -87,25 +87,25 @@ export function SystemMetrics() {
                             </AreaChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">Cargando datos reales...</div>
+                        <div className="w-full h-full flex items-center justify-center text-nexus-text-sec">Cargando datos reales...</div>
                     )}
                 </div>
             </div>
 
             {/* Gráfica 2: Vercel / Latencia */}
-            <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-[#120505]/50 group">
+            <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-nexus-card/80 group">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500">
                         <Zap className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white leading-none">Vercel Performance</h3>
+                        <h3 className="text-lg font-bold text-nexus-text leading-none">Vercel Performance</h3>
                         <p className="text-xs text-orange-200/40 mt-1">Edge Runtime & Latency Metrics</p>
                     </div>
                 </div>
 
-                <div className="h-64 mt-4 flex items-center justify-center border border-dashed border-white/5 rounded-xl bg-black/20">
-                    <span className="text-gray-500 font-medium">Sin datos disponibles</span>
+                <div className="h-64 mt-4 flex items-center justify-center border border-dashed border-nexus-border rounded-xl bg-nexus-surface">
+                    <span className="text-nexus-text-sec font-medium">Sin datos disponibles</span>
                 </div>
             </div>
         </div>

@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 import * as idb from "idb-keyval";
-import { BuiltInAsset } from "../components/BottomPanel";
 import { supabase } from "../../../../lib/supabase";
 
 export type EngineMode = "2D" | "3D";

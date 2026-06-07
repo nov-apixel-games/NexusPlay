@@ -234,17 +234,17 @@ export function AppDetailView({
         <div className="flex items-center justify-between mb-8 sm:mb-12">
           <button 
             onClick={onBack}
-            className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-nexus-cyan/10 border border-white/10 hover:border-nexus-cyan/30 rounded-2xl transition-all font-black text-xs uppercase tracking-widest group shadow-lg"
+            className="flex items-center gap-3 px-6 py-3 bg-nexus-card hover:bg-nexus-cyan/10 border border-nexus-border hover:border-nexus-cyan/30 rounded-2xl transition-all font-black text-xs uppercase tracking-widest group shadow-lg"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-nexus-cyan" />
             <span>{backLabel}</span>
           </button>
           
           <div className="flex items-center gap-3">
-             <button onClick={toggleFavorite} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-red-500 cursor-pointer">
+             <button onClick={toggleFavorite} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-red-500 cursor-pointer">
                <Heart className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
              </button>
-             <button className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-slate-400 hover:text-nexus-cyan cursor-pointer">
+             <button className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-nexus-cyan cursor-pointer">
                <Share2 className="w-5 h-5" />
              </button>
           </div>
@@ -261,29 +261,29 @@ export function AppDetailView({
                 <img 
                   src={app.icon} 
                   alt={app.name} 
-                  className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[1.5rem] sm:rounded-[2rem] object-cover shadow-2xl border border-white/10 group-hover:scale-[1.02] transition-transform duration-500"
+                  className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[1.5rem] sm:rounded-[2rem] object-cover shadow-2xl border border-nexus-border group-hover:scale-[1.02] transition-transform duration-500"
                   referrerPolicy="no-referrer"
                 />
                 {app.status === 'published' && (
                   <div className="absolute -bottom-2 -right-2 bg-nexus-cyan p-2 rounded-xl shadow-xl border-4 border-nexus-bg">
-                    <CheckCircle2 className="w-6 h-6 text-black" />
+                    <CheckCircle2 className="w-6 h-6 text-nexus-bg" />
                   </div>
                 )}
               </div>
 
               <div className="flex-1 pt-2 space-y-4">
                 <div className="space-y-1">
-                  <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-white drop-shadow-sm leading-none">{app.name}</h1>
+                  <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-nexus-text drop-shadow-sm leading-none">{app.name}</h1>
                   <p className="text-xl sm:text-2xl font-bold text-nexus-cyan tracking-tight">{app.developer}</p>
                 </div>
                 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
-                  <span className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest text-slate-400">{app.category}</span>
+                  <span className="px-4 py-1.5 bg-nexus-card border border-nexus-border rounded-full text-xs font-black uppercase tracking-widest text-nexus-text-sec">{app.category}</span>
                   <div className="flex items-center gap-1.5 px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full text-xs font-black text-yellow-400 uppercase tracking-widest">
                     <Star className="w-3.5 h-3.5 fill-yellow-400" />
                     {reviewStats.total > 0 ? reviewStats.average.toFixed(1) : safeRating}
                   </div>
-                  <div className="flex items-center gap-1.5 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-black text-slate-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-1.5 px-4 py-1.5 bg-nexus-card border border-nexus-border rounded-full text-xs font-black text-nexus-text-sec uppercase tracking-widest">
                     <Download className="w-3.5 h-3.5" />
                     {realDownloads}
                   </div>
@@ -302,22 +302,22 @@ export function AppDetailView({
                       className="group relative flex-1 sm:flex-initial"
                     >
                       <div className={`absolute -inset-1 ${isUpdateAvailable ? 'bg-green-500' : 'bg-nexus-cyan'} rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500`}></div>
-                      <button className={`relative w-full sm:w-64 flex items-center justify-center gap-3 py-4 ${isUpdateAvailable ? 'bg-green-500 hover:bg-green-400' : 'bg-nexus-cyan hover:bg-cyan-400'} text-black rounded-2xl font-black text-lg transition-all active:scale-95 shadow-xl`}>
+                      <button className={`relative w-full sm:w-64 flex items-center justify-center gap-3 py-4 ${isUpdateAvailable ? 'bg-green-500 hover:bg-green-400' : 'bg-nexus-cyan hover:bg-cyan-400'} text-nexus-bg rounded-2xl font-black text-lg transition-all active:scale-95 shadow-xl`}>
                         <Download className="w-6 h-6" />
                         {isUpdateAvailable ? 'ACTUALIZAR' : 'INSTALAR'}
                       </button>
                     </a>
                   ) : (
-                    <button className="flex-1 sm:flex-initial flex items-center justify-center gap-3 py-4 bg-slate-800/50 text-slate-500 rounded-2xl font-black text-lg cursor-not-allowed border border-white/5">
+                    <button className="flex-1 sm:flex-initial flex items-center justify-center gap-3 py-4 bg-nexus-card/50 text-nexus-text-sec rounded-2xl font-black text-lg cursor-not-allowed border border-nexus-border">
                       <MonitorPlay className="w-6 h-6" />
                       PRÓXIMAMENTE
                     </button>
                   )}
                   
-                  <div className="flex items-center gap-3 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-xs font-bold text-slate-400">
+                  <div className="flex items-center gap-3 px-6 py-4 bg-nexus-card border border-nexus-border rounded-2xl text-xs font-bold text-nexus-text-sec">
                     <ShieldCheck className="w-5 h-5 text-nexus-cyan" />
                     <div>
-                      <p className="text-white">Nexus Protect</p>
+                      <p className="text-nexus-text">Nexus Protect</p>
                       <p className="opacity-60">Escaneado y seguro</p>
                     </div>
                   </div>
@@ -328,13 +328,13 @@ export function AppDetailView({
             {/* Screenshots Slider */}
             {app.screenshots && app.screenshots.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Vista Previa</h3>
+                <h3 className="text-sm font-black text-nexus-text-sec uppercase tracking-[0.2em] ml-1">Vista Previa</h3>
                 <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x snap-mandatory">
                   {app.screenshots.map((img, idx) => (
                     <motion.div 
                       key={idx}
                       whileHover={{ scale: 1.02 }}
-                      className="relative shrink-0 w-[85%] sm:w-[500px] h-64 sm:h-80 rounded-3xl overflow-hidden border border-white/10 shadow-2xl snap-center cursor-pointer group"
+                      className="relative shrink-0 w-[85%] sm:w-[500px] h-64 sm:h-80 rounded-3xl overflow-hidden border border-nexus-border shadow-2xl snap-center cursor-pointer group"
                       onClick={() => setSelectedImage(img)}
                     >
                       <img 
@@ -353,17 +353,17 @@ export function AppDetailView({
             {/* Description Card */}
             <div className="premium-card p-8 sm:p-12 space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-black text-white flex items-center gap-3">
+                <h3 className="text-2xl font-black text-nexus-text flex items-center gap-3">
                   <Info className="w-6 h-6 text-nexus-cyan" />
                   Información General
                 </h3>
                 {app.shortDescription && (
-                  <p className="text-xl font-bold text-slate-300 leading-relaxed italic border-l-4 border-nexus-cyan pl-6 py-2">
+                  <p className="text-xl font-bold text-nexus-text-sec leading-relaxed italic border-l-4 border-nexus-cyan pl-6 py-2">
                     {app.shortDescription}
                   </p>
                 )}
                 <div className={`relative transition-all duration-500 overflow-hidden ${showFullDesc ? '' : 'max-h-40'}`}>
-                  <p className="text-slate-400 leading-relaxed whitespace-pre-wrap text-lg">
+                  <p className="text-nexus-text-sec leading-relaxed whitespace-pre-wrap text-lg">
                     {app.full_description || app.description || 'Sin descripción detallada.'}
                   </p>
                   {!showFullDesc && (
@@ -373,7 +373,7 @@ export function AppDetailView({
                 {!showFullDesc && (
                   <button 
                     onClick={() => setShowFullDesc(true)}
-                    className="text-nexus-cyan font-black text-sm uppercase tracking-widest hover:text-white transition-colors"
+                    className="text-nexus-cyan font-black text-sm uppercase tracking-widest hover:text-nexus-text transition-colors"
                   >
                     Leer más +
                   </button>
@@ -382,14 +382,14 @@ export function AppDetailView({
 
               {/* Whats New Section */}
               {(app.changelog || app.whatsNew) && (
-                <div className="pt-8 border-t border-white/5 space-y-4">
-                  <h3 className="text-xl font-black text-white flex items-center gap-3">
+                <div className="pt-8 border-t border-nexus-border space-y-4">
+                  <h3 className="text-xl font-black text-nexus-text flex items-center gap-3">
                     <History className="w-6 h-6 text-nexus-cyan" />
                     Novedades
                   </h3>
-                  <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                  <div className="bg-nexus-card rounded-2xl p-6 border border-nexus-border">
                     <p className="text-nexus-cyan font-bold mb-2">Versión {app.version}</p>
-                    <p className="text-slate-400 leading-relaxed">
+                    <p className="text-nexus-text-sec leading-relaxed">
                       {app.changelog || app.whatsNew}
                     </p>
                   </div>
@@ -400,7 +400,7 @@ export function AppDetailView({
               {app.tags && app.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-4">
                   {app.tags.map((tag: string) => (
-                    <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-bold text-slate-500 uppercase">
+                    <span key={tag} className="px-3 py-1 bg-nexus-card border border-nexus-border rounded-lg text-[10px] font-bold text-nexus-text-sec uppercase">
                       #{tag}
                     </span>
                   ))}
@@ -408,22 +408,22 @@ export function AppDetailView({
               )}
 
               {/* Specs Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-nexus-border">
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Tamaño</span>
-                  <p className="text-white font-bold text-lg">{app.size || '78 MB'}</p>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Tamaño</span>
+                  <p className="text-nexus-text font-bold text-lg">{app.size || '78 MB'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Versión</span>
-                  <p className="text-white font-bold text-lg">{app.version || '1.0.0'}</p>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Versión</span>
+                  <p className="text-nexus-text font-bold text-lg">{app.version || '1.0.0'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Req. Min</span>
-                  <p className="text-white font-bold text-lg">{app.min_android || 'Android 8.0'}</p>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Req. Min</span>
+                  <p className="text-nexus-text font-bold text-lg">{app.min_android || 'Android 8.0'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Contenido</span>
-                  <p className="text-white font-bold text-lg">+13</p>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Contenido</span>
+                  <p className="text-nexus-text font-bold text-lg">+13</p>
                 </div>
               </div>
             </div>
@@ -432,11 +432,11 @@ export function AppDetailView({
           {/* Sidebar Right: Ratings & Reviews */}
           <div className="lg:col-span-4 space-y-8">
             <div className="premium-card p-8 space-y-6">
-              <h3 className="text-xl font-black text-white">Calificaciones</h3>
+              <h3 className="text-xl font-black text-nexus-text">Calificaciones</h3>
               <div className="flex items-center gap-6">
                 <div className="text-center space-y-1">
-                  <p className="text-5xl font-black text-white">{reviewStats.total > 0 ? reviewStats.average.toFixed(1) : '0.0'}</p>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{reviewStats.total} Reseñas</p>
+                  <p className="text-5xl font-black text-nexus-text">{reviewStats.total > 0 ? reviewStats.average.toFixed(1) : '0.0'}</p>
+                  <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{reviewStats.total} Reseñas</p>
                 </div>
                 <div className="flex-1 space-y-2">
                   {[5,4,3,2,1].map(star => {
@@ -444,8 +444,8 @@ export function AppDetailView({
                     const percent = reviewStats.total > 0 ? (count / reviewStats.total) * 100 : 0;
                     return (
                       <div key={star} className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-slate-500 w-2">{star}</span>
-                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <span className="text-[10px] font-black text-nexus-text-sec w-2">{star}</span>
+                        <div className="flex-1 h-1.5 bg-nexus-card rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ width: `${percent}%` }}
@@ -461,12 +461,12 @@ export function AppDetailView({
 
             {/* Public Review */}
             <div className="premium-card p-8 space-y-6">
-              <h3 className="text-xl font-black text-white italic">Opiniones Reales</h3>
+              <h3 className="text-xl font-black text-nexus-text italic">Opiniones Reales</h3>
               
               {userId && !hasReviewed && (
-                <div className="space-y-4 p-5 bg-black/40 rounded-2xl border border-white/5 mb-6">
+                <div className="space-y-4 p-5 bg-nexus-surface rounded-2xl border border-nexus-border mb-6">
                   <div className="flex justify-between items-center">
-                    <p className="text-sm font-bold text-slate-300">Deja tu reseña:</p>
+                    <p className="text-sm font-bold text-nexus-text-sec">Deja tu reseña:</p>
                     <div className="flex gap-1 cursor-pointer">
                       {[1,2,3,4,5].map(s => (
                         <Star 
@@ -481,13 +481,13 @@ export function AppDetailView({
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
                     placeholder="¿Qué te pareció esta app?"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-nexus-cyan transition-colors resize-none"
+                    className="w-full bg-nexus-surface border border-nexus-border rounded-xl p-3 text-sm text-nexus-text placeholder-slate-500 focus:outline-none focus:border-nexus-cyan transition-colors resize-none"
                     rows={2}
                   />
                   <button 
                     onClick={submitReview}
                     disabled={!newReview.trim()}
-                    className="w-full py-2.5 bg-nexus-cyan text-black font-black text-xs uppercase rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-nexus-cyan text-nexus-bg font-black text-xs uppercase rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" /> Enviar Opinión
                   </button>
@@ -496,22 +496,22 @@ export function AppDetailView({
 
               <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
                  {reviews.length === 0 ? (
-                   <div className="text-center py-6 text-slate-500 italic text-sm">
+                   <div className="text-center py-6 text-nexus-text-sec italic text-sm">
                      Sin reseñas todavía. ¡Sé el primero en opinar!
                    </div>
                  ) : (
                    reviews.map(rev => (
-                  <div key={rev.id} className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <div key={rev.id} className="space-y-3 p-4 bg-nexus-card rounded-2xl border border-nexus-border">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center text-white font-black text-xs uppercase overflow-hidden relative">
+                        <div className="w-8 h-8 rounded-lg bg-nexus-card border border-nexus-border flex items-center justify-center text-nexus-text font-black text-xs uppercase overflow-hidden relative">
                           {rev.user_profile?.avatar_url ? (
                             <img src={rev.user_profile.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                           ) : (
                             <span>{(rev.user_profile?.real_name || rev.user_profile?.username || rev.user_name || '?')[0].toUpperCase()}</span>
                           )}
                         </div>
-                        <span className="font-bold text-sm text-white">{rev.user_profile?.real_name || rev.user_profile?.username || rev.user_name}</span>
+                        <span className="font-bold text-sm text-nexus-text">{rev.user_profile?.real_name || rev.user_profile?.username || rev.user_name}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-0.5">
@@ -520,13 +520,13 @@ export function AppDetailView({
                           ))}
                         </div>
                         {userId === rev.user_id && (
-                          <button onClick={() => deleteReview(rev.id)} className="text-slate-500 hover:text-red-500 transition-colors">
+                          <button onClick={() => deleteReview(rev.id)} className="text-nexus-text-sec hover:text-red-500 transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">{rev.comment}</p>
+                    <p className="text-sm text-nexus-text-sec leading-relaxed line-clamp-3">{rev.comment}</p>
                   </div>
                 )))}
               </div>
@@ -538,7 +538,7 @@ export function AppDetailView({
         {relatedApps.length > 0 && (
           <div className="mt-20 space-y-10">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-black text-white tracking-tighter">Apps Recomendadas</h2>
+              <h2 className="text-3xl font-black text-nexus-text tracking-tighter">Apps Recomendadas</h2>
               <button className="text-nexus-cyan font-black text-xs uppercase tracking-widest border-b border-nexus-cyan/30 pb-1">Ver todas</button>
             </div>
             <AppGrid apps={relatedApps} onAppClick={onAppClick} />
@@ -553,7 +553,7 @@ export function AppDetailView({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4 sm:p-20"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-nexus-surface backdrop-blur-2xl p-4 sm:p-20"
             onClick={() => setSelectedImage(null)}
           >
             <motion.div 
@@ -567,7 +567,7 @@ export function AppDetailView({
                 alt="Screenshot Full" 
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl shadow-cyan-500/10" 
               />
-              <button className="absolute top-0 right-0 p-4 text-white/50 hover:text-white transition-colors">
+              <button className="absolute top-0 right-0 p-4 text-nexus-text/50 hover:text-nexus-text transition-colors">
                 <X className="w-8 h-8" />
               </button>
             </motion.div>

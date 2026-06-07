@@ -1084,29 +1084,29 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[99999] bg-[#02040a] flex flex-col w-screen h-screen m-0 p-0 left-0 top-0 overflow-hidden">
+    <div className="fixed inset-0 z-[99999] bg-nexus-card flex flex-col w-screen h-screen m-0 p-0 left-0 top-0 overflow-hidden">
       
       {/* Dynamic Header */}
-      <div className="bg-[#090d16] border-b border-white/5 py-4 pt-8 sm:pt-4 px-6 flex items-center justify-between z-[100] shrink-0 shadow-lg">
+      <div className="bg-nexus-card border-b border-nexus-border py-4 pt-8 sm:pt-4 px-6 flex items-center justify-between z-[100] shrink-0 shadow-lg">
          <div className="flex items-center gap-4">
-           <button onClick={onBack} className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all cursor-pointer">
+           <button onClick={onBack} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-full text-nexus-text-sec hover:text-nexus-text transition-all cursor-pointer">
               <ChevronLeft className="w-5 h-5 animate-pulse" />
            </button>
            <div>
-             <h2 className="text-white font-black text-lg tracking-tight flex items-center gap-2">
+             <h2 className="text-nexus-text font-black text-lg tracking-tight flex items-center gap-2">
                Games Studio <span className="text-[10px] px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold uppercase tracking-widest font-mono">2D ENGINE</span>
              </h2>
-             <span className="text-xs text-slate-400 font-bold font-mono tracking-wide">{initialTemplate}</span>
+             <span className="text-xs text-nexus-text-sec font-bold font-mono tracking-wide">{initialTemplate}</span>
            </div>
          </div>
          
          <div className="flex items-center gap-3">
            {mode === 'edit' ? (
-             <button onClick={startPlayMode} className="flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black px-5 py-2.5 rounded-xl font-bold font-mono shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
+             <button onClick={startPlayMode} className="flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-nexus-bg px-5 py-2.5 rounded-xl font-bold font-mono shadow-nexus-glow transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
                <Play className="w-4.5 h-4.5 fill-black" /> PROBAR JUEGO
              </button>
            ) : (
-             <button onClick={stopPlayMode} className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold font-mono shadow-[0_0_20px_rgba(244,63,94,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
+             <button onClick={stopPlayMode} className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-nexus-text px-5 py-2.5 rounded-xl font-bold font-mono shadow-[0_0_20px_rgba(244,63,94,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
                <Square className="w-4.5 h-4.5 fill-white" /> PARAR EDITOR
              </button>
            )}
@@ -1119,7 +1119,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                  onBack();
                }, 1400); 
              }}
-             className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-white/10 text-white px-4 py-2.5 rounded-xl text-sm font-bold font-mono transition-all cursor-pointer"
+             className="flex items-center gap-2 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text px-4 py-2.5 rounded-xl text-sm font-bold font-mono transition-all cursor-pointer"
            >
              {isPublishing ? <Check className="w-4 h-4 text-emerald-400" /> : <Upload className="w-4 h-4" />} 
              {isPublishing ? 'PUBLICADO!' : 'PUBLICAR'}
@@ -1131,8 +1131,8 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
         
         {/* LEFT TOOLBAR */}
         {mode === 'edit' && (
-          <div className="w-full md:w-20 bg-[#060810] border-b md:border-b-0 md:border-r border-white/5 flex md:flex-col items-center py-4 px-2 gap-4 shrink-0 overflow-x-auto overflow-y-hidden md:overflow-y-auto no-scrollbar">
-             <div className="text-[10px] text-gray-500 font-black tracking-widest uppercase hidden md:block">ENTIDADES</div>
+          <div className="w-full md:w-20 bg-nexus-card border-b md:border-b-0 md:border-r border-nexus-border flex md:flex-col items-center py-4 px-2 gap-4 shrink-0 overflow-x-auto overflow-y-hidden md:overflow-y-auto no-scrollbar">
+             <div className="text-[10px] text-nexus-text-sec font-black tracking-widest uppercase hidden md:block">ENTIDADES</div>
              <ToolbarBtn icon={Move} label="Plataforma" onClick={() => addNewObject('platform')} color="text-sky-400" />
              <ToolbarBtn icon={Check} label="Spawn Jugador" onClick={() => addNewObject('player')} color="text-cyan-400" />
              <ToolbarBtn icon={Globe} label="Moneda de Oro" onClick={() => addNewObject('coin')} color="text-yellow-400" />
@@ -1143,9 +1143,9 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
         )}
 
         {/* WORKSPACE PREVIEW CAMERA CANVAS */}
-        <div className="flex-1 bg-[#090b14] flex flex-col items-center justify-center p-4 relative" ref={containerRef}>
+        <div className="flex-1 bg-nexus-card flex flex-col items-center justify-center p-4 relative" ref={containerRef}>
             
-            <div className={`relative shadow-2xl rounded-2xl overflow-hidden ring-1 ring-white/10 ${mode === 'play' ? 'ring-cyan-500/50 shadow-[0_0_40px_rgba(34,211,238,0.25)]' : ''}`}>
+            <div className={`relative shadow-2xl rounded-2xl overflow-hidden ring-1 ring-white/10 ${mode === 'play' ? 'ring-cyan-500/50 shadow-nexus-glow' : ''}`}>
                <canvas
                  ref={canvasRef}
                  width={canvasSize.width}
@@ -1154,20 +1154,20 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                  onPointerMove={handlePointerMove}
                  onPointerUp={handlePointerUp}
                  onPointerLeave={handlePointerUp}
-                 className="block bg-[#05060c] touch-none"
+                 className="block bg-nexus-card touch-none"
                  style={{ cursor: mode === 'play' ? 'pointer' : editState.current.isDragging ? 'grabbing' : selectedObjectId ? 'move' : 'default' }}
                />
                
                {/* TOP HUD STATUS BAR */}
                {mode === 'play' && (
                  <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
-                    <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 border border-white/10 rounded-xl">
+                    <div className="flex items-center gap-3 bg-nexus-surface backdrop-blur-md px-4 py-2 border border-nexus-border rounded-xl">
                        <span className="text-rose-500 font-bold font-mono flex items-center gap-1">
                          {initialTemplate === 'Clicker / Idle' ? `⚡ MULT: x${clickMult} | ⚙ CPS: +${autoCPS}/s` : '❤'.repeat(gameLives)}
                        </span>
                     </div>
                     
-                    <div className="bg-black/60 backdrop-blur-md px-4 py-2 border border-white/10 rounded-xl font-black font-mono text-cyan-400 text-lg flex items-center gap-2">
+                    <div className="bg-nexus-surface backdrop-blur-md px-4 py-2 border border-nexus-border rounded-xl font-black font-mono text-cyan-400 text-lg flex items-center gap-2">
                        <Globe className="w-5 h-5 text-yellow-400 animate-spin" style={{ animationDuration: '4s' }} /> {gameScore} PTS
                     </div>
                  </div>
@@ -1175,15 +1175,15 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
 
                {/* GAME OVER DIALOG OVERLAY */}
                {mode === 'play' && playState.current.gameOver && (
-                  <div className="absolute inset-0 bg-black/90 pointer-events-auto backdrop-blur-md flex flex-col items-center justify-center text-center p-6">
+                  <div className="absolute inset-0 bg-nexus-surface pointer-events-auto backdrop-blur-md flex flex-col items-center justify-center text-center p-6">
                      <h2 className="text-4xl sm:text-5xl font-black text-rose-500 tracking-tighter uppercase drop-shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-bounce mb-3">
                        FIN DEL JUEGO
                      </h2>
-                     <p className="text-gray-400 text-sm sm:text-base font-mono mb-8">Puntuación Lograda: {gameScore} Puntos</p>
+                     <p className="text-nexus-text-sec text-sm sm:text-base font-mono mb-8">Puntuación Lograda: {gameScore} Puntos</p>
                      
                      <button
                        onClick={startPlayMode}
-                       className="px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-black uppercase tracking-wider rounded-xl transition-all transform hover:scale-105 cursor-pointer"
+                       className="px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-nexus-bg font-black uppercase tracking-wider rounded-xl transition-all transform hover:scale-105 cursor-pointer"
                      >
                        Reintentar Partida
                      </button>
@@ -1193,10 +1193,10 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
 
             {/* CLICKER UPGRADE CONTROL DECK CARD */}
             {mode === 'play' && initialTemplate === 'Clicker / Idle' && (
-               <div className="bg-[#0b101c]/95 border border-white/5 backdrop-blur-md p-5 rounded-2xl w-full xl:w-72 flex flex-col gap-3.5 shadow-2xl shrink-0 pointer-events-auto">
+               <div className="bg-nexus-card/80 border border-nexus-border backdrop-blur-md p-5 rounded-2xl w-full xl:w-72 flex flex-col gap-3.5 shadow-2xl shrink-0 pointer-events-auto">
                  <div>
-                   <h3 className="text-white font-extrabold text-sm font-mono flex items-center gap-1 text-cyan-400 font-bold">⚡ CLICKER UPGRADES</h3>
-                   <p className="text-[10px] text-gray-400 font-medium font-sans">Adquiere mejoras para maximizar tu minería de oro.</p>
+                   <h3 className="text-nexus-text font-extrabold text-sm font-mono flex items-center gap-1 text-cyan-400 font-bold">⚡ CLICKER UPGRADES</h3>
+                   <p className="text-[10px] text-nexus-text-sec font-medium font-sans">Adquiere mejoras para maximizar tu minería de oro.</p>
                  </div>
                  
                  <div className="space-y-2.5">
@@ -1205,7 +1205,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                       className="w-full bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/25 p-3 rounded-xl flex items-center justify-between text-left transition-all active:scale-95 cursor-pointer"
                     >
                        <div>
-                          <div className="text-xs font-bold text-white font-mono">🔨 Martillo de Bronce</div>
+                          <div className="text-xs font-bold text-nexus-text font-mono">🔨 Martillo de Bronce</div>
                           <div className="text-[10px] text-cyan-300 font-semibold font-mono">+$1 / click permanente</div>
                        </div>
                        <span className="text-xs bg-cyan-500/20 text-cyan-300 font-bold font-mono px-2.5 py-1 rounded-lg">
@@ -1218,7 +1218,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                       className="w-full bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/25 p-3 rounded-xl flex items-center justify-between text-left transition-all active:scale-95 cursor-pointer"
                     >
                        <div>
-                          <div className="text-xs font-bold text-white font-mono">⚙ Taladro Automatizado</div>
+                          <div className="text-xs font-bold text-nexus-text font-mono">⚙ Taladro Automatizado</div>
                           <div className="text-[10px] text-purple-300 font-semibold font-mono">+$2 / segundo auto</div>
                        </div>
                        <span className="text-xs bg-purple-500/20 text-purple-300 font-bold font-mono px-2.5 py-1 rounded-lg">
@@ -1227,7 +1227,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                     </button>
                  </div>
 
-                 <div className="border-t border-white/5 pt-3 flex gap-2">
+                 <div className="border-t border-nexus-border pt-3 flex gap-2">
                     <button 
                       onClick={resetClickerProgress}
                       className="flex-1 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-[10px] font-bold font-mono py-2 rounded-lg text-center cursor-pointer transition-colors"
@@ -1244,31 +1244,31 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                   {initialTemplate === 'Arcade Shooter' ? (
                     <div className="grid grid-cols-3 gap-2 pointer-events-auto">
                       <div />
-                      <button className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-white font-bold"
+                      <button className="w-14 h-14 bg-nexus-card-hover backdrop-blur-md rounded-xl border border-nexus-border flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-nexus-text font-bold"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys['w'] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['w'] = false; }}
                       >▲</button>
                       <div />
-                      <button className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-white font-bold"
+                      <button className="w-14 h-14 bg-nexus-card-hover backdrop-blur-md rounded-xl border border-nexus-border flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-nexus-text font-bold"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys['a'] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['a'] = false; }}
                       >◀</button>
-                      <button className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-white font-bold"
+                      <button className="w-14 h-14 bg-nexus-card-hover backdrop-blur-md rounded-xl border border-nexus-border flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-nexus-text font-bold"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys['s'] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['s'] = false; }}
                       >▼</button>
-                      <button className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-white font-bold"
+                      <button className="w-14 h-14 bg-nexus-card-hover backdrop-blur-md rounded-xl border border-nexus-border flex items-center justify-center active:bg-cyan-500/30 active:scale-95 transition-all text-nexus-text font-bold"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys['d'] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['d'] = false; }}
                       >▶</button>
                     </div>
                   ) : (
                     <div className="flex gap-4 pointer-events-auto">
-                      <button className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center active:bg-cyan-500/30 active:scale-95 text-white text-lg font-bold"
+                      <button className="w-16 h-16 bg-nexus-card-hover backdrop-blur-md rounded-full border border-nexus-border flex items-center justify-center active:bg-cyan-500/30 active:scale-95 text-nexus-text text-lg font-bold"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys['a'] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['a'] = false; }}
                       >◀</button>
-                      <button className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center active:bg-cyan-500/30 active:scale-95 text-white text-lg font-bold"
+                      <button className="w-16 h-16 bg-nexus-card-hover backdrop-blur-md rounded-full border border-nexus-border flex items-center justify-center active:bg-cyan-500/30 active:scale-95 text-nexus-text text-lg font-bold"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys['d'] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['d'] = false; }}
                       >▶</button>
@@ -1277,12 +1277,12 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
 
                   <div className="flex gap-4 pointer-events-auto">
                     {initialTemplate === 'Arcade Shooter' && (
-                      <button className="w-16 h-16 bg-yellow-500/20 backdrop-blur-md rounded-full border border-yellow-500/50 flex items-center justify-center active:bg-yellow-500/60 active:scale-95 shadow-[0_0_15px_rgba(250,204,21,0.3)] text-white text-md font-black"
+                      <button className="w-16 h-16 bg-yellow-500/20 backdrop-blur-md rounded-full border border-yellow-500/50 flex items-center justify-center active:bg-yellow-500/60 active:scale-95 shadow-[0_0_15px_rgba(250,204,21,0.3)] text-nexus-text text-md font-black"
                         onTouchStart={(e) => { e.preventDefault(); playState.current.keys[' '] = true; }}
                         onTouchEnd={(e) => { e.preventDefault(); playState.current.keys[' '] = false; }}
                       >DISPARO</button>
                     )}
-                    <button className="w-16 h-16 bg-cyan-500/20 backdrop-blur-md rounded-full border border-cyan-500/50 flex items-center justify-center active:bg-cyan-500/60 active:scale-95 shadow-[0_0_15px_rgba(34,211,238,0.3)] text-white text-lg font-black"
+                    <button className="w-16 h-16 bg-cyan-500/20 backdrop-blur-md rounded-full border border-cyan-500/50 flex items-center justify-center active:bg-cyan-500/60 active:scale-95 shadow-nexus-glow text-nexus-text text-lg font-black"
                       onTouchStart={(e) => { e.preventDefault(); playState.current.keys['w'] = true; }}
                       onTouchEnd={(e) => { e.preventDefault(); playState.current.keys['w'] = false; }}
                     >SALTO</button>
@@ -1295,69 +1295,69 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
         {mode === 'edit' && selectedObjectId && (
           <motion.div 
              initial={{ opacity: 0, x: 25 }} animate={{ opacity: 1, x: 0 }}
-             className="w-full md:w-72 bg-[#060810] border-t md:border-t-0 md:border-l border-white/5 p-6 shrink-0 overflow-y-auto"
+             className="w-full md:w-72 bg-nexus-card border-t md:border-t-0 md:border-l border-nexus-border p-6 shrink-0 overflow-y-auto"
           >
-             <h3 className="text-white font-black font-mono text-sm mb-6 flex items-center gap-2 text-cyan-400">
+             <h3 className="text-nexus-text font-black font-mono text-sm mb-6 flex items-center gap-2 text-cyan-400">
                <Settings className="w-4 h-4" /> INSPECTOR ENTIDAD
              </h3>
              
              {objects.filter(o => o.id === selectedObjectId).map(obj => (
                <div key={obj.id} className="space-y-5">
                  <div>
-                   <label className="text-[10px] text-gray-500 font-black tracking-wider uppercase mb-1.5 block">Tipo Objeto</label>
-                   <div className="bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-xl text-white font-mono text-xs uppercase">{obj.type}</div>
+                   <label className="text-[10px] text-nexus-text-sec font-black tracking-wider uppercase mb-1.5 block">Tipo Objeto</label>
+                   <div className="bg-nexus-card border border-nexus-border px-3.5 py-2.5 rounded-xl text-nexus-text font-mono text-xs uppercase">{obj.type}</div>
                  </div>
 
                  <div className="grid grid-cols-2 gap-3">
                    <div>
-                     <label className="text-[10px] text-gray-500 font-black tracking-wider uppercase mb-1.5 block">Coord X</label>
+                     <label className="text-[10px] text-nexus-text-sec font-black tracking-wider uppercase mb-1.5 block">Coord X</label>
                      <input 
                        type="number" 
                        value={Math.round(obj.x)} 
                        onChange={(e) => setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, x: Number(e.target.value) } : o))}
-                       className="w-full bg-slate-900 border border-white/10 px-3 py-2 rounded-xl text-white text-xs font-mono" 
+                       className="w-full bg-nexus-surface border border-nexus-border px-3 py-2 rounded-xl text-nexus-text text-xs font-mono" 
                      />
                    </div>
                    <div>
-                     <label className="text-[10px] text-gray-500 font-black tracking-wider uppercase mb-1.5 block">Coord Y</label>
+                     <label className="text-[10px] text-nexus-text-sec font-black tracking-wider uppercase mb-1.5 block">Coord Y</label>
                      <input 
                        type="number" 
                        value={Math.round(obj.y)} 
                        onChange={(e) => setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, y: Number(e.target.value) } : o))}
-                       className="w-full bg-slate-900 border border-white/10 px-3 py-2 rounded-xl text-white text-xs font-mono" 
+                       className="w-full bg-nexus-surface border border-nexus-border px-3 py-2 rounded-xl text-nexus-text text-xs font-mono" 
                      />
                    </div>
                  </div>
 
                  <div className="grid grid-cols-2 gap-3">
                    <div>
-                     <label className="text-[10px] text-gray-500 font-black tracking-wider uppercase mb-1.5 block">Ancho (W)</label>
+                     <label className="text-[10px] text-nexus-text-sec font-black tracking-wider uppercase mb-1.5 block">Ancho (W)</label>
                      <input 
                        type="number" 
                        value={obj.width} 
                        onChange={e => setObjects(prev => prev.map(o => o.id === obj.id ? {...o, width: Number(e.target.value)} : o))} 
-                       className="w-full bg-slate-900 border border-white/10 px-3 py-2 rounded-xl text-white text-xs font-mono" 
+                       className="w-full bg-nexus-surface border border-nexus-border px-3 py-2 rounded-xl text-nexus-text text-xs font-mono" 
                      />
                    </div>
                    <div>
-                     <label className="text-[10px] text-gray-500 font-black tracking-wider uppercase mb-1.5 block">Alto (H)</label>
+                     <label className="text-[10px] text-nexus-text-sec font-black tracking-wider uppercase mb-1.5 block">Alto (H)</label>
                      <input 
                        type="number" 
                        value={obj.height} 
                        onChange={e => setObjects(prev => prev.map(o => o.id === obj.id ? {...o, height: Number(e.target.value)} : o))} 
-                       className="w-full bg-slate-900 border border-white/10 px-3 py-2 rounded-xl text-white text-xs font-mono" 
+                       className="w-full bg-nexus-surface border border-nexus-border px-3 py-2 rounded-xl text-nexus-text text-xs font-mono" 
                      />
                    </div>
                  </div>
 
                  <div>
-                    <label className="text-[10px] text-gray-500 font-black tracking-wider uppercase mb-1.5 block">Paleta Color</label>
+                    <label className="text-[10px] text-nexus-text-sec font-black tracking-wider uppercase mb-1.5 block">Paleta Color</label>
                     <div className="flex gap-2">
                       {['#22d3ee', '#fbbf24', '#f43f5e', '#38bdf8', '#0284c7', '#db2777'].map(col => (
                         <button 
                           key={col} 
                           onClick={() => setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, color: col } : o))}
-                          className="w-6 h-6 rounded-full border border-white/15 cursor-pointer" 
+                          className="w-6 h-6 rounded-full border border-nexus-border cursor-pointer" 
                           style={{ backgroundColor: col }}
                         />
                       ))}
@@ -1384,11 +1384,11 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
   );
 }
 
-function ToolbarBtn({ icon: Icon, label, onClick, color = "text-white", active }: any) {
+function ToolbarBtn({ icon: Icon, label, onClick, color = "text-nexus-text", active }: any) {
   return (
     <button 
       onClick={onClick}
-      className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center flex-col gap-1 transition-all group cursor-pointer ${active ? 'bg-white/10 border border-white/20' : 'bg-transparent hover:bg-white/5 border border-transparent'}`}
+      className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center flex-col gap-1 transition-all group cursor-pointer ${active ? 'bg-nexus-card-hover border border-nexus-border' : 'bg-transparent hover:bg-nexus-card border border-transparent'}`}
       title={label}
     >
       <Icon className={`w-5.5 h-5.5 ${color} group-hover:scale-110 transition-transform`} />

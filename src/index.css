@@ -4,64 +4,89 @@
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   
-  --color-nexus-bg: #030711;
-  --color-nexus-card: #0a0f1d;
-  --color-nexus-cyan: #00e5ff;
-  --color-nexus-blue: #2563eb;
-  --color-nexus-green: #10b981;
-  --color-nexus-purple: #7c3aed;
-  --color-nexus-pink: #db2777;
+  --color-nexus-bg: var(--nexus-bg);
+  --color-nexus-card: var(--nexus-card);
+  --color-nexus-card-hover: var(--nexus-card-hover);
+  --color-nexus-text: var(--nexus-text);
+  --color-nexus-text-sec: var(--nexus-text-sec);
+  --color-nexus-accent: var(--nexus-accent);
+  --color-nexus-border: var(--nexus-border);
+  --color-nexus-cyan: var(--nexus-accent);
+  --color-nexus-surface: var(--nexus-surface);
+  --color-nexus-overlay: var(--nexus-overlay);
 }
 
 @layer base {
+  :root, [data-theme="dark"] {
+    --nexus-bg: #050816;
+    --nexus-card: #111827;
+    --nexus-card-hover: #1e293b;
+    --nexus-text: #FFFFFF;
+    --nexus-text-sec: #94A3B8;
+    --nexus-accent: #00D4FF;
+    --nexus-border: #1E293B;
+  }
+
+  [data-theme="light"] {
+    --nexus-bg: #F8FAFC;
+    --nexus-card: #FFFFFF;
+    --nexus-card-hover: #F1F5F9;
+    --nexus-text: #0F172A;
+    --nexus-text-sec: #475569;
+    --nexus-accent: #00B8E6;
+    --nexus-border: #E2E8F0;
+    --nexus-overlay: rgba(255, 255, 255, 0.7);
+    --nexus-surface: rgba(248, 250, 252, 0.8);
+  }
+
+  [data-theme="amoled"] {
+    --nexus-bg: #000000;
+    --nexus-card: #050505;
+    --nexus-card-hover: #0A0A0A;
+    --nexus-text: #FFFFFF;
+    --nexus-text-sec: #888888;
+    --nexus-accent: #00D4FF;
+    --nexus-border: #111111;
+    --nexus-overlay: rgba(0, 0, 0, 0.8);
+    --nexus-surface: rgba(0, 0, 0, 0.6);
+  }
+
+  :root, [data-theme="dark"] {
+    --nexus-bg: #050816;
+    --nexus-card: #111827;
+    --nexus-card-hover: #1e293b;
+    --nexus-text: #FFFFFF;
+    --nexus-text-sec: #94A3B8;
+    --nexus-accent: #00D4FF;
+    --nexus-border: #1E293B;
+    --nexus-overlay: rgba(0, 0, 0, 0.8);
+    --nexus-surface: rgba(17, 24, 39, 0.6);
+  }
+
   html, body {
-    @apply max-w-[100vw] overflow-x-hidden bg-nexus-bg text-slate-100 antialiased selection:bg-nexus-cyan/30 flex flex-col min-h-screen;
+    @apply max-w-[100vw] overflow-x-hidden bg-nexus-bg text-nexus-text antialiased selection:bg-nexus-cyan/30 flex flex-col min-h-screen;
     transition: background-color 0.3s ease, color 0.3s ease;
-  }
-  
-  body.light-theme {
-    --color-nexus-bg: #f8fafc;
-    --color-nexus-card: #ffffff;
-    @apply text-slate-900;
-    background-image: 
-      radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, rgba(0, 229, 255, 0.05) 0%, transparent 50%);
-  }
-
-  body.light-theme .glass-panel {
-    @apply bg-white border-slate-200 shadow-lg shadow-slate-200/50;
-  }
-
-  body.light-theme .text-gray-400 {
-    @apply text-slate-500;
-  }
-
-  body.light-theme .text-white {
-    @apply text-slate-900;
-  }
-
-  body.light-theme .bg-white\/5 {
-    @apply bg-slate-100;
-  }
-
-  body.light-theme .bg-white\/10 {
-    @apply bg-slate-200;
-  }
-
-  body.light-theme .border-white\/5,
-  body.light-theme .border-white\/10 {
-    @apply border-slate-200;
-  }
-  body {
-    background-image: 
-      radial-gradient(circle at 0% 0%, rgba(0, 229, 255, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
   }
 }
 
 @layer components {
+  /* Dynamic shadows and glows depending on theme */
+  .shadow-nexus-glow {
+    box-shadow: 0 0 15px var(--nexus-accent), 0 0 30px var(--nexus-accent);
+    opacity: 0.8;
+  }
+  
+  [data-theme="light"] .shadow-nexus-glow {
+    box-shadow: 0 4px 10px rgba(0, 184, 230, 0.2);
+    opacity: 1;
+  }
+
   .glass-panel {
-    @apply bg-nexus-card/60 backdrop-blur-xl border border-white/5 shadow-xl;
+    @apply bg-nexus-surface backdrop-blur-xl border border-nexus-border shadow-xl;
+  }
+  
+  [data-theme="light"] .glass-panel {
+    @apply shadow-sm;
   }
   
   .neon-text-gradient {
@@ -73,7 +98,7 @@
   }
 
   .premium-card {
-    @apply bg-gradient-to-br from-slate-900/60 to-slate-900/40 backdrop-blur-md border border-white/10 rounded-[2rem] shadow-2xl transition-all duration-300;
+    @apply bg-nexus-card backdrop-blur-md border border-nexus-border rounded-[2rem] shadow-2xl transition-all duration-300;
   }
 
   /* Custom Scrollbar */
@@ -85,7 +110,7 @@
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-nexus-card rounded-full hover:bg-nexus-cyan/50 transition-colors;
+    @apply bg-nexus-card rounded-full hover:bg-nexus-cyan/50 transition-colors border border-nexus-border;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -96,3 +121,4 @@
     scrollbar-width: none;
   }
 }
+

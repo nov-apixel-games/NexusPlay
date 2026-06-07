@@ -142,7 +142,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#020617] flex flex-col font-sans overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-nexus-card flex flex-col font-sans overflow-hidden">
       {/* Background futuristic grid & glow */}
       <div className="absolute inset-0 pointer-events-none -z-10">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,_rgba(34,211,238,0.15),_transparent_70%)]" />
@@ -150,17 +150,17 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-600/10 blur-[150px] rounded-full" />
       </div>
 
-      <header className="h-20 shrink-0 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl flex items-center justify-between px-6 z-20 sticky top-0">
+      <header className="h-20 shrink-0 border-b border-nexus-border bg-nexus-bg/80 backdrop-blur-xl flex items-center justify-between px-6 z-20 sticky top-0">
         <div className="flex items-center gap-4">
-           <button onClick={onBack} className="p-2.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-2xl transition-all active:scale-95 border border-white/5 shadow-inner">
+           <button onClick={onBack} className="p-2.5 text-nexus-text-sec hover:text-nexus-text bg-nexus-card hover:bg-nexus-card-hover rounded-2xl transition-all active:scale-95 border border-nexus-border shadow-inner">
               <ArrowLeft className="w-6 h-6" />
            </button>
            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center border border-cyan-500/40 shadow-[0_0_20px_rgba(34,211,238,0.3)] animate-pulse">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-2xl flex items-center justify-center border border-cyan-500/40 shadow-nexus-glow animate-pulse">
                  <BrainCircuit className="w-6 h-6 text-cyan-400" />
               </div>
               <div className="hidden sm:block">
-                 <h1 className="text-xl font-black text-white tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">NEXUS AI <span className="text-cyan-400">ENGINE</span></h1>
+                 <h1 className="text-xl font-black text-nexus-text tracking-tighter drop-shadow-lg">NEXUS AI <span className="text-cyan-400">ENGINE</span></h1>
                  <p className="text-[10px] uppercase font-black tracking-[0.2em] text-cyan-500/80">Recomendaciones Inteligentes</p>
               </div>
            </div>
@@ -183,16 +183,16 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
               >
                  <div className="relative mb-8">
                     <div className="absolute inset-0 bg-cyan-500/20 blur-[60px] rounded-full animate-pulse" />
-                    <div className="w-28 h-28 rounded-[2.5rem] bg-slate-900 border border-cyan-500/30 flex items-center justify-center relative z-10 shadow-2xl overflow-hidden group">
+                    <div className="w-28 h-28 rounded-[2.5rem] bg-nexus-card border border-cyan-500/30 flex items-center justify-center relative z-10 shadow-2xl overflow-hidden group">
                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                        <BrainCircuit className="w-14 h-14 text-cyan-400 relative z-10" />
                     </div>
                  </div>
-                 <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter italic">
+                 <h2 className="text-4xl md:text-5xl font-black text-nexus-text mb-4 tracking-tighter italic">
                    ¿EN QUÉ TE PUEDO <span className="text-cyan-400">AYUDAR?</span>
                  </h2>
-                 <p className="text-slate-400 max-w-lg text-lg font-medium leading-relaxed">
-                   Dime qué buscas, los specs de tu celular o qué áreas te gustaría mejorar. Crearé packs y recomendaciones a medida de nuestro catálogo de <span className="text-white font-bold">{apps.length} apps</span>.
+                 <p className="text-nexus-text-sec max-w-lg text-lg font-medium leading-relaxed">
+                   Dime qué buscas, los specs de tu celular o qué áreas te gustaría mejorar. Crearé packs y recomendaciones a medida de nuestro catálogo de <span className="text-nexus-text font-bold">{apps.length} apps</span>.
                  </p>
 
                  {/* Quick Action Buttons */}
@@ -203,7 +203,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleSend(btn.q)}
-                        className="flex items-center gap-2.5 px-5 py-3 bg-slate-900/50 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-500/50 rounded-2xl text-slate-300 hover:text-cyan-400 transition-all shadow-lg backdrop-blur-md group"
+                        className="flex items-center gap-2.5 px-5 py-3 bg-nexus-card/50 hover:bg-cyan-500/10 border border-nexus-border hover:border-cyan-500/50 rounded-2xl text-nexus-text-sec hover:text-cyan-400 transition-all shadow-lg backdrop-blur-md group"
                       >
                         <btn.icon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                         <span className="font-bold text-sm tracking-wide">{btn.label}</span>
@@ -230,10 +230,10 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                       
                       <div className={`p-5 rounded-3xl ${
                         msg.role === 'user' 
-                          ? 'bg-blue-600 text-white rounded-br-sm' 
+                          ? 'bg-blue-600 text-nexus-text rounded-br-sm' 
                           : msg.isError 
                             ? 'bg-red-950/50 text-red-200 border border-red-500/30 rounded-bl-sm'
-                            : 'bg-slate-800/80 text-slate-200 border border-slate-700 rounded-bl-sm prose prose-invert prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700 max-w-none'
+                            : 'bg-nexus-card/80 text-nexus-text border border-nexus-border rounded-bl-sm prose prose-invert prose-p:leading-relaxed prose-pre:bg-nexus-card prose-pre:border prose-pre:border-nexus-border max-w-none'
                       }`}>
                         {msg.role === 'user' ? (
                           <div className="text-[15px] leading-relaxed">{msg.text}</div>
@@ -250,8 +250,8 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                       </div>
 
                       {msg.role === 'user' && (
-                        <div className="w-8 h-8 rounded-full bg-slate-800 flex flex-shrink-0 items-center justify-center border border-slate-700">
-                          <User className="w-4 h-4 text-slate-400" />
+                        <div className="w-8 h-8 rounded-full bg-nexus-card flex flex-shrink-0 items-center justify-center border border-nexus-border">
+                          <User className="w-4 h-4 text-nexus-text-sec" />
                         </div>
                       )}
                     </div>
@@ -263,12 +263,12 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                              <div 
                                key={app.id} 
                                onClick={() => onAppClick(app)}
-                               className="bg-slate-900 border border-white/10 hover:border-cyan-400/50 p-4 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg hover:shadow-cyan-900/20 flex gap-4"
+                               className="bg-nexus-card border border-nexus-border hover:border-cyan-400/50 p-4 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 shadow-lg hover:shadow-cyan-900/20 flex gap-4"
                              >
-                                <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-xl bg-slate-950 object-cover" />
+                                <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-xl bg-nexus-bg object-cover" />
                                 <div className="flex flex-col flex-1 min-w-0 justify-center">
-                                  <h4 className="text-white font-bold truncate">{app.name}</h4>
-                                  <p className="text-xs text-slate-400 truncate mt-0.5 mb-1.5">{app.developer}</p>
+                                  <h4 className="text-nexus-text font-bold truncate">{app.name}</h4>
+                                  <p className="text-xs text-nexus-text-sec truncate mt-0.5 mb-1.5">{app.developer}</p>
                                   <div className="flex items-center gap-2">
                                      <span className="flex items-center gap-1 text-[10px] text-yellow-400 font-bold"><Star className="w-3 h-3 fill-yellow-400"/> {app.rating}</span>
                                      <span className="flex items-center gap-1 text-[10px] text-cyan-400 font-bold"><Download className="w-3 h-3"/> {app.downloads}</span>
@@ -290,7 +290,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                     <div className="w-8 h-8 rounded-full bg-cyan-900/50 flex flex-shrink-0 items-center justify-center border border-cyan-500/40">
                       <BrainCircuit className="w-4 h-4 text-cyan-400" />
                     </div>
-                    <div className="p-4 rounded-3xl rounded-bl-sm bg-slate-800/80 border border-slate-700 flex items-center gap-2">
+                    <div className="p-4 rounded-3xl rounded-bl-sm bg-nexus-card/80 border border-nexus-border flex items-center gap-2">
                       <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -305,11 +305,11 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
       </main>
 
       {/* Input Area */}
-      <div className="p-4 sm:p-6 bg-slate-950/80 backdrop-blur-xl border-t border-white/10 z-20 sticky bottom-0">
+      <div className="p-4 sm:p-6 bg-nexus-bg/80 backdrop-blur-xl border-t border-nexus-border z-20 sticky bottom-0">
          <div className="max-w-4xl mx-auto relative group">
             <div className="absolute inset-0 bg-cyan-500/10 blur-[20px] rounded-3xl opacity-0 hover:opacity-100 focus-within:opacity-100 transition-opacity" />
             
-            <div className="relative flex items-center bg-slate-900 shadow-xl border-2 border-slate-800 rounded-3xl overflow-hidden focus-within:border-cyan-500/50 transition-all p-1.5">
+            <div className="relative flex items-center bg-nexus-card shadow-xl border-2 border-nexus-border rounded-3xl overflow-hidden focus-within:border-cyan-500/50 transition-all p-1.5">
                <input 
                  ref={inputRef}
                  type="text" 
@@ -317,7 +317,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick }: NexusAIChatPro
                  onChange={e => setQuery(e.target.value)}
                  onKeyDown={handleKeyDown}
                  placeholder="Escribe tu consulta o dímelo de esta manera: 'Mi celular es un Galaxy A10...'"
-                 className="flex-1 bg-transparent border-none text-white px-5 h-12 lg:h-14 outline-none text-[15px] lg:text-base font-medium placeholder:text-slate-500"
+                 className="flex-1 bg-transparent border-none text-nexus-text px-5 h-12 lg:h-14 outline-none text-[15px] lg:text-base font-medium placeholder:text-nexus-text-sec"
                />
                <button 
                  onClick={() => handleSend(query)}

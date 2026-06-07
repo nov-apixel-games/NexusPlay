@@ -1,0 +1,62 @@
+import { create } from 'zustand';
+import { translations, LanguageCode, TranslationKey } from '../i18n/translations';
+
+export type ThemeType = 'dark' | 'light' | 'amoled' | 'auto';
+
+interface AppStore {
+  language: LanguageCode;
+  setLanguage: (lang: LanguageCode) => void;
+  t: (key: TranslationKey | string) => string;
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
+}
+
+const applyTheme = (t: string) => {
+  let activeTheme = t;
+  if (t === 'auto') {
+    activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    console.log("[Theme] Current theme:", activeTheme);
+    console.log("[Theme] Applied to document");
+  }
+};
+
+export const useAppStore = create<AppStore>((set, get) => ({
+  language: (localStorage.getItem('nexus_language') as LanguageCode) || 'es',
+  setLanguage: (lang) => {
+    localStorage.setItem('nexus_language', lang);
+    set((state) => ({ 
+      language: lang,
+      t: (key) => {
+        return (translations[lang] as any)[key] || (translations['es'] as any)[key] || key;
+      }
+    }));
+  },
+  t: (key) => {
+    const lang = (localStorage.getItem('nexus_language') as LanguageCode) || 'es';
+    return (translations[lang] as any)[key] || (translations['es'] as any)[key] || key;
+  },
+  theme: (localStorage.getItem('nexus_theme') as ThemeType) || 'dark',
+  setTheme: (theme: ThemeType) => {
+    localStorage.setItem('nexus_theme', theme);
+    applyTheme(theme);
+    set({ theme });
+  }
+}));
+
+// Apply initial theme
+if (typeof window !== 'undefined') {
+  const initialTheme = (localStorage.getItem('nexus_theme') as ThemeType) || 'dark';
+  applyTheme(initialTheme);
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    const currentTheme = useAppStore.getState().theme;
+    if (currentTheme === 'auto') {
+      applyTheme('auto');
+    }
+  });
+}
+

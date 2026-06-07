@@ -1,3 +1,4 @@
+import { useAppStore } from '../store/useAppStore';
 import { Compass, Trophy, PlusSquare, Zap, Star, Hexagon } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -10,10 +11,11 @@ export default function Hero({
   slogan?: string,
   onAction?: (action: string) => void
 }) {
+  const { t } = useAppStore();
   return (
     <section className="relative pt-28 pb-20 px-6 overflow-hidden min-h-[85vh] flex items-center justify-center">
       {/* Dynamic Sci-Fi Background Elements */}
-      <div className="absolute inset-0 bg-[#030407] -z-20"></div>
+      <div className="absolute inset-0 bg-nexus-card -z-20"></div>
       
       {/* Subtle Futuristic Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:40px_40px] -z-10 [mask-image:radial-gradient(ellipse_60%_60%_at_50%_40%,#000_20%,transparent_100%)] opacity-70"></div>
@@ -38,10 +40,10 @@ export default function Hero({
           className="relative group cursor-default"
         >
           <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full group-hover:bg-cyan-400/30 transition-all duration-500"></div>
-          <div className="relative px-5 py-2 rounded-full border border-cyan-400/30 mb-8 sm:mb-10 flex items-center gap-3 bg-[#0a0c16]/80 backdrop-blur-3xl shadow-[0_0_30px_rgba(34,211,238,0.15)]">
+          <div className="relative px-5 py-2 rounded-full border border-cyan-400/30 mb-8 sm:mb-10 flex items-center gap-3 bg-nexus-card/80 backdrop-blur-3xl shadow-nexus-glow">
             <div className="relative flex items-center justify-center">
               <div className="absolute w-full h-full rounded-full bg-cyan-400 animate-ping opacity-60" />
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,1)]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-nexus-glow" />
             </div>
             <span className="text-[11px] sm:text-[13px] font-black text-cyan-300 uppercase tracking-[0.2em] drop-shadow-md">Nexus AI 2.0 • Sistema Activo</span>
           </div>
@@ -58,10 +60,10 @@ export default function Hero({
           
           <h1 className="text-6xl sm:text-8xl md:text-[110px] font-black mb-4 sm:mb-6 tracking-tighter leading-[1.1] relative">
             <span className="relative inline-block pb-2 sm:pb-4">
-              <span className="absolute inset-0 bg-gradient-to-br from-white via-cyan-200 to-[#0055ff] bg-clip-text text-transparent blur-[12px] opacity-40 select-none hidden sm:block">
+              <span className="absolute inset-0 bg-gradient-to-br from-nexus-text via-cyan-400 to-blue-500 bg-clip-text text-transparent blur-[12px] opacity-40 select-none hidden sm:block">
                 {storeName}
               </span>
-              <span className="relative bg-gradient-to-br from-white via-cyan-100 to-[#1a75ff] bg-clip-text text-transparent drop-shadow-[0_5px_10px_rgba(0,0,0,0.8)]">
+              <span className="relative bg-gradient-to-br from-nexus-text via-cyan-400 to-blue-600 bg-clip-text text-transparent drop-shadow-lg">
                 {storeName}
               </span>
             </span>
@@ -72,7 +74,7 @@ export default function Hero({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          className="text-lg sm:text-2xl md:text-3xl text-gray-300 font-medium mb-8 sm:mb-10 max-w-3xl leading-relaxed drop-shadow-lg px-4"
+          className="text-lg sm:text-2xl md:text-3xl text-nexus-text font-medium mb-8 sm:mb-10 max-w-3xl leading-relaxed drop-shadow-lg px-4"
         >
           {slogan} <br className="hidden sm:block" />
           <span className="text-cyan-400/80 font-normal">Experiencia premium sin límites.</span>
@@ -82,11 +84,11 @@ export default function Hero({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mb-12 sm:mb-16 text-[11px] sm:text-[15px] font-black text-gray-400 tracking-widest uppercase"
+          className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mb-12 sm:mb-16 text-[11px] sm:text-[15px] font-black text-nexus-text-sec tracking-widest uppercase"
         >
-          <span className="hover:text-cyan-300 transition-colors cursor-default drop-shadow-sm">Juegos</span>
+          <span className="hover:text-cyan-300 transition-colors cursor-default drop-shadow-sm">{t('nav.games')}</span>
           <span className="text-cyan-500/50">•</span>
-          <span className="hover:text-indigo-300 transition-colors cursor-default drop-shadow-sm">Comunidad</span>
+          <span className="hover:text-indigo-300 transition-colors cursor-default drop-shadow-sm">{t('nav.sidebar.community')}</span>
           <span className="text-indigo-500/50">•</span>
           <span className="hover:text-blue-300 transition-colors cursor-default drop-shadow-sm">Recompensas</span>
           <span className="text-blue-500/50 hidden sm:inline">•</span>
@@ -100,7 +102,7 @@ export default function Hero({
           className="flex flex-wrap justify-center gap-3 sm:gap-6 z-10 relative px-2"
         >
           <QuickAction icon={Compass} label="Explorar Hub" 
-             color="from-cyan-600/20 to-blue-600/20 text-cyan-300 border-cyan-500/40 hover:border-cyan-400 hover:from-cyan-500/30 hover:to-blue-500/30 shadow-[0_0_20px_rgba(34,211,238,0.2)] hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] ring-1 ring-cyan-500/10" 
+             color="from-cyan-600/20 to-blue-600/20 text-cyan-300 border-cyan-500/40 hover:border-cyan-400 hover:from-cyan-500/30 hover:to-blue-500/30 shadow-nexus-glow hover:shadow-nexus-glow ring-1 ring-cyan-500/10" 
              onClick={() => onAction?.('explore')} />
           
           <QuickAction icon={Trophy} label="Rankings" 
@@ -132,8 +134,8 @@ function QuickAction({ icon: Icon, label, color, onClick }: { icon: any, label: 
       onClick={onClick} 
       className={`group relative flex items-center gap-2 sm:gap-3 px-5 sm:px-7 py-3 sm:py-4 rounded-[16px] sm:rounded-[20px] bg-gradient-to-br border transition-all duration-300 ease-out hover:-translate-y-1 active:scale-[0.98] ${color} backdrop-blur-xl overflow-hidden`}
     >
-      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="relative flex items-center justify-center p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-black/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
+      <div className="absolute inset-0 bg-nexus-card opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="relative flex items-center justify-center p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-nexus-surface shadow-inner group-hover:scale-110 transition-transform duration-300">
          <Icon className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md" />
       </div>
       <span className="text-[14px] sm:text-[16px] font-black tracking-wide drop-shadow-sm">{label}</span>

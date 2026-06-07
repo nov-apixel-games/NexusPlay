@@ -51,7 +51,7 @@ export const ExplorerPanel = ({ mobile }: { mobile?: boolean }) => {
   return (
     <div className={`${mobile ? 'w-full' : 'w-64'} bg-neutral-900 border-r border-neutral-800 flex flex-col h-full text-neutral-300`}>
       {!mobile && (
-        <div className="p-2 border-b border-neutral-800 font-semibold text-sm text-white">
+        <div className="p-2 border-b border-neutral-800 font-semibold text-sm text-nexus-text">
           Explorador
         </div>
       )}
@@ -60,7 +60,7 @@ export const ExplorerPanel = ({ mobile }: { mobile?: boolean }) => {
       <div className="p-2 border-b border-neutral-800">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-neutral-500 uppercase">Escenas</span>
-          <button onClick={() => addScene('Nueva Escena')} className="text-neutral-400 hover:text-white p-1">
+          <button onClick={() => addScene('Nueva Escena')} className="text-neutral-400 hover:text-nexus-text p-1">
             <Plus size={14} />
           </button>
         </div>
@@ -69,7 +69,7 @@ export const ExplorerPanel = ({ mobile }: { mobile?: boolean }) => {
              <div 
                key={s.id} 
                onClick={() => setActiveScene(s.id)}
-               className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer group ${s.id === activeSceneId ? 'bg-blue-600/30 border border-blue-500/50 text-white' : 'hover:bg-neutral-800'}`}
+               className={`flex items-center justify-between px-2 py-1.5 rounded cursor-pointer group ${s.id === activeSceneId ? 'bg-blue-600/30 border border-blue-500/50 text-nexus-text' : 'hover:bg-neutral-800'}`}
              >
                 {editingSceneId === s.id ? (
                   <input 

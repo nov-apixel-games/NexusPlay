@@ -46,7 +46,7 @@ class ModelErrorBoundary extends React.Component<{ url: string, entityName: stri
             <meshStandardMaterial color="red" wireframe />
           </mesh>
           <Html center>
-            <div className="bg-red-900/90 text-white p-3 rounded-lg border border-red-500 w-64 text-xs font-mono break-all pointer-events-none">
+            <div className="bg-red-900/90 text-nexus-text p-3 rounded-lg border border-red-500 w-64 text-xs font-mono break-all pointer-events-none">
               <strong className="block mb-1 text-red-300">Model Load Error</strong>
               <div>Ext: {this.props.url.split('.').pop()?.split('?')[0]}</div>
               <div className="mt-1 font-semibold text-red-200">{this.state.error?.message}</div>
@@ -416,7 +416,7 @@ const Viewport2D = () => {
   }, [entities2D, appState, selectEntity]);
 
   return (
-    <div className="w-full h-full bg-[#1e1e1e] relative">
+    <div className="w-full h-full bg-nexus-card relative">
       <div ref={gameRef} className="absolute inset-0 w-full h-full" />
     </div>
   );
@@ -465,7 +465,7 @@ export const Viewport = () => {
       {engineMode === '3D' ? <Viewport3D /> : <Viewport2D />}
       
       <div className="absolute top-4 left-4 z-10 pointer-events-none">
-        <div className="bg-black/50 backdrop-blur text-white text-xs px-2 py-1 rounded font-mono border border-white/10">
+        <div className="bg-nexus-surface backdrop-blur text-nexus-text text-xs px-2 py-1 rounded font-mono border border-nexus-border">
           Modo: {engineMode}
         </div>
       </div>
