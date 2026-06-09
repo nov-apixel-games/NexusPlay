@@ -28,6 +28,7 @@ const NexusAIChat = lazy(() => import('./components/NexusAIChat'));
 const GamesHubView = lazy(() => import('./components/views/GamesHubView').then(m => ({ default: m.GamesHubView })));
 const AppDetailView = lazy(() => import('./components/views/AppDetailView').then(m => ({ default: m.AppDetailView })));
 const SettingsView = lazy(() => import('./components/views/SettingsView').then(m => ({ default: m.SettingsView })));
+const SmartHubView = lazy(() => import('./components/views/SmartHubView').then(m => ({ default: m.SmartHubView })));
 import AuthModal from './components/AuthModal';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
@@ -108,9 +109,9 @@ export default function App() {
   };
 
   const DEFAULT_AI_CONFIG: AIConfig = {
-    enabled: false,
-    apiKey: localStorage.getItem('nexus_ai_key') || import.meta.env.VITE_GEMINI_API_KEY || '',
-    model: 'gemini-2.0-flash',
+    enabled: true,
+    apiKey: '',
+    model: 'gemini-2.5-flash',
     endpoint: 'https://generativelanguage.googleapis.com'
   };
   const [aiConfig, setAiConfig] = useState<AIConfig>(DEFAULT_AI_CONFIG);
@@ -159,7 +160,7 @@ export default function App() {
 
   useEffect(() => {
     let fallbackTimeout: any;
-    
+
     const runInit = async () => {
       try {
         if (isSupabaseConfigured) {
@@ -167,36 +168,53 @@ export default function App() {
         } else {
           document.title = 'NexusPlay';
         }
-
-        // Apply global theme
-        const theme = localStorage.getItem('nexus_theme') || 'dark';
-        const applyTheme = (t: string) => {
-          const isDark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (!isDark) {
-            document.body.classList.add('light-theme');
-          } else {
-            document.body.classList.remove('light-theme');
-          }
-        };
-        applyTheme(theme);
-
       } catch (err) {
         console.error("Initialization error:", err);
-      } finally {
-        setIsInitializing(false);
-        clearTimeout(fallbackTimeout);
       }
     };
-    
-    // Recovery system: Always force load after 2.5 seconds max
+
+    runInit();
+
+    // Verify session
+    if (isSupabaseConfigured && navigator.onLine) {
+      supabase.auth.getSession().then(({ data: { session: fetchedSession } }: any) => {
+        console.log("[Auth] Session loaded at startup:", !!fetchedSession);
+        setSession(fetchedSession);
+        if (fetchedSession?.user) {
+          fetchUserProfile(fetchedSession.user.id, fetchedSession.user.email).finally(() => {
+            setIsInitializing(false);
+          });
+        } else {
+          setIsInitializing(false);
+        }
+      }).catch(e => {
+        console.warn("getSession error", e);
+        setIsInitializing(false);
+      });
+    } else {
+      if (!navigator.onLine) {
+        try {
+          const cachedSession = localStorage.getItem('supabase.auth.token');
+          if (cachedSession) {
+            const parsed = JSON.parse(cachedSession);
+            if (parsed && parsed.currentSession) {
+              setSession(parsed.currentSession);
+              if (parsed.currentSession.user) {
+                 fetchUserProfile(parsed.currentSession.user.id, parsed.currentSession.user.email);
+              }
+            }
+          }
+        } catch(e) {}
+      }
+      setIsInitializing(false);
+    }
+
     fallbackTimeout = setTimeout(() => {
       console.warn("Recovery mode activated: Forcing app initialization");
       setIsInitializing(false);
       if (!navigator.onLine) setIsOffline(true);
-    }, 2500);
-    
-    runInit();
-    
+    }, 4000);
+
     return () => clearTimeout(fallbackTimeout);
   }, [isSupabaseConfigured]);
 
@@ -224,31 +242,6 @@ export default function App() {
       };
     }
     
-    if (!navigator.onLine) {
-      // offline branch
-      try {
-        const cachedSession = localStorage.getItem('supabase.auth.token');
-        if (cachedSession) {
-          const parsed = JSON.parse(cachedSession);
-          if (parsed && parsed.currentSession) {
-            setSession(parsed.currentSession);
-            if (parsed.currentSession.user) {
-               fetchUserProfile(parsed.currentSession.user.id, parsed.currentSession.user.email);
-            }
-          }
-        }
-      } catch(e) {}
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }: any) => {
-        console.log("[Auth] Session loaded at startup:", !!session);
-        setSession(session);
-        if (session?.user) {
-          fetchUserProfile(session.user.id, session.user.email);
-          setShowAuthModal(false);
-        }
-      }).catch(e => console.warn("getSession error", e));
-    }
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -869,6 +862,8 @@ export default function App() {
              aiConfig={aiConfig}
            />
         );
+      case 'smart-hub':
+         return <SmartHubView onBack={() => setActiveView('home')} apps={publishedApps} onAppClick={handleAppClick} userProfile={userProfile} />;
       case 'nexus-ai':
         if (isOffline) {
           return (

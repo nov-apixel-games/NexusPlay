@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import PublishingWizard from './PublishingWizard';
+import { DeveloperAnalytics } from './DeveloperAnalytics';
 
 interface DeveloperConsoleProps {
   userId: string;
@@ -45,10 +46,19 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
 
       if (!error && data) {
         setApps(data);
-        // Calculate stats
-        const downloads = data.reduce((acc, app) => acc + (parseInt(app.downloads) || 0), 0);
+        
+        const parseDownloadsInt = (dStr: string | number | undefined | null) => {
+          if (!dStr) return 0;
+          if (typeof dStr === 'number') return dStr;
+          let n = parseFloat(dStr.toString());
+          if (dStr.toString().toLowerCase().includes('m')) n *= 1000000;
+          else if (dStr.toString().toLowerCase().includes('k')) n *= 1000;
+          return isNaN(n) ? 0 : n;
+        };
+
+        const downloads = data.reduce((acc, app) => acc + parseDownloadsInt(app.downloads), 0);
         const ratings = data.filter(app => app.rating).map(app => parseFloat(app.rating));
-        const avg = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 5.0;
+        const avg = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
         
         setStats({
           totalDownloads: downloads,
@@ -407,11 +417,15 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
                        </div>
                     )}
 
-                    {(activeTab === 'analytics' || activeTab === 'settings') && (
+                    {activeTab === 'analytics' && (
+                       <DeveloperAnalytics apps={apps} stats={stats} />
+                    )}
+
+                    {activeTab === 'settings' && (
                        <div className="py-12 lg:py-24 flex flex-col items-center justify-center text-center space-y-4 px-4">
-                          <Activity className="w-16 h-16 lg:w-20 lg:h-20 text-gray-800 mb-4 animate-pulse" />
-                          <h3 className="text-2xl lg:text-3xl font-black uppercase text-gray-700 leading-tight">Módulo en Desarrollo</h3>
-                          <p className="text-xs lg:text-sm text-nexus-text-sec max-w-md">Estamos integrando el nuevo sistema de analíticas en tiempo real. Esta sección estará disponible en la próxima actualización.</p>
+                          <Settings className="w-16 h-16 lg:w-20 lg:h-20 text-gray-800 mb-4 animate-spin-slow" />
+                          <h3 className="text-2xl lg:text-3xl font-black uppercase text-gray-700 leading-tight">Configuración</h3>
+                          <p className="text-xs lg:text-sm text-nexus-text-sec max-w-md">Opciones avanzadas en desarrollo.</p>
                        </div>
                     )}
                   </motion.div>

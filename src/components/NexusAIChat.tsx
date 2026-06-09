@@ -237,16 +237,18 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
       </AnimatePresence>
 
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ 
-          x: isSidebarOpen ? 0 : '-100%',
-          width: '280px'
-        }}
-        transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-        className="fixed md:static inset-y-0 left-0 z-[120] bg-nexus-card border-r border-nexus-border flex flex-col"
-      >
-        <div className="p-4 border-b border-nexus-border flex items-center justify-between">
+      <AnimatePresence initial={false}>
+        {(isSidebarOpen || window.innerWidth > 768) ? (
+          <motion.aside
+            initial={false}
+            animate={{ 
+              width: isSidebarOpen ? (window.innerWidth > 768 ? '280px' : '280px') : '0px',
+              x: isSidebarOpen ? 0 : (window.innerWidth > 768 ? 0 : '-100%')
+            }}
+            transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+            className={`fixed md:static inset-y-0 left-0 z-[120] bg-nexus-card border-r border-nexus-border flex flex-col overflow-hidden ${!isSidebarOpen && window.innerWidth > 768 ? 'border-r-0' : ''}`}
+          >
+            <div className="p-4 border-b border-nexus-border flex items-center justify-between w-[280px]">
            <div className="flex items-center gap-2 text-nexus-text font-semibold">
               <BrainCircuit className="w-5 h-5 text-blue-500" />
               Historial
@@ -320,6 +322,8 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
            )}
         </div>
       </motion.aside>
+      ) : null}
+      </AnimatePresence>
 
       <div className="flex-1 flex flex-col min-w-0 bg-nexus-bg">
         {/* Subtle tech texture */}

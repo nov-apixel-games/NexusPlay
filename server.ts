@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import os from "os";
 import fs from "fs";
@@ -165,8 +166,24 @@ setInterval(async () => {
 
 export const app = express();
 
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const nexusAiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, 
+  max: 10, 
+  message: { success: false, error: "Límite de solicitudes alcanzado. Por favor, intenta de nuevo más tarde." }
+});
+
 app.use(express.json({ limit: '2000mb' }));
 app.use(express.urlencoded({ limit: '2000mb', extended: true }));
+
+app.use('/api/', apiLimiter);
+app.use('/api/nexus-ai', nexusAiLimiter);
 
 // Helper for Cloudinary Signature
 app.get("/api/cloudinary-signature", (req, res) => {

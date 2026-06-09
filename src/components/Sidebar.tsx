@@ -22,6 +22,7 @@ const getMenuItems = (isAdmin: boolean, t: any) => [
   { label: t('nav.sidebar.discover'), items: [
     { label: t('nav.home'), icon: Home, id: 'home', active: true, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
     { label: t('nav.explore'), icon: Compass, id: 'explore', color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { label: 'Centro Inteligente', icon: Sparkles, id: 'smart-hub', color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10' },
     { label: 'Games Hub', icon: Gamepad2, id: 'games-hub', color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10' },
     { label: 'Nexus AI', icon: BrainCircuit, id: 'nexus-ai', color: 'text-blue-400', bg: 'bg-blue-400/10' },
   ]},

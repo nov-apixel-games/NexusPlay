@@ -1091,11 +1091,11 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                setRequests={setDevRequests} 
                config={{
                   enabled: true,
-                  apiKey: aiConfig?.apiKey || localStorage.getItem('nexus_ai_key') || import.meta.env.VITE_GEMINI_API_KEY || '',
-                  model: aiConfig?.model || 'gemini-2.0-flash'
+                  apiKey: '',
+                  model: 'gemini-2.5-flash'
                }}
                setConfig={(newConf: any) => {
-                  localStorage.setItem('nexus_ai_key', newConf.apiKey);
+                  console.log("Config ignored on frontend");
                }}
                addToast={addToast} 
              />
