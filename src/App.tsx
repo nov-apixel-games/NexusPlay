@@ -888,6 +888,7 @@ export default function App() {
               onLoginClick={() => setShowAuthModal(true)} 
               onLogoutClick={() => { handleLogout(); }}
               onSettingsClick={() => setActiveView('settings')}
+              onProfileUpdate={(updatedProfile) => setUserProfile((prev: any) => ({ ...prev, ...updatedProfile }))}
               onDeveloperAction={(action) => {
                 if (action === 'activate') {
                   handleActivateDeveloper();
