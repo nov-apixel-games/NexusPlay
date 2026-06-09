@@ -439,7 +439,7 @@ NOTIFY pgrst, 'reload schema';
 -- ==========================================
 -- FAVORITES
 -- ==========================================
-CREATE TABLE IF NOT EXISTS public.favorites (
+CREATE TABLE IF NOT EXISTS public.user_favorites (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     app_id UUID REFERENCES public.apps(id) ON DELETE CASCADE,
@@ -447,11 +447,11 @@ CREATE TABLE IF NOT EXISTS public.favorites (
     UNIQUE(user_id, app_id)
 );
 
-ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Public favorites viewable by all." ON public.favorites;
-CREATE POLICY "Public favorites viewable by all." ON public.favorites FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Users can manage own favorites." ON public.favorites;
-CREATE POLICY "Users can manage own favorites." ON public.favorites FOR ALL USING (auth.uid() = user_id);
+ALTER TABLE public.user_favorites ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public favorites viewable by all." ON public.user_favorites;
+CREATE POLICY "Public favorites viewable by all." ON public.user_favorites FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage own favorites." ON public.user_favorites;
+CREATE POLICY "Users can manage own favorites." ON public.user_favorites FOR ALL USING (auth.uid() = user_id);
 
 CREATE OR REPLACE FUNCTION public.update_favorites_count()
 RETURNS trigger AS $$
@@ -469,9 +469,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS on_favorite_change ON public.favorites;
+DROP TRIGGER IF EXISTS on_favorite_change ON public.user_favorites;
 CREATE TRIGGER on_favorite_change
-  AFTER INSERT OR DELETE ON public.favorites
+  AFTER INSERT OR DELETE ON public.user_favorites
   FOR EACH ROW EXECUTE PROCEDURE public.update_favorites_count();
 
 -- ==========================================

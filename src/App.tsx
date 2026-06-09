@@ -38,6 +38,8 @@ import OfflineIndicator from './components/OfflineIndicator';
 
 import { useAppStore } from './store/useAppStore';
 
+import { useFavoritesStore } from './store/useFavoritesStore';
+
 export const DEFAULT_SETTINGS = {
   storeName: 'NexusPlay',
   slogan: 'La plataforma digital de nueva generación',
@@ -58,6 +60,32 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleRequireLogin = () => setShowAuthModal(true);
+    const handleShowToast = (e: Event) => {
+      const customEvent = e as CustomEvent<{ message: string; type: ToastType }>;
+      if (customEvent.detail) {
+        addToast(customEvent.detail.message, customEvent.detail.type);
+      }
+    };
+    window.addEventListener('require-login', handleRequireLogin);
+    window.addEventListener('show-toast', handleShowToast);
+    return () => {
+      window.removeEventListener('require-login', handleRequireLogin);
+      window.removeEventListener('show-toast', handleShowToast);
+    };
+  }, []);
+
+  const { fetchFavorites, clearFavorites, favoriteIds } = useFavoritesStore();
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchFavorites(session.user.id);
+    } else {
+      clearFavorites();
+    }
+  }, [session?.user?.id]);
 
   // Data fetching state
   const [apps, setApps] = useState<AppItem[]>([]);
@@ -902,13 +930,23 @@ export default function App() {
         );
       case 'settings':
         return <SettingsView onBack={() => setActiveView('home')} userProfile={userProfile} />;
-      case 'favorites':
+      case 'favorites': {
+        const favoriteApps = publishedApps.filter(app => favoriteIds.has(app.id));
         return (
-          <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 min-h-[60vh]">
-            <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500" /> Mis Favoritos</h1>
-            <AppGrid apps={publishedApps.filter((_:any, i:number) => i % 4 === 0).slice(0, 4)} onAppClick={handleAppClick} />
+          <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 min-h-[60vh] animate-in">
+            <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500 fill-red-500/20" /> Mis Favoritos</h1>
+            {favoriteApps.length > 0 ? (
+              <AppGrid apps={favoriteApps} onAppClick={handleAppClick} />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 bg-nexus-card border border-nexus-border rounded-3xl text-center">
+                <Heart className="w-16 h-16 text-nexus-text-sec/50 mb-4" />
+                <h2 className="text-2xl font-black mb-2">Aún no tienes favoritos</h2>
+                <p className="text-nexus-text-sec max-w-md">Explora el catálogo y pulsa el corazón en las aplicaciones que más te gusten para guardarlas aquí.</p>
+              </div>
+            )}
           </div>
         );
+      }
       case 'downloads':
         return <DownloadsView apps={publishedApps} onAppClick={handleAppClick} />;
       case 'events':

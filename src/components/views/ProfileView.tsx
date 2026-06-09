@@ -3,6 +3,7 @@ import { User, LogOut, Settings, Edit3, Image as ImageIcon, Check, Loader2, Spar
 import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 import { useAppStore } from '../../store/useAppStore';
+import { useFavoritesStore } from '../../store/useFavoritesStore';
 
 export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction, onLogoutClick, onSettingsClick, onProfileUpdate }: { 
   session?: any, 
@@ -45,16 +46,16 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
     }
   }, [userProfile, session]);
 
+  const { favoriteIds } = useFavoritesStore();
+
   useEffect(() => {
     if (session?.user?.id) {
        loadRealStats(session.user.id);
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, favoriteIds.size]);
 
   const loadRealStats = async (userId: string) => {
     try {
-      // Favorites
-      const { count: favCount } = await supabase.from('favorites').select('id', { count: 'exact', head: true }).eq('user_id', userId);
       // Published
       const { count: pubCount } = await supabase.from('apps').select('id', { count: 'exact', head: true }).eq('developer_id', userId);
       
@@ -65,7 +66,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
 
       setRealStats({
-          favorites: favCount || 0,
+          favorites: favoriteIds.size,
           published: pubCount || 0,
           activeDays: diffDays,
       });

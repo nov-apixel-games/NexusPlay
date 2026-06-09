@@ -3,14 +3,19 @@ import { Star, Download, Sparkles, ChevronRight, Gamepad2, TrendingUp } from 'lu
 import { motion } from 'motion/react';
 import { DEMO_APPS } from '../data';
 import { AppItem } from '../types';
+import { FavoriteButton } from './FavoriteButton';
 
 export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: () => void }) => {
   return (
     <motion.div 
       whileHover={{ y: -6, scale: 1.02 }}
-      className="flex flex-col gap-3 group cursor-pointer"
+      className="flex flex-col gap-3 group cursor-pointer relative"
       onClick={onClick}
     >
+      <div className="absolute top-2 right-2 z-40 hidden group-hover:flex">
+        <FavoriteButton appId={app.id} />
+      </div>
+      
       <div className="relative aspect-square w-full rounded-[24px] overflow-hidden bg-nexus-card border border-nexus-border shadow-md group-hover:shadow-nexus-glow group-hover:border-cyan-500/40 transition-all duration-300">
         <img 
           src={app.icon} 
@@ -77,6 +82,9 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
          <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1.5 shadow-lg">
            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
            <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">Popular</span>
+         </div>
+         <div className="absolute top-3 right-3 z-20">
+           <FavoriteButton appId={app.id} />
          </div>
       </div>
 

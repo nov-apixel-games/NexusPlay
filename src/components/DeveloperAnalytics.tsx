@@ -132,7 +132,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
                   <tr key={app.id} className="border-b border-nexus-border/50 last:border-0 hover:bg-nexus-card-hover transition-colors">
                      <td className="py-4">
                         <div className="flex items-center gap-3">
-                           <img src={app.icon_url} className="w-8 h-8 rounded-lg object-cover" />
+                           <img src={app.icon} className="w-8 h-8 rounded-lg object-cover" />
                            <span className="font-bold text-sm">{app.name}</span>
                         </div>
                      </td>
