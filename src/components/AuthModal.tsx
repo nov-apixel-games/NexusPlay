@@ -49,7 +49,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://nexus-play-uy.vercel.app/'
+          redirectTo: window.location.origin
         }
       });
 

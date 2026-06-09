@@ -201,8 +201,6 @@ export default function App() {
   }, [isSupabaseConfigured]);
 
   useEffect(() => {
-    if (isInitializing) return;
-
     // Aplicar logo web y favicon
     if (webLogo) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
@@ -234,32 +232,53 @@ export default function App() {
           const parsed = JSON.parse(cachedSession);
           if (parsed && parsed.currentSession) {
             setSession(parsed.currentSession);
-            if (parsed.currentSession.user) fetchUserProfile(parsed.currentSession.user.id, parsed.currentSession.user.email);
+            if (parsed.currentSession.user) {
+               fetchUserProfile(parsed.currentSession.user.id, parsed.currentSession.user.email);
+            }
           }
         }
       } catch(e) {}
     } else {
-      const sessionPromise = supabase.auth.getSession();
-      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
-      Promise.race([sessionPromise, sessionTimeout]).then(({ data: { session } }: any) => {
+      supabase.auth.getSession().then(({ data: { session } }: any) => {
+        console.log("[Auth] Session loaded at startup:", !!session);
         setSession(session);
         if (session?.user) {
           fetchUserProfile(session.user.id, session.user.email);
           setShowAuthModal(false);
         }
-      }).catch(e => console.warn("getSession timeout/error", e));
+      }).catch(e => console.warn("getSession error", e));
     }
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth event:", _event, !!session);
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id, session.user.email);
-        setShowAuthModal(false);
-      } else {
-        setUserProfile(null);
+      console.log(`[Diagnostic] Auth event: ${_event}, Session valid: ${!!session}`);
+      
+      switch (_event) {
+        case 'SIGNED_IN':
+          console.log("[Diagnostic] SIGNED_IN event triggered.");
+          setSession(session);
+          if (session?.user) {
+            fetchUserProfile(session.user.id, session.user.email);
+            setShowAuthModal(false);
+            // Force re-render of user specific fields by clearing temporary data if needed
+          }
+          break;
+        case 'SIGNED_OUT':
+          console.log("[Diagnostic] SIGNED_OUT event triggered.");
+          setSession(null);
+          setUserProfile(null);
+          break;
+        case 'TOKEN_REFRESHED':
+          console.log("[Diagnostic] TOKEN_REFRESHED event triggered.");
+          setSession(session);
+          break;
+        default:
+          setSession(session);
+          if (session?.user && !userProfile) {
+            fetchUserProfile(session.user.id, session.user.email);
+          }
+          break;
       }
     });
 
@@ -285,7 +304,7 @@ export default function App() {
       supabase.removeChannel(appsSubscription);
       window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
     };
-  }, [webLogo, isInitializing]);
+  }, [webLogo]); // Removed isInitializing from dependencies to avoid listener churn
 
   const fetchUserProfile = async (userId: string, email?: string) => {
     try {
@@ -293,18 +312,15 @@ export default function App() {
         throw new Error("Offline fetch profile fallback");
       }
       
-      const sessionPromise = supabase.auth.getSession();
-      const sessionTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
-      const { data: { session: freshSession } } = await Promise.race([sessionPromise, sessionTimeout]) as any;
+      const sessionResponse = await supabase.auth.getSession();
+      const freshSession = sessionResponse.data.session;
       
       const currentSession = freshSession || session;
       const finalEmail = email || currentSession?.user?.email || '';
       console.log("Intentando cargar perfil:", userId);
 
       // 1. Intentar obtener perfil existente
-      const profilePromise = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-      const profileTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
-      const { data, error } = await Promise.race([profilePromise, profileTimeout]) as any;
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
       
       if (error) {
         console.warn("Error de red/permisos al cargar perfil:", error.message);
@@ -864,7 +880,7 @@ export default function App() {
             />
           );
         }
-        return <NexusAIChat apps={publishedApps} apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} onAppClick={handleAppClick} />;
+        return <NexusAIChat apps={publishedApps} apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} onAppClick={handleAppClick} userProfile={userProfile} />;
       case 'profile':
         return (
           <ProfileView 
