@@ -25,6 +25,8 @@
     --nexus-text-sec: #94A3B8;
     --nexus-accent: #00D4FF;
     --nexus-border: #1E293B;
+    --nexus-overlay: rgba(5, 8, 22, 0.7);
+    --nexus-surface: rgba(17, 24, 39, 0.8);
   }
 
   [data-theme="light"] {
@@ -49,18 +51,6 @@
     --nexus-border: #111111;
     --nexus-overlay: rgba(0, 0, 0, 0.8);
     --nexus-surface: rgba(0, 0, 0, 0.6);
-  }
-
-  :root, [data-theme="dark"] {
-    --nexus-bg: #050816;
-    --nexus-card: #111827;
-    --nexus-card-hover: #1e293b;
-    --nexus-text: #FFFFFF;
-    --nexus-text-sec: #94A3B8;
-    --nexus-accent: #00D4FF;
-    --nexus-border: #1E293B;
-    --nexus-overlay: rgba(0, 0, 0, 0.8);
-    --nexus-surface: rgba(17, 24, 39, 0.6);
   }
 
   html, body {

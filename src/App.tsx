@@ -18,7 +18,8 @@ import { ShieldAlert, Heart, Menu, Search, Bell, DownloadCloud, UploadCloud } fr
 import { AnimatePresence, motion } from 'motion/react';
 import Footer from './components/Footer';
 import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditionsView, CookiePolicyView, AboutView } from './components/views/LegalViews';
-import { GamesView, ExploreView, RankingView, ProfileView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
+import { GamesView, ExploreView, RankingView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
+import { ProfileView } from './components/views/ProfileView';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 const NexusHub = lazy(() => import('./components/NexusHub'));
@@ -882,6 +883,8 @@ export default function App() {
             session={session} 
             userProfile={userProfile} 
             onLoginClick={() => setShowAuthModal(true)} 
+            onLogoutClick={() => { handleLogout(); }}
+            onSettingsClick={() => setActiveView('settings')}
             onDeveloperAction={(action) => {
               if (action === 'activate') {
                 handleActivateDeveloper();

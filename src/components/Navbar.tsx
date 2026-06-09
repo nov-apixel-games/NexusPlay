@@ -333,7 +333,7 @@ export default function Navbar({
 
               {/* Menú de Perfil de Usuario Desplegable (Estilo Play Store / TapTap) */}
               <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-nexus-border relative" ref={profileMenuRef}>
-                 <div className="hidden lg:block text-right select-none">
+                 <div className="hidden lg:block text-right select-none cursor-pointer" onClick={(e) => { e.stopPropagation(); if (onProfileClick) onProfileClick(); }}>
                    <div className="text-[14px] font-black text-nexus-text leading-tight truncate max-w-[120px]">{username}</div>
                    <div className="text-[10px] font-black uppercase tracking-widest text-cyan-500">{userProfile?.role || 'User'}</div>
                  </div>
@@ -342,7 +342,7 @@ export default function Navbar({
                    className="relative group cursor-pointer" 
                    onClick={(e) => {
                      e.stopPropagation();
-                     setShowProfileMenu(!showProfileMenu);
+                     if (onProfileClick) onProfileClick();
                    }}
                  >
                     <div className="absolute inset-0 bg-cyan-400 rounded-full blur-[10px] opacity-0 group-hover:opacity-40 transition-opacity"></div>
@@ -355,110 +355,6 @@ export default function Navbar({
                     </div>
                  </div>
 
-                 {/* Dropdown del Perfil */}
-                 <AnimatePresence>
-                   {showProfileMenu && (
-                     <motion.div
-                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                       exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                       transition={{ duration: 0.25, type: "spring", stiffness: 350, damping: 26 }}
-                       className="absolute right-0 top-14 w-[310px] sm:w-[350px] bg-nexus-card/80 backdrop-blur-3xl border border-nexus-border rounded-[28px] shadow-lg z-50 overflow-hidden p-6 flex flex-col"
-                     >
-                        {/* Cabecera del Usuario */}
-                        <div className="flex flex-col items-center text-center pb-5 border-b border-nexus-border relative">
-                          <div className="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-xl relative mb-3">
-                            <div className="w-full h-full rounded-full bg-nexus-card overflow-hidden flex items-center justify-center font-black text-2xl text-nexus-text">
-                              {userProfile?.avatar_url ? (
-                                <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar Grande" onError={(e) => { e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`; }} />
-                              ) : (
-                                username?.charAt(0)
-                              )}
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 bg-nexus-card rounded-full p-1 border border-nexus-border">
-                              <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-nexus-bg font-black text-[10px]" title="Nivel del Jugador">
-                                Lvl {level}
-                              </div>
-                            </div>
-                          </div>
-
-                          <h4 className="text-[17px] font-black text-nexus-text leading-tight drop-shadow-sm flex items-center gap-1.5 justify-center">
-                            {userRealName || username}
-                          </h4>
-                          <span className="text-[11px] font-bold text-nexus-text-sec tracking-wider font-mono mt-0.5">{`@${username}`}</span>
-                          <span className="text-[11px] text-nexus-text-sec mt-1 flex items-center gap-1.5 truncate max-w-[220px]">
-                            <Mail className="w-3.5 h-3.5 text-cyan-400" /> {userEmail}
-                          </span>
-
-                          {/* XP progressive meter */}
-                          <div className="w-full mt-3 px-1">
-                            <div className="flex justify-between items-center text-[9px] uppercase font-bold text-nexus-text-sec mb-1 font-mono tracking-wider">
-                              <span>Progreso Nivel</span>
-                              <span className="text-yellow-500 font-extrabold">{currentLevelXp} / 1000 XP</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-nexus-card border border-nexus-border rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-nexus-card bg-gradient-to-r from-cyan-400 via-blue-500 to-yellow-500 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
-                            </div>
-                          </div>
-
-                          <div className="mt-3.5 px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-400 text-[10px] font-black tracking-widest uppercase border border-cyan-400/20 shadow-sm inline-block">
-                            {roleName}
-                          </div>
-
-                          {userBio && (
-                            <p className="text-[12px] text-nexus-text-sec italic max-w-[2400px] mt-3 bg-nexus-card px-4 py-2 rounded-2xl border border-nexus-border line-clamp-2">
-                              "{userBio}"
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Lista de Acciones del Menú */}
-                        <div className="pt-4 flex flex-col gap-2">
-                           {/* Botón Editar Perfil */}
-                           <button 
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleOpenEditProfile();
-                             }}
-                             className="w-full py-3 px-4 bg-nexus-card hover:bg-cyan-500/15 border border-nexus-border hover:border-cyan-500/30 rounded-2xl text-nexus-text hover:text-cyan-400 text-[13px] font-black transition-all flex items-center justify-center gap-2 uppercase tracking-wider shadow-sm group"
-                           >
-                             <Edit2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> {t('nav.editProfile')}
-                           </button>
-
-                           {/* Botón Mi Cuenta */}
-                           <button 
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               setShowProfileMenu(false);
-                               if (onProfileClick) onProfileClick();
-                             }}
-                             className="w-full py-3 px-4 bg-transparent hover:bg-nexus-card rounded-2xl text-nexus-text hover:text-nexus-text text-[13px] font-bold transition-colors flex items-center gap-3 text-left"
-                           >
-                              <div className="w-8 h-8 rounded-xl bg-nexus-card flex items-center justify-center text-nexus-text-sec">
-                                <User className="w-4 h-4" />
-                              </div>
-                              <span className="flex-1">{t('nav.myAccount')}</span>
-                              <span className="text-[10px] uppercase font-bold tracking-widest text-nexus-text-sec">Ir</span>
-                           </button>
-
-                           {/* Botón Cerrar Sesión */}
-                           <button 
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               setShowProfileMenu(false);
-                               if (onLogoutClick) onLogoutClick();
-                             }}
-                             className="w-full py-3 px-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/20 rounded-2xl text-red-400 hover:text-red-300 text-[13px] font-black transition-all flex items-center gap-3 text-left mt-2"
-                           >
-                              <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
-                                <LogOut className="w-4 h-4" />
-                              </div>
-                              <span className="flex-1 uppercase tracking-wider text-[11px]">{t('nav.logout')}</span>
-                           </button>
-                        </div>
-                     </motion.div>
-                   )}
-                 </AnimatePresence>
               </div>
           </>
         ) : (

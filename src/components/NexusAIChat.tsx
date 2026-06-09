@@ -127,7 +127,22 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
       // Find last index of user message and only keep current prompt + last 5 contextual messages to avoid huge payload
       const historyLog = messages.slice(-10).map(m => ({ role: m.role, text: m.text }));
 
-      const res = await fetch('/api/nexus-ai', {
+      const fetchWithRetry = async (url: string, options: any, maxRetries = 3) => {
+        for (let i = 0; i < maxRetries; i++) {
+          try {
+            const res = await fetch(url, options);
+            if (!res.ok && res.status >= 500) throw new Error("Server Error " + res.status);
+            return res;
+          } catch (e: any) {
+            if (e.name === 'AbortError') throw e;
+            if (i === maxRetries - 1) throw e;
+            await new Promise(r => setTimeout(r, 1000 * (i + 1))); // exponential backoff
+          }
+        }
+        throw new Error("API Network Error");
+      };
+
+      const res = await fetchWithRetry('/api/nexus-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: text, history: historyLog, catalogue, language: useAppStore.getState().language }),
@@ -136,7 +151,14 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
 
       clearTimeout(timeoutId);
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (e) {
+        throw new Error(rawText.substring(0, 100) || "Error parseando respuesta del servidor");
+      }
+
       if (!data.success) {
         throw Object.assign(new Error(data.error || "API Error"), { details: data.details });
       }
