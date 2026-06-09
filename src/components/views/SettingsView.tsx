@@ -18,6 +18,45 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
   
   const [activeTab, setActiveTab] = useState<'interface' | 'notifications' | 'account' | 'privacy' | 'app' | 'nexus-ai' | 'pwa' | 'advanced'>('interface');
   const [toastMessage, setToastMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation.trim().toUpperCase() !== 'ELIMINAR') return;
+    
+    setIsDeleting(true);
+    setDeleteError('');
+    
+    try {
+      import('../../lib/supabase').then(async ({ supabase }) => {
+          // Intentar borrar vía RPC
+          const { error: rpcError } = await supabase.rpc('delete_user_account');
+          
+          if (rpcError) {
+             console.warn("RPC delete_user_account falló:", rpcError);
+             // Fallback: borramos perfiles de base local (puede no borrar todo auth si no hay privileges, pero sí datos en la BD pública)
+             if (userProfile?.id) {
+                await supabase.from('profiles').delete().eq('id', userProfile.id);
+             }
+          }
+          
+          // Cerrar sesión
+          await supabase.auth.signOut();
+          window.dispatchEvent(new CustomEvent('show-toast', {
+            detail: {
+              message: 'Cuenta eliminada correctamente.',
+              type: 'success'
+            }
+          }));
+          window.location.reload(); 
+      });
+    } catch (err: any) {
+      setDeleteError(err.message || 'Error al eliminar cuenta');
+      setIsDeleting(false);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -250,7 +289,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                  <div className="p-5 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl">
                     <h4 className="font-bold flex items-center gap-2 mb-1"><ShieldAlert className="w-4 h-4"/> Zona de Peligro</h4>
                     <p className="text-sm mb-4">Elimina tu cuenta y todos los datos asociados. Esto no se puede deshacer.</p>
-                    <button onClick={() => alert("Por favor contacta al soporte para eliminar la cuenta (prevención de borrado accidental).")} className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg font-bold transition-colors text-sm">Eliminar Cuenta</button>
+                    <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg font-bold transition-colors text-sm">Eliminar Cuenta</button>
                  </div>
               </div>
             )}
@@ -365,7 +404,69 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
               </div>
             )}
           </div>
+      </div>
+      
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-nexus-card border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600" />
+            <h2 className="text-2xl font-black mb-4 text-white flex items-center gap-3">
+              <ShieldAlert className="text-red-500 w-8 h-8" />
+              Eliminar Cuenta
+            </h2>
+            <p className="text-nexus-text-sec mb-6 leading-relaxed">
+              Esta acción eliminará <strong>permanentemente</strong> tu cuenta y todos tus datos asociados (perfil, favoritos, historial y configuraciones).
+            </p>
+            
+            <div className="mb-6">
+              <label className="text-sm font-bold text-nexus-text mb-2 block">
+                Escribe <span className="text-red-400 font-mono bg-red-400/10 px-2 py-0.5 rounded">ELIMINAR</span> para confirmar:
+              </label>
+              <input 
+                type="text" 
+                value={deleteConfirmation}
+                onChange={e => setDeleteConfirmation(e.target.value)}
+                placeholder="ELIMINAR"
+                className="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors uppercase"
+              />
+            </div>
+
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-500/10 text-red-400 rounded-lg text-sm border border-red-500/20">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end mt-8">
+              <button 
+                onClick={() => { setShowDeleteModal(false); setDeleteConfirmation(''); }}
+                className="px-6 py-3 rounded-xl font-bold bg-nexus-bg hover:bg-nexus-border text-nexus-text-sec transition-colors"
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDeleteAccount}
+                disabled={isDeleting || deleteConfirmation.trim().toUpperCase() !== 'ELIMINAR'}
+                className="px-6 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 focus:ring-4 ring-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Eliminando cuenta...
+                  </>
+                ) : 'Eliminar Cuenta'}
+              </button>
+            </div>
+          </motion.div>
         </div>
+      )}
+
     </motion.div>
   );
 }

@@ -500,3 +500,16 @@ CREATE POLICY "Users can insert their own studio assets" ON public.studio_assets
 DROP POLICY IF EXISTS "Users can delete their own studio assets" ON public.studio_assets;
 CREATE POLICY "Users can delete their own studio assets" ON public.studio_assets FOR DELETE USING (auth.uid() = user_id);
 
+-- ==========================================
+-- ACCOUNT DELETION RPC
+-- ==========================================
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS void AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
