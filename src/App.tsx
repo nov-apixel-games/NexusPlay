@@ -22,6 +22,8 @@ import { GamesView, ExploreView, RankingView, DownloadsView, EventsView, Achieve
 import { ProfileView } from './components/views/ProfileView';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
+import { ErrorBoundary } from './components/ErrorBoundary';
+
 const NexusHub = lazy(() => import('./components/NexusHub'));
 const DeveloperPanel = lazy(() => import('./components/DeveloperPanel'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -879,21 +881,23 @@ export default function App() {
         return <NexusAIChat apps={publishedApps} apiKey={aiConfig.apiKey} onBack={() => setActiveView('home')} onAppClick={handleAppClick} userProfile={userProfile} />;
       case 'profile':
         return (
-          <ProfileView 
-            session={session} 
-            userProfile={userProfile} 
-            onLoginClick={() => setShowAuthModal(true)} 
-            onLogoutClick={() => { handleLogout(); }}
-            onSettingsClick={() => setActiveView('settings')}
-            onDeveloperAction={(action) => {
-              if (action === 'activate') {
-                handleActivateDeveloper();
-              } else if (action === 'open') {
-                setDevPanelInitialTab('upload');
-                setShowDevPanel(true);
-              }
-            }}
-          />
+          <ErrorBoundary>
+            <ProfileView 
+              session={session} 
+              userProfile={userProfile} 
+              onLoginClick={() => setShowAuthModal(true)} 
+              onLogoutClick={() => { handleLogout(); }}
+              onSettingsClick={() => setActiveView('settings')}
+              onDeveloperAction={(action) => {
+                if (action === 'activate') {
+                  handleActivateDeveloper();
+                } else if (action === 'open') {
+                  setDevPanelInitialTab('upload');
+                  setShowDevPanel(true);
+                }
+              }}
+            />
+          </ErrorBoundary>
         );
       case 'settings':
         return <SettingsView onBack={() => setActiveView('home')} userProfile={userProfile} />;

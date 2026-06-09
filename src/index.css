@@ -30,15 +30,15 @@
   }
 
   [data-theme="light"] {
-    --nexus-bg: #F8FAFC;
-    --nexus-card: #FFFFFF;
-    --nexus-card-hover: #F1F5F9;
+    --nexus-bg: #F0F5F9;
+    --nexus-card: rgba(255, 255, 255, 0.65);
+    --nexus-card-hover: rgba(255, 255, 255, 0.9);
     --nexus-text: #0F172A;
-    --nexus-text-sec: #475569;
-    --nexus-accent: #00B8E6;
-    --nexus-border: #E2E8F0;
-    --nexus-overlay: rgba(255, 255, 255, 0.7);
-    --nexus-surface: rgba(248, 250, 252, 0.8);
+    --nexus-text-sec: #334155;
+    --nexus-accent: #0284C7;
+    --nexus-border: #7DD3FC;
+    --nexus-overlay: rgba(255, 255, 255, 0.85);
+    --nexus-surface: rgba(255, 255, 255, 0.6);
   }
 
   [data-theme="amoled"] {
@@ -76,7 +76,7 @@
   }
   
   [data-theme="light"] .glass-panel {
-    @apply shadow-sm;
+    @apply shadow-lg bg-white/70 backdrop-blur-2xl border-cyan-300/50;
   }
   
   .neon-text-gradient {

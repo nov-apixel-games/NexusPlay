@@ -154,12 +154,23 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   const isDeveloper = userProfile?.role === 'developer' || isAdmin;
   const initial = username.charAt(0).toUpperCase();
 
-  const xp = userProfile?.xp || metadata.xp || 0;
+  const xp = Number(userProfile?.xp || metadata.xp || 0) || 0;
   const level = Math.floor(xp / 1000) + 1;
   const currentLevelXp = xp % 1000;
+  const nextLevelXp = level * 1000;
   const progressPercent = (currentLevelXp / 1000) * 100;
 
-  const joinDate = userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long' }) : '-';
+  let joinDate = '-';
+  try {
+    if (userProfile?.created_at) {
+      const date = new Date(userProfile.created_at);
+      if (!isNaN(date.getTime())) {
+        joinDate = date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long' });
+      }
+    }
+  } catch (e) {
+    console.error("Invalid join date", e);
+  }
 
   return (
     <div className="pt-24 px-4 sm:px-6 max-w-4xl mx-auto pb-16 space-y-8 animate-in mt-1">
@@ -326,7 +337,7 @@ function StatCard({ icon, label, value, bg }: any) {
           {icon}
        </div>
        <div>
-         <p className="text-2xl font-black text-nexus-text truncate">{value.toLocaleString()}</p>
+         <p className="text-2xl font-black text-nexus-text truncate">{value !== undefined && value !== null ? value.toLocaleString() : '0'}</p>
          <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest font-bold mt-1 line-clamp-1">{label}</p>
        </div>
     </div>
