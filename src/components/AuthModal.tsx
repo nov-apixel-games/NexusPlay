@@ -3,6 +3,9 @@ import { supabase } from '../lib/supabase';
 import { Mail, Lock, X, Loader2, User, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useAppStore } from '../store/useAppStore';
+
 interface AuthModalProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -10,6 +13,8 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalProps) {
+  useBodyScrollLock(true);
+  const { t } = useAppStore();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +145,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-nexus-overlay backdrop-blur-md">
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md overflow-hidden pointer-events-auto overscroll-none">
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -163,7 +168,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
           
           <div className="mb-8">
             <h2 className="text-3xl font-black text-nexus-text mb-2 tracking-tight">
-              {isLogin ? 'Bienvenido a Nexus' : 'Crear Cuenta'}
+              {isLogin ? t('auth.welcome') : t('auth.createAccount')}
             </h2>
             <p className="text-nexus-text-sec text-sm">
               {isLogin ? 'Inicia sesión para continuar tu aventura.' : 'Únete a la plataforma digital de nueva generación.'}

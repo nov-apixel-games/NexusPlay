@@ -18,9 +18,12 @@ interface DeveloperConsoleProps {
   publishedApps: any[];
 }
 
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+
 type Tab = 'dashboard' | 'apps' | 'publish' | 'analytics' | 'settings';
 
 export default function DeveloperConsole({ userId, userProfile, onClose, onAddApp, publishedApps: initialApps }: DeveloperConsoleProps) {
+  useBodyScrollLock(true);
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [apps, setApps] = useState(initialApps);
@@ -94,7 +97,7 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex bg-nexus-card overflow-hidden animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[100000] flex bg-nexus-card overflow-hidden animate-in fade-in duration-500 pointer-events-auto overscroll-none">
       {/* MOBILE SIDEBAR OVERLAY */}
       <AnimatePresence>
         {isSidebarOpen && (

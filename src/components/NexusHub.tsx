@@ -8,12 +8,14 @@ import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserItem } from '../types';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 interface NexusHubProps {
   session: any;
   userProfile: any;
   onBack: () => void;
 }
+
 
 interface Community {
   id: string;
@@ -39,6 +41,7 @@ interface Message {
 }
 
 export default function NexusHub({ session, userProfile, onBack }: NexusHubProps) {
+  useBodyScrollLock(true);
   const [communities, setCommunities] = useState<Community[]>([]);
   const [activeCommunity, setActiveCommunity] = useState<Community | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,14 +49,6 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   const isAdmin = userProfile?.role === 'admin';
-
-  useEffect(() => {
-    // Lock body scroll
-    document.body.style.overflow = 'hidden';
-    return () => {
-       document.body.style.overflow = '';
-    };
-  }, []);
 
   useEffect(() => {
     fetchCommunities();
@@ -115,7 +110,7 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
 
   if (tableError) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-nexus-card h-[100dvh] w-full overflow-hidden text-center fixed top-0 left-0 z-[100]">
+      <div className="flex flex-col items-center justify-center p-8 bg-nexus-card h-[100dvh] w-full overflow-hidden text-center fixed inset-0 z-[100000] pointer-events-auto overscroll-none">
          <AlertTriangle className="w-20 h-20 text-red-500 mb-6" />
          <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">Falta Base de Datos</h2>
          <p className="text-nexus-text-sec max-w-lg mb-4">Las tablas de Nexus Hub no existen en tu base de datos de Supabase.</p>
@@ -125,7 +120,7 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
   }
 
   return (
-    <div className="flex flex-col bg-nexus-card h-[100dvh] w-full overflow-hidden fixed top-0 left-0 z-[100]">
+    <div className="flex flex-col bg-nexus-card h-[100dvh] w-full overflow-hidden fixed inset-0 z-[100000] pointer-events-auto overscroll-none">
       {activeCommunity ? (
         <ChatRoom 
           community={activeCommunity} 

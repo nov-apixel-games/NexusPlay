@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { useAppStore } from '../store/useAppStore';
+import { ModalWrapper } from './ModalWrapper';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -304,14 +305,14 @@ export default function Navbar({
                       className="absolute right-0 top-14 w-80 sm:w-96 bg-nexus-card/80 backdrop-blur-2xl border border-nexus-border rounded-[24px] shadow-lg overflow-hidden z-50"
                     >
                        <div className="p-5 border-b border-nexus-border flex items-center justify-between">
-                         <h3 className="font-black text-nexus-text text-[15px] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-400" /> Notificaciones</h3>
-                         {unreadCount > 0 && <span className="text-[10px] font-black tracking-widest bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-lg uppercase border border-cyan-500/20">{unreadCount} Nuevas</span>}
+                         <h3 className="font-black text-nexus-text text-[15px] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-400" /> {t('nav.notifications') || 'Notificaciones'}</h3>
+                         {unreadCount > 0 && <span className="text-[10px] font-black tracking-widest bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-lg uppercase border border-cyan-500/20">{unreadCount} {t('nav.new') || 'Nuevas'}</span>}
                        </div>
                        <div className="max-h-80 overflow-y-auto no-scrollbar">
                          {notifications.length === 0 ? (
                            <div className="p-10 text-center flex flex-col items-center gap-3">
                              <Sparkles className="w-8 h-8 text-gray-600" />
-                             <span className="text-nexus-text-sec text-[13px] font-medium tracking-wide">Todo está al día</span>
+                             <span className="text-nexus-text-sec text-[13px] font-medium tracking-wide">{t('nav.allCaughtUp') || 'Todo está al día'}</span>
                            </div>
                          ) : (
                            notifications.map(notif => (
@@ -370,17 +371,8 @@ export default function Navbar({
       {/* Modal Moderno de Edición de Perfil (Estilo TapTap/Play Store) */}
       <AnimatePresence>
         {showEditProfileModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-nexus-surface backdrop-blur-md">
-            {/* Backdrop click blocker to dismiss modal */}
-            <div className="absolute inset-0 cursor-default" onClick={() => setShowEditProfileModal(false)} />
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, type: "spring", stiffness: 350, damping: 28 }}
-              className="bg-nexus-card/80 border border-nexus-border rounded-[32px] max-w-lg w-full shadow-lg flex flex-col relative z-50 overflow-hidden max-h-[100%] sm:max-h-[90vh]"
-            >
+          <ModalWrapper onClose={() => setShowEditProfileModal(false)}>
+            <div className="w-full h-full flex flex-col relative z-50 overflow-hidden">
               {/* Sticky Header */}
               <div className="flex-none p-5 sm:p-6 pb-4 border-b border-nexus-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -389,17 +381,11 @@ export default function Navbar({
                   </div>
                   <div>
                     <h3 className="text-base sm:text-lg font-black text-nexus-text uppercase tracking-wider leading-none">
-                      Perfil Personalizado
+                      {t('profile.editProfile') || 'Perfil Personalizado'}
                     </h3>
                     <p className="text-[10px] text-nexus-text-sec font-medium uppercase tracking-widest mt-1">Identidad en Nexus Hub</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setShowEditProfileModal(false)}
-                  className="w-10 h-10 rounded-full bg-nexus-card hover:bg-nexus-card-hover text-nexus-text-sec hover:text-nexus-text flex items-center justify-center transition-all cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
 
               {/* Scrollable Content */}
@@ -749,13 +735,13 @@ export default function Navbar({
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4 hidden sm:inline" /> Guardar
+                      <Check className="w-4 h-4 hidden sm:inline" /> {t('profile.save')}
                     </>
                   )}
                 </button>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </ModalWrapper>
         )}
       </AnimatePresence>
     </nav>

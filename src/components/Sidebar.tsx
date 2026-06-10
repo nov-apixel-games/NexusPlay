@@ -22,12 +22,12 @@ const getMenuItems = (isAdmin: boolean, t: any) => [
   { label: t('nav.sidebar.discover'), items: [
     { label: t('nav.home'), icon: Home, id: 'home', active: true, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
     { label: t('nav.explore'), icon: Compass, id: 'explore', color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-    { label: 'Centro Inteligente', icon: Sparkles, id: 'smart-hub', color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10' },
-    { label: 'Games Hub', icon: Gamepad2, id: 'games-hub', color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10' },
-    { label: 'Nexus AI', icon: BrainCircuit, id: 'nexus-ai', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: t('nav.smartCenter'), icon: Sparkles, id: 'smart-hub', color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10' },
+    { label: t('nav.gamesHub'), icon: Gamepad2, id: 'games-hub', color: 'text-fuchsia-400', bg: 'bg-fuchsia-400/10' },
+    { label: t('ai.title'), icon: BrainCircuit, id: 'nexus-ai', color: 'text-blue-400', bg: 'bg-blue-400/10' },
   ]},
   { label: t('nav.sidebar.community'), items: [
-    { label: 'Nexus Hub', icon: Users, id: 'nexus-hub', color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+    { label: t('nav.nexusHub'), icon: Users, id: 'nexus-hub', color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
     { label: t('nav.ranking'), icon: Trophy, id: 'ranking', color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
   ]},
   { label: t('nav.sidebar.library'), items: [
@@ -37,7 +37,7 @@ const getMenuItems = (isAdmin: boolean, t: any) => [
   { label: t('nav.sidebar.account'), items: [
     { label: t('nav.profile'), icon: User, id: 'profile', color: 'text-nexus-text-sec', bg: 'bg-slate-300/10' },
     { label: t('nav.settings'), icon: Settings, id: 'settings', color: 'text-nexus-text-sec', bg: 'bg-gray-400/10' },
-    ...(isAdmin ? [{ label: 'Admin', icon: Shield, id: 'admin-panel', color: 'text-red-500', bg: 'bg-red-500/10' }] : []),
+    ...(isAdmin ? [{ label: t('nav.admin') || 'Admin Panel', icon: Shield, id: 'admin-panel', color: 'text-red-500', bg: 'bg-red-500/10' }] : []),
   ]}
 ];
 
@@ -46,7 +46,7 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, u
   const MENU_ITEMS = getMenuItems(isAdmin, t);
   const displayLogo = webLogo || localStorage.getItem('nexus_web_logo');
   const platformName = propPlatformName || localStorage.getItem('nexus_platform_name') || 'Nexus';
-  const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Invitado';
+  const username = userProfile?.username || session?.user?.email?.split('@')[0] || t('nav.guest') || 'Invitado';
 
   return (
     <AnimatePresence>
@@ -58,7 +58,7 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, u
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed inset-0 bg-nexus-overlay backdrop-blur-sm z-[80]"
+            className="fixed inset-0 bg-nexus-overlay backdrop-blur-sm z-[80] pointer-events-auto overscroll-none"
           />
           <motion.div 
             initial={{ x: '-100%', opacity: 0 }}
@@ -171,7 +171,7 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, u
                   className="flex items-center justify-center gap-2 px-4 py-3.5 w-full rounded-2xl text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all group font-black uppercase tracking-widest text-[11px] sm:text-[12px] cursor-pointer shadow-[0_4px_15px_rgba(239,68,68,0.1)]"
                 >
                   <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                  Cerrar Sesión
+                  {t('nav.logout')}
                 </button>
               </div>
             )}

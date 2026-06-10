@@ -186,12 +186,12 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
 
       <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-64 flex flex-col gap-2 shrink-0">
-            <TabButton active={activeTab === 'interface'} onClick={() => setActiveTab('interface')} icon={Palette} label="Apariencia" />
-            <TabButton active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} icon={Bell} label="Notificaciones" />
-            <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={User} label="Cuenta" />
+            <TabButton active={activeTab === 'interface'} onClick={() => setActiveTab('interface')} icon={Palette} label={t('settings.theme') || "Apariencia"} />
+            <TabButton active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} icon={Bell} label={t('nav.notifications') || "Notificaciones"} />
+            <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={User} label={t('nav.myAccount') || "Cuenta"} />
             <TabButton active={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} icon={Lock} label="Privacidad" />
-            <TabButton active={activeTab === 'app'} onClick={() => setActiveTab('app')} icon={Monitor} label="Descargas" />
-            <TabButton active={activeTab === 'nexus-ai'} onClick={() => setActiveTab('nexus-ai')} icon={Cpu} label="Nexus AI" />
+            <TabButton active={activeTab === 'app'} onClick={() => setActiveTab('app')} icon={Monitor} label={t('nav.downloads') || "Descargas"} />
+            <TabButton active={activeTab === 'nexus-ai'} onClick={() => setActiveTab('nexus-ai')} icon={Cpu} label={t('ai.title') || "Nexus AI"} />
             <TabButton active={activeTab === 'pwa'} onClick={() => setActiveTab('pwa')} icon={Smartphone} label="PWA / App Web" />
             <TabButton active={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} icon={Settings} label="Avanzado" />
           </div>

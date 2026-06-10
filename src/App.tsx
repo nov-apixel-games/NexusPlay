@@ -38,6 +38,7 @@ import OfflineIndicator from './components/OfflineIndicator';
 
 import { useAppStore } from './store/useAppStore';
 
+import { ModalWrapper } from './components/ModalWrapper';
 import { useFavoritesStore } from './store/useFavoritesStore';
 
 export const DEFAULT_SETTINGS = {
@@ -663,9 +664,9 @@ export default function App() {
 
   const publishedApps = apps.filter(a => a.status === 'published');
 
-  const renderActiveView = () => {
-    if (activeView.startsWith('app/')) {
-      const appId = activeView.split('/')[1];
+  const renderActiveView = (view: string) => {
+    if (view.startsWith('app/')) {
+      const appId = view.split('/')[1];
       const app = apps.find(a => a.id === appId);
       if (app) {
          // Derive back label from history
@@ -682,7 +683,7 @@ export default function App() {
       }
     }
 
-    switch (activeView) {
+    switch (view) {
       case 'home':
         return (
           <>
@@ -702,7 +703,7 @@ export default function App() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
                   <div className="w-1.5 h-8 bg-cyan-400 rounded-full shadow-nexus-glow"></div>
-                  Destacados
+                  {t('home.featured')}
                 </h2>
               </div>
               <AppGrid apps={publishedApps.length > 0 ? (publishedApps.filter(a => a.featured).length > 0 ? publishedApps.filter(a => a.featured) : publishedApps.sort((a,b) => b.rating - a.rating).slice(0, 10)) : []} onAppClick={handleAppClick} />
@@ -773,10 +774,10 @@ export default function App() {
                <div className="flex items-center justify-between mb-6">
                  <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
                     <div className="w-1.5 h-8 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
-                    Tendencias Globales
+                    {t('home.trending')}
                  </h2>
                  <button onClick={() => setActiveView('games')} className="text-purple-400 text-[13px] font-black hover:text-purple-300 transition-colors uppercase tracking-widest hidden sm:block">
-                   Explorar Catálogo
+                   {t('home.exploreCatalog')}
                  </button>
                </div>
                
@@ -819,7 +820,7 @@ export default function App() {
                <div className="flex items-center justify-between mb-6">
                  <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3">
                     <div className="w-1.5 h-8 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                    Nuevos Lanzamientos
+                    {t('home.newReleases')}
                  </h2>
                </div>
                
@@ -934,13 +935,13 @@ export default function App() {
         const favoriteApps = publishedApps.filter(app => favoriteIds.has(app.id));
         return (
           <div className="pt-24 px-6 max-w-7xl mx-auto pb-16 min-h-[60vh] animate-in">
-            <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500 fill-red-500/20" /> Mis Favoritos</h1>
+            <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Heart className="w-8 h-8 text-red-500 fill-red-500/20" /> {t('favorites.title')}</h1>
             {favoriteApps.length > 0 ? (
               <AppGrid apps={favoriteApps} onAppClick={handleAppClick} />
             ) : (
               <div className="flex flex-col items-center justify-center p-12 bg-nexus-card border border-nexus-border rounded-3xl text-center">
                 <Heart className="w-16 h-16 text-nexus-text-sec/50 mb-4" />
-                <h2 className="text-2xl font-black mb-2">Aún no tienes favoritos</h2>
+                <h2 className="text-2xl font-black mb-2">{t('favorites.empty')}</h2>
                 <p className="text-nexus-text-sec max-w-md">Explora el catálogo y pulsa el corazón en las aplicaciones que más te gusten para guardarlas aquí.</p>
               </div>
             )}
@@ -984,7 +985,20 @@ export default function App() {
     }
   };
 
-  const isFullScreenView = activeView === 'nexus-ai' || activeView === 'admin-panel' || activeView === 'search' || activeView === 'nexus-hub' || activeView === 'games-hub';
+  const modalViewList = ['profile', 'settings', 'favorites', 'privacy', 'terms', 'cookies', 'about', 'contact', 'help', 'achievements', 'nexus-ai'];
+  
+  const isModalView = modalViewList.includes(activeView);
+  
+  const getBaseView = () => {
+    for (let i = viewHistory.length - 1; i >= 0; i--) {
+      if (!modalViewList.includes(viewHistory[i])) return viewHistory[i];
+    }
+    return 'home';
+  };
+
+  const baseView = isModalView ? getBaseView() : activeView;
+
+  const isFullScreenView = baseView === 'admin-panel' || baseView === 'search' || baseView === 'nexus-hub' || baseView === 'games-hub';
 
   if (isInitializing) {
     return (
@@ -1096,14 +1110,14 @@ export default function App() {
       {isFullScreenView ? (
          <div className="flex-1 w-full h-screen">
             <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-nexus-card">Cargando Módulo...</div>}>
-              {renderActiveView()}
+              {renderActiveView(baseView)}
             </Suspense>
          </div>
       ) : (
         <main className="max-w-7xl mx-auto flex-1 w-full relative z-10 flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeView}
+              key={baseView}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -1111,12 +1125,27 @@ export default function App() {
               className="flex-1 w-full flex flex-col"
             >
               <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">Cargando Sección...</div>}>
-                {renderActiveView()}
+                {renderActiveView(baseView)}
               </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>
       )}
+
+      {/* Render Modal View on top if active */}
+      <AnimatePresence>
+        {isModalView && (
+          <ModalWrapper 
+            key="modal-wrapper" 
+            onClose={handleBack}
+            fullScreen={activeView === 'nexus-ai'}
+          >
+             <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">Cargando...</div>}>
+               {renderActiveView(activeView)}
+             </Suspense>
+          </ModalWrapper>
+        )}
+      </AnimatePresence>
 
       {!isFullScreenView && !activeView.startsWith('app/') && (
         <Footer onNavigate={handleAction} />

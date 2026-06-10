@@ -243,7 +243,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-nexus-bg flex flex-col md:flex-row font-sans overflow-hidden transition-colors duration-300" style={{ height: '100dvh' }}>
+    <div className="relative w-full h-full bg-nexus-bg flex flex-col md:flex-row font-sans overflow-hidden transition-colors duration-300">
       
       {/* Sidebar Overlay */}
       <AnimatePresence>
