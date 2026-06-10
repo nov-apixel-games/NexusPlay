@@ -31,13 +31,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set((state) => ({ 
       language: lang,
       t: (key) => {
-        return (translations[lang] as any)[key] || (translations['es'] as any)[key] || key;
+        const val = (translations[lang] as any)[key] || (translations['es'] as any)[key];
+        if (!val && typeof window !== 'undefined') console.warn(`[i18n] Missing key: ${key}`);
+        return val || undefined as any;
       }
     }));
   },
   t: (key) => {
     const lang = (localStorage.getItem('nexus_language') as LanguageCode) || 'es';
-    return (translations[lang] as any)[key] || (translations['es'] as any)[key] || key;
+    const val = (translations[lang] as any)[key] || (translations['es'] as any)[key];
+    if (!val && typeof window !== 'undefined') console.warn(`[i18n] Missing key: ${key}`);
+    return val || undefined as any;
   },
   theme: (localStorage.getItem('nexus_theme') as ThemeType) || 'dark',
   setTheme: (theme: ThemeType) => {

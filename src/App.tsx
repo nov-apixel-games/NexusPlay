@@ -33,6 +33,7 @@ const AppDetailView = lazy(() => import('./components/views/AppDetailView').then
 const SettingsView = lazy(() => import('./components/views/SettingsView').then(m => ({ default: m.SettingsView })));
 const SmartHubView = lazy(() => import('./components/views/SmartHubView').then(m => ({ default: m.SmartHubView })));
 import AuthModal from './components/AuthModal';
+import { OnboardingView } from './components/OnboardingView';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
 
@@ -59,6 +60,8 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingSession, setOnboardingSession] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -358,49 +361,9 @@ export default function App() {
       const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture || null;
 
       if (!data) {
-        console.log("Perfil no existe en DB. Creando...");
-        const role = finalEmail === 'elmenorjn@gmail.com' ? 'admin' : 'user';
-        const uniqueSuffix = userId.substring(0, 4);
-
-        // Truncar username para evitar errores de longitud (máx 20 caracteres por seguridad)
-        const baseName = (metaName || finalEmail.split('@')[0] || 'User')
-          .replace(/[^a-zA-Z0-9]/g, '')
-          .substring(0, 15);
-        const username = `${baseName || 'User'}_${uniqueSuffix}`;
-        
-        let createdProfile = null;
-        let finalErr = null;
-        
-        const tryUpsert = async (withAvatar: boolean) => {
-          const payload: any = {
-            id: userId,
-            email: finalEmail,
-            role,
-            username,
-            real_name: metaName || null
-          };
-          if (withAvatar) payload.avatar_url = metaAvatar || null;
-          
-          return await supabase.from('profiles').upsert(payload, { onConflict: 'id' }).select().single();
-        };
-
-        const { data: created, error: insErr } = await tryUpsert(true);
-        createdProfile = created;
-        finalErr = insErr;
-
-        if (insErr && insErr.message && insErr.message.includes('schema cache')) {
-           const { data: retryCreated, error: retryErr } = await tryUpsert(false);
-           createdProfile = retryCreated;
-           finalErr = retryErr;
-        }
-
-        if (!finalErr && createdProfile) {
-          setUserProfile(createdProfile);
-        } else {
-          console.error("No se pudo persistir el perfil:", finalErr);
-          // Fallback local
-          setUserProfile({ id: userId, email: finalEmail, role, username, real_name: metaName || null, avatar_url: metaAvatar || null });
-        }
+        console.log("Perfil no existe en DB. Mostrar onboarding...");
+        setOnboardingSession(currentSession);
+        setShowOnboarding(true);
       } else {
         // Asegurar admin por email si es necesario
         if (data.email === 'elmenorjn@gmail.com' && data.role !== 'admin') {
@@ -583,12 +546,14 @@ export default function App() {
   const isDeveloper = userProfile?.role === 'developer' || isAdmin;
 
   useEffect(() => {
-    if (isSidebarOpen || showDevPanel || showAuthModal) {
+    if (isSidebarOpen || showDevPanel || showAuthModal || showOnboarding) {
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
     }
-  }, [isSidebarOpen, showDevPanel, showAuthModal]);
+  }, [isSidebarOpen, showDevPanel, showAuthModal, showOnboarding]);
 
   const [devPanelInitialTab, setDevPanelInitialTab] = useState<'upload' | 'my-apps' | 'requirements'>('upload');
 
@@ -1046,7 +1011,17 @@ export default function App() {
       <GoogleAdSense />
       <OfflineIndicator />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-      {showAuthModal && (
+      {showOnboarding && onboardingSession && (
+        <OnboardingView 
+          session={onboardingSession} 
+          onComplete={(profile) => {
+             setUserProfile(profile);
+             setShowOnboarding(false);
+          }} 
+        />
+      )}
+
+      {showAuthModal && !showOnboarding && (
         <AuthModal 
           onClose={() => setShowAuthModal(false)} 
           onSuccess={() => {
