@@ -77,8 +77,13 @@ function ProgressBar({ label, value, color }: any) {
 }
 
 export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUsers: (u: any[]) => void, addToast: any }) {
-  const toggleStatus = (id: string, currentStatus: string) => {
+  const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', id);
+    if (error) {
+       addToast(`Error: ${error.message}`, 'error');
+       return;
+    }
     setUsers(users.map(u => u.id === id ? { ...u, status: newStatus as any } : u));
     addToast(newStatus === 'active' ? 'Usuario activado exitosamente.' : 'Usuario suspendido.', newStatus === 'active' ? 'success' : 'info');
   };
@@ -91,6 +96,27 @@ export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUse
     }
     setUsers(users.map(u => u.id === id ? { ...u, role: role as 'user' | 'developer' | 'admin' } : u));
     addToast(`Rol de usuario actualizado a ${role}`, 'success');
+  };
+
+  const deleteUser = async (id: string) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este usuario completamente?")) return;
+    
+    // Attempt backend delete via API if available, or direct if RLS allows (unlikely to allow full auth delete directly from client without service key)
+    try {
+      const resp = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: id })
+      });
+      if (resp.ok) {
+         setUsers(users.filter(u => u.id !== id));
+         addToast("Usuario eliminado correctamente.", "success");
+      } else {
+         addToast("Error al eliminar cuenta auth.", "error");
+      }
+    } catch (err: any) {
+      addToast(`Error: ${err.message}`, "error");
+    }
   };
 
   return (
@@ -135,6 +161,8 @@ export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUse
                     >
                       <option value="user">Usuario</option>
                       <option value="developer">Desarrollador</option>
+                      <option value="editor">Editor</option>
+                      <option value="moderator">Moderador</option>
                       <option value="admin">Admin</option>
                     </select>
                   </td>
@@ -152,14 +180,23 @@ export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUse
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => toggleStatus(user.id, user.status || 'active')}
-                      className={`text-xs px-3 py-1.5 rounded-lg border font-bold transition-all active:scale-95 ${
-                        (user.status || 'active') === 'active' ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'
-                      }`}
-                    >
-                      {(user.status || 'active') === 'active' ? 'Suspender' : 'Activar'}
-                    </button>
+                    <div className="flex justify-end gap-2">
+                       <button 
+                         onClick={() => toggleStatus(user.id, user.status || 'active')}
+                         className={`text-xs px-3 py-1.5 rounded-lg border font-bold transition-all active:scale-95 ${
+                           (user.status || 'active') === 'active' ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'
+                         }`}
+                       >
+                         {(user.status || 'active') === 'active' ? 'Suspender' : 'Activar'}
+                       </button>
+                       <button 
+                         onClick={() => deleteUser(user.id)}
+                         className="text-xs px-3 py-1.5 rounded-lg border border-red-900/30 text-red-500 font-bold transition-all hover:bg-red-500 hover:text-white"
+                         title="Eliminar usuario"
+                       >
+                         <Trash2 className="w-4 h-4" />
+                       </button>
+                    </div>
                   </td>
                 </tr>
               )})}

@@ -14,7 +14,7 @@ import {
   AdminDashboard, AdminUsers 
 } from './admin/AdminViews1';
 import { 
-  AdminModeration, AdminAds, AdminSettings, AdminAI 
+  AdminModeration, AdminAds, AdminSettings, AdminAI, AdminNotifications, AdminDatabaseTools
 } from './admin/AdminViews2';
 
 interface AdminPanelProps {
@@ -414,8 +414,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     { id: 'dashboard', label: 'Dashboard', icon: BarChart },
     { id: 'apps', label: 'Aplicaciones', icon: Smartphone },
     { id: 'users', label: 'Usuarios', icon: Users },
+    { id: 'notifications', label: 'Notificaciones', icon: MessageSquare },
     { id: 'devs', label: 'Peticiones Dev', icon: Code },
     { id: 'reviews', label: 'Reseñas y Moderación', icon: Star },
+    { id: 'db_tools', label: 'Base de Datos', icon: Database },
     { id: 'monetization', label: 'Monetización', icon: DollarSign },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'infra', label: 'Infraestructura', icon: Activity },
@@ -947,6 +949,16 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {/* USUARIOS */}
            {activeTab === 'users' && (
              <AdminUsers users={users} setUsers={setUsers} addToast={addToast} />
+           )}
+
+           {/* NOTIFICACIONES */}
+           {activeTab === 'notifications' && (
+             <AdminNotifications users={users} addToast={addToast} />
+           )}
+
+           {/* BASE DE DATOS */}
+           {activeTab === 'db_tools' && (
+             <AdminDatabaseTools addToast={addToast} />
            )}
 
            {/* DESARROLLADORES */}
