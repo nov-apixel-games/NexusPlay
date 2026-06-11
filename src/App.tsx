@@ -52,7 +52,10 @@ export default function App() {
   const { t } = useAppStore();
   const [isInitializing, setIsInitializing] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeView, setActiveView] = useState('home');
+  const [activeView, setActiveView] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view') || 'home';
+  });
   const [viewHistory, setViewHistory] = useState<string[]>(['home']);
   const [showDevPanel, setShowDevPanel] = useState(false);
   
@@ -668,6 +671,18 @@ export default function App() {
 
     switch (view) {
       case 'home':
+        if (isOffline && publishedApps.length === 0) {
+          return (
+            <div className="pt-24 min-h-[60vh] flex flex-col items-center justify-center">
+              <OfflineFallback 
+                onBack={() => setActiveView('home')} 
+                onGoToGames={() => setActiveView('games-hub')} 
+                title="Conexión Perdida"
+                description="Parece que estás desconectado y no tienes aplicaciones almacenadas en la caché local. ¡Pásate por el Games Hub preinstalado para jugar sin internet!"
+              />
+            </div>
+          );
+        }
         return (
           <>
             <Hero storeName={settings.storeName} slogan={settings.slogan} onAction={(action) => setActiveView(action)} />
