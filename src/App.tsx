@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import GoogleAdSense from './components/GoogleAdSense';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -1174,6 +1175,8 @@ export default function App() {
       {!showAuthModal && activeView !== 'nexus-ai' && activeView !== 'admin-panel' && activeView !== 'nexus-hub' && (
         <BottomNav activeView={activeView} onNavigate={handleAction} />
       )}
+
+      <SpeedInsights />
     </div>
   );
 }
