@@ -279,7 +279,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
          <div className="col-span-1 space-y-6 sm:space-y-8">
             <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] space-y-4">
                <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-                 <Shield className="w-4 h-4" /> Rol & Nivel
+                 <Shield className="w-4 h-4" /> Rol
                </h3>
                
                <div className="flex items-center gap-4">
@@ -290,16 +290,6 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                    <p className="text-2xl font-black capitalize tracking-tight">{userProfile?.role || 'Mortal'}</p>
                    <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mt-1">Status Actual</p>
                  </div>
-               </div>
-
-               <div className="pt-6 border-t border-nexus-border/50 space-y-3">
-                  <div className="flex justify-between items-center whitespace-nowrap">
-                    <span className="font-black text-lg">Nivel {level}</span>
-                    <span className="text-xs text-nexus-text-sec font-mono font-bold bg-nexus-bg px-2 py-1 rounded-md border border-nexus-border">{xp.toLocaleString()} XP / {nextLevelXp.toLocaleString()}</span>
-                  </div>
-                  <div className="h-2.5 bg-nexus-bg rounded-full overflow-hidden border border-nexus-border/50 shadow-inner">
-                    <div className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 rounded-full" style={{ width: `${progressPercent}%` }} />
-                  </div>
                </div>
             </div>
 
@@ -330,7 +320,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 flex-1">
                   <StatCard icon={<Star className="w-6 h-6 text-yellow-400" />} label="Favoritos Guardados" value={realStats.favorites} bg="bg-yellow-500/10 border-yellow-500/20" />
                   <StatCard icon={<Compass className="w-6 h-6 text-blue-400" />} label="Apps Publicadas" value={realStats.published} bg="bg-blue-500/10 border-blue-500/20" />
-                  <StatCard icon={<Sparkles className="w-6 h-6 text-emerald-400" />} label="XP Obtenida" value={xp} bg="bg-emerald-500/10 border-emerald-500/20" />
+                  <StatCard icon={<Activity className="w-6 h-6 text-emerald-400" />} label="Días Activos" value={realStats.activeDays} bg="bg-emerald-500/10 border-emerald-500/20" />
                </div>
 
                {(!isDeveloper) && (

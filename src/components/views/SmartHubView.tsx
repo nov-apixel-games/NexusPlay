@@ -78,7 +78,7 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-             {apps.slice(0, 3).map(app => (
+             {apps.length > 0 ? apps.slice(0, 3).map(app => (
                 <div key={app.id} onClick={() => onAppClick(app)} className="bg-nexus-bg border border-nexus-border hover:border-blue-500/30 transition-colors rounded-xl p-3 flex items-center gap-3 cursor-pointer">
                    <img src={app.icon} alt={app.name} className="w-12 h-12 rounded-xl object-cover" />
                    <div>
@@ -89,7 +89,11 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
                      </p>
                    </div>
                 </div>
-             ))}
+             )) : (
+               <div className="col-span-1 md:col-span-3 text-center py-6 text-nexus-text-sec text-sm">
+                 Sin datos disponibles
+               </div>
+             )}
            </div>
         </section>
 
@@ -154,29 +158,13 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
                     <Trophy className="w-5 h-5 text-yellow-400" />
                     <h3 className="font-bold text-nexus-text">Tu Actividad</h3>
                   </div>
-                  {userProfile && <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-medium">Lvl 5</span>}
                </div>
 
                {userProfile ? (
                  <div className="space-y-4">
-                   <div className="flex justify-between items-center text-sm">
-                      <span className="text-nexus-text-sec flex items-center gap-1.5"><Heart className="w-4 h-4 text-rose-400" /> Favoritos</span>
-                      <span className="text-nexus-text font-bold">12</span>
-                   </div>
-                   <div className="flex justify-between items-center text-sm">
-                      <span className="text-nexus-text-sec flex items-center gap-1.5"><Compass className="w-4 h-4 text-emerald-400" /> Exploradas</span>
-                      <span className="text-nexus-text font-bold">142</span>
-                   </div>
-                   <div className="flex justify-between items-center text-sm">
-                      <span className="text-nexus-text-sec flex items-center gap-1.5"><Activity className="w-4 h-4 text-blue-400" /> Días activo</span>
-                      <span className="text-nexus-text font-bold">18</span>
-                   </div>
-                   
-                   <div className="pt-3 mx-auto flex justify-center gap-2 border-t border-nexus-border">
-                      <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500" title="Explorador Novato">🎖️</div>
-                      <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500" title="Beta Tester">🔬</div>
-                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500" title="10 Apps Descargadas">🚀</div>
-                   </div>
+                    <div className="text-center py-4 text-nexus-text-sec text-sm">
+                       Sin datos de actividad disponibles
+                    </div>
                  </div>
                ) : (
                  <div className="text-center py-4">
@@ -185,22 +173,19 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
                )}
             </div>
 
-            {/* AI News / Resumen */}
+            {/* AI News / Resumen - Disabled to eliminate fake data 
             <div className="bg-nexus-card border border-nexus-border rounded-2xl p-5">
                <div className="flex items-center gap-2 mb-4">
                   <Activity className="w-5 h-5 text-rose-400" />
                   <h3 className="font-bold text-nexus-text">Tech News (IA)</h3>
                </div>
                <div className="space-y-3">
-                 {news.map(n => (
-                    <div key={n.id} className="border-b border-nexus-border pb-3 last:border-0 last:pb-0">
-                       <h4 className="text-sm font-semibold text-nexus-text leading-tight mb-1">{n.title}</h4>
-                       <p className="text-xs text-nexus-text-sec">{n.excerpt}</p>
-                       <span className="text-[10px] text-blue-400 mt-1 block">{n.date}</span>
-                    </div>
-                 ))}
+                 <div className="col-span-1 md:col-span-3 text-center py-6 text-nexus-text-sec text-sm">
+                     Sin datos disponibles
+                 </div>
                </div>
             </div>
+            */}
           </section>
         </div>
         

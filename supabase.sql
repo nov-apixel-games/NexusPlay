@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     followers INTEGER DEFAULT 0,
     likes INTEGER DEFAULT 0,
     comments INTEGER DEFAULT 0,
+    onboarding_completed BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -140,6 +141,10 @@ ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 DROP POLICY IF EXISTS "Users can update own profile." ON public.profiles;
 CREATE POLICY "Users can update own profile." 
 ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can delete own profile." ON public.profiles;
+CREATE POLICY "Users can delete own profile." 
+ON public.profiles FOR DELETE USING (auth.uid() = id);
 
 -- APPS
 DROP POLICY IF EXISTS "Published apps are viewable by everyone." ON public.apps;

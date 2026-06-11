@@ -98,49 +98,41 @@ export function OnboardingView({ session, onComplete }: OnboardingViewProps) {
     setIsSaving(true);
     try {
       const role = email === 'elmenorjn@gmail.com' ? 'admin' : 'user';
+
+      // Actualizar metadata de auth con la info adicional que no cabe en profiles local
+      await supabase.auth.updateUser({
+        data: { 
+          avatar_url: avatarUrl, 
+          full_name: displayName.trim(), 
+          bio: bio.trim(),
+          language: language,
+          country: country.trim(),
+          onboarding_completed: true
+        }
+      });
       
-      const payload = {
+      localStorage.setItem('nexus_language', language);
+
+      const compatPayload = {
         id: session.user.id,
         email: email,
         username: username.trim().toLowerCase(),
-        display_name: displayName.trim(),
-        real_name: displayName.trim(), // for backwards compatibility
+        real_name: displayName.trim(),
         avatar_url: avatarUrl,
         bio: bio.trim(),
         language: language,
         country: country.trim(),
-        role: role
+        role: role,
+        onboarding_completed: true
       };
-
-      const { data, error } = await supabase.from('profiles').insert([payload]).select().single();
       
-      if (error) {
-        if (error.message.includes('column') || error.message.includes('schema cache')) {
-          // If the columns aren't there yet, try to save minimal necessary fields just to pass
-          console.warn("Algunas columnas no existen. Intentando guardado de compatibilidad...", error);
-          const compatPayload = {
-            id: session.user.id,
-            email: email,
-            username: username.trim().toLowerCase(),
-            real_name: displayName.trim(),
-            avatar_url: avatarUrl,
-            role: role
-          };
-          const { data: compatData, error: compatErr } = await supabase.from('profiles').insert([compatPayload]).select().single();
-          if (compatErr) throw compatErr;
-          onComplete(compatData);
-        } else {
-          throw error;
-        }
-      } else {
-        await supabase.auth.updateUser({
-          data: { avatar_url: avatarUrl, full_name: displayName.trim(), bio: bio.trim() }
-        });
-        onComplete(data);
-      }
+      const { data: compatData, error: compatErr } = await supabase.from('profiles').upsert([compatPayload], { onConflict: 'id' }).select().single();
+      if (compatErr) throw compatErr;
+      
+      onComplete(compatData);
     } catch (err: any) {
       console.error("Error setting up profile:", err);
-      alert(`No se pudo crear el perfil: ${err.message}. Asegúrate de haber actualizado supabase.sql en tu BD.`);
+      alert(`No se pudo crear el perfil: ${err.message}`);
     } finally {
       setIsSaving(false);
     }

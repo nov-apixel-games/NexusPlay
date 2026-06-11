@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AppItem } from '../../types';
 import AppGrid from '../AppGrid';
 import { supabase } from '../../lib/supabase';
+import { useFavoritesStore } from '../../store/useFavoritesStore';
 
 export function AppDetailView({ 
   app, 
@@ -29,7 +30,7 @@ export function AppDetailView({
   const [realDownloads, setRealDownloads] = useState<string>(app.download_count?.toString() || app.downloads || '0');
   const [reviewStats, setReviewStats] = useState({ average: 0, total: 0, distribution: {1:0, 2:0, 3:0, 4:0, 5:0} });
   const [hasReviewed, setHasReviewed] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const { favoriteIds, toggleFavorite: storeToggleFavorite } = useFavoritesStore();
   
   // Track download version
   const downloadedVersion = localStorage.getItem(`nexus_app_version_${app.id}`);
@@ -47,35 +48,12 @@ export function AppDetailView({
     fetchReviews();
   }, [app.id]);
 
-  useEffect(() => {
-     if (userId) {
-        checkFavoriteStatus();
-     }
-  }, [userId, app.id]);
-
-  const checkFavoriteStatus = async () => {
-     try {
-        const { data, error } = await supabase.from('favorites').select('id').eq('user_id', userId).eq('app_id', app.id).maybeSingle();
-        if (data) setIsFavorited(true);
-     } catch(e) {}
-  };
-
   const toggleFavorite = async () => {
      if (!userId) {
-         alert('Debes iniciar sesión para añadir a favoritos.');
+         window.dispatchEvent(new CustomEvent('require-login'));
          return;
      }
-     try {
-        if (isFavorited) {
-           await supabase.from('favorites').delete().eq('user_id', userId).eq('app_id', app.id);
-           setIsFavorited(false);
-        } else {
-           await supabase.from('favorites').insert({ user_id: userId, app_id: app.id });
-           setIsFavorited(true);
-        }
-     } catch(e) {
-         console.warn("Favorites error", e);
-     }
+     await storeToggleFavorite(app.id);
   };
 
   const fetchReviews = async () => {
@@ -242,7 +220,7 @@ export function AppDetailView({
           
           <div className="flex items-center gap-3">
              <button onClick={toggleFavorite} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-red-500 cursor-pointer">
-               <Heart className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+               <Heart className={`w-5 h-5 ${favoriteIds.has(app.id) ? 'fill-red-500 text-red-500' : ''}`} />
              </button>
              <button className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-nexus-cyan cursor-pointer">
                <Share2 className="w-5 h-5" />

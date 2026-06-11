@@ -31,25 +31,26 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
     
     try {
       import('../../lib/supabase').then(async ({ supabase }) => {
-          // Intentar borrar vía RPC
-          const { error: rpcError } = await supabase.rpc('delete_user_account');
           
-          if (rpcError) {
-             console.warn("RPC delete_user_account falló:", rpcError);
-             // Fallback: borramos perfiles de base local (puede no borrar todo auth si no hay privileges, pero sí datos en la BD pública)
-             if (userProfile?.id) {
-                await supabase.from('profiles').delete().eq('id', userProfile.id);
+          if (userProfile?.id) {
+             const res = await fetch('/api/delete-account', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ userId: userProfile.id })
+             });
+             
+             if (!res.ok) {
+               // Fallback: Delete profile from client-side where we have RLS permissions
+               console.warn("Backend delete_user failed. Using client-side profile deletion fallback.");
+               const { error: profileDelErr } = await supabase.from('profiles').delete().eq('id', userProfile.id);
+               if (profileDelErr) {
+                 const errData = await res.json().catch(() => ({}));
+                 throw new Error(profileDelErr.message || errData.error || 'Error server');
+               }
              }
           }
           
-          // Cerrar sesión
           await supabase.auth.signOut();
-          window.dispatchEvent(new CustomEvent('show-toast', {
-            detail: {
-              message: 'Cuenta eliminada correctamente.',
-              type: 'success'
-            }
-          }));
           window.location.reload(); 
       });
     } catch (err: any) {

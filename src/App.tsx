@@ -359,11 +359,29 @@ export default function App() {
       const userMetadata = currentSession?.user?.user_metadata || {};
       const metaName = userMetadata?.full_name || userMetadata?.name || '';
       const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture || null;
+      let onboardingCompleted = false;
 
-      if (!data) {
-        console.log("Perfil no existe en DB. Mostrar onboarding...");
+      // Usar la BD si el campo existe allí, si no, fallback seguro (si el registro es viejo no forzamos, para respetar la retrocompatibilidad, PERO el usuario especificó "Mientras onboarding_completed sea false: Mostrar obligatoriamente".
+      // Vamos a confiar directamente en el valor que nos devuelva data.onboarding_completed si existe, o forzar false.
+      // Ojo: "Solo cuando onboarding_completed sea true: Permitir entrar al inicio."
+      
+      if (data && typeof data.onboarding_completed === 'boolean') {
+        onboardingCompleted = data.onboarding_completed;
+      } else if (userMetadata?.onboarding_completed === true) {
+        onboardingCompleted = true;
+      }
+
+      console.log(`[Diagnostic] user_metadata:`, userMetadata);
+      console.log(`[Diagnostic] onboarding_completed: ${onboardingCompleted}, profile_data_exists: ${!!data}`);
+
+      if (!onboardingCompleted) {
+        console.log("Perfil nuevo sin onboarding. Mostrar onboarding...");
         setOnboardingSession(currentSession);
         setShowOnboarding(true);
+      } else if (!data) {
+        // Fallback for missing profile
+        console.warn("Perfil sin datos en BD");
+        setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] || 'Usuario' });
       } else {
         // Asegurar admin por email si es necesario
         if (data.email === 'elmenorjn@gmail.com' && data.role !== 'admin') {

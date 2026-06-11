@@ -12,7 +12,7 @@ export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: (
       className="flex flex-col gap-3 group cursor-pointer relative"
       onClick={onClick}
     >
-      <div className="absolute top-2 right-2 z-40 hidden group-hover:flex">
+      <div className="absolute top-2 right-2 z-40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <FavoriteButton appId={app.id} />
       </div>
       

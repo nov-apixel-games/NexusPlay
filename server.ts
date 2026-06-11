@@ -537,6 +537,30 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
+app.post("/api/delete-account", async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "Falta userId" });
+  }
+  
+  const supBase = getSupabase();
+  if (!supBase) {
+    return res.status(500).json({ error: "Supabase no configurado en el servidor." });
+  }
+
+  try {
+    const { error: delAuthErr } = await supBase.auth.admin.deleteUser(userId);
+    if (delAuthErr) {
+       console.warn("[Backend] No se pudo borrar auth user:", delAuthErr.message);
+       const { error: profileErr } = await supBase.from('profiles').delete().eq('id', userId);
+       if (profileErr) throw new Error("Tampoco se pudo borrar el perfil: " + profileErr.message);
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 async function startServer() {
   const PORT = 3000;
 
