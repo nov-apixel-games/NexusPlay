@@ -99,7 +99,8 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     try {
       // Guardar local antes para visualización reactiva
       if (updates.maintenance_mode !== undefined) {
-        localStorage.setItem('nexus_maintenance', updates.maintenance_mode.toString());
+        localStorage.setItem('nexus_maintenance_mode', updates.maintenance_mode.toString());
+        window.dispatchEvent(new CustomEvent('nexusMaintenanceUpdated', { detail: updates.maintenance_mode }));
       }
       if (updates.logo_url !== undefined) {
         localStorage.setItem('nexus_web_logo', updates.logo_url);

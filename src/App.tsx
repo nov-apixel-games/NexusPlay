@@ -271,10 +271,16 @@ export default function App() {
     const handleLogoUpdate = (e: any) => {
       if (e.detail) setWebLogo(e.detail);
     };
+    const handleMaintenanceUpdate = (e: any) => {
+      if (e.detail !== undefined) setMaintenanceMode(e.detail);
+    };
+    
     window.addEventListener('nexusLogoUpdated', handleLogoUpdate);
+    window.addEventListener('nexusMaintenanceUpdated', handleMaintenanceUpdate);
 
     return () => {
       window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
+      window.removeEventListener('nexusMaintenanceUpdated', handleMaintenanceUpdate);
     };
   }, [webLogo]);
 
@@ -390,7 +396,7 @@ export default function App() {
         setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] || 'Usuario' });
       } else {
         // Asegurar admin por email si es necesario
-        if (data.email === 'elmenorjn@gmail.com' && data.role !== 'admin') {
+        if (finalEmail === 'elmenorjn@gmail.com' && data.role !== 'admin') {
           const { data: updated } = await supabase.from('profiles').update({ role: 'admin' }).eq('id', userId).select().single();
           setUserProfile(updated || { ...data, role: 'admin' });
         } else {
