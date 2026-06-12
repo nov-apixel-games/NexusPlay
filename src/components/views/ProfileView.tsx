@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Settings, Edit3, Image as ImageIcon, Check, Loader2, Sparkles, Activity, Star, Calendar, Trophy, Compass, Shield } from 'lucide-react';
+import { User, LogOut, Settings, Edit3, Image as ImageIcon, Check, Loader2, Sparkles, Activity, Star, Calendar, Trophy, Compass, Shield, CloudOff, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 import { useAppStore } from '../../store/useAppStore';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
+import { useOfflineStore } from '../../store/useOfflineStore';
+
 
 export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction, onLogoutClick, onSettingsClick, onProfileUpdate }: { 
   session?: any, 
@@ -47,6 +49,8 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   }, [userProfile, session]);
 
   const { favoriteIds } = useFavoritesStore();
+  const { offlineApps, removeOffline } = useOfflineStore();
+  const offlineAppsList = Object.values(offlineApps);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -339,6 +343,60 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                )}
             </div>
          </div>
+      </div>
+
+      {/* OFFLINE APPS */}
+      <div className="mt-6 sm:mt-8 glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem]">
+         <div className="flex items-center justify-between mb-6">
+            <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
+              <CloudOff className="w-4 h-4" /> Aplicaciones Offline
+            </h3>
+            <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">
+              {offlineAppsList.length > 0 ? `${offlineAppsList.length} Apps Almacenadas` : 'Vacío'}
+            </span>
+         </div>
+         
+         {offlineAppsList.length > 0 ? (
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+             {offlineAppsList.map(app => (
+               <div key={app.id} className="bg-nexus-bg border border-nexus-border p-4 rounded-[1.5rem] flex flex-col gap-3 group relative overflow-hidden">
+                  <div className="flex items-center gap-3">
+                    <img src={app.icon} alt={app.name} className="w-12 h-12 rounded-[14px] object-cover bg-nexus-surface" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-[13px] text-nexus-text truncate group-hover:text-cyan-400 transition-colors">
+                        <a href={app.downloadUrl || '#'} target="_blank" rel="noopener noreferrer">{app.name}</a>
+                      </h4>
+                      <p className="text-[10px] text-cyan-500/80 uppercase tracking-widest font-black mt-0.5">
+                        {app.category}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-1 px-1">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">Tamaño</span>
+                      <span className="text-[11px] font-black">{app.sizeBytes ? (app.sizeBytes / 1024 / 1024).toFixed(2) : '0.00'} MB</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">Fecha</span>
+                      <span className="text-[11px] font-black">{new Date(app.downloadedAt).toLocaleDateString()}</span>
+                    </div>
+                    <button 
+                      onClick={() => removeOffline(app.id)}
+                      className="p-2 border border-red-500/20 text-red-400 rounded-xl bg-red-500/5 hover:bg-red-500/10 transition-colors"
+                      title="Eliminar descarga offline"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+               </div>
+             ))}
+           </div>
+         ) : (
+           <div className="py-8 flex flex-col items-center justify-center text-center">
+              <CloudOff className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
+              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">No tienes aplicaciones guardadas para jugar sin Internet.</p>
+           </div>
+         )}
       </div>
     </div>
   );

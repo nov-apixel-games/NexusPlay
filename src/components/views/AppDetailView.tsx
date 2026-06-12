@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Download, ShieldCheck, Share2, Info, CheckCircle2, AlertTriangle, MonitorPlay, Heart, History, User, Send, ThumbsUp, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Star, Download, ShieldCheck, Share2, Info, CheckCircle2, AlertTriangle, MonitorPlay, Heart, History, User, Send, ThumbsUp, X, Trash2, CloudOff, CloudDownload, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppItem } from '../../types';
 import AppGrid from '../AppGrid';
 import { supabase } from '../../lib/supabase';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
+import { useOfflineStore } from '../../store/useOfflineStore';
+
 
 export function AppDetailView({ 
   app, 
@@ -36,6 +38,10 @@ export function AppDetailView({
   const downloadedVersion = localStorage.getItem(`nexus_app_version_${app.id}`);
   const isUpdateAvailable = downloadedVersion && downloadedVersion !== app.version;
   const hasDownloaded = !!downloadedVersion;
+
+  const { offlineApps, downloadingAppIds, saveOffline, removeOffline } = useOfflineStore();
+  const isDownloadedOffline = !!offlineApps[app.id];
+  const isDownloadingOffline = downloadingAppIds.includes(app.id);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -289,6 +295,24 @@ export function AppDetailView({
                     <button className="flex-1 sm:flex-initial flex items-center justify-center gap-3 py-4 bg-nexus-card/50 text-nexus-text-sec rounded-2xl font-black text-lg cursor-not-allowed border border-nexus-border">
                       <MonitorPlay className="w-6 h-6" />
                       PRÓXIMAMENTE
+                    </button>
+                  )}
+                  
+                  {app.status === 'published' && app.downloadUrl && (
+                    <button 
+                      onClick={() => isDownloadedOffline ? removeOffline(app.id) : saveOffline(app)}
+                      disabled={isDownloadingOffline}
+                      className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-4 px-6 border rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
+                        isDownloadingOffline 
+                          ? 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10 cursor-wait'
+                          : isDownloadedOffline 
+                            ? 'border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/40' 
+                            : 'border-nexus-border text-nexus-text-sec hover:text-nexus-text hover:border-nexus-text-sec box-border'
+                      }`}
+                    >
+                       {isDownloadingOffline ? <><Loader2 className="w-5 h-5 animate-spin" /> Descargando...</>
+                       : isDownloadedOffline ? <><Trash2 className="w-5 h-5" /> Eliminar Offline</>
+                       : <><CloudDownload className="w-5 h-5" /> Guardar Offline</>}
                     </button>
                   )}
                   
