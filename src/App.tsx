@@ -273,13 +273,18 @@ export default function App() {
     };
     window.addEventListener('nexusLogoUpdated', handleLogoUpdate);
 
+    return () => {
+      window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
+    };
+  }, [webLogo]);
+
+  useEffect(() => {
     if (!isSupabaseConfigured) {
       addToast('Faltan configurar variables de entorno de Supabase.', 'error');
-      return () => {
-        window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
-      };
+      return;
     }
     
+    // Auth Listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -292,7 +297,6 @@ export default function App() {
           if (session?.user) {
             fetchUserProfile(session.user.id, session.user.email);
             setShowAuthModal(false);
-            // Force re-render of user specific fields by clearing temporary data if needed
           }
           break;
         case 'SIGNED_OUT':
@@ -333,9 +337,8 @@ export default function App() {
     return () => {
       subscription.unsubscribe();
       supabase.removeChannel(appsSubscription);
-      window.removeEventListener('nexusLogoUpdated', handleLogoUpdate);
     };
-  }, [webLogo]); // Removed isInitializing from dependencies to avoid listener churn
+  }, []); // Run only once to persist session listener
 
   const fetchUserProfile = async (userId: string, email?: string) => {
     try {
@@ -1039,6 +1042,33 @@ export default function App() {
     );
   }
 
+  if (maintenanceMode && userProfile?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-nexus-bg flex flex-col items-center justify-center p-6 text-center">
+        {showAuthModal && (
+          <AuthModal 
+            onClose={() => setShowAuthModal(false)} 
+            onSuccess={() => window.location.reload()}
+            onNavigate={(view) => setShowAuthModal(false)}
+          />
+        )}
+        <div className="w-24 h-24 mb-8 bg-yellow-500/10 rounded-full flex items-center justify-center border border-yellow-500/20 shadow-[0_0_50px_rgba(234,179,8,0.2)]">
+          <ShieldAlert className="w-12 h-12 text-yellow-500 animate-pulse" />
+        </div>
+        <h1 className="text-4xl font-black text-nexus-text mb-4">Modo Mantenimiento</h1>
+        <p className="text-nexus-text-sec max-w-lg text-lg mb-8">
+          Nuestros servidores están en mantenimiento. Estamos implementando mejoras para ofrecerte una mejor experiencia. ¡Volvemos pronto!
+        </p>
+        <button 
+          onClick={() => setShowAuthModal(true)} 
+          className="px-6 py-2 border border-cyan-500/30 text-cyan-400 font-bold rounded-xl hover:bg-cyan-500/10 transition-colors"
+        >
+          Acceso Administradores
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-nexus-text font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
       <GoogleAdSense />
@@ -1051,20 +1081,6 @@ export default function App() {
              setUserProfile(profile);
              setShowOnboarding(false);
           }} 
-        />
-      )}
-
-      {showAuthModal && !showOnboarding && (
-        <AuthModal 
-          onClose={() => setShowAuthModal(false)} 
-          onSuccess={() => {
-            setShowAuthModal(false);
-            addToast('Sesión iniciada correctamente', 'success');
-          }}
-          onNavigate={(view) => {
-            setShowAuthModal(false);
-            setActiveView(view);
-          }}
         />
       )}
       {/* Background Abstract Effects */}
@@ -1089,7 +1105,7 @@ export default function App() {
         </svg>
       </div>
 
-      {!showAuthModal && !isFullScreenView && (
+      {!isFullScreenView && (
         <Navbar 
           onMenuClick={() => setIsSidebarOpen(true)} 
           userProfile={userProfile} 
@@ -1102,6 +1118,7 @@ export default function App() {
           webLogo={webLogo}
         />
       )}
+
       
       <Sidebar 
         isOpen={isSidebarOpen} 
@@ -1173,6 +1190,21 @@ export default function App() {
 
       {!showAuthModal && activeView !== 'nexus-ai' && activeView !== 'admin-panel' && activeView !== 'nexus-hub' && (
         <BottomNav activeView={activeView} onNavigate={handleAction} />
+      )}
+
+      {/* Render AuthModal globally on top */}
+      {showAuthModal && !showOnboarding && (
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)} 
+          onSuccess={() => {
+            setShowAuthModal(false);
+            addToast('Sesión iniciada correctamente', 'success');
+          }}
+          onNavigate={(view) => {
+            setShowAuthModal(false);
+            setActiveView(view);
+          }}
+        />
       )}
     </div>
   );
