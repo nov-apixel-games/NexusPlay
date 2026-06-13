@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Settings, Edit3, Image as ImageIcon, Check, Loader2, Sparkles, Activity, Star, Calendar, Trophy, Compass, Shield, CloudOff, Trash2 } from 'lucide-react';
+import { User, LogOut, Settings, Edit3, Image as ImageIcon, Check, Loader2, Sparkles, Activity, Star, Calendar, Trophy, Compass, Shield, CloudOff, Trash2, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 import { useAppStore } from '../../store/useAppStore';
@@ -35,6 +35,8 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       published: 0,
       activeDays: 0,
   });
+  
+  const [followedCommunities, setFollowedCommunities] = useState<any[]>([]);
 
   const metadata = session?.user?.user_metadata || {};
 
@@ -55,8 +57,31 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   useEffect(() => {
     if (session?.user?.id) {
        loadRealStats(session.user.id);
+       loadFollowedCommunities(session.user.id);
     }
   }, [session?.user?.id, favoriteIds.size]);
+  
+  const loadFollowedCommunities = async (userId: string) => {
+    try {
+      // Get the distinct community IDs the user is a member of
+      const { data, error } = await supabase
+        .from('community_members')
+        .select('community_id')
+        .eq('user_id', userId);
+        
+      if (!error && data) {
+         const commIds = data.map(d => d.community_id);
+         if (commIds.length > 0) {
+           const { data: comms } = await supabase.from('communities').select('*').in('id', commIds);
+           if (comms) setFollowedCommunities(comms);
+         } else {
+           setFollowedCommunities([]);
+         }
+      }
+    } catch(e) {
+      console.warn("Could not load communities", e);
+    }
+  };
 
   const loadRealStats = async (userId: string) => {
     try {
@@ -395,6 +420,43 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
            <div className="py-8 flex flex-col items-center justify-center text-center">
               <CloudOff className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
               <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">No tienes aplicaciones guardadas para jugar sin Internet.</p>
+           </div>
+         )}
+      </div>
+
+      {/* FOLLOWED COMMUNITIES */}
+      <div className="mt-6 sm:mt-8 glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem]">
+         <div className="flex items-center justify-between mb-6">
+            <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
+              <Users className="w-4 h-4" /> Comunidades Seguidas
+            </h3>
+            <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">
+              {followedCommunities.length > 0 ? `${followedCommunities.length} Comunidades` : 'Ninguna'}
+            </span>
+         </div>
+         
+         {followedCommunities.length > 0 ? (
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+             {followedCommunities.map(comm => (
+               <div key={comm.id} className="bg-nexus-bg border border-nexus-border p-4 rounded-[1.5rem] flex items-center gap-4">
+                  <div className="w-12 h-12 bg-black border border-cyan-500/50 rounded-[12px] shrink-0 overflow-hidden relative">
+                     {comm.image_url ? (
+                       <img src={comm.image_url} className="w-full h-full object-cover" />
+                     ) : (
+                       <div className="w-full h-full flex items-center justify-center text-cyan-400 font-black text-xl uppercase">{comm.name?.[0]}</div>
+                     )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-[14px] text-nexus-text truncate">{comm.name}</h4>
+                    <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest font-bold mt-0.5 truncate">{comm.category}</p>
+                  </div>
+               </div>
+             ))}
+           </div>
+         ) : (
+           <div className="py-8 flex flex-col items-center justify-center text-center">
+              <Compass className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
+              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">No sigues ninguna comunidad en Nexus Hub todavía.</p>
            </div>
          )}
       </div>

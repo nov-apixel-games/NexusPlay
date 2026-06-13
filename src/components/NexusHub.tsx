@@ -327,6 +327,9 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
   const [onlineCount, setOnlineCount] = useState(1);
   const [activeChannel, setActiveChannel] = useState('general');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
+  const [isJoining, setIsJoining] = useState(false);
   
   // Channels and Member states
   const [channels, setChannels] = useState<string[]>([]);
@@ -350,6 +353,37 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
     setChannels(getCommunityChannels(community));
   }, [community]);
 
+  const handleJoin = async () => {
+    setIsJoining(true);
+    const { error } = await supabase.from('community_members').insert({
+       community_id: community.id,
+       user_id: session.user.id
+    });
+    if (!error) {
+      setIsJoined(true);
+      setMemberCount(prev => prev + 1);
+    } else {
+      setErrorMsg("No se pudo unir a la comunidad.");
+    }
+    setIsJoining(false);
+  };
+
+  const handleLeave = async () => {
+    const confirm = window.confirm("¿Seguro que quieres dejar esta comunidad?");
+    if (!confirm) return;
+    setIsJoining(true);
+    const { error } = await supabase.from('community_members').delete()
+       .eq('community_id', community.id)
+       .eq('user_id', session.user.id);
+    if (!error) {
+      setIsJoined(false);
+      setMemberCount(prev => Math.max(0, prev - 1));
+    } else {
+      setErrorMsg("No se pudo dejar la comunidad.");
+    }
+    setIsJoining(false);
+  };
+
   // Fetch reactions helper
   const fetchReactions = async () => {
     if (messages.length === 0) return;
@@ -371,14 +405,26 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
   useEffect(() => {
     let mounted = true;
     const init = async () => {
-      // Auto-join community in background
       try {
-        await supabase.from('community_members').insert({
-          community_id: community.id,
-          user_id: session.user.id
-        }).select();
+        const { data: memberData } = await supabase.from('community_members')
+          .select('*')
+          .eq('community_id', community.id)
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (mounted && memberData) setIsJoined(true);
       } catch (e) {
-        // fail silently if member already exists
+        if (mounted) setIsJoined(false);
+      }
+
+      try {
+        const { count } = await supabase.from('community_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('community_id', community.id);
+        
+        if (mounted && count !== null) setMemberCount(count);
+      } catch (e) {
+        console.error("Error fetching member count");
       }
       
       await fetchMessages();
@@ -776,7 +822,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                       <h2 className="text-lg sm:text-2xl font-black text-nexus-text uppercase tracking-tighter drop-shadow-nexus-glow truncate">{currentCommunity.name}</h2>
                       <p className="text-[9px] sm:text-[10px] font-mono text-cyan-400 capitalize flex items-center gap-1.5 whitespace-nowrap">
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
-                        {onlineCount} EN RED
+                        {onlineCount} EN RED <span className="opacity-50">| {memberCount} MIEMBROS</span>
                       </p>
                    </div>
                 </div>
@@ -784,6 +830,11 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
              
              {/* HUD elements */}
              <div className="hidden sm:flex items-center gap-4 shrink-0 border-l border-nexus-border/50 pl-4 ml-4">
+                 {isJoined && (
+                   <button onClick={handleLeave} disabled={isJoining} className="text-[10px] font-black uppercase text-red-500 hover:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg mr-2 transition-colors">
+                     Abandonar
+                   </button>
+                 )}
                  <div className="text-right">
                     <p className="text-[9px] font-mono text-cyan-500 uppercase tracking-widest opacity-80">Identidad</p>
                     <p className="text-xs font-black text-nexus-text uppercase tracking-wider">{session.user.email?.split('@')[0]}</p>
@@ -842,17 +893,34 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
 
        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 flex flex-col gap-5 sm:gap-6 relative z-10 scrollbar-hide">
          
-         {/* Welcome Hologram */}
-         {filteredMessages.length === 0 && (
-           <div className="flex flex-col items-center justify-center my-auto animate-pulse">
-              <div className="w-20 h-20 bg-cyan-950/30 rounded-full flex items-center justify-center border border-nexus-border/50 shadow-nexus-glow mb-4">
-                 <Lock className="w-8 h-8 text-cyan-700" />
+         {!isJoined ? (
+           <div className="flex flex-col items-center justify-center my-auto">
+              <div className="w-24 h-24 bg-cyan-950/30 rounded-full flex items-center justify-center border border-nexus-border/50 shadow-nexus-glow mb-6">
+                 <Shield className="w-10 h-10 text-cyan-600" />
               </div>
-              <p className="text-cyan-600 font-mono text-[10px] uppercase tracking-widest">TRANSMISIÓN VACÍA</p>
+              <h3 className="text-xl font-black text-cyan-400 uppercase tracking-widest mb-3">Acceso Restringido</h3>
+              <p className="text-sm font-mono text-cyan-600 uppercase tracking-widest mb-8 text-center px-4">Debes unirte a esta comunidad para participar en el chat, leer y enviar mensajes.</p>
+              <button 
+                onClick={handleJoin} 
+                disabled={isJoining}
+                className="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-nexus-bg font-black uppercase text-sm tracking-widest rounded-[12px] shadow-nexus-glow transition-all"
+              >
+                {isJoining ? 'Procesando...' : 'Unirse a la comunidad'}
+              </button>
            </div>
-         )}
-
-         {filteredMessages.map((msg, index) => {
+         ) : (
+           <>
+             {/* Welcome Hologram */}
+             {filteredMessages.length === 0 && (
+               <div className="flex flex-col items-center justify-center my-auto animate-pulse">
+                  <div className="w-20 h-20 bg-cyan-950/30 rounded-full flex items-center justify-center border border-nexus-border/50 shadow-nexus-glow mb-4">
+                     <Lock className="w-8 h-8 text-cyan-700" />
+                  </div>
+                  <p className="text-cyan-600 font-mono text-[10px] uppercase tracking-widest">TRANSMISIÓN VACÍA</p>
+               </div>
+             )}
+    
+             {filteredMessages.map((msg, index) => {
              const parsed = parseMessageContent(msg.content);
              const isOwn = msg.user_id === session.user.id;
              const isAI = parsed.text?.startsWith('[NEXUS AI]');
@@ -946,51 +1014,54 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                </div>
              )
          })}
+           </>
+         )}
          <div ref={messagesEndRef} className="h-6" />
        </main>
 
        {/* Cyber Input Area */}
-       <div className="p-3 sm:p-5 shrink-0 relative bg-black border-t border-nexus-border/50 z-20 pb-safe">
-           {chatImagePreviewUrl && (
-             <div className="absolute bottom-full left-4 bg-nexus-card/80 backdrop-blur-md border border-nexus-border p-2 rounded-t-xl flex gap-3 items-center shadow-lg">
-                <img src={chatImagePreviewUrl} className="w-14 h-14 object-cover rounded-lg border border-nexus-border" />
-                <button onClick={() => {setChatImageFile(null); setChatImagePreviewUrl(null);}} className="w-6 h-6 bg-red-950 rounded-full flex items-center justify-center text-red-500 hover:text-red-300 transition-colors"><X className="w-3 h-3"/></button>
-             </div>
-           )}
-
-           <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 relative max-w-5xl mx-auto items-stretch">
-              <input type="file" id="hud-file" className="hidden" accept="image/*" onChange={(e)=>{
-                if(e.target.files&&e.target.files[0]){
-                  setChatImageFile(e.target.files[0]);
-                  setChatImagePreviewUrl(URL.createObjectURL(e.target.files[0]));
-                }
-              }} />
-              <label htmlFor="hud-file" className="w-[45px] sm:w-[50px] bg-cyan-950/40 border border-nexus-border/80 text-cyan-500 flex justify-center items-center cursor-pointer hover:bg-cyan-900/80 hover:border-cyan-400 hover:text-cyan-400 transition-all rounded-[12px] shadow-inner shrink-0 group">
-                 <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform"/>
-              </label>
-
-              <div className="flex-1 relative flex items-center">
-                 <input 
-                   type="text" 
-                   value={newMessage} 
-                   onChange={e=>setNewMessage(e.target.value)} 
-                   placeholder="TRANSMITIR MENSAJE..." 
-                   className="w-full h-full bg-nexus-surface border border-nexus-border/80 text-cyan-300 font-mono text-[11px] sm:text-xs px-4 focus:outline-none focus:border-cyan-500 focus:bg-nexus-card transition-all shadow-inner rounded-[12px] placeholder:text-cyan-900/80" 
-                 />
-                 <div className="absolute right-3 w-1.5 h-1.5 bg-cyan-700 rounded-full animate-pulse pointer-events-none"></div>
-              </div>
-              
-              <button type="submit" disabled={(!newMessage.trim() && !chatImageFile) || isSending} className="w-[80px] sm:w-[120px] bg-cyan-500 text-nexus-bg font-black uppercase text-[10px] sm:text-xs hover:bg-cyan-400 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 transition-all rounded-[12px] disabled:opacity-30 disabled:hover:scale-100 disabled:pointer-events-none shadow-nexus-glow shrink-0">
-                 <span className="hidden sm:inline">ENVIAR</span>
-                 <Send className="w-4 h-4" />
-              </button>
-           </form>
-       </div>
+       {isJoined && (
+         <div className="p-3 sm:p-5 shrink-0 relative bg-black border-t border-nexus-border/50 z-20 pb-safe">
+             {chatImagePreviewUrl && (
+               <div className="absolute bottom-full left-4 bg-nexus-card/80 backdrop-blur-md border border-nexus-border p-2 rounded-t-xl flex gap-3 items-center shadow-lg">
+                  <img src={chatImagePreviewUrl} className="w-14 h-14 object-cover rounded-lg border border-nexus-border" />
+                  <button onClick={() => {setChatImageFile(null); setChatImagePreviewUrl(null);}} className="w-6 h-6 bg-red-950 rounded-full flex items-center justify-center text-red-500 hover:text-red-300 transition-colors"><X className="w-3 h-3"/></button>
+               </div>
+             )}
+  
+             <form onSubmit={handleSendMessage} className="flex gap-2 sm:gap-3 relative max-w-5xl mx-auto items-stretch">
+                <input type="file" id="hud-file" className="hidden" accept="image/*" onChange={(e)=>{
+                  if(e.target.files&&e.target.files[0]){
+                    setChatImageFile(e.target.files[0]);
+                    setChatImagePreviewUrl(URL.createObjectURL(e.target.files[0]));
+                  }
+                }} />
+                <label htmlFor="hud-file" className="w-[45px] sm:w-[50px] bg-cyan-950/40 border border-nexus-border/80 text-cyan-500 flex justify-center items-center cursor-pointer hover:bg-cyan-900/80 hover:border-cyan-400 hover:text-cyan-400 transition-all rounded-[12px] shadow-inner shrink-0 group">
+                   <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform"/>
+                </label>
+  
+                <div className="flex-1 relative flex items-center">
+                   <input 
+                     type="text" 
+                     value={newMessage} 
+                     onChange={e=>setNewMessage(e.target.value)} 
+                     placeholder="TRANSMITIR MENSAJE..." 
+                     className="w-full h-full bg-nexus-surface border border-nexus-border/80 text-cyan-300 font-mono text-[11px] sm:text-xs px-4 focus:outline-none focus:border-cyan-500 focus:bg-nexus-card transition-all shadow-inner rounded-[12px] placeholder:text-cyan-900/80" 
+                   />
+                   <div className="absolute right-3 w-1.5 h-1.5 bg-cyan-700 rounded-full animate-pulse pointer-events-none"></div>
+                </div>
+                
+                <button type="submit" disabled={(!newMessage.trim() && !chatImageFile) || isSending} className="w-[80px] sm:w-[120px] bg-cyan-500 text-nexus-bg font-black uppercase text-[10px] sm:text-xs hover:bg-cyan-400 hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 transition-all rounded-[12px] disabled:opacity-30 disabled:hover:scale-100 disabled:pointer-events-none shadow-nexus-glow shrink-0">
+                   <span className="hidden sm:inline">ENVIAR</span>
+                   <Send className="w-4 h-4" />
+                </button>
+             </form>
+         </div>
+       )}
     </div>
   );
 
 }
-
 
 // ============================================================================
 // CREATE MODAL
