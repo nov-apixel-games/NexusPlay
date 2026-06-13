@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 
 export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const { t } = useAppStore();
   const gameApps = apps.filter(a => a.category.toLowerCase() === 'juegos' || a.category.toLowerCase() === 'acción' || a.category.toLowerCase() === 'aventura' || a.category.toLowerCase() === 'estrategia');
   
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
@@ -32,17 +33,17 @@ export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: 
   return (
     <div className="pt-24 px-6 max-w-7xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-black flex items-center gap-3"><Gamepad2 className="w-8 h-8 text-cyan-400" /> Catálogo de Juegos</h1>
+        <h1 className="text-3xl font-black flex items-center gap-3"><Gamepad2 className="w-8 h-8 text-cyan-400" /> {t('cat.Juegos') || "Catálogo de Juegos"}</h1>
         <div className="flex bg-nexus-card rounded-xl p-1 border border-nexus-border">
-          <button onClick={() => setSortBy('downloads')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${sortBy==='downloads'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>Populares</button>
-          <button onClick={() => setSortBy('rating')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${sortBy==='rating'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>Mejor Valorados</button>
+          <button onClick={() => setSortBy('downloads')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${sortBy==='downloads'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>{t('games.popular') || "Populares"}</button>
+          <button onClick={() => setSortBy('rating')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${sortBy==='rating'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>{t('games.topRated') || "Mejor Valorados"}</button>
         </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-4 mb-6 no-scrollbar">
         {['Todos', 'Acción', 'Aventura', 'Estrategia', 'RPG', 'Deportes'].map(cat => (
           <button key={cat} onClick={()=>setActiveCategory(cat)} className={`px-4 py-2 shrink-0 rounded-full text-sm font-bold border transition-colors ${activeCategory===cat ? 'bg-cyan-500 text-nexus-bg border-cyan-500' : 'bg-nexus-card text-nexus-text border-nexus-border hover:border-cyan-500/50'}`}>
-            {cat}
+            {cat === 'Todos' ? (t('games.cat.Todos') || cat) : (t(`cat.${cat}` as any) || cat)}
           </button>
         ))}
       </div>
@@ -115,10 +116,10 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
   return (
     <div className="pt-24 px-4 sm:px-6 max-w-7xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-black flex items-center gap-3"><Compass className="w-8 h-8 text-cyan-400" /> Descubrir</h1>
+        <h1 className="text-3xl font-black flex items-center gap-3"><Compass className="w-8 h-8 text-cyan-400" /> {t('explore.discover') || "Descubrir"}</h1>
         <div className="flex bg-nexus-card rounded-xl p-1 border border-nexus-border">
-          <button onClick={() => setActiveTab('feed')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab==='feed'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>Feed Social</button>
-          <button onClick={() => setActiveTab('packs')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab==='packs'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>Packs y Colecciones</button>
+          <button onClick={() => setActiveTab('feed')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab==='feed'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>{t('explore.socialFeed') || "Feed Social"}</button>
+          <button onClick={() => setActiveTab('packs')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab==='packs'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>{t('explore.packs') || "Packs y Colecciones"}</button>
         </div>
       </div>
 
@@ -171,7 +172,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
           
           <div className="space-y-6">
             <div className="glass-panel p-6 rounded-3xl border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-transparent">
-              <h2 className="font-black mb-4 flex items-center gap-2"><Star className="w-5 h-5 text-yellow-400"/> Tendencias del Día</h2>
+              <h2 className="font-black mb-4 flex items-center gap-2"><Star className="w-5 h-5 text-yellow-400"/> {t('explore.trends') || "Tendencias del Día"}</h2>
               <div className="space-y-3">
                 {trends.map((app, idx) => (
                    <div key={app.id} onClick={() => onAppClick?.(app)} className="flex items-center gap-3 cursor-pointer group">
@@ -179,7 +180,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                       <img src={app.icon} className="w-10 h-10 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
                          <p className="text-sm font-bold text-nexus-text truncate">{app.name}</p>
-                         <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest">{app.category}</p>
+                         <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest">{t(`cat.${app.category}`) || app.category}</p>
                       </div>
                    </div>
                 ))}
@@ -215,7 +216,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                            <img src={app.icon} className="w-10 h-10 rounded-xl object-cover shadow-sm" />
                            <div className="min-w-0">
                               <h4 className="font-bold text-sm text-nexus-text truncate">{app.name}</h4>
-                              <p className="text-xs text-nexus-text-sec capitalize truncate">{app.category}</p>
+                              <p className="text-xs text-nexus-text-sec capitalize truncate">{t(`cat.${app.category}`) || app.category}</p>
                            </div>
                         </div>
                      ))}
@@ -246,6 +247,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
 }
 
 export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const { t } = useAppStore();
   const getDownloadsNum = (app: any) => {
     if (typeof app.download_count === 'number') return app.download_count;
     const d = app.downloads;
@@ -257,7 +259,7 @@ export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?
   
   return (
     <div className="pt-24 px-6 max-w-4xl mx-auto pb-16">
-      <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Trophy className="w-8 h-8 text-yellow-400" /> Ranking Global</h1>
+      <h1 className="text-3xl font-black flex items-center gap-3 mb-8"><Trophy className="w-8 h-8 text-yellow-400" /> {t('ranking.title') || "Ranking Global"}</h1>
       
       <div className="space-y-3">
         {sortedByDownloads.map((app, idx) => (
@@ -272,7 +274,7 @@ export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?
             </div>
             <div className="hidden sm:flex flex-col items-end gap-1">
               <div className="flex items-center gap-1 text-sm font-bold text-nexus-text"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500"/> {app.rating}</div>
-              <div className="text-xs text-nexus-text-sec font-medium">{app.download_count?.toString() || app.downloads || '0'} descargas</div>
+              <div className="text-xs text-nexus-text-sec font-medium">{app.download_count?.toString() || app.downloads || '0'} {t('ranking.downloads') || "descargas"}</div>
             </div>
           </div>
         ))}

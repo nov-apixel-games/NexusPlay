@@ -9,6 +9,7 @@ import { uploadToCloudinary } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserItem } from '../types';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { useAppStore } from '../store/useAppStore';
 
 interface NexusHubProps {
   session: any;
@@ -41,6 +42,7 @@ interface Message {
 }
 
 export default function NexusHub({ session, userProfile, onBack }: NexusHubProps) {
+  const { t } = useAppStore();
   useBodyScrollLock(true);
   const [communities, setCommunities] = useState<Community[]>([]);
   const [activeCommunity, setActiveCommunity] = useState<Community | null>(null);
@@ -101,9 +103,9 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-nexus-card h-[100dvh] w-full overflow-hidden text-center fixed top-0 left-0 z-[100]">
          <Shield className="w-20 h-20 text-cyan-500 mb-6" />
-         <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">Inicia sesión requerida</h2>
-         <p className="text-nexus-text-sec max-w-lg mb-8">Debes iniciar sesión para usar Nexus Hub y conectarte con la comunidad.</p>
-         <button onClick={onBack} className="px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">Volver al inicio</button>
+         <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t('community.restricted') || "Inicia sesión requerida"}</h2>
+         <p className="text-nexus-text-sec max-w-lg mb-8">{t('community.loginRequired') || "Debes iniciar sesión para usar Nexus Hub y conectarte con la comunidad."}</p>
+         <button onClick={onBack} className="px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">{t('nav.home') || "Volver al inicio"}</button>
       </div>
     );
   }
@@ -169,6 +171,7 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
 // ============================================================================
 
 function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick, isAdmin, onDelete, onBack, userProfile, session }: any) {
+  const { t } = useAppStore();
   const [activeTab, setActiveTab] = useState<'home' | 'explore'>('home');
   const validCommunities = communities.filter((c: any) => c.image_url);
   const recommended = validCommunities.slice(0, 4);
@@ -193,7 +196,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
            </div>
         </div>
         <button onClick={onCreateClick} className="px-3 py-2 sm:px-5 sm:py-3 bg-cyan-500 hover:bg-cyan-400 text-nexus-bg font-black uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all shadow-nexus-glow animate-pulse flex items-center gap-1.5">
-           <Plus className="w-4 h-4"/> <span className="hidden sm:inline">INICIAR SERVER</span>
+           <Plus className="w-4 h-4"/> <span className="hidden sm:inline">{t('hub.startServer') || "INICIAR SERVER"}</span>
         </button>
       </header>
 
@@ -201,7 +204,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
         <div className="max-w-7xl mx-auto space-y-12 mt-8">
            {/* Active/Trending Showcase */}
            <section>
-             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Flame className="w-4 h-4 sm:w-5 sm:h-5"/> SECTORES DESTACADOS</h2>
+             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Flame className="w-4 h-4 sm:w-5 sm:h-5"/> {t('hub.featuredSectors') || "SECTORES DESTACADOS"}</h2>
              <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-6 pt-2 px-2 -mx-2">
                {recommended.map((c: any) => (
                  <div key={c.id} onClick={() => onSelect(c)} className="snap-center shrink-0 w-[280px] sm:w-[400px] h-[200px] sm:h-[240px] rounded-[24px] relative group cursor-pointer border border-cyan-500/20 hover:border-cyan-400 shadow-nexus-glow overflow-hidden transition-all duration-300">
@@ -212,7 +215,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                     </div>
                     <div className="absolute bottom-6 left-6 right-6">
                        <h3 className="text-xl sm:text-3xl font-black text-nexus-text uppercase tracking-tighter drop-shadow-nexus-glow mb-1 leading-tight">{c.name}</h3>
-                       <p className="text-[10px] sm:text-xs text-cyan-400 font-mono opacity-90 truncate bg-cyan-900/30 inline-block px-2 py-0.5 rounded border border-nexus-border/50">{c.category}</p>
+                       <p className="text-[10px] sm:text-xs text-cyan-400 font-mono opacity-90 truncate bg-cyan-900/30 inline-block px-2 py-0.5 rounded border border-nexus-border/50">{t(`cat.${c.category}`) || c.category}</p>
                     </div>
                  </div>
                ))}
@@ -221,7 +224,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
 
            {/* All Communities as Sci-fi Panels */}
            <section>
-             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Zap className="w-4 h-4 sm:w-5 sm:h-5"/> DATABANKS GLOBALES</h2>
+             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Zap className="w-4 h-4 sm:w-5 sm:h-5"/> {t('hub.globalDatabanks') || "DATABANKS GLOBALES"}</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {communities.map((c: any) => (
                   <div key={c.id} onClick={() => onSelect(c)} className="group bg-nexus-surface backdrop-blur-md border border-nexus-border/50 hover:border-cyan-400/80 rounded-[20px] p-4 sm:p-5 cursor-pointer transition-all hover:bg-cyan-950/20 hover:shadow-nexus-glow flex gap-4 relative overflow-hidden">
@@ -239,9 +242,9 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                         <h4 className="text-base sm:text-lg font-black text-nexus-text truncate uppercase tracking-tight group-hover:text-cyan-400 drop-shadow-sm">{c.name}</h4>
                         <p className="text-[10px] sm:text-[11px] text-nexus-text-sec font-mono mt-1 line-clamp-1">{c.description}</p>
                         <div className="flex items-center gap-2 mt-3">
-                           <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-[#0ff] bg-cyan-950/50 px-2 py-0.5 rounded border border-nexus-border">Activo</span>
+                           <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-[#0ff] bg-cyan-950/50 px-2 py-0.5 rounded border border-nexus-border">{t('hub.active') || "Activo"}</span>
                            {isAdmin && (
-                             <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" title="Eliminar Base">
+                             <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" title={t('hub.deleteBase') || "Eliminar Base"}>
                                <Trash2 className="w-4 h-4"/>
                              </button>
                            )}
@@ -319,6 +322,7 @@ function serializeMessageContent(text: string, channel: string, imageUrl?: strin
 }
 
 function ChatRoom({ community, communities, onSelectCommunity, session, userProfile, onBack, isAdmin }: any) {
+  const { t } = useAppStore();
   const [currentCommunity, setCurrentCommunity] = useState(community);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -822,7 +826,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                       <h2 className="text-lg sm:text-2xl font-black text-nexus-text uppercase tracking-tighter drop-shadow-nexus-glow truncate">{currentCommunity.name}</h2>
                       <p className="text-[9px] sm:text-[10px] font-mono text-cyan-400 capitalize flex items-center gap-1.5 whitespace-nowrap">
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
-                        {onlineCount} EN RED <span className="opacity-50">| {memberCount} MIEMBROS</span>
+                        {onlineCount} {t('community.membersOnline') || "EN RED"} <span className="opacity-50">| {memberCount} {t('community.members') || "MIEMBROS"}</span>
                       </p>
                    </div>
                 </div>
@@ -832,7 +836,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
              <div className="hidden sm:flex items-center gap-4 shrink-0 border-l border-nexus-border/50 pl-4 ml-4">
                  {isJoined && (
                    <button onClick={handleLeave} disabled={isJoining} className="text-[10px] font-black uppercase text-red-500 hover:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg mr-2 transition-colors">
-                     Abandonar
+                     {t('community.leave') || "Abandonar"}
                    </button>
                  )}
                  <div className="text-right">
@@ -898,14 +902,14 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
               <div className="w-24 h-24 bg-cyan-950/30 rounded-full flex items-center justify-center border border-nexus-border/50 shadow-nexus-glow mb-6">
                  <Shield className="w-10 h-10 text-cyan-600" />
               </div>
-              <h3 className="text-xl font-black text-cyan-400 uppercase tracking-widest mb-3">Acceso Restringido</h3>
-              <p className="text-sm font-mono text-cyan-600 uppercase tracking-widest mb-8 text-center px-4">Debes unirte a esta comunidad para participar en el chat, leer y enviar mensajes.</p>
+              <h3 className="text-xl font-black text-cyan-400 uppercase tracking-widest mb-3">{t('community.restricted') || "Acceso Restringido"}</h3>
+              <p className="text-sm font-mono text-cyan-600 uppercase tracking-widest mb-8 text-center px-4">{t('community.mustJoin') || "Debes unirte a esta comunidad para participar en el chat, leer y enviar mensajes."}</p>
               <button 
                 onClick={handleJoin} 
                 disabled={isJoining}
                 className="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-nexus-bg font-black uppercase text-sm tracking-widest rounded-[12px] shadow-nexus-glow transition-all"
               >
-                {isJoining ? 'Procesando...' : 'Unirse a la comunidad'}
+                {isJoining ? (t('community.processing') || 'Procesando...') : (t('community.join') || 'Unirse a la comunidad')}
               </button>
            </div>
          ) : (

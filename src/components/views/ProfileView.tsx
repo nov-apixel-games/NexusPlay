@@ -428,7 +428,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       <div className="mt-6 sm:mt-8 glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem]">
          <div className="flex items-center justify-between mb-6">
             <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-              <Users className="w-4 h-4" /> Comunidades Seguidas
+              <Users className="w-4 h-4" /> {t('community.followed') || "Comunidades Seguidas"}
             </h3>
             <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">
               {followedCommunities.length > 0 ? `${followedCommunities.length} Comunidades` : 'Ninguna'}
@@ -448,7 +448,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-black text-[14px] text-nexus-text truncate">{comm.name}</h4>
-                    <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest font-bold mt-0.5 truncate">{comm.category}</p>
+                    <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest font-bold mt-0.5 truncate">{t(`cat.${comm.category}`) || comm.category}</p>
                   </div>
                </div>
              ))}
@@ -456,7 +456,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
          ) : (
            <div className="py-8 flex flex-col items-center justify-center text-center">
               <Compass className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
-              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">No sigues ninguna comunidad en Nexus Hub todavía.</p>
+              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">{t('community.none') || "No sigues ninguna comunidad en Nexus Hub todavía."}</p>
            </div>
          )}
       </div>
