@@ -2,7 +2,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
 import { Database, Zap } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { authFetch } from '../../lib/supabase';
 
 export function SystemMetrics() {
   const { t } = useAppStore();
@@ -12,12 +12,7 @@ export function SystemMetrics() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
-                const token = session?.access_token;
-                
-                const res = await fetch('/api/system-stats', {
-                  headers: token ? { "Authorization": `Bearer ${token}` } : {}
-                });
+                const res = await authFetch('/api/system-stats');
                 const json = await res.json();
                 if (json.success) {
                     const memUsage = ((json.systemInfo.totalMem - json.systemInfo.freeMem) / json.systemInfo.totalMem) * 100;

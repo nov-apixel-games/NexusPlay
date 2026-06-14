@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { authFetch } from './supabase';
 
 const compressImage = async (file: File): Promise<File> => {
   if (!file.type?.startsWith("image/")) return file;
@@ -79,8 +79,7 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   // Try signed upload first
   try {
     const sigURL = `/api/cloudinary-signature?folder=${encodeURIComponent(folder || "avatars")}`;
-;
-    const sigResponse = await fetch(sigURL);
+    const sigResponse = await authFetch(sigURL);
     
 ;
     
@@ -155,7 +154,10 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   }
 
   // Fallback to unsigned upload
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dnpnmhmht";
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) {
+    throw new Error("VITE_CLOUDINARY_CLOUD_NAME is not configured");
+  }
   const uploadPreset =
     import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "nexus_unsigned";
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
@@ -222,7 +224,7 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
 
 export const deleteFromCloudinary = async (publicId: string) => {
   try {
-    const response = await fetch("/api/delete-image", {
+    const response = await authFetch("/api/delete-image", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ public_id: publicId }),
@@ -237,14 +239,10 @@ export const deleteFromCloudinary = async (publicId: string) => {
 
 export const deleteFolderFromCloudinary = async (folder: string) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    
-    const response = await fetch("/api/delete-folder", {
+    const response = await authFetch("/api/delete-folder", {
       method: "POST",
       headers: { 
-        "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({ folder }),
     });
