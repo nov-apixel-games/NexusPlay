@@ -24,7 +24,11 @@ export const useFavoritesStore = create<FavoritesStore>((set, get) => ({
         .select('app_id')
         .eq('user_id', userId);
         
-      if (!error && data) {
+      if (error) {
+        console.error('[Favorites] Supabase error fetching favorites:', error.message);
+        return;
+      }
+      if (data) {
         set({ favoriteIds: new Set(data.map(d => d.app_id)), initialized: true });
       }
     } catch (e) {

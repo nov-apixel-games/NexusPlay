@@ -513,7 +513,9 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                       try {
                         commandObj = JSON.parse(match[1]);
                         displayContent = m.content.replace(match[0], '');
-                      } catch(e) {}
+                      } catch(e) {
+                        console.warn("[AdminAI] Failed to parse JSON command block:", e);
+                      }
                     }
                   }
 

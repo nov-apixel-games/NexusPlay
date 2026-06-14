@@ -126,7 +126,9 @@ export const useOfflineStore = create<OfflineState>()(
                     urlsToRemove.push(url);
                  }
                }
-            } catch (e) {}
+            } catch (e) {
+              console.warn("[Offline] Could not parse cached HTML for resource extraction:", e);
+            }
           }
           
           if (app.icon) urlsToRemove.push(app.icon);

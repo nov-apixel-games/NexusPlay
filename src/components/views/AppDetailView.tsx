@@ -142,7 +142,9 @@ export function AppDetailView({
         download_count: newCount 
       }).eq('id', app.id);
       if (error) console.error("Error setting downloads:", error);
-    } catch(err) {}
+    } catch(err) {
+      console.error("[AppDetail] Failed to increment download count:", err);
+    }
   };
 
   const submitReview = async () => {

@@ -73,14 +73,18 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
 
   const handleToggleFavorite = async (game: OfflineGame, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isFav = favorites.some(f => f.id === game.id);
-    if (isFav) {
-      await deleteOfflineGame(game.id);
-      setFavorites(prev => prev.filter(f => f.id !== game.id));
-    } else {
-      const favGame: OfflineGame = { ...game, lastPlayed: undefined };
-      await saveOfflineGame(favGame);
-      setFavorites(prev => [...prev, favGame]);
+    try {
+      const isFav = favorites.some(f => f.id === game.id);
+      if (isFav) {
+        await deleteOfflineGame(game.id);
+        setFavorites(prev => prev.filter(f => f.id !== game.id));
+      } else {
+        const favGame: OfflineGame = { ...game, lastPlayed: undefined };
+        await saveOfflineGame(favGame);
+        setFavorites(prev => [...prev, favGame]);
+      }
+    } catch (err) {
+      console.error('[GamesHub] Failed to toggle favorite:', err);
     }
   };
 
@@ -91,7 +95,11 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
       lastPlayed: new Date().toISOString(),
       playCount: (game.playCount || 0) + 1
     };
-    await saveOfflineGame(recentGame);
+    try {
+      await saveOfflineGame(recentGame);
+    } catch (err) {
+      console.error('[GamesHub] Failed to save recent game:', err);
+    }
     
     // Abrir plantilla correspondiente en el editor interactivo de forma directa
     let templateName = 'Platformer';
@@ -104,8 +112,12 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
   const handleDeleteDraft = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('¿Estás seguro de que deseas eliminar este proyecto local offline?')) {
-      await deleteGameDraft(id);
-      setLocalDrafts(prev => prev.filter(d => d.id !== id));
+      try {
+        await deleteGameDraft(id);
+        setLocalDrafts(prev => prev.filter(d => d.id !== id));
+      } catch (err) {
+        console.error('[GamesHub] Failed to delete draft:', err);
+      }
     }
   };
 
@@ -557,7 +569,12 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                         objects: [],
                         updatedAt: new Date().toISOString()
                       };
-                      await saveGameDraft(newDraft); setEditorDraftId(newDraft.id);
+                      try {
+                        await saveGameDraft(newDraft);
+                        setEditorDraftId(newDraft.id);
+                      } catch (err) {
+                        console.error('[GamesHub] Failed to save new draft:', err);
+                      }
                       setEditorTemplate(t.title);
                     }} 
                     className="p-6 rounded-2xl bg-nexus-card border border-nexus-border hover:border-cyan-500/30 text-left transition-all hover:bg-nexus-card group cursor-pointer"

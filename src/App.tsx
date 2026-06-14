@@ -242,7 +242,9 @@ export default function App() {
               }
             }
           }
-        } catch(e) {}
+        } catch(e) {
+          console.warn("[App] Failed to restore cached session from localStorage:", e);
+        }
       }
       setIsInitializing(false);
     }

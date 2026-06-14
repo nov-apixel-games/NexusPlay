@@ -156,7 +156,9 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
          setNodeStats(data.systemInfo);
          setCloudStats(data.cloudinaryUsage);
        }
-     } catch (e) {}
+     } catch (e) {
+       console.warn("[Admin] Failed to fetch system stats:", e);
+     }
 
      const startSupa = Date.now();
      try {
@@ -195,7 +197,9 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     try {
       const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
       if (data) setAllReviews(data);
-    } catch(e) {}
+    } catch(e) {
+      console.error("[Admin] Failed to fetch reviews:", e);
+    }
   };
 
   useEffect(() => {
