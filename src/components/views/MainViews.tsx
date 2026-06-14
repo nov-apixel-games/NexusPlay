@@ -33,7 +33,7 @@ export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: 
   return (
     <div className="pt-24 px-6 max-w-7xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-black flex items-center gap-3"><Gamepad2 className="w-8 h-8 text-cyan-400" /> {t('cat.Juegos') || "Catálogo de Juegos"}</h1>
+        <h1 className="text-3xl font-black flex items-center gap-3"><Gamepad2 className="w-8 h-8 text-cyan-400" /> {t('games.catalog') || "Catálogo de Juegos"}</h1>
         <div className="flex bg-nexus-card rounded-xl p-1 border border-nexus-border">
           <button onClick={() => setSortBy('downloads')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${sortBy==='downloads'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>{t('games.popular') || "Populares"}</button>
           <button onClick={() => setSortBy('rating')} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${sortBy==='rating'?'bg-nexus-card-hover text-nexus-text':'text-nexus-text-sec hover:text-nexus-text'}`}>{t('games.topRated') || "Mejor Valorados"}</button>
@@ -84,7 +84,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                user: r.profiles?.username || r.user_name || 'Anónimo',
                avatar: r.profiles?.avatar_url || null,
                time: new Date(r.created_at).toLocaleDateString(),
-               content: `Dejó una reseña de ${r.rating} estrellas en ${relApp?.name || 'una app'}: "${r.comment}"`,
+               content: `${t("explore.leftReview1") || "Dejó una reseña de"} ${r.rating} ${t("explore.leftReview2") || "estrellas en"} ${relApp?.name || "una app"}: "${r.comment}"`,
                image: null
             };
          });
@@ -98,7 +98,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
          user: a.developer,
          avatar: null,
          time: new Date(a.date || 0).toLocaleDateString(),
-         content: `¡Ha publicado un nuevo juego: ${a.name}! Ya puedes jugarlo en el catálogo.`,
+         content: `${t("explore.publishedNew") || "¡Ha publicado un nuevo juego:"} ${a.name}! ${t("explore.nowPlayable") || "Ya puedes jugarlo en el catálogo."}`,
          image: a.icon
       }));
 
@@ -144,7 +144,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                 {item.type === 'pack' && (
                   <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-purple-900/40 to-cyan-900/40 border border-nexus-border cursor-pointer hover:scale-[1.02] transition-transform">
                     <h4 className="font-black text-nexus-text text-lg flex items-center gap-2"><Layers className="w-4 h-4 text-cyan-400"/> {item.packName}</h4>
-                    <p className="text-xs text-cyan-200/70 mt-1">Ver aplicaciones del pack →</p>
+                    <p className="text-xs text-cyan-200/70 mt-1">{t("explore.viewPackApps") || "Ver aplicaciones del pack →"}</p>
                   </div>
                 )}
                 {item.type === 'new_app' && apps[0] && (
@@ -157,15 +157,15 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                     <Heart className="w-4 h-4" /> {item.likes}
                   </button>
                   <button onClick={() => onAction?.('nexus-hub')} className="flex items-center gap-1.5 text-sm font-bold text-nexus-text-sec hover:text-cyan-400 transition-colors">
-                    💬 Comentar
+                    💬 {t("explore.comment") || "Comentar"}
                   </button>
                 </div>
               </div>
             )) : (
               <div className="flex flex-col items-center justify-center py-20 text-center bg-nexus-card border border-nexus-border rounded-3xl">
                 <Users className="w-12 h-12 text-nexus-text-sec mb-4" />
-                <h3 className="text-xl font-bold text-nexus-text">No hay publicaciones todavía</h3>
-                <p className="text-nexus-text-sec font-medium mt-2">Pronto la comunidad empezará a publicar.</p>
+                <h3 className="text-xl font-bold text-nexus-text">{t("main.noPosts") || "No hay publicaciones todavía"}</h3>
+                <p className="text-nexus-text-sec font-medium mt-2">{t("explore.communitySoon") || "Pronto la comunidad empezará a publicar."}</p>
               </div>
             )}
           </div>
@@ -188,9 +188,9 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
             </div>
 
             <div className="glass-panel p-6 rounded-3xl border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-transparent">
-              <h2 className="font-black mb-1">Nexus AI <span className="px-2 py-0.5 ml-2 bg-cyan-500 text-nexus-bg text-[9px] uppercase tracking-widest rounded-lg">Inteligencia</span></h2>
-              <p className="text-xs text-nexus-text-sec mb-4 mb-4">¿No sabes a qué jugar o qué pack descargar? Pregúntale a Nexus AI.</p>
-              <button onClick={() => onAction?.('nexus-ai')} className="w-full py-2 bg-nexus-card-hover hover:bg-cyan-500 hover:text-nexus-bg font-bold text-sm rounded-xl transition-all">Consultar IA</button>
+              <h2 className="font-black mb-1">Nexus AI <span className="px-2 py-0.5 ml-2 bg-cyan-500 text-nexus-bg text-[9px] uppercase tracking-widest rounded-lg">{t("explore.intelligence") || "Inteligencia"}</span></h2>
+              <p className="text-xs text-nexus-text-sec mb-4 mb-4">{t("explore.askAiDesc") || "¿No sabes a qué jugar o qué pack descargar? Pregúntale a Nexus AI."}</p>
+              <button onClick={() => onAction?.('nexus-ai')} className="w-full py-2 bg-nexus-card-hover hover:bg-cyan-500 hover:text-nexus-bg font-bold text-sm rounded-xl transition-all">{t("explore.consultAi") || "Consultar IA"}</button>
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                    <div className="mt-8 flex items-center justify-between border-t border-nexus-border pt-6">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-cyan-900 flex items-center justify-center font-bold text-xs">{pack.creator[0]}</div>
-                        <span className="text-sm font-bold text-nexus-text">Creado por {pack.creator}</span>
+                        <span className="text-sm font-bold text-nexus-text">{t("explore.createdBy") || "Creado por"} {pack.creator}</span>
                       </div>
                       <button onClick={() => alert("Función de Guardar Pack en desarrollo")} className="px-6 py-2 bg-nexus-card-hover hover:bg-cyan-500 hover:text-nexus-bg font-bold rounded-xl transition-colors text-sm">
                         Compartir Pack
@@ -236,8 +236,8 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
           )) : (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-nexus-card border border-nexus-border rounded-3xl">
               <Layers className="w-12 h-12 text-nexus-text-sec mb-4" />
-              <h3 className="text-xl font-bold text-nexus-text">No hay packs todavía</h3>
-              <p className="text-nexus-text-sec font-medium mt-2">Crea tus propias colecciones pronto.</p>
+              <h3 className="text-xl font-bold text-nexus-text">{t("main.noPacks") || "No hay packs todavía"}</h3>
+              <p className="text-nexus-text-sec font-medium mt-2">{t("explore.collectionsSoon") || "Crea tus propias colecciones pronto."}</p>
             </div>
           )}
         </div>
@@ -355,7 +355,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
         <div className="w-24 h-24 rounded-full bg-nexus-card border border-nexus-border flex items-center justify-center mb-4">
           <User className="w-10 h-10 text-nexus-text-sec" />
         </div>
-        <h1 className="text-3xl font-black">Tu Cuenta Nexus</h1>
+        <h1 className="text-3xl font-black">{t("main.yourAccount") || "Tu Cuenta Nexus"}</h1>
         <p className="text-nexus-text-sec max-w-sm">Inicia sesión o regístrate para acceder a tus descargas, guardar favoritos, crear packs y ganar experiencia en NexusPlay.</p>
         <button 
           onClick={onLoginClick}
@@ -471,7 +471,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
                   <h1 className="text-3xl font-black truncate drop-shadow-md">{username}</h1>
                   <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
-                    <div className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-black border border-green-500/20 uppercase tracking-widest">Verificado</div>
+                    <div className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-black border border-green-500/20 uppercase tracking-widest">{t("main.verified") || "Verificado"}</div>
                     {isAdmin && (
                       <div className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-black border border-amber-500/20 uppercase tracking-widest">Admin</div>
                     )}
@@ -542,7 +542,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                      <div className="min-w-0 flex-1">
                        <div className="flex items-center gap-2">
                          <h4 className="text-nexus-text font-black text-base truncate font-mono">@{username || 'jugador_nexus'}</h4>
-                         <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">Jugador</span>
+                         <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">{t("main.player") || "Jugador"}</span>
                        </div>
                        <p className="text-nexus-text-sec text-xs truncate mt-0.5">{realName || 'Tu Nombre o Alias'}</p>
                        <p className="text-nexus-text-sec text-[10px] italic truncate mt-1">"{bio || 'Sin biografía establecida.'}"</p>
@@ -648,7 +648,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                            <div className="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
                              <Camera className="w-5 h-5" />
                            </div>
-                           <p className="text-xs font-bold text-gray-200">Suelta tu imagen o Haz Clic para subir</p>
+                           <p className="text-xs font-bold text-gray-200">{t("main.dropImage") || "Suelta tu imagen o Haz Clic para subir"}</p>
                            <p className="text-[9px] text-nexus-text-sec uppercase tracking-widest mt-1">PNG, JPG, WEBP (SE GUARDA EN CLOUDINARY)</p>
                          </div>
                        )}
@@ -674,7 +674,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                            />
                          </div>
                          <div>
-                           <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest font-mono">Generando por IA</span>
+                           <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest font-mono">{t("main.generatingAI") || "Generando por IA"}</span>
                            <p className="text-xs font-bold text-nexus-text">Generación Dinámica Directa</p>
                          </div>
                        </div>
@@ -777,13 +777,13 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                    </div>
                    
                    <div>
-                     <label className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 font-mono">Nombre Visible</label>
+                     <label className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 font-mono">{t("main.displayName") || "Nombre Visible"}</label>
                      <input type="text" value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-4 py-3 text-nexus-text outline-none focus:border-cyan-500 focus:bg-nexus-surface transition-all font-semibold text-[13px]" placeholder="Tu Nombre Real" />
                    </div>
 
                    <div>
                      <div className="flex justify-between text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 font-mono">
-                       <span>Biografía corta o Estado</span>
+                       <span>{t("main.shortBio") || "Biografía corta o Estado"}</span>
                        <span className="text-nexus-text-sec font-bold">{bio.length}/100</span>
                      </div>
                      <textarea value={bio} onChange={e => setBio(e.target.value)} maxLength={100} rows={2} className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-4 py-3 text-nexus-text outline-none focus:border-cyan-500 focus:bg-nexus-surface transition-all font-semibold text-[13px] resize-none" placeholder="Amo los juegos Indie..." />
@@ -830,7 +830,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
               <div className="text-3xl font-black text-yellow-500">{level}</div>
                <div className="flex-1">
                  <div className="flex justify-between text-[10px] font-bold text-nexus-text-sec mb-1 uppercase tracking-widest">
-                    <span>XP Actual</span>
+                    <span>{t("main.currentXP") || "XP Actual"}</span>
                     <span>Nivel {level + 1}</span>
                  </div>
                  <div className="w-full h-3 bg-nexus-surface rounded-full overflow-hidden border border-nexus-border">
@@ -841,7 +841,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                  </div>
                </div>
            </div>
-           <p className="text-xs text-nexus-text-sec font-medium leading-relaxed">Completa <span className="text-cyan-400 cursor-pointer hover:underline">Misiones de Comunidad</span> descargando apps y comentando en foros para ganar más XP.</p>
+           <p className="text-xs text-nexus-text-sec font-medium leading-relaxed">Completa <span className="text-cyan-400 cursor-pointer hover:underline">{t("main.communityMissions") || "Misiones de Comunidad"}</span> descargando apps y comentando en foros para ganar más XP.</p>
         </div>
 
         {/* Insignias / Badges */}
@@ -887,7 +887,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border-nexus-border hover:border-nexus-border transition-colors bg-nexus-card">
            <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Settings className="w-6 h-6 text-nexus-text-sec" /> Configuración</h3>
            <p className="text-sm text-nexus-text-sec mb-6 font-medium leading-relaxed max-w-xs">Ajusta preferencias de privacidad, seguridad de la cuenta y notificaciones.</p>
-           <button className="px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text rounded-xl text-sm font-bold transition-colors">Abrir Ajustes</button>
+           <button className="px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text rounded-xl text-sm font-bold transition-colors">{t("main.openSettings") || "Abrir Ajustes"}</button>
         </div>
       </div>
     </div>
@@ -962,7 +962,7 @@ export function DownloadsView({ apps, onAppClick }: { apps: AppItem[], onAppClic
                   </button>
                 ) : (
                   <>
-                    <button className="hidden sm:block px-4 py-2 bg-nexus-card text-nexus-text-sec hover:bg-nexus-card-hover hover:text-nexus-text font-bold rounded-xl text-sm transition-colors border border-nexus-border">Instalar de nuevo</button>
+                    <button className="hidden sm:block px-4 py-2 bg-nexus-card text-nexus-text-sec hover:bg-nexus-card-hover hover:text-nexus-text font-bold rounded-xl text-sm transition-colors border border-nexus-border">{t("main.installAgain") || "Instalar de nuevo"}</button>
                     <button className="sm:hidden p-2 bg-nexus-card text-nexus-text-sec rounded-xl border border-nexus-border"><Download className="w-5 h-5"/></button>
                   </>
                 )}
@@ -975,7 +975,7 @@ export function DownloadsView({ apps, onAppClick }: { apps: AppItem[], onAppClic
             <div className="w-20 h-20 bg-gray-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                <Download className="w-10 h-10 text-gray-600" />
             </div>
-            <h2 className="text-xl font-bold text-nexus-text mb-2">No tienes descargas recientes</h2>
+            <h2 className="text-xl font-bold text-nexus-text mb-2">{t("main.noRecentDownloads") || "No tienes descargas recientes"}</h2>
             <p className="text-nexus-text-sec text-sm max-w-xs mx-auto">Explora nuestro catálogo y empieza a descargar los mejores juegos y aplicaciones.</p>
             <button 
               onClick={() => window.location.hash = ''} 
@@ -1032,10 +1032,10 @@ export function EventsView({ apps, onAppClick }: { apps?: AppItem[], onAppClick?
       <h1 className="text-3xl font-black mb-8 text-nexus-text flex items-center gap-3"><Zap className="w-8 h-8 text-yellow-400" /> Eventos & Novedades</h1>
       <div className="space-y-6">
         <div className="glass-panel p-6 sm:p-8 rounded-[2rem] border-cyan-500/30 bg-cyan-500/5 relative overflow-hidden shadow-nexus-glow">
-          <div className="absolute top-4 right-4 bg-red-500 text-nexus-text text-[10px] font-black px-3 py-1.5 uppercase rounded-lg animate-pulse tracking-widest shadow-lg shadow-red-500/20">EVENTO EN VIVO</div>
+          <div className="absolute top-4 right-4 bg-red-500 text-nexus-text text-[10px] font-black px-3 py-1.5 uppercase rounded-lg animate-pulse tracking-widest shadow-lg shadow-red-500/20">{t("main.liveEvent") || "EVENTO EN VIVO"}</div>
           <h2 className="text-2xl font-black mb-3 text-cyan-400 drop-shadow-md">NexusPlay Developer Fest 2026</h2>
           <p className="text-nexus-text mb-6 max-w-xl text-lg leading-relaxed">Conoce las nuevas herramientas de desarrollo, actualizaciones de seguridad y el nuevo modelo Nexus AI para crear apps más rápido.</p>
-          <button className="px-6 py-3 bg-cyan-500 text-nexus-bg font-black uppercase tracking-wider rounded-xl text-sm hover:bg-cyan-400 transition-colors shadow-nexus-glow">Explorar Evento</button>
+          <button className="px-6 py-3 bg-cyan-500 text-nexus-bg font-black uppercase tracking-wider rounded-xl text-sm hover:bg-cyan-400 transition-colors shadow-nexus-glow">{t("main.exploreEvent") || "Explorar Evento"}</button>
         </div>
 
         {newlyUpdated.length > 0 && (
@@ -1337,8 +1337,8 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
               <div className="w-20 h-20 bg-nexus-card rounded-full flex items-center justify-center mx-auto mb-6">
                  <Search className="w-10 h-10 text-gray-600" />
               </div>
-              <h2 className="text-xl font-bold text-nexus-text mb-2">No encontramos resultados</h2>
-              <p className="text-nexus-text-sec text-sm">Intenta otro nombre o revisa la ortografía</p>
+              <h2 className="text-xl font-bold text-nexus-text mb-2">{t("main.noResults") || "No encontramos resultados"}</h2>
+              <p className="text-nexus-text-sec text-sm">{t("main.tryAnother") || "Intenta otro nombre o revisa la ortografía"}</p>
             </div>
           )}
         </div>

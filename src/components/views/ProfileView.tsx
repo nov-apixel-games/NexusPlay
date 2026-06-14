@@ -251,16 +251,16 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                {isEditing ? (
                   <div className="space-y-4 max-w-lg w-full mb-4 bg-nexus-bg/50 p-5 rounded-2xl border border-nexus-border backdrop-blur-md relative z-10 mt-4 sm:mt-0">
                      <div>
-                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">Nombre de Usuario</label>
+                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">{t("profile.username") || "Nombre de Usuario"}</label>
                        <input value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 font-bold focus:border-cyan-500/50 outline-none transition-colors" placeholder="Usuario" />
                      </div>
                      <div>
-                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">Nombre Visible (Opcional)</label>
+                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">{t("profile.displayName") || "Nombre Visible (Opcional)"}</label>
                        <input value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 font-bold focus:border-cyan-500/50 outline-none transition-colors" placeholder="Nombre completo" />
                      </div>
                      <div>
-                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">Acerca de ti</label>
-                       <textarea value={bio} onChange={e => setBio(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 resize-none h-24 font-medium focus:border-cyan-500/50 outline-none transition-colors leading-relaxed" placeholder="Añade tu bio..." maxLength={200} />
+                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">{t("profile.about") || "Acerca de ti"}</label>
+                       <textarea value={bio} onChange={e => setBio(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 resize-none h-24 font-medium focus:border-cyan-500/50 outline-none transition-colors leading-relaxed" placeholder={t("profile.addBio") || "Añade tu bio..."} maxLength={200} />
                      </div>
                      {error && <p className="text-red-500 text-sm font-bold bg-red-500/10 p-3 rounded-lg border border-red-500/20 flex items-center gap-2"><Trophy className="w-4 h-4"/> {error}</p>}
                      
@@ -270,7 +270,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                         </button>
                         <button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full sm:w-auto px-8 py-3 bg-cyan-500 text-white font-black rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors shadow-lg shadow-cyan-500/20">
                           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                          {saving ? 'Guardando...' : 'Guardar Perfil'}
+                          {saving ? t("profile.saving") || "Guardando..." : t("profile.save") || "Guardar Perfil"}
                         </button>
                      </div>
                   </div>
@@ -283,18 +283,18 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                       <span className="text-sm opacity-80">{email}</span>
                     </p>
                     <p className="text-nexus-text mt-4 max-w-lg mx-auto sm:mx-0 line-clamp-3 leading-relaxed font-medium bg-nexus-bg/30 p-3 rounded-xl border border-nexus-border/50">
-                      {bio || <span className="opacity-50 italic">Todavía no has escrito una biografía.</span>}
+                      {bio || <span className="opacity-50 italic">{t("profile.noBio") || "Todavía no has escrito una biografía."}</span>}
                     </p>
                     
                     <div className="mt-6 flex flex-wrap gap-3 justify-center sm:justify-start w-full">
                        <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm group">
-                          <Edit3 className="w-4 h-4 group-hover:scale-110 transition-transform text-cyan-400" /> Editar
+                          <Edit3 className="w-4 h-4 group-hover:scale-110 transition-transform text-cyan-400" /> {t("profile.edit") || "Editar"}
                        </button>
                        <button onClick={onSettingsClick} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm">
                           <Settings className="w-4 h-4 text-nexus-text-sec" />
                        </button>
                        <button onClick={onLogoutClick} className="w-full sm:w-auto px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-2xl font-black flex items-center justify-center gap-2 transition-all sm:ml-auto">
-                          <LogOut className="w-4 h-4" /> Salir
+                          <LogOut className="w-4 h-4" /> {t("profile.logout") || "Salir"}
                        </button>
                     </div>
                   </div>
@@ -308,7 +308,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
          <div className="col-span-1 space-y-6 sm:space-y-8">
             <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] space-y-4">
                <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-                 <Shield className="w-4 h-4" /> Rol
+                 <Shield className="w-4 h-4" /> {t("profile.role") || "Rol"}
                </h3>
                
                <div className="flex items-center gap-4">
@@ -317,22 +317,22 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                  </div>
                  <div>
                    <p className="text-2xl font-black capitalize tracking-tight">{userProfile?.role || 'Mortal'}</p>
-                   <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mt-1">Status Actual</p>
+                   <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mt-1">{t("profile.currentStatus") || "Status Actual"}</p>
                  </div>
                </div>
             </div>
 
             <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] space-y-4">
                <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80 mb-6">
-                 <Calendar className="w-4 h-4" /> Actividad
+                 <Calendar className="w-4 h-4" /> {t("profile.activity") || "Actividad"}
                </h3>
                <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-nexus-bg/50 rounded-xl border border-nexus-border">
-                     <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">Miembro desde</span>
+                     <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">{t("profile.memberSince") || "Miembro desde"}</span>
                      <span className="font-black text-sm">{joinDate}</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-nexus-bg/50 rounded-xl border border-nexus-border">
-                     <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">Días activos</span>
+                     <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">{t("profile.activeDays") || "Días activos"}</span>
                      <span className="font-black text-sm flex items-center gap-1.5"><Activity className="w-4 h-4 text-emerald-400" /> {realStats.activeDays}</span>
                   </div>
                </div>
@@ -343,13 +343,13 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
          <div className="col-span-1 lg:col-span-2">
             <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] h-full flex flex-col">
                <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 mb-6 sm:mb-8 opacity-80">
-                 <Trophy className="w-4 h-4" /> Estadísticas Reales
+                 <Trophy className="w-4 h-4" /> {t("profile.realStats") || "Estadísticas Reales"}
                </h3>
                
                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 flex-1">
-                  <StatCard icon={<Star className="w-6 h-6 text-yellow-400" />} label="Favoritos Guardados" value={realStats.favorites} bg="bg-yellow-500/10 border-yellow-500/20" />
-                  <StatCard icon={<Compass className="w-6 h-6 text-blue-400" />} label="Apps Publicadas" value={realStats.published} bg="bg-blue-500/10 border-blue-500/20" />
-                  <StatCard icon={<Activity className="w-6 h-6 text-emerald-400" />} label="Días Activos" value={realStats.activeDays} bg="bg-emerald-500/10 border-emerald-500/20" />
+                  <StatCard icon={<Star className="w-6 h-6 text-yellow-400" />} label={t("profile.favSaved") || "Favoritos Guardados"} value={realStats.favorites} bg="bg-yellow-500/10 border-yellow-500/20" />
+                  <StatCard icon={<Compass className="w-6 h-6 text-blue-400" />} label={t("profile.appsPublished") || "Apps Publicadas"} value={realStats.published} bg="bg-blue-500/10 border-blue-500/20" />
+                  <StatCard icon={<Activity className="w-6 h-6 text-emerald-400" />} label={t("profile.activeDays") || "Días Activos"} value={realStats.activeDays} bg="bg-emerald-500/10 border-emerald-500/20" />
                </div>
 
                {(!isDeveloper) && (
@@ -358,8 +358,8 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                      <Sparkles className="w-8 h-8" />
                    </div>
                    <div>
-                     <h4 className="font-black text-xl mb-2 text-nexus-text drop-shadow-sm">Conviértete en Creador</h4>
-                     <p className="text-nexus-text-sec text-sm leading-relaxed mb-5 max-w-md font-medium">¿Tienes una aplicación web, un juego o quieres publicar mods? Conviértete en desarrollador verificado y monetiza tus juegos.</p>
+                     <h4 className="font-black text-xl mb-2 text-nexus-text drop-shadow-sm">{t("profile.creator") || "Conviértete en Creador"}</h4>
+                     <p className="text-nexus-text-sec text-sm leading-relaxed mb-5 max-w-md font-medium">{t("profile.creatorDesc") || "¿Tienes una aplicación web, un juego o quieres publicar mods? Conviértete en desarrollador verificado y monetiza tus juegos."}</p>
                      <button onClick={() => onDeveloperAction?.('open')} className="px-6 py-3 bg-cyan-500 text-white border border-cyan-400/50 rounded-xl font-black hover:bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all">
                        Aplicar ahora
                      </button>
@@ -374,10 +374,10 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       <div className="mt-6 sm:mt-8 glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem]">
          <div className="flex items-center justify-between mb-6">
             <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-              <CloudOff className="w-4 h-4" /> Aplicaciones Offline
+              <CloudOff className="w-4 h-4" /> {t("profile.offlineApps") || "Aplicaciones Offline"}
             </h3>
             <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">
-              {offlineAppsList.length > 0 ? `${offlineAppsList.length} Apps Almacenadas` : 'Vacío'}
+              {offlineAppsList.length > 0 ? `${offlineAppsList.length} Apps Almacenadas` : t('profile.empty') || 'Vacío'}
             </span>
          </div>
          
@@ -398,11 +398,11 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                   </div>
                   <div className="flex items-center justify-between mt-1 px-1">
                     <div className="flex flex-col">
-                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">Tamaño</span>
+                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">{t("profile.size") || "Tamaño"}</span>
                       <span className="text-[11px] font-black">{app.sizeBytes ? (app.sizeBytes / 1024 / 1024).toFixed(2) : '0.00'} MB</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">Fecha</span>
+                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">{t("profile.date") || "Fecha"}</span>
                       <span className="text-[11px] font-black">{new Date(app.downloadedAt).toLocaleDateString()}</span>
                     </div>
                     <button 
@@ -419,7 +419,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
          ) : (
            <div className="py-8 flex flex-col items-center justify-center text-center">
               <CloudOff className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
-              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">No tienes aplicaciones guardadas para jugar sin Internet.</p>
+              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">{t("profile.noOfflineApps") || "No tienes aplicaciones guardadas para jugar sin Internet."}</p>
            </div>
          )}
       </div>

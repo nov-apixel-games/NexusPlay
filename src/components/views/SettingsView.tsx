@@ -181,7 +181,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
           <h1 className="text-2xl sm:text-3xl font-black text-nexus-text tracking-tight">{t('nav.settings')}</h1>
         </div>
         <button onClick={onBack} className="group flex items-center gap-2 px-4 py-2 bg-nexus-card hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-xl transition-all border border-transparent hover:border-cyan-500/30">
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> Volver
+          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> {t("nav.back") || "Volver"}
         </button>
       </div>
 
@@ -190,11 +190,11 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
             <TabButton active={activeTab === 'interface'} onClick={() => setActiveTab('interface')} icon={Palette} label={t('settings.theme') || "Apariencia"} />
             <TabButton active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} icon={Bell} label={t('nav.notifications') || "Notificaciones"} />
             <TabButton active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={User} label={t('nav.myAccount') || "Cuenta"} />
-            <TabButton active={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} icon={Lock} label="Privacidad" />
+            <TabButton active={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} icon={Lock} label={t('settings.privacy') || "Privacidad"} />
             <TabButton active={activeTab === 'app'} onClick={() => setActiveTab('app')} icon={Monitor} label={t('nav.downloads') || "Descargas"} />
             <TabButton active={activeTab === 'nexus-ai'} onClick={() => setActiveTab('nexus-ai')} icon={Cpu} label={t('ai.title') || "Nexus AI"} />
             <TabButton active={activeTab === 'pwa'} onClick={() => setActiveTab('pwa')} icon={Smartphone} label="PWA / App Web" />
-            <TabButton active={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} icon={Settings} label="Avanzado" />
+            <TabButton active={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} icon={Settings} label={t('settings.advanced') || "Avanzado"} />
           </div>
 
           <div className="flex-1 min-w-0 bg-nexus-surface rounded-2xl md:p-6 border-0 md:border border-nexus-border shadow-sm">
@@ -202,7 +202,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
             {activeTab === 'interface' && (
               <div className="space-y-8 animate-in fade-in">
                 <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Palette className="w-5 h-5 text-cyan-400" /> Selector de Tema</h3>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Palette className="w-5 h-5 text-cyan-400" /> {t('settings.themeSelector') || "Selector de Tema"}</h3>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <button onClick={() => setTheme('dark')} className={`py-4 flex flex-col items-center gap-2 rounded-xl border-2 transition-all ${theme === 'dark' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-nexus-border bg-nexus-card text-nexus-text-sec hover:border-cyan-400/50'}`}>
                       <div className="w-6 h-6 rounded-full bg-[#0f172a] border border-nexus-border shadow-inner"></div>
@@ -224,7 +224,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                 </div>
                 <div className="h-px bg-nexus-card-hover" />
                 <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Flag className="w-5 h-5 text-indigo-400" /> Idioma (Language)</h3>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Flag className="w-5 h-5 text-indigo-400" />{t("settings.languageStr") || "Idioma (Language)"}</h3>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                      {['es', 'en', 'pt'].map((langKey) => (
                         <button key={langKey} onClick={() => setLanguage(langKey as any)} className={`py-3 px-4 flex items-center justify-between rounded-xl border-2 transition-all ${language === langKey ? 'border-indigo-400 bg-indigo-400/10 text-indigo-400' : 'border-nexus-border bg-nexus-card text-nexus-text-sec hover:border-indigo-400/50'}`}>
@@ -242,8 +242,8 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Bell className="w-5 h-5 text-yellow-400" /> Preferencias de Avisos</h3>
                 <div className="p-4 bg-nexus-card border border-nexus-border rounded-xl flex items-center justify-between">
                    <div>
-                      <h4 className="font-bold text-nexus-text text-sm">Alertas de Ofertas</h4>
-                      <p className="text-xs text-nexus-text-sec">Recibir notificaciones cuando haya juegos gratis o con descuento.</p>
+                      <h4 className="font-bold text-nexus-text text-sm">{t("settings.alerts") || "Alertas de Ofertas"}</h4>
+                      <p className="text-xs text-nexus-text-sec">{t("settings.dealAlertsDesc") || "Recibir notificaciones cuando haya juegos gratis o con descuento."}</p>
                    </div>
                    <Toggle checked={dealAlerts} onChange={setDealAlerts} />
                 </div>
@@ -253,14 +253,14 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
             {activeTab === 'account' && (
               <div className="space-y-8 animate-in fade-in">
                 <div>
-                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><User className="w-5 h-5 text-blue-400" /> Datos de Sesión</h3>
+                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><User className="w-5 h-5 text-blue-400" /> {t("settings.sessionData") || "Datos de Sesión"}</h3>
                    <div className="space-y-4 max-w-md">
                       <div>
-                        <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">Usuario</label>
+                        <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">{t("settings.user") || "Usuario"}</label>
                         <input value={name} onChange={e=>setName(e.target.value)} className="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-2" placeholder="Usuario" />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">Correo Electrónico</label>
+                        <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">{t("settings.email") || "Correo Electrónico"}</label>
                         <input value={email} disabled className="w-full bg-nexus-card-hover border border-nexus-border rounded-xl px-4 py-2 opacity-70" placeholder="Email" />
                       </div>
                       <button onClick={handleSaveProfile} className="flex items-center gap-2 px-6 py-2 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors">
@@ -270,10 +270,10 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                 </div>
                 <div className="h-px bg-nexus-card-hover" />
                 <div>
-                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Lock className="w-5 h-5 text-red-400" /> Seguridad</h3>
+                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Lock className="w-5 h-5 text-red-400" /> {t("settings.security") || "Seguridad"}</h3>
                    <div className="space-y-4 max-w-md">
                       <div>
-                        <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">Nueva Contraseña</label>
+                        <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">{t("settings.newPassword") || "Nueva Contraseña"}</label>
                         <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-2" placeholder="********" />
                       </div>
                       <button onClick={handleSavePassword} className="flex items-center gap-2 px-6 py-2 bg-nexus-card border border-nexus-border text-nexus-text rounded-xl font-bold hover:bg-nexus-card-hover transition-colors">
@@ -288,28 +288,28 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
               <div className="space-y-6 animate-in fade-in">
                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Eye className="w-5 h-5 text-purple-400" /> Datos y Privacidad</h3>
                  <div className="p-5 border border-red-500/20 bg-red-500/5 text-red-400 rounded-xl">
-                    <h4 className="font-bold flex items-center gap-2 mb-1"><ShieldAlert className="w-4 h-4"/> Zona de Peligro</h4>
-                    <p className="text-sm mb-4">Elimina tu cuenta y todos los datos asociados. Esto no se puede deshacer.</p>
-                    <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg font-bold transition-colors text-sm">Eliminar Cuenta</button>
+                    <h4 className="font-bold flex items-center gap-2 mb-1"><ShieldAlert className="w-4 h-4"/> {t("settings.dangerZone") || "Zona de Peligro"}</h4>
+                    <p className="text-sm mb-4">{t("settings.deleteDesc") || "Elimina tu cuenta y todos los datos asociados. Esto no se puede deshacer."}</p>
+                    <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg font-bold transition-colors text-sm">{t("settings.deleteAccount") || "Eliminar Cuenta"}</button>
                  </div>
               </div>
             )}
 
             {activeTab === 'app' && (
               <div className="space-y-6 animate-in fade-in">
-                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><DownloadCloud className="w-5 h-5 text-emerald-400" /> Descargas</h3>
+                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><DownloadCloud className="w-5 h-5 text-emerald-400" /> {t("settings.downloads") || "Descargas"}</h3>
                  <div className="space-y-4">
                     <div>
-                       <label className="text-sm font-bold text-nexus-text mb-2 block">Preferencias de Red de Descarga</label>
+                       <label className="text-sm font-bold text-nexus-text mb-2 block">{t("settings.networkPrefs") || "Preferencias de Red de Descarga"}</label>
                        <select value={networkPref} onChange={e => setNetworkPref(e.target.value)} className="w-full max-w-md bg-nexus-bg border border-nexus-border rounded-xl px-4 py-3 outline-none focus:border-emerald-400/50">
-                          <option value="any">Cualquier Red (Wi-Fi o Datos)</option>
-                          <option value="wifi">Solo por Wi-Fi</option>
+                          <option value="any">{t("settings.anyNetwork") || "Cualquier Red (Wi-Fi o Datos)"}</option>
+                          <option value="wifi">{t("settings.wifiOnly") || "Solo por Wi-Fi"}</option>
                        </select>
                     </div>
                     <div className="p-4 bg-nexus-card border border-nexus-border rounded-xl flex items-center justify-between max-w-md">
                        <div>
-                          <h4 className="font-bold text-nexus-text text-sm">Actualizaciones Automáticas</h4>
-                          <p className="text-xs text-nexus-text-sec">Instalar versiones nuevas en segundo plano.</p>
+                          <h4 className="font-bold text-nexus-text text-sm">{t("settings.autoUpdates") || "Actualizaciones Automáticas"}</h4>
+                          <p className="text-xs text-nexus-text-sec">{t("settings.autoUpdatesDesc") || "Instalar versiones nuevas en segundo plano."}</p>
                        </div>
                        <Toggle checked={autoUpdate} onChange={setAutoUpdate} />
                     </div>
@@ -320,20 +320,20 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
             {activeTab === 'nexus-ai' && (
               <div className="space-y-8 animate-in fade-in">
                  <div>
-                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Cpu className="w-5 h-5 text-blue-400" /> Gestión Nexus AI</h3>
+                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Cpu className="w-5 h-5 text-blue-400" /> {t("settings.nexusMng") || "Gestión Nexus AI"}</h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-5 border border-nexus-border bg-nexus-card rounded-xl">
-                        <h4 className="font-bold mb-2">Eliminar Historial</h4>
-                        <p className="text-xs text-nexus-text-sec mb-4 h-8">Limpiar toda la conversación guardada localmente de Nexus AI.</p>
+                        <h4 className="font-bold mb-2">{t("settings.clearHistory") || "Eliminar Historial"}</h4>
+                        <p className="text-xs text-nexus-text-sec mb-4 h-8">{t("settings.clearAiDesc") || "Limpiar toda la conversación guardada localmente de Nexus AI."}</p>
                         <button onClick={clearAiHistory} className="w-full flex items-center justify-center gap-2 py-2 bg-nexus-bg hover:bg-red-500/10 text-red-500 border border-nexus-border rounded-lg font-bold text-sm transition-colors">
-                          <Trash2 className="w-4 h-4"/> Limpiar
+                          <Trash2 className="w-4 h-4"/> {t("settings.clear") || "Limpiar"}
                         </button>
                       </div>
                       <div className="p-5 border border-nexus-border bg-nexus-card rounded-xl">
-                        <h4 className="font-bold mb-2">Exportar Conversación</h4>
-                        <p className="text-xs text-nexus-text-sec mb-4 h-8">Descargar el JSON de tus consultas actuales.</p>
+                        <h4 className="font-bold mb-2">{t("settings.exportChat") || "Exportar Conversación"}</h4>
+                        <p className="text-xs text-nexus-text-sec mb-4 h-8">{t("settings.exportDesc") || "Descargar el JSON de tus consultas actuales."}</p>
                         <button onClick={exportAiHistory} className="w-full flex items-center justify-center gap-2 py-2 bg-nexus-bg hover:bg-blue-500/10 text-blue-400 border border-nexus-border rounded-lg font-bold text-sm transition-colors">
-                          <DownloadCloud className="w-4 h-4"/> Exportar Detalles
+                          <DownloadCloud className="w-4 h-4"/> {t("settings.exportDetails") || "Exportar Detalles"}
                         </button>
                       </div>
                    </div>
@@ -343,45 +343,45 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
 
             {activeTab === 'pwa' && (
               <div className="space-y-6 animate-in fade-in">
-                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Smartphone className="w-5 h-5 text-indigo-400" /> Estado de PWA</h3>
+                 <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Smartphone className="w-5 h-5 text-indigo-400" /> {t("settings.pwaState") || "Estado de PWA"}</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-5 border border-nexus-border bg-nexus-card rounded-xl space-y-3">
-                       <h4 className="font-bold text-sm tracking-wider uppercase text-nexus-text-sec">Conexión</h4>
+                       <h4 className="font-bold text-sm tracking-wider uppercase text-nexus-text-sec">{t("settings.connection") || "Conexión"}</h4>
                        <div className="flex items-center gap-2">
                          <div className={`w-3 h-3 rounded-full ${isOffline ? 'bg-red-500' : 'bg-green-500'}`} /> 
-                         <span className="font-bold text-lg">{isOffline ? 'Desconectado' : 'Online'}</span>
+                         <span className="font-bold text-lg">{isOffline ? (t('settings.offline') || 'Desconectado') : 'Online'}</span>
                        </div>
                     </div>
                     <div className="p-5 border border-nexus-border bg-nexus-card rounded-xl space-y-3">
-                       <h4 className="font-bold text-sm tracking-wider uppercase text-nexus-text-sec">Instalación</h4>
+                       <h4 className="font-bold text-sm tracking-wider uppercase text-nexus-text-sec">{t("settings.installation") || "Instalación"}</h4>
                        <div className="flex items-center gap-2">
                          {isInstallable ? (
-                           <span className="font-bold text-lg text-emerald-400">App Instalada</span>
+                           <span className="font-bold text-lg text-emerald-400">{t("settings.appInstalled") || "App Instalada"}</span>
                          ) : (
-                           <button onClick={handleInstallPwa} className="px-3 py-1 bg-indigo-500 text-white rounded font-bold text-sm">Instalar App</button>
+                           <button onClick={handleInstallPwa} className="px-3 py-1 bg-indigo-500 text-white rounded font-bold text-sm">{t("settings.installApp") || "Instalar App"}</button>
                          )}
                        </div>
                     </div>
                  </div>
 
                  <div className="space-y-3 mt-4">
-                    <h4 className="font-bold text-sm tracking-wider uppercase text-nexus-text-sec">Recursos Locales</h4>
+                    <h4 className="font-bold text-sm tracking-wider uppercase text-nexus-text-sec">{t("settings.localResources") || "Recursos Locales"}</h4>
                     <div className="flex flex-col sm:flex-row items-center gap-4 p-5 bg-nexus-card border border-nexus-border rounded-xl">
                        <div className="flex items-center gap-3">
                           <HardDrive className="w-8 h-8 text-cyan-500" />
                           <div>
-                            <span className="block font-bold">Uso Aproximado</span>
-                            <span className="text-sm text-nexus-text-sec">{storageUsed} en caché</span>
+                            <span className="block font-bold">{t("settings.approxUse") || "Uso Aproximado"}</span>
+                            <span className="text-sm text-nexus-text-sec">{storageUsed} {t('settings.inCache') || 'en caché'}</span>
                           </div>
                        </div>
                        <div className="flex-1" />
                        <button onClick={clearPwaCache} className="px-4 py-2 border border-nexus-border bg-nexus-surface hover:bg-nexus-bg rounded-xl text-sm font-bold flex items-center gap-2">
-                         <RefreshCw className="w-4 h-4" /> Vaciar Caché
+                         <RefreshCw className="w-4 h-4" /> {t('settings.clearCache') || 'Vaciar Caché'}
                        </button>
                     </div>
                     
                     <button onClick={updateApp} className="w-full flex items-center justify-between p-4 bg-nexus-card hover:bg-nexus-bg border border-nexus-border rounded-xl transition-colors">
-                      <span className="font-bold text-sm text-nexus-text">Buscar Actualizaciones de Cliente</span>
+                      <span className="font-bold text-sm text-nexus-text">{t("settings.checkUpdates") || "Buscar Actualizaciones de Cliente"}</span>
                       <ChevronLeft className="w-4 h-4 rotate-180 text-nexus-text-sec" />
                     </button>
                  </div>
@@ -391,7 +391,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
             {activeTab === 'advanced' && (
               <div className="space-y-8 animate-in fade-in">
                 <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Settings className="w-5 h-5 text-cyan-400" /> Sist. Info</h3>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-nexus-text"><Settings className="w-5 h-5 text-cyan-400" /> {t("settings.sysInfo") || "Sist. Info"}</h3>
                   <div className="bg-nexus-surface border border-nexus-border rounded-xl p-4 space-y-2 text-sm text-nexus-text-sec">
                      <div className="flex justify-between"><span className="text-nexus-text-sec">PWA Status</span><span className="font-mono text-emerald-400">ACTIVA</span></div>
                      <div className="flex justify-between"><span className="text-nexus-text-sec">Cliente</span><span className="font-mono text-cyan-400">v2.1.5-beta</span></div>
@@ -399,8 +399,8 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                 </div>
                 <div className="h-px bg-nexus-card-hover" />
                 <div className="flex flex-col">
-                   <h3 className="text-xl font-bold text-nexus-text mb-2">Soporte</h3>
-                   <SupportEmailBox category="Requerimiento Avanzado" />
+                   <h3 className="text-xl font-bold text-nexus-text mb-2">{t("settings.support") || "Soporte"}</h3>
+                   <SupportEmailBox category={t("settings.advReq") || "Requerimiento Avanzado"} />
                 </div>
               </div>
             )}

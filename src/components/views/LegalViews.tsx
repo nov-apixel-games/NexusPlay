@@ -7,7 +7,7 @@ import { SupportEmailBox } from '../SupportEmailBox';
 
 export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   return (
-    <LegalPage title="Política de Privacidad" lastUpdated="15 de Mayo, 2026" onBack={onBack}>
+    <LegalPage title={t("footer.privacy") || "Política de Privacidad"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-nexus-text mb-4">1. Introducción</h2>
         <p>En {storeName}, la privacidad de nuestros usuarios y desarrolladores es nuestra prioridad. Esta Política de Privacidad explica cómo recopilamos, utilizamos, almacenamos y protegemos la información personal cuando utilizas nuestra plataforma digital.</p>
@@ -84,7 +84,7 @@ export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; on
 
 export function TermsAndConditionsView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   return (
-    <LegalPage title="Términos y Condiciones" lastUpdated="15 de Mayo, 2026" onBack={onBack}>
+    <LegalPage title={t("footer.terms") || "Términos y Condiciones"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-nexus-text mb-4">1. Aceptación de los Términos</h2>
         <p>Al crear una cuenta en {storeName} o acceder a nuestra plataforma, aceptas de manera expresa y vinculante estos Términos y Condiciones. Si no estás de acuerdo con ellos, no utilices nuestros servicios.</p>
@@ -151,7 +151,7 @@ export function TermsAndConditionsView({ storeName, onBack }: { storeName: strin
 
 export function CookiePolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   return (
-    <LegalPage title="Política de Cookies" lastUpdated="15 de Mayo, 2026" onBack={onBack}>
+    <LegalPage title={t("footer.cookies") || "Política de Cookies"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-nexus-text mb-4">1. Introducción</h2>
         <p>En {storeName}, utilizamos cookies y tecnologías similares para mejorar tu experiencia, garantizar la seguridad y asegurar el correcto funcionamiento de nuestra plataforma. Esta política explica qué son, cómo las usamos y qué control tienes sobre ellas.</p>

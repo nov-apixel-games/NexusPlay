@@ -55,11 +55,11 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
   const isNearBottomRef = useRef(true);
 
   const quickButtons = [
-    { label: t('Recomendar juegos') || 'Recomendar juegos', icon: Gamepad2, q: 'Recomiéndame los mejores juegos' },
-    { label: t('Optimizar Android') || 'Optimizar Android', icon: Cpu, q: 'Quiero optimizar el rendimiento de mi celular' },
-    { label: t('Ayuda con IA') || 'Ayuda con IA', icon: BrainCircuit, q: '¿En qué tareas de IA puedes ayudarme?' },
-    { label: t('Ahorrar batería') || 'Ahorrar batería', icon: Battery, q: '¿Cómo puedo ahorrar batería en mi Android?' },
-    { label: t('Explorar NexusPlay') || 'Explorar NexusPlay', icon: Star, q: '¿Qué apps destacan hoy en NexusPlay?' },
+    { label: t("chat.recomGames") || "Recomendar juegos", icon: Gamepad2, q: t('chat.recBestGames') || 'Recomiéndame los mejores juegos' },
+    { label: t("chat.optAndroid") || "Optimizar Android", icon: Cpu, q: t('chat.optPerf') || 'Quiero optimizar el rendimiento de mi celular' },
+    { label: t("chat.helpAI") || "Ayuda con IA", icon: BrainCircuit, q: t('chat.helpTasks') || '¿En qué tareas de IA puedes ayudarme?' },
+    { label: t("chat.saveBat") || "Ahorrar batería", icon: Battery, q: t('chat.saveBatArr') || '¿Cómo puedo ahorrar batería en mi Android?' },
+    { label: t("chat.expNexus") || "Explorar NexusPlay", icon: Star, q: t('chat.exploreApp') || '¿Qué apps destacan hoy en NexusPlay?' },
   ];
 
   const handleCopy = (text: string, id: string) => {
@@ -201,7 +201,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
       // Cleanup stray backticks only if empty or just containing "json" string at the bottom
       cleanText = cleanText.replace(/```(?:json)?/gi, '').trim();
 
-      if (!cleanText.trim()) cleanText = t('He analizado tus necesidades y aquí están las opciones ideales para ti:') || "He analizado tus necesidades y aquí están las opciones ideales para ti:";
+      if (!cleanText.trim()) cleanText = t('chat.aiAnaNeeds') || 'He analizado tus necesidades y aquí están las opciones ideales para ti:';
 
       const recommendedApps = apps.filter(a => recommendedIds.includes(a.id));
 
@@ -217,10 +217,10 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
     } catch (error: any) {
       console.error("AI Chat Error:", error);
       
-      let errorMsg = error.message && error.message !== "API Error" ? error.message : t('Hubo un error al procesar tu solicitud. Intenta nuevamente.') || "Hubo un error al procesar tu solicitud. Intenta nuevamente.";
+      let errorMsg = error.message && error.message !== "API Error" ? error.message : t('chat.aiErrProc') || 'Hubo un error al procesar tu solicitud. Intenta nuevamente.';
       
       if (error.name === 'AbortError') {
-        errorMsg = t('El servidor está tardando demasiado en responder. Por favor, intenta de nuevo.') || "El servidor está tardando demasiado en responder. Por favor, intenta de nuevo.";
+        errorMsg = t('chat.aiErrTime') || 'El servidor está tardando demasiado en responder. Por favor, intenta de nuevo.';
       }
       
       const errorMessage: Message = {
@@ -273,7 +273,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
             <div className="p-4 border-b border-nexus-border flex items-center justify-between w-[280px]">
            <div className="flex items-center gap-2 text-nexus-text font-semibold">
               <BrainCircuit className="w-5 h-5 text-blue-500" />
-              Historial
+              {t("chat.history") || "Historial"}
            </div>
            <button onClick={() => setIsSidebarOpen(false)} className="p-2 md:hidden text-nexus-text-sec hover:text-nexus-text bg-nexus-bg hover:bg-nexus-card-hover rounded-full">
               <X className="w-4 h-4" />
@@ -292,7 +292,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-nexus-text-sec" />
               <input 
                 type="text" 
-                placeholder="Buscar..." 
+                placeholder={t("chat.search") || "Buscar..."} 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-nexus-bg text-nexus-text text-[13px] rounded-xl pl-9 pr-3 py-2 border border-nexus-border focus:border-blue-500/50 outline-none"
@@ -340,7 +340,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                </div>
            ))}
            {conversations.length === 0 && (
-              <p className="text-center text-[12px] text-nexus-text-sec mt-10">No hay conversaciones previas</p>
+              <p className="text-center text-[12px] text-nexus-text-sec mt-10">{t("chat.noPrev") || "No hay conversaciones previas"}</p>
            )}
         </div>
       </motion.aside>
@@ -373,16 +373,16 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
                      </span>
-                     {t('En línea') || 'En línea'} <span className="text-[9px] opacity-70 ml-1">Nexus AI 2.0</span>
+                     {t("chat.online") || "En línea"} <span className="text-[9px] opacity-70 ml-1">Nexus AI 2.0</span>
                    </p>
                 </div>
              </div>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => { startNew(); }} className="p-2 hidden md:block text-nexus-text-sec hover:text-blue-500 hover:bg-nexus-card-hover rounded-full transition-all active:scale-95" title={t('Nueva Conversación') || 'Nueva Conversación'}>
+            <button onClick={() => { startNew(); }} className="p-2 hidden md:block text-nexus-text-sec hover:text-blue-500 hover:bg-nexus-card-hover rounded-full transition-all active:scale-95" title={t("chat.newConv") || "Nueva Conversación"}>
                <MessageSquarePlus className="w-5 h-5" />
             </button>
-            <button onClick={() => { if(currentId) deleteConversation(currentId); }} className="p-2 text-nexus-text-sec hover:text-red-500 hover:bg-nexus-card-hover rounded-full transition-all active:scale-95" title={t('Eliminar Conversación') || 'Eliminar Conversación'}>
+            <button onClick={() => { if(currentId) deleteConversation(currentId); }} className="p-2 text-nexus-text-sec hover:text-red-500 hover:bg-nexus-card-hover rounded-full transition-all active:scale-95" title={t("chat.delete") || "Eliminar Conversación"}>
                <Trash2 className="w-5 h-5" />
             </button>
           </div>
@@ -404,10 +404,10 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                     <BrainCircuit className="w-8 h-8 text-blue-500" />
                  </div>
                  <h2 className="text-2xl font-bold text-nexus-text mb-2">
-                   {t('¿En qué te puedo ayudar?') || '¿En qué te puedo ayudar?'}
+                   {t("chat.helpUser") || "¿En qué te puedo ayudar?"}
                  </h2>
                  <p className="text-nexus-text-sec max-w-sm text-sm mb-8 leading-relaxed">
-                   {t('Pregúntame sobre optimización, recomendaciones de apps o soluciones a problemas comunes en Android.') || 'Pregúntame sobre optimización, recomendaciones de apps o soluciones a problemas comunes en Android.'}
+                   {t("chat.helpDesc") || "Pregúntame sobre optimización, recomendaciones de apps o soluciones a problemas comunes en Android."}
                  </p>
 
                  <div className="flex flex-col gap-2 w-full max-w-sm">
@@ -483,7 +483,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                                <button onClick={() => handleShare(msg.text)} className="p-1.5 text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card rounded-md transition-colors">
                                  <Share2 className="w-3.5 h-3.5" />
                                </button>
-                               <button onClick={() => handleSend(t('Genera otra respuesta o explícalo de forma distinta') || "Genera otra respuesta o explícalo de forma distinta")} className="p-1.5 text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card rounded-md transition-colors">
+                               <button onClick={() => handleSend(t('chat.genOther') || 'Genera otra respuesta o explícalo de forma distinta')} className="p-1.5 text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card rounded-md transition-colors">
                                  <RotateCcw className="w-3.5 h-3.5" />
                                </button>
                              </div>
@@ -533,7 +533,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                     </div>
                     <div className="flex flex-col w-full min-w-0">
                       <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-nexus-card border border-nexus-border shadow-sm flex items-center gap-3 h-[48px]">
-                        <span className="text-[13px] font-medium text-nexus-text-sec">{t('NexusAI está escribiendo...') || 'NexusAI está escribiendo...'}</span>
+                        <span className="text-[13px] font-medium text-nexus-text-sec">{t("chat.aiTyping") || "NexusAI está escribiendo..."}</span>
                         <div className="flex gap-1">
                           <div className="w-1.5 h-1.5 bg-blue-500/70 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <div className="w-1.5 h-1.5 bg-blue-500/70 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -564,7 +564,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                      handleSend(query);
                    }
                  }}
-                 placeholder={t('Mensaje a NexusAI...') || "Mensaje a NexusAI..."}
+                 placeholder={t("chat.msgAI") || "Mensaje a NexusAI..."}
                  rows={1}
                  className="flex-1 bg-transparent border-none text-nexus-text px-3 py-2.5 min-h-[44px] max-h-32 resize-none outline-none text-[15px] placeholder:text-nexus-text-sec custom-scrollbar leading-relaxed"
                  style={{ height: 'auto' }}
@@ -583,7 +583,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                </button>
             </div>
             <div className="mt-2 text-center">
-              <p className="text-[10px] text-nexus-text-sec">{t('NexusAI puede cometer errores. Considera verificar la información importante.') || 'NexusAI puede cometer errores. Considera verificar la información importante.'}</p>
+              <p className="text-[10px] text-nexus-text-sec">{t("chat.disclaimer") || "NexusAI puede cometer errores. Considera verificar la información importante."}</p>
             </div>
          </div>
       </div>

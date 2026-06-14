@@ -1,9 +1,11 @@
 import React from 'react';
 import { Activity, Download, Users, TrendingUp, ChevronUp } from 'lucide-react';
 import { AppItem } from '../types';
+import { useAppStore } from '../store/useAppStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: any }) {
+  const { t } = useAppStore();
   // Generate some semi-real data based on total downloads to make it functional
   // Using actual stats from the apps prop to define trends
   const actualDownloads = typeof stats.totalDownloads === 'number' ? stats.totalDownloads : 0;
@@ -36,8 +38,8 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
     <div className="space-y-8 animate-in fade-in">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-black uppercase text-nexus-text tracking-tighter">Analíticas</h2>
-          <p className="text-xs text-nexus-text-sec uppercase tracking-widest mt-1">Rendimiento últimos 30 días</p>
+          <h2 className="text-2xl font-black uppercase text-nexus-text tracking-tighter">{t("dev.analytics") || "Analíticas"}</h2>
+          <p className="text-xs text-nexus-text-sec uppercase tracking-widest mt-1">{t("dev.perf30") || "Rendimiento últimos 30 días"}</p>
         </div>
       </div>
 
@@ -48,7 +50,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
              <div className="bg-cyan-500/10 p-3 rounded-2xl">
                <Download className="w-5 h-5 text-cyan-400" />
              </div>
-             <p className="text-[10px] uppercase font-black tracking-widest text-nexus-text-sec">Descargas Reales</p>
+             <p className="text-[10px] uppercase font-black tracking-widest text-nexus-text-sec">{t("dev.realDownloads") || "Descargas Reales"}</p>
           </div>
           <div className="flex items-end justify-between">
              <p className="text-4xl font-black text-nexus-text tracking-tighter">{actualDownloads.toLocaleString()}</p>
@@ -63,7 +65,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
              <div className="bg-purple-500/10 p-3 rounded-2xl">
                <Users className="w-5 h-5 text-purple-400" />
              </div>
-             <p className="text-[10px] uppercase font-black tracking-widest text-nexus-text-sec">Usuarios Activos (MAU)</p>
+             <p className="text-[10px] uppercase font-black tracking-widest text-nexus-text-sec">{t("dev.activeUsers") || "Usuarios Activos (MAU)"}</p>
           </div>
           <div className="flex items-end justify-between">
              <p className="text-4xl font-black text-nexus-text tracking-tighter">{activeUsers.toLocaleString()}</p>
@@ -78,7 +80,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
              <div className="bg-yellow-500/10 p-3 rounded-2xl">
                <Activity className="w-5 h-5 text-yellow-400" />
              </div>
-             <p className="text-[10px] uppercase font-black tracking-widest text-nexus-text-sec">Retención App Promedio</p>
+             <p className="text-[10px] uppercase font-black tracking-widest text-nexus-text-sec">{t("dev.avgRetention") || "Retención App Promedio"}</p>
           </div>
           <div className="flex items-end justify-between">
              <p className="text-4xl font-black text-nexus-text tracking-tighter">{stats.appCount > 0 ? '64%' : '0%'}</p>
@@ -89,7 +91,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
       {/* Chart */}
       <div className="bg-nexus-card border border-nexus-border rounded-[2rem] p-6 lg:p-8">
          <h3 className="text-sm font-black uppercase text-nexus-text tracking-widest mb-6 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-cyan-400" /> Crecimiento de Audiencia
+            <TrendingUp className="w-4 h-4 text-cyan-400" /> {t("dev.audienceGrowth") || "Crecimiento de Audiencia"}
          </h3>
          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -117,14 +119,14 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
       {/* App Specific Details */}
       <div className="bg-nexus-card border border-nexus-border rounded-[2rem] p-6 lg:p-8 overflow-x-auto">
          <h3 className="text-sm font-black uppercase text-nexus-text tracking-widest mb-6 flex items-center gap-2">
-           Desglose por Aplicación
+           {t("dev.appBreakdown") || "Desglose por Aplicación"}
          </h3>
          <table className="w-full min-w-[600px] text-left">
             <thead>
                <tr className="border-b border-nexus-border">
-                  <th className="pb-4 text-xs tracking-widest uppercase text-nexus-text-sec">Aplicación</th>
-                  <th className="pb-4 text-xs tracking-widest uppercase text-nexus-text-sec">Estado</th>
-                  <th className="pb-4 text-xs tracking-widest uppercase text-nexus-text-sec text-right">Descargas</th>
+                  <th className="pb-4 text-xs tracking-widest uppercase text-nexus-text-sec">{t("dev.application") || "Aplicación"}</th>
+                  <th className="pb-4 text-xs tracking-widest uppercase text-nexus-text-sec">{t("dev.status") || "Estado"}</th>
+                  <th className="pb-4 text-xs tracking-widest uppercase text-nexus-text-sec text-right">{t("dev.downloadsUpper") || "Descargas"}</th>
                </tr>
             </thead>
             <tbody>
@@ -138,7 +140,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
                      </td>
                      <td className="py-4">
                         <div className={`px-2 py-1 inline-flex text-xs font-bold rounded-lg ${app.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                           {app.status === 'published' ? 'ONLINE' : 'REVISIÓN'}
+                           {app.status === 'published' ? '{t("admin.online") || "ONLINE"}' : '{t("admin.review") || "REVISIÓN"}'}
                         </div>
                      </td>
                      <td className="py-4 text-right font-bold">
@@ -147,7 +149,7 @@ export function DeveloperAnalytics({ apps, stats }: { apps: AppItem[], stats: an
                   </tr>
                )) : (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-nexus-text-sec">No tienes aplicaciones publicadas aún.</td>
+                    <td colSpan={3} className="py-8 text-center text-nexus-text-sec">{t("dev.noAppsPub") || "No tienes aplicaciones publicadas aún."}</td>
                   </tr>
                )}
             </tbody>

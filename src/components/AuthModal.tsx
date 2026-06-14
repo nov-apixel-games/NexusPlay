@@ -74,7 +74,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
         onSuccess();
       } else if (mode === 'register') {
         if (!termsAccepted) {
-          throw new Error('Debes aceptar los Términos y Condiciones para continuar.');
+          throw new Error(t('auth.acceptTerms') || 'Debes aceptar los {t("footer.terms") || "Términos y Condiciones"} para continuar.');
         }
         if (username.length < 3) throw new Error('El nombre de usuario debe tener al menos 3 caracteres.');
         if (password.length < 8) throw new Error('La contraseña debe tener al menos 8 caracteres.');
@@ -199,7 +199,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12.24 10.285V14.4h6.887C18.2 16.56 15.645 18 12.24 18 8.445 18 5.385 15.3 5.385 12c0-3.3 3.06-6 6.855-6 1.8 0 3.465.72 4.68 1.89l3.24-3.24C18.24 2.835 15.42 1.8 12.24 1.8 6.57 1.8 1.8 6.57 1.8 12.24s4.77 10.44 10.44 10.44c6.3 0 10.71-4.275 10.71-10.44 0-.765-.09-1.35-.225-1.95H12.24z"/>
                   </svg>
-                  Continuar con Google
+                  {t("auth.continueWithGoogle") || "Continuar con Google"}
                 </>
               )}
             </button>
@@ -209,7 +209,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                 <div className="w-full border-t border-nexus-border"></div>
               </div>
               <span className="relative bg-nexus-card px-4 text-[10px] font-bold uppercase tracking-widest text-nexus-text-sec">
-                O CON EMAIL
+                {t("auth.orEmail") || "O CON EMAIL"}
               </span>
             </div>
           </div>
@@ -332,13 +332,13 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
                   className="w-4 h-4 mt-0.5 rounded bg-nexus-surface border-nexus-border text-cyan-500 focus:ring-cyan-500"
                 />
                 <label htmlFor="terms" className="text-xs text-nexus-text-sec">
-                  He leído y acepto los {' '}
+                  {t("auth.readTerms") || "He leído y acepto los"} {' '}
                   <button type="button" onClick={() => onNavigate('terms')} className="text-cyan-400 font-bold hover:underline">
                     Términos y Condiciones
                   </button>{' '}
-                  y la{' '}
+                  {t("auth.andCookies") || "y la"}{' '}
                   <button type="button" onClick={() => onNavigate('cookies')} className="text-cyan-400 font-bold hover:underline">
-                    Política de Cookies
+                    {t("footer.cookies") || "Política de Cookies"}
                   </button>
                 </label>
               </div>
@@ -350,18 +350,18 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
              disabled={loading || (mode === 'register' && !termsAccepted)}
              className="w-full h-12 mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-nexus-bg font-black uppercase tracking-wider text-sm rounded-[1rem] transition-all disabled:opacity-50 flex items-center justify-center shadow-nexus-glow"
           >
-             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : mode === 'login' ? 'Iniciar Sesión' : mode === 'register' ? 'Crear Cuenta' : 'Enviar Enlace'}
+             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : mode === 'login' ? (t('auth.loginBtn') || 'Iniciar Sesión') : mode === 'register' ? (t('auth.createAccount') || 'Crear Cuenta') : (t('auth.sendLink') || 'Enviar Enlace')}
           </button>
         </form>
 
         {mode === 'login' && (
           <div className="mt-8 text-center text-sm text-nexus-text-sec">
-            ¿No tienes cuenta?{' '}
+            {t("auth.noAccount") || "¿No tienes cuenta?"}{' '}
             <button 
               onClick={() => switchMode('register')} 
               className="text-cyan-400 font-bold hover:text-cyan-300 transition-colors"
             >
-              Regístrate aquí
+              {t("auth.registerHere") || "Regístrate aquí"}
             </button>
           </div>
         )}

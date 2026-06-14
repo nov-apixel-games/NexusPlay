@@ -162,12 +162,12 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
             
             <div className="p-8">
                <div className="flex flex-wrap gap-4 mb-8">
-                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">👥 Multijugador Activo</div>
-                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">⭐ {selectedGamePage.rating} de 5</div>
-                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">🎮 {selectedGamePage.playCount} Sesiones</div>
-                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">📅 Act. Reciente</div>
+                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">{t("gameshub.activeMulti") || "👥 Multijugador Activo"}</div>
+                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">⭐ {selectedGamePage.rating} {t("gameshub.outOf5") || "de 5"}</div>
+                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">🎮 {selectedGamePage.playCount} {t("gameshub.sessions") || "Sesiones"}</div>
+                 <div className="bg-nexus-card px-4 py-2 rounded-xl text-sm font-bold text-nexus-text">{t("gameshub.recentAct") || "📅 Act. Reciente"}</div>
                </div>
-               <h3 className="text-xl font-bold text-nexus-text mb-2">Acerca del juego</h3>
+               <h3 className="text-xl font-bold text-nexus-text mb-2">{t("games.about") || "Acerca del juego"}</h3>
                <p className="text-nexus-text-sec leading-relaxed mb-8">{selectedGamePage.description}</p>
                
                <h3 className="text-xl font-bold text-nexus-text mb-4">{t('nav.sidebar.community')}</h3>
@@ -197,13 +197,13 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                   <h1 className="text-2xl font-black text-nexus-text tracking-tight">Games Hub</h1>
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${navigator.onLine ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${navigator.onLine ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
-                    {navigator.onLine ? 'ONLINE' : 'OFFLINE'}
+                    {navigator.onLine ? (t('gameshub.online') || 'ONLINE') : (t('gameshub.offline') || 'OFFLINE')}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-nexus-text-sec font-mono mt-1">
-                  <span>Tamaño Caché: ~3.7 MB</span>
+                  <span>{t("gameshub.cacheSize") || "Tamaño Caché: ~3.7 MB"}</span>
                   <span>•</span>
-                  <span>Sincronizado: Hoy, {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  <span>{t("gameshub.synced") || "Sincronizado: Hoy, "}{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
               </div>
             </div>
@@ -212,18 +212,18 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                 onClick={() => setActiveTab('create')}
                 className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-nexus-text px-5 py-2.5 rounded-xl font-bold shadow-nexus-glow transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                <Plus className="w-5 h-5" /> Crear Juego HTML5
+                <Plus className="w-5 h-5" /> {t('games.createHtml5') || "Crear Juego HTML5"}
               </button>
             </div>
           </div>
           
           <div className="mt-6 flex flex-wrap items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
             {[
-              { id: 'explore', label: 'Juegos' },
-              { id: 'marketplace', label: 'Marketplace' },
-              { id: 'drafts', label: 'Proyectos Pro' },
-              { id: 'social', label: 'Comunidad' },
-              { id: 'offline', label: 'Locales' }
+              { id: 'explore', label: t('games.games') || 'Juegos' },
+              { id: 'marketplace', label: t('gameshub.marketplace') || 'Marketplace' },
+              { id: 'drafts', label: t('gameshub.proProjects') || 'Proyectos Pro' },
+              { id: 'social', label: t('games.community') || 'Comunidad' },
+              { id: 'offline', label: t('games.locals') || 'Locales' }
             ].map(tab => (
               <button 
                 key={tab.id}
@@ -258,8 +258,8 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                     <Zap className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="text-nexus-text font-bold text-lg">Soporte Offline Integrado</h3>
-                    <p className="text-nexus-text-sec text-sm">Los juegos del catálogo arcade se guardan de forma local en IndexedDB y funcionan al 100% sin internet.</p>
+                    <h3 className="text-nexus-text font-bold text-lg">{t('games.offlineSupport') || "Soporte Offline Integrado"}</h3>
+                    <p className="text-nexus-text-sec text-sm">{t("gameshub.offlineDesc") || "Los juegos del catálogo arcade se guardan de forma local en IndexedDB y funcionan al 100% sin internet."}</p>
                   </div>
                 </div>
               </motion.div>
@@ -269,7 +269,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
             {activeTab === 'explore' && (
               <section>
                 <h2 className="text-xl font-bold text-nexus-text flex items-center gap-2 mb-6">
-                   <Star className="w-5 h-5 text-yellow-400" /> Destacados de la Comunidad
+                   <Star className="w-5 h-5 text-yellow-400" /> {t('games.communityFeatured') || "Destacados de la Comunidad"}
                 </h2>
                 {apps.length === 0 ? (
                   <div className="w-full bg-nexus-card rounded-3xl border border-cyan-500/20 p-12 flex flex-col items-center justify-center text-center shadow-nexus-glow relative overflow-hidden group">
@@ -281,12 +281,12 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                        <Sparkles className="w-5 h-5 text-fuchsia-400 absolute -top-2 -right-2 animate-bounce" />
                     </div>
                     
-                    <h3 className="text-2xl font-black text-nexus-text font-mono tracking-tight mb-2">Todavía no hay juegos publicados</h3>
-                    <p className="text-cyan-200/60 max-w-sm mx-auto mb-8 text-sm">El universo Nexus está esperando. ¡Crea el próximo gran éxito y compártelo con miles de jugadores!</p>
+                    <h3 className="text-2xl font-black text-nexus-text font-mono tracking-tight mb-2">{t("games.noGamesPublished") || "Todavía no hay juegos publicados"}</h3>
+                    <p className="text-cyan-200/60 max-w-sm mx-auto mb-8 text-sm">{t("gameshub.nexusWait") || "El universo Nexus está esperando. ¡Crea el próximo gran éxito y compártelo con miles de jugadores!"}</p>
                     
                     <button onClick={() => setActiveTab('create')} className="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 text-nexus-bg font-black uppercase tracking-wider rounded-xl cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-nexus-glow flex items-center gap-2">
                       <Plus className="w-5 h-5" />
-                      Sé el primero en publicar
+                      {t("gameshub.beFirst") || "Sé el primero en publicar"}
                     </button>
                   </div>
                 ) : (
@@ -305,7 +305,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                             <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent opacity-80"></div>
                             <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md border border-nexus-border px-3 py-1 rounded-full flex items-center gap-1.5">
                               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                              <span className="text-[10px] font-black text-nexus-text uppercase tracking-wider">OFFLINE READY</span>
+                              <span className="text-[10px] font-black text-nexus-text uppercase tracking-wider">{t("gameshub.offlineReady") || "OFFLINE READY"}</span>
                             </div>
                           </div>
                           <div className="p-5">
@@ -344,9 +344,9 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
               <section>
                 <div className="text-center sm:text-left mb-6">
                   <h2 className="text-xl font-bold text-nexus-text flex items-center justify-center sm:justify-start gap-2">
-                     <Clock className="w-5 h-5 text-emerald-400" /> Jugados Recientemente Offline
+                     <Clock className="w-5 h-5 text-emerald-400" /> {t("gameshub.playedRecently") || "Jugados Recientemente Offline"}
                   </h2>
-                  <p className="text-nexus-text-sec text-sm mt-1">Juegos que has lanzado y que están listones para ejecutarse con o sin red.</p>
+                  <p className="text-nexus-text-sec text-sm mt-1">{t("gameshub.playedRecentlyDesc") || "Juegos que has lanzado y que están listones para ejecutarse con o sin red."}</p>
                 </div>
                 {recentGames.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -358,7 +358,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                               <CheckCircle2 className="w-3.5 h-3.5" /> LISTO OFFLINE
                             </div>
                             {game.lastPlayed && (
-                              <span className="text-[10px] text-nexus-text-sec font-mono">Última vez: {new Date(game.lastPlayed).toLocaleDateString()}</span>
+                              <span className="text-[10px] text-nexus-text-sec font-mono">{t("gameshub.lastTime") || "Última vez: "}{new Date(game.lastPlayed).toLocaleDateString()}</span>
                             )}
                           </div>
                           <h3 className="text-lg font-bold text-nexus-text mb-1">{game.title}</h3>
@@ -372,8 +372,8 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                 ) : (
                   <div className="bg-nexus-card rounded-2xl p-10 text-center border border-nexus-border">
                     <Gamepad2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <p className="text-nexus-text-sec font-bold">¡No has jugado a ningún juego todavía!</p>
-                    <p className="text-nexus-text-sec text-xs mt-1">Los juegos que abras en el modo de exploración se guardarán automáticamente aquí.</p>
+                    <p className="text-nexus-text-sec font-bold">{t("gameshub.noGamesPlayed") || "¡No has jugado a ningún juego todavía!"}</p>
+                    <p className="text-nexus-text-sec text-xs mt-1">{t("gameshub.noGamesPlayedDesc") || "Los juegos que abras en el modo de exploración se guardarán automáticamente aquí."}</p>
                   </div>
                 )}
               </section>
@@ -384,7 +384,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
               <section>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-nexus-text flex items-center gap-2">
-                     <Zap className="w-5 h-5 text-yellow-400" /> Marketplace de Creadores
+                     <Zap className="w-5 h-5 text-yellow-400" /> {t("gameshub.creatorsMarket") || "Marketplace de Creadores"}
                   </h2>
                   <button className="px-4 py-2 bg-nexus-card border border-nexus-border rounded-xl text-xs font-bold hover:bg-nexus-card-hover text-nexus-text cursor-pointer">
                     Subir Asset
@@ -392,7 +392,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                 </div>
                 
                 <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-                  {['Todos', 'Modelos 3D', 'Texturas', 'Scripts Lógicos', 'Terrenos', 'Sonidos'].map((cat, i) => (
+                  {[(t('gameshub.all')||'Todos'), (t('gameshub.models3d')||'Modelos 3D'), (t('gameshub.textures')||'Texturas'), (t('gameshub.logicScripts')||'Scripts Lógicos'), (t('gameshub.terrains')||'Terrenos'), (t('gameshub.sounds')||'Sonidos')].map((cat, i) => (
                     <button key={i} className={`px-4 py-1.5 rounded-full text-xs font-bold shrink-0 ${i === 0 ? 'bg-cyan-500 text-nexus-bg' : 'bg-nexus-card text-nexus-text-sec border border-nexus-border'}`}>{cat}</button>
                   ))}
                 </div>
@@ -412,7 +412,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                         <div className="p-3">
                            <h4 className="text-sm font-bold text-nexus-text mb-1">{asset.name}</h4>
                            <p className="text-[10px] text-nexus-text-sec mb-3">{asset.type} • Por {asset.author}</p>
-                           <button className="w-full py-1.5 rounded-lg bg-nexus-card hover:bg-cyan-500/10 text-cyan-400 text-xs font-bold border border-nexus-border transition-all cursor-pointer">Añadir a Proyectos</button>
+                           <button className="w-full py-1.5 rounded-lg bg-nexus-card hover:bg-cyan-500/10 text-cyan-400 text-xs font-bold border border-nexus-border transition-all cursor-pointer">{t("games.addToProjects") || "Añadir a Proyectos"}</button>
                         </div>
                      </div>
                    ))}
@@ -424,7 +424,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
             {activeTab === 'social' && (
               <section className="flex flex-col md:flex-row gap-6">
                 <div className="flex-1 bg-nexus-card border border-nexus-border rounded-3xl p-6">
-                   <h3 className="text-lg font-bold text-nexus-text mb-4 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-fuchsia-400" /> Actividad Reciente</h3>
+                   <h3 className="text-lg font-bold text-nexus-text mb-4 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-fuchsia-400" /> {t("gameshub.recentActivity") || "Actividad Reciente"}</h3>
                    <div className="space-y-4">
                      {[
                        { u: "PixelMaster", m: "acaba de publicar 'Neon Racer X' - ¡Pruébalo!", t: "hace 5 min" },
@@ -443,7 +443,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                 </div>
                 <div className="w-full md:w-72 space-y-6">
                    <div className="bg-nexus-card border border-nexus-border rounded-3xl p-6">
-                     <h3 className="text-nexus-text font-bold mb-4">Mejores Creadores</h3>
+                     <h3 className="text-nexus-text font-bold mb-4">{t("games.topCreators") || "Mejores Creadores"}</h3>
                      <div className="space-y-3">
                        {["ZeroDev", "NexusTeam", "Artisan3D"].map((n, i) => (
                          <div key={i} className="flex items-center justify-between">
@@ -451,7 +451,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                              <div className="w-8 h-8 rounded-full bg-nexus-card-hover"></div>
                              <span className="text-sm font-bold text-nexus-text-sec">{n}</span>
                            </div>
-                           <button className="text-[9px] px-2 py-1 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500/20 font-bold uppercase">Seguir</button>
+                           <button className="text-[9px] px-2 py-1 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500/20 font-bold uppercase">{t("games.follow") || "Seguir"}</button>
                          </div>
                        ))}
                      </div>
@@ -465,9 +465,9 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
               <section>
                 <div className="text-center sm:text-left mb-6">
                   <h2 className="text-xl font-bold text-nexus-text flex items-center justify-center sm:justify-start gap-2">
-                     <Plus className="w-5 h-5 text-cyan-400" /> Proyectos Locales en Desarrollo
+                     <Plus className="w-5 h-5 text-cyan-400" /> {t("gameshub.localProjects") || "Proyectos Locales en Desarrollo"}
                   </h2>
-                  <p className="text-nexus-text-sec text-sm mt-1">Tus creaciones de minijuegos autoguardadas de forma segura de modo local (IndexedDB).</p>
+                  <p className="text-nexus-text-sec text-sm mt-1">{t("gameshub.localProjectsDesc") || "Tus creaciones de minijuegos autoguardadas de forma segura de modo local (IndexedDB)."}</p>
                 </div>
                 {localDrafts.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -475,7 +475,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                       <div key={draft.id} className="bg-nexus-card rounded-[24px] border border-nexus-border p-6 flex flex-col justify-between hover:border-cyan-500/20 transition-all group">
                         <div>
                           <div className="flex items-center justify-between mb-4">
-                            <span className="bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-lg text-[10px] font-bold">Offline Draft</span>
+                            <span className="bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-lg text-[10px] font-bold">{t("gameshub.offlineDraft") || "Offline Draft"}</span>
                             <button 
                               onClick={(e) => handleDeleteDraft(draft.id, e)}
                               className="text-nexus-text-sec hover:text-red-400 p-1.5 hover:bg-nexus-card rounded-lg transition-colors cursor-pointer"
@@ -485,7 +485,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                             </button>
                           </div>
                           <h3 className="text-lg font-black text-nexus-text group-hover:text-cyan-400 transition-colors mb-2">{draft.title}</h3>
-                          <p className="text-nexus-text-sec text-xs font-mono mb-4">Módulos: {draft.objects?.length || 0} • {new Date(draft.updatedAt).toLocaleDateString()}</p>
+                          <p className="text-nexus-text-sec text-xs font-mono mb-4">{t("gameshub.modules") || "Módulos: "}{draft.objects?.length || 0} • {new Date(draft.updatedAt).toLocaleDateString()}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           <button 
@@ -496,7 +496,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                             }}
                             className="w-full bg-nexus-card hover:bg-nexus-card text-nexus-text font-bold py-2 rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer text-xs"
                           >
-                            <Play className="w-4 h-4" /> Editar
+                            <Play className="w-4 h-4" /> {t("gameshub.edit") || "Editar"}
                           </button>
                           <button 
                             onClick={() => {
@@ -504,7 +504,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                             }}
                             className="w-full bg-emerald-500 hover:bg-emerald-400 text-nexus-bg font-extrabold py-2 rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer text-xs"
                           >
-                            <Globe className="w-4 h-4" /> Publicar
+                            <Globe className="w-4 h-4" /> {t("gameshub.publish") || "Publicar"}
                           </button>
                         </div>
                       </div>
@@ -513,8 +513,8 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
                 ) : (
                   <div className="bg-nexus-card rounded-2xl p-10 text-center border border-nexus-border">
                     <Sparkles className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <p className="text-nexus-text-sec font-bold">No tienes borradores todavía</p>
-                    <p className="text-nexus-text-sec text-xs mt-1">Crea un nuevo juego haciendo clic en el botón superior, los cambios se autoguardarán.</p>
+                    <p className="text-nexus-text-sec font-bold">{t("games.noDrafts") || "No tienes borradores todavía"}</p>
+                    <p className="text-nexus-text-sec text-xs mt-1">{t("gameshub.noDraftsDesc") || "Crea un nuevo juego haciendo clic en el botón superior, los cambios se autoguardarán."}</p>
                   </div>
                 )}
               </section>
@@ -531,21 +531,21 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
               <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 mx-auto flex items-center justify-center mb-6 shadow-nexus-glow">
                 <Plus className="w-10 h-10 text-nexus-text" />
               </div>
-              <h2 className="text-3xl font-black text-nexus-text mb-4">Games Studio (Beta)</h2>
-              <p className="text-nexus-text-sec max-w-lg mx-auto">Crea minijuegos HTML5 instantáneos, arcade puzzles o plataformas de forma táctil e intuitiva, 100% desde Android, sin necesidad de conexión.</p>
+              <h2 className="text-3xl font-black text-nexus-text mb-4">{t("gameshub.gamesStudio") || "Games Studio (Beta)"}</h2>
+              <p className="text-nexus-text-sec max-w-lg mx-auto">{t("gameshub.studioDesc") || "Crea minijuegos HTML5 instantáneos, arcade puzzles o plataformas de forma táctil e intuitiva, 100% desde Android, sin necesidad de conexión."}</p>
               <div className="flex items-center justify-center gap-3 mt-6">
                 <div className="flex items-center gap-1.5 bg-nexus-card border border-emerald-500/30 px-3 py-1.5 rounded-full">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">Guardado Offline</span>
+                  <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">{t("gameshub.offlineSave") || "Guardado Offline"}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-nexus-card border border-blue-500/30 px-3 py-1.5 rounded-full">
                   <Zap className="w-3 h-3 text-blue-400" />
-                  <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase">IndexedDB Activo</span>
+                  <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase">{t("gameshub.indexedDb") || "IndexedDB Activo"}</span>
                 </div>
               </div>
             <div className="grid grid-cols-1 gap-4">
                {[
-                 { title: 'Crear desde cero 3D', icon: Sliders, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: 'Comienza con un lienzo limpio y herramientas 3D completas: biomas, físicas, scripts e importaciones.' },
+                 { title: t('gameshub.create3d') || 'Crear desde cero 3D', icon: Sliders, color: 'text-cyan-400', bg: 'bg-cyan-500/10', desc: t('gameshub.create3dDesc') || 'Comienza con un lienzo limpio y herramientas 3D completas: biomas, físicas, scripts e importaciones.' },
                ].map((t, i) => (
                  <button 
                     key={i} 
@@ -573,7 +573,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
             
             <div className="mt-8 p-6 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-2xl text-center shadow-nexus-glow">
               <Sparkles className="w-8 h-8 text-cyan-400 mx-auto mb-3 animate-pulse" />
-              <p className="text-cyan-100 font-bold tracking-wide font-mono text-sm max-w-md mx-auto">Muy pronto llegarán plantillas avanzadas totalmente funcionales para Games Studio.</p>
+              <p className="text-cyan-100 font-bold tracking-wide font-mono text-sm max-w-md mx-auto">{t("gameshub.soon") || "Muy pronto llegarán plantillas avanzadas totalmente funcionales para Games Studio."}</p>
             </div>
             </div>
           </motion.div>

@@ -64,11 +64,11 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
   } | null>(null);
 
   const steps: { id: Step; label: string; icon: any }[] = [
-    { id: 'info', label: 'Información', icon: Info },
-    { id: 'resources', label: 'Recursos', icon: ImageIcon },
-    { id: 'apk', label: 'APK', icon: Package },
-    { id: 'config', label: 'Configuración', icon: ShieldCheck },
-    { id: 'preview', label: 'Vista Previa', icon: Eye }
+    { id: 'info', label: t("wiz.info") || 'Información', icon: Info },
+    { id: 'resources', label: t("wiz.resources") || 'Recursos', icon: ImageIcon },
+    { id: 'apk', label: t("wiz.apk") || 'APK', icon: Package },
+    { id: 'config', label: t("nav.settings") || 'Configuración', icon: ShieldCheck },
+    { id: 'preview', label: t("wiz.preview") || 'Vista Previa', icon: Eye }
   ];
 
   const handleNext = () => {
@@ -97,7 +97,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
       const res = await uploadToCloudinary(file, `NexusStore/${cleanName}/icon`);
       setFiles(prev => ({ ...prev, icon: file, iconUrl: res.secure_url, iconPublicId: res.public_id }));
     } catch (err: any) {
-      setUiError("Error subiendo icono: " + err.message);
+      setUiError((t("wiz.errIcon") || "Error subiendo icono: ") + err.message);
     } finally {
       setIsUploadingIcon(false);
     }
@@ -122,7 +122,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
       }));
     } catch (err: any) {
       setFiles(prev => ({ ...prev, screenshots: prev.screenshots.filter(s => s.id !== tempId) }));
-      setUiError("Error subiendo captura: " + err.message);
+      setUiError((t("wiz.errScreenshot") || "Error subiendo captura: ") + err.message);
     }
   };
 
@@ -155,27 +155,27 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
   const handlePublish = async () => {
     setUiError(null);
     if (!formData.apk_url || !formData.apk_url.startsWith('http')) {
-      setUiError("Falta un enlace de descarga APK válido.");
+      setUiError(t("wiz.errLink") || "Falta un enlace de descarga APK válido.");
       return;
     }
     if (!files.iconUrl) {
-      setUiError("Falta la imagen del icono.");
+      setUiError(t("wiz.errNoIcon") || "Falta la imagen del icono.");
       return;
     }
     if (files.screenshots.length === 0) {
-      setUiError("Falta subir algunas capturas de pantalla.");
+      setUiError(t("wiz.errNoScreens") || "Falta subir algunas capturas de pantalla.");
       return;
     }
 
     setIsPublishing(true);
     setPublishProgress(0);
-    setStatus('Iniciando publicación...');
+    setStatus(t("wiz.initPublish") || 'Iniciando publicación...');
 
     try {
       setPublishProgress(60);
 
       // Register in Supabase
-      setStatus('Finalizando y publicando en NexusPlay...');
+      setStatus(t("wiz.finishing") || 'Finalizando y publicando en NexusPlay...');
       const registerRes = await fetch('/api/upload-app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -201,14 +201,14 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
       if (!registerRes.ok) {
         const errText = await registerRes.text();
-        let errMsg = "Error registrando metadata en Supabase";
+        let errMsg = t("wiz.errMeta") || "Error registrando metadata en Supabase";
         try { errMsg = JSON.parse(errText).error || errMsg; } catch(e) {}
         throw new Error(errMsg);
       }
       
       const finalizeResult = await registerRes.json();
       setPublishProgress(100);
-      setStatus('¡Publicación completada!');
+      setStatus(t("wiz.pubComplete") || '¡Publicación completada!');
 
       setTimeout(() => {
         onSuccess(finalizeResult.app);
@@ -234,7 +234,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
               <h2 className="text-lg lg:text-2xl font-black text-nexus-text uppercase tracking-tighter truncate">
                 Lanzamiento
               </h2>
-              <p className="text-[8px] lg:text-[10px] text-nexus-text-sec font-bold uppercase tracking-widest truncate">Panel Automatizado</p>
+              <p className="text-[8px] lg:text-[10px] text-nexus-text-sec font-bold uppercase tracking-widest truncate">{t("wiz.autoPanel") || "Panel Automatizado"}</p>
             </div>
           </div>
           
@@ -296,14 +296,14 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
               {currentStep === 'info' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
-                    <h3 className="text-xl font-black text-cyan-400 uppercase">Información de la App</h3>
+                    <h3 className="text-xl font-black text-cyan-400 uppercase">{t("app.info") || "Información de la App"}</h3>
                     
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Nombre del Proyecto</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("upload.appName") || "Nombre del Proyecto"}</label>
                         <input 
                           type="text" 
-                          placeholder="Nombre oficial de la aplicación"
+                          placeholder={t("wiz.appNameHolder") || "Nombre oficial de la aplicación"}
                           className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                           value={formData.app_name}
                           onChange={e => setFormData({...formData, app_name: e.target.value})}
@@ -311,10 +311,10 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Estudio / Compañía</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("upload.company") || "Estudio / Compañía"}</label>
                         <input 
                           type="text" 
-                          placeholder="Nombre de tu estudio de desarrollo"
+                          placeholder={t("wiz.companyHolder") || "Nombre de tu estudio de desarrollo"}
                           className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                           value={formData.company_name}
                           onChange={e => setFormData({...formData, company_name: e.target.value})}
@@ -323,7 +323,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Categoría</label>
+                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("upload.category") || "Categoría"}</label>
                           <select 
                             className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all appearance-none"
                             value={formData.category}
@@ -337,10 +337,10 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                           </select>
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Versión</label>
+                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("app.version") || "Versión"}</label>
                           <input 
                             type="text" 
-                            placeholder="Ej: 1.2.0"
+                            placeholder={t("wiz.versionHolder") || "Ej: 1.2.0"}
                             className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                             value={formData.version}
                             onChange={e => setFormData({...formData, version: e.target.value})}
@@ -351,14 +351,14 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                   </div>
 
                   <div className="space-y-6">
-                    <h3 className="text-xl font-black text-cyan-400 uppercase">Descripciones</h3>
+                    <h3 className="text-xl font-black text-cyan-400 uppercase">{t("wiz.descriptions") || "Descripciones"}</h3>
                     
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Breve Resumen</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("wiz.shortDesc") || "Breve Resumen"}</label>
                         <input 
                           type="text" 
-                          placeholder="Lo que verá el usuario en el listado principal"
+                          placeholder={t("wiz.shortDescHolder") || "Lo que verá el usuario en el listado principal"}
                           className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all"
                           value={formData.short_description}
                           onChange={e => setFormData({...formData, short_description: e.target.value})}
@@ -366,10 +366,10 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Descripción Completa</label>
+                        <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("wiz.fullDesc") || "Descripción Completa"}</label>
                         <textarea 
                           rows={6}
-                          placeholder="Explica detalladamente las funciones principales de tu app..."
+                          placeholder={t("wiz.fullDescHolder") || "Explica detalladamente las funciones principales de tu app..."}
                           className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all resize-none"
                           value={formData.full_description}
                           onChange={e => setFormData({...formData, full_description: e.target.value})}
@@ -384,19 +384,19 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-4">
-                      <h3 className="text-xl font-black text-cyan-400 uppercase">Icono Principal</h3>
-                      <p className="text-nexus-text-sec text-xs">Aparecerá en el launcher y en la tienda. Recomendado 512x512 PNG/JPG.</p>
+                      <h3 className="text-xl font-black text-cyan-400 uppercase">{t("wiz.mainIcon") || "Icono Principal"}</h3>
+                      <p className="text-nexus-text-sec text-xs">{t("wiz.iconHint") || "Aparecerá en el launcher y en la tienda. Recomendado 512x512 PNG/JPG."}</p>
                       
                       <div className="relative group aspect-square w-48 mx-auto md:mx-0">
                         {isUploadingIcon ? (
                           <div className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-nexus-border rounded-3xl bg-nexus-card">
                             <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-2" />
-                            <span className="text-[10px] font-black text-nexus-text-sec uppercase">Subiendo...</span>
+                            <span className="text-[10px] font-black text-nexus-text-sec uppercase">{t("upload.uploading") || "Subiendo..."}</span>
                           </div>
                         ) : !files.iconUrl ? (
                           <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-nexus-border rounded-3xl cursor-pointer hover:bg-nexus-card hover:border-cyan-500/50 transition-all">
                             <Upload className="w-8 h-8 text-gray-600 mb-2" />
-                            <span className="text-[10px] font-black text-nexus-text-sec uppercase">Cargar Icono</span>
+                            <span className="text-[10px] font-black text-nexus-text-sec uppercase">{t("upload.uploadIcon") || "Cargar Icono"}</span>
                             <input type="file" className="hidden" accept="image/*" onChange={e => {
                               if(e.target.files?.[0]) {
                                 uploadIcon(e.target.files[0]);
@@ -420,10 +420,10 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
                     <div className="md:col-span-2 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-black text-cyan-400 uppercase">Capturas de Pantalla</h3>
+                        <h3 className="text-xl font-black text-cyan-400 uppercase">{t("wiz.screenshots") || "Capturas de Pantalla"}</h3>
                         <span className="text-[10px] font-black text-nexus-text-sec">{files.screenshots.length}/4</span>
                       </div>
-                      <p className="text-nexus-text-sec text-xs mb-4">Sube entre 1 y 4 capturas que muestren la interfaz o gameplay real.</p>
+                      <p className="text-nexus-text-sec text-xs mb-4">{t("wiz.screenshotsHint") || "Sube entre 1 y 4 capturas que muestren la interfaz o gameplay real."}</p>
                       
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {files.screenshots.map((ss) => (
@@ -448,7 +448,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         {files.screenshots.length < 4 && (
                           <label className="aspect-[9/16] border-2 border-dashed border-nexus-border rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-nexus-surface hover:border-cyan-500/50 transition-all text-nexus-text-sec">
                             <Plus className="w-8 h-8 mb-2" />
-                            <span className="text-[10px] font-black uppercase">Añadir</span>
+                            <span className="text-[10px] font-black uppercase">{t("wiz.add") || "Añadir"}</span>
                             <input type="file" className="hidden" accept="image/*" onChange={e => {
                               if(e.target.files?.[0]) {
                                 uploadScreenshot(e.target.files[0]);
@@ -465,21 +465,21 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
               {currentStep === 'apk' && (
                 <div className="space-y-6">
-                  <h3 className="text-lg lg:text-xl font-black text-cyan-400 uppercase">Enlace de Descarga APK</h3>
+                  <h3 className="text-lg lg:text-xl font-black text-cyan-400 uppercase">{t("wiz.apkLink") || "Enlace de Descarga APK"}</h3>
                   
                   <div className="p-8 lg:p-12 border-2 border-dashed border-nexus-border rounded-2xl lg:rounded-[3rem] bg-nexus-surface/50 flex flex-col items-center justify-center text-center gap-4 lg:gap-6">
                     <div className="w-16 h-16 lg:w-24 lg:h-24 bg-nexus-card rounded-full flex items-center justify-center text-nexus-text-sec">
                       <Globe className="w-8 h-8 lg:w-12 lg:h-12" />
                     </div>
                     <div>
-                      <p className="text-lg lg:text-xl font-black text-nexus-text uppercase tracking-tight mb-2">NexusPlay actualmente no almacena APKs directamente.</p>
-                      <p className="text-nexus-text-sec text-[10px] lg:text-sm max-w-lg mx-auto">Debes subir tu APK a un servicio externo (como MediaFire, Mega, Dropbox o Google Drive) y pegar aquí el enlace público de descarga.</p>
+                      <p className="text-lg lg:text-xl font-black text-nexus-text uppercase tracking-tight mb-2">{t("wiz.apkWarning1") || "NexusPlay actualmente no almacena APKs directamente."}</p>
+                      <p className="text-nexus-text-sec text-[10px] lg:text-sm max-w-lg mx-auto">{t("wiz.apkWarning2") || "Debes subir tu APK a un servicio externo (como MediaFire, Mega, Dropbox o Google Drive) y pegar aquí el enlace público de descarga."}</p>
                     </div>
                     
                     <div className="w-full max-w-xl mt-4">
                       <input 
                         type="url" 
-                        placeholder="https://mega.nz/file/... o https://mediafire.com/..."
+                        placeholder={t("wiz.linkHolder") || "https://mega.nz/file/... o https://mediafire.com/..."}
                         className="w-full bg-nexus-surface border border-nexus-border p-4 lg:p-5 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text transition-all text-sm lg:text-base text-center"
                         value={formData.apk_url}
                         onChange={e => setFormData({...formData, apk_url: e.target.value})}
@@ -493,8 +493,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         <Globe className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-nexus-text uppercase mb-1 tracking-wider">Alojamiento Externo</p>
-                        <p className="text-[10px] text-nexus-text-sec font-medium">Recomendamos usar hosting confiable sin límite de descargas para que tu app siempre esté disponible.</p>
+                        <p className="text-xs font-black text-nexus-text uppercase mb-1 tracking-wider">{t("wiz.extHosting") || "Alojamiento Externo"}</p>
+                        <p className="text-[10px] text-nexus-text-sec font-medium">{t("wiz.extHostingHint") || "Recomendamos usar hosting confiable sin límite de descargas para que tu app siempre esté disponible."}</p>
                       </div>
                     </div>
                     <div className="p-4 bg-purple-500/5 border border-purple-500/20 rounded-2xl flex gap-4">
@@ -502,8 +502,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         <ShieldCheck className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-nexus-text uppercase mb-1 tracking-wider">Verificación de URL</p>
-                        <p className="text-[10px] text-nexus-text-sec font-medium">Asegúrate de que el enlace proporcionado sea público y no requiera cuenta para descargar.</p>
+                        <p className="text-xs font-black text-nexus-text uppercase mb-1 tracking-wider">{t("wiz.urlVerify") || "Verificación de URL"}</p>
+                        <p className="text-[10px] text-nexus-text-sec font-medium">{t("wiz.urlVerifyHint") || "Asegúrate de que el enlace proporcionado sea público y no requiera cuenta para descargar."}</p>
                       </div>
                     </div>
                   </div>
@@ -513,11 +513,11 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
               {currentStep === 'config' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <div className="space-y-6">
-                      <h3 className="text-xl font-black text-cyan-400 uppercase">Compatibilidad</h3>
+                      <h3 className="text-xl font-black text-cyan-400 uppercase">{t("wiz.compatibility") || "Compatibilidad"}</h3>
                       
                       <div className="space-y-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Mínimo Android Requerido</label>
+                          <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("wiz.minAndroid") || "Mínimo Android Requerido"}</label>
                           <select 
                             className="w-full bg-nexus-surface border border-nexus-border p-4 rounded-2xl focus:border-cyan-500 outline-none text-nexus-text"
                             value={formData.min_android}
@@ -532,12 +532,12 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         </div>
 
                         <div className="p-6 bg-nexus-card rounded-3xl border border-nexus-border">
-                           <h4 className="text-xs font-black text-nexus-text uppercase mb-4 tracking-widest">Permisos Detectados</h4>
+                           <h4 className="text-xs font-black text-nexus-text uppercase mb-4 tracking-widest">{t("wiz.permissionsDetected") || "Permisos Detectados"}</h4>
                            <div className="space-y-3">
                               {[
-                                { id: 'internet', label: 'Acceso a Internet', desc: 'android.permission.INTERNET' },
-                                { id: 'storage', label: 'Almacenamiento Externo', desc: 'android.permission.WRITE_EXTERNAL_STORAGE' },
-                                { id: 'notify', label: 'Notificaciones Push', desc: 'android.permission.POST_NOTIFICATIONS' }
+                                { id: 'internet', label: t("wiz.permInternet") || 'Acceso a Internet', desc: 'android.permission.INTERNET' },
+                                { id: 'storage', label: t("wiz.permStorage") || 'Almacenamiento Externo', desc: 'android.permission.WRITE_EXTERNAL_STORAGE' },
+                                { id: 'notify', label: t("wiz.permPush") || 'Notificaciones Push', desc: 'android.permission.POST_NOTIFICATIONS' }
                               ].map(perm => (
                                 <div key={perm.id} className="flex items-start gap-4">
                                    <div className="w-5 h-5 rounded border border-cyan-500/50 bg-cyan-500/10 flex items-center justify-center text-cyan-400">
@@ -555,10 +555,10 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                    </div>
 
                    <div className="space-y-6">
-                      <h3 className="text-xl font-black text-cyan-400 uppercase">Qué hay de nuevo</h3>
+                      <h3 className="text-xl font-black text-cyan-400 uppercase">{t("wiz.whatsNewTitle") || "Qué hay de nuevo"}</h3>
                       <div className="space-y-4">
                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Cambios de la Versión {formData.version}</label>
+                            <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("wiz.changelog") || "Cambios de la Versión"} {formData.version}</label>
                             <textarea 
                               rows={5}
                               placeholder="Ej: - Mejoras de rendimiento\n- Nueva interfaz oscura\n- Errores corregidos"
@@ -571,8 +571,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                          <div className="flex items-center gap-3 p-4 bg-green-500/5 border border-green-500/20 rounded-2xl">
                             <ShieldCheck className="w-6 h-6 text-green-500" />
                             <div className="flex-1">
-                               <p className="text-[10px] font-black text-nexus-text uppercase">Publicación Automática</p>
-                               <p className="text-[9px] text-nexus-text-sec">Tu aplicación será publicada inmediatamente después de finalizar el proceso.</p>
+                               <p className="text-[10px] font-black text-nexus-text uppercase">{t("wiz.autoPublish") || "Publicación Automática"}</p>
+                               <p className="text-[9px] text-nexus-text-sec">{t("wiz.autoPublishHint") || "Tu aplicación será publicada inmediatamente después de finalizar el proceso."}</p>
                             </div>
                             <div className="w-12 h-6 bg-cyan-500 rounded-full relative p-1 cursor-pointer">
                                <div className="w-4 h-4 bg-black rounded-full absolute right-1" />
@@ -586,8 +586,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
               {currentStep === 'preview' && (
                 <div className="space-y-8">
                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                     <h3 className="text-xl font-black text-cyan-400 uppercase">Vista previa</h3>
-                     <p className="text-nexus-text-sec text-[8px] lg:text-xs font-bold">ASÍ SE VERÁ TU APP EN NEXUS PLAY</p>
+                     <h3 className="text-xl font-black text-cyan-400 uppercase">{t("wiz.preview") || "Vista previa"}</h3>
+                     <p className="text-nexus-text-sec text-[8px] lg:text-xs font-bold">{t("wiz.previewHint") || "ASÍ SE VERÁ TU APP EN NEXUS PLAY"}</p>
                    </div>
 
                    <div className="relative bg-nexus-card rounded-3xl lg:rounded-[3rem] border border-nexus-border overflow-hidden shadow-2xl">
@@ -619,7 +619,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                                  </p>
                                </div>
                                <div className="px-3 lg:px-4 py-2 bg-nexus-card rounded-xl border border-nexus-border">
-                                 <p className="text-[8px] lg:text-[10px] font-black text-nexus-text-sec uppercase mb-0.5">Min</p>
+                                 <p className="text-[8px] lg:text-[10px] font-black text-nexus-text-sec uppercase mb-0.5">{t("wiz.min") || "Min"}</p>
                                  <p className="text-[10px] lg:text-sm font-black text-nexus-text leading-none tracking-tight">{formData.min_android.split(' ')[1] || '8.0'}</p>
                                </div>
                              </div>
@@ -652,25 +652,25 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         {/* Description Preview */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 pt-8 border-t border-nexus-border">
                            <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-                              <h4 className="text-2xl font-black text-nexus-text uppercase tracking-tight">Sobre esta aplicación</h4>
+                              <h4 className="text-2xl font-black text-nexus-text uppercase tracking-tight">{t("wiz.aboutApp") || "Sobre esta aplicación"}</h4>
                               <p className="text-nexus-text-sec text-lg leading-relaxed whitespace-pre-wrap">{formData.full_description || 'Descripción completa de la aplicación...'}</p>
                            </div>
                            <div className="space-y-8">
                               <div>
-                                <h4 className="text-sm font-black text-nexus-text uppercase tracking-widest mb-4">Lo nuevo</h4>
+                                <h4 className="text-sm font-black text-nexus-text uppercase tracking-widest mb-4">{t("wiz.whatsNewShort") || "Lo nuevo"}</h4>
                                 <div className="p-5 bg-nexus-card rounded-2xl border border-nexus-border text-xs text-nexus-text-sec leading-relaxed italic">
                                   {formData.whats_new || 'No hay notas de cambios para esta versión.'}
                                 </div>
                               </div>
                               <div>
-                                <h4 className="text-sm font-black text-nexus-text uppercase tracking-widest mb-4">Detalles</h4>
+                                <h4 className="text-sm font-black text-nexus-text uppercase tracking-widest mb-4">{t("wiz.details") || "Detalles"}</h4>
                                 <div className="space-y-4">
                                   <div className="flex justify-between border-b border-nexus-border pb-2">
-                                     <span className="text-[10px] text-nexus-text-sec font-bold uppercase">Actualizado</span>
-                                     <span className="text-[10px] text-nexus-text font-black uppercase">Hoy</span>
+                                     <span className="text-[10px] text-nexus-text-sec font-bold uppercase">{t("wiz.updated") || "Actualizado"}</span>
+                                     <span className="text-[10px] text-nexus-text font-black uppercase">{t("wiz.today") || "Hoy"}</span>
                                   </div>
                                   <div className="flex justify-between border-b border-nexus-border pb-2">
-                                     <span className="text-[10px] text-nexus-text-sec font-bold uppercase">Proveedor</span>
+                                     <span className="text-[10px] text-nexus-text-sec font-bold uppercase">{t("wiz.provider") || "Proveedor"}</span>
                                      <span className="text-[10px] text-nexus-text font-black uppercase">{formData.company_name}</span>
                                   </div>
                                 </div>
@@ -694,7 +694,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
              disabled={currentStep === 'info' || isPublishing}
              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 font-black text-[10px] uppercase transition-all rounded-xl ${currentStep === 'info' || isPublishing ? 'hidden' : 'text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card'}`}
            >
-             <ArrowLeft className="w-4 h-4" /> Anterior
+             <ArrowLeft className="w-4 h-4" /> {t("wiz.back") || "Anterior"}
            </button>
  
            <div className="flex-1 w-full flex flex-col items-center">
@@ -722,9 +722,9 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                className={`w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-cyan-500 text-nexus-bg font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl shadow-xl shadow-cyan-500/20 active:scale-95 transition-all ${isPublishing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cyan-400 hover:shadow-cyan-400/40'}`}
              >
                {isPublishing ? (
-                 <> <Loader2 className="w-5 h-5 animate-spin" /> PROCESANDO...</>
+                 <> <Loader2 className="w-5 h-5 animate-spin" /> {t("wiz.processingText") || "PROCESANDO..."}</>
                ) : (
-                 <> <Share2 className="w-5 h-5" /> LANZAR APP</>
+                 <> <Share2 className="w-5 h-5" /> {t("wiz.launchApp") || "LANZAR APP"}</>
                )}
              </button>
            ) : (

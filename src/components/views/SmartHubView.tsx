@@ -40,10 +40,10 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
   ];
 
   const tools = [
-    { id: 'calc', name: 'Calculadora', icon: Calculator, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { id: 'notes', name: 'Bloc Notas', icon: Clipboard, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-    { id: 'qr', name: 'Código QR', icon: QrCode, color: 'text-purple-400', bg: 'bg-purple-400/10' },
-    { id: 'currency', name: 'Conversor', icon: Coins, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'calc', name: t('smart.calc') || 'Calculadora', icon: Calculator, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { id: 'notes', name: t('smart.notes') || 'Bloc Notas', icon: Clipboard, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { id: 'qr', name: t('smart.qr') || 'Código QR', icon: QrCode, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { id: 'currency', name: t('smart.converter') || 'Conversor', icon: Coins, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
   ];
 
   return (
@@ -62,8 +62,8 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
              <Bot className="w-6 h-6 text-blue-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-nexus-text">Centro Inteligente</h1>
-            <p className="text-sm text-nexus-text-sec">Tu espacio personalizado y utilidades</p>
+            <h1 className="text-2xl font-bold text-nexus-text">{t("smart.hubTitle") || "Centro Inteligente"}</h1>
+            <p className="text-sm text-nexus-text-sec">{t("smart.hubDesc") || "Tu espacio personalizado y utilidades"}</p>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
            <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="flex items-center gap-2">
                  <Wand2 className="w-5 h-5 text-fuchsia-400" />
-                 <h2 className="text-lg font-bold text-nexus-text">Recomendado para ti</h2>
+                 <h2 className="text-lg font-bold text-nexus-text">{t("smart.recommended") || "Recomendado para ti"}</h2>
               </div>
            </div>
            
@@ -102,7 +102,7 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
           <section className="col-span-1 lg:col-span-2">
              <div className="flex items-center gap-2 mb-4">
                 <Zap className="w-5 h-5 text-yellow-400" />
-                <h2 className="text-lg font-bold text-nexus-text">Herramientas Rápidas</h2>
+                <h2 className="text-lg font-bold text-nexus-text">{t("smart.quickTools") || "Herramientas Rápidas"}</h2>
              </div>
              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                {tools.map(tool => (

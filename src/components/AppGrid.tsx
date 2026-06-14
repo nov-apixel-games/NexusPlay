@@ -81,7 +81,7 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
          
          <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1.5 shadow-lg">
            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
-           <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">Popular</span>
+           <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">{t("app.popular") || "Popular"}</span>
          </div>
          <div className="absolute top-3 right-3 z-20">
            <FavoriteButton appId={app.id} />
@@ -138,7 +138,7 @@ export default function AppGrid({ apps = DEMO_APPS, onAppClick }: { apps?: AppIt
           <div className="w-20 h-20 bg-nexus-card rounded-[24px] border border-nexus-border flex items-center justify-center mb-5 shadow-inner">
             <Sparkles className="w-10 h-10 text-cyan-500/50" />
           </div>
-          <h3 className="text-xl font-black text-nexus-text mb-2 tracking-tight">El universo digital está vacío</h3>
+          <h3 className="text-xl font-black text-nexus-text mb-2 tracking-tight">{t("home.emptyUniverse") || "El universo digital está vacío"}</h3>
           <p className="text-nexus-text-sec text-[15px] max-w-md font-medium leading-relaxed">
             Se el primer desarrollador en lanzar tu app en NexusPlay y marca el inicio de una nueva era.
           </p>

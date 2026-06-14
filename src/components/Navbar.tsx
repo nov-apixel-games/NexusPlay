@@ -65,7 +65,7 @@ export default function Navbar({
   const [aiPresetStyle, setAiPresetStyle] = useState('bottts');
 
   const isAuth = !!session || !!userProfile;
-  const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
+  const username = userProfile?.username || session?.user?.email?.split('@')[0] || (t('nav.user') || 'Usuario');
   const displayLogo = webLogo || localStorage.getItem('nexus_web_logo');
   const userEmail = session?.user?.email || userProfile?.email || '';
   const userBio = session?.user?.user_metadata?.bio || '';
@@ -220,7 +220,7 @@ export default function Navbar({
 
   // Profile Roles
   const userRole = userProfile?.role || 'user';
-  const roleName = userRole === 'admin' ? 'Administrador' : userRole === 'developer' ? 'Desarrollador' : 'Jugador Nexus';
+  const roleName = userRole === 'admin' ? (t('nav.roleAdmin') || 'Administrador') : userRole === 'developer' ? (t('nav.roleDev') || 'Desarrollador') : (t('nav.rolePlayer') || 'Jugador Nexus');
 
   const xp = userProfile?.xp || 0;
   const level = Math.floor(xp / 1000) + 1;
@@ -312,7 +312,7 @@ export default function Navbar({
                          {notifications.length === 0 ? (
                            <div className="p-10 text-center flex flex-col items-center gap-3">
                              <Sparkles className="w-8 h-8 text-gray-600" />
-                             <span className="text-nexus-text-sec text-[13px] font-medium tracking-wide">{t('nav.allCaughtUp') || 'Todo está al día'}</span>
+                             <span className="text-nexus-text-sec text-[13px] font-medium tracking-wide">{t('nav.allCaughtUp') || '{t("nav.allCaughtUp") || "Todo está al día"}'}</span>
                            </div>
                          ) : (
                            notifications.map(notif => (
@@ -383,7 +383,7 @@ export default function Navbar({
                     <h3 className="text-base sm:text-lg font-black text-nexus-text uppercase tracking-wider leading-none">
                       {t('profile.editProfile') || 'Perfil Personalizado'}
                     </h3>
-                    <p className="text-[10px] text-nexus-text-sec font-medium uppercase tracking-widest mt-1">Identidad en Nexus Hub</p>
+                    <p className="text-[10px] text-nexus-text-sec font-medium uppercase tracking-widest mt-1">{t("nav.identityHub") || "Identidad en Nexus Hub"}</p>
                   </div>
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function Navbar({
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-[30px] pointer-events-none" />
                 
-                <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-500/70 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/10">Vista Previa</span>
+                <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-500/70 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/10">{t("nav.preview") || "Vista Previa"}</span>
                 
                 <div className="flex items-center gap-4 relative z-10 w-full">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-nexus-card border border-nexus-border overflow-visible relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-nexus-text">
@@ -427,7 +427,7 @@ export default function Navbar({
                       <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">{roleName}</span>
                     </div>
                     <p className="text-nexus-text-sec text-xs truncate">{inputRealName || 'Tu Nombre o Alias'}</p>
-                    <p className="text-nexus-text-sec text-[10px] italic truncate mt-1">"{inputBio || 'Sin biografía establecida.'}"</p>
+                    <p className="text-nexus-text-sec text-[10px] italic truncate mt-1">"{inputBio || '{t("nav.noBio") || "Sin biografía establecida."}'}"</p>
                   </div>
                 </div>
               </div>
@@ -531,7 +531,7 @@ export default function Navbar({
                     {uploadingImage ? (
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-7 h-7 text-cyan-400 animate-spin" />
-                        <span className="text-[10px] uppercase font-black tracking-widest text-cyan-400 animate-pulse">Subiendo a Cloudinary...</span>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-cyan-400 animate-pulse">{t("nav.uploading") || "Subiendo a Cloudinary..."}</span>
                       </div>
                     ) : inputAvatar ? (
                       <div className="absolute inset-0 flex items-center justify-center group">
@@ -545,8 +545,8 @@ export default function Navbar({
                         <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
                           <Camera className="w-5 h-5" />
                         </div>
-                        <p className="text-[11px] font-bold text-gray-200">Suelta o Clic para subir</p>
-                        <p className="text-[8px] text-nexus-text-sec uppercase tracking-widest mt-1">PNG, JPG, WEBP (Guardado Seguro)</p>
+                        <p className="text-[11px] font-bold text-gray-200">{t("nav.dropToUpload") || "Suelta o Clic para subir"}</p>
+                        <p className="text-[8px] text-nexus-text-sec uppercase tracking-widest mt-1">{t("nav.supportedFormats") || "PNG, JPG, WEBP (Guardado Seguro)"}</p>
                       </div>
                     )}
                     <input 
@@ -571,17 +571,17 @@ export default function Navbar({
                         />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">Generador IA</span>
-                        <p className="text-[11px] font-bold text-nexus-text truncate w-full">Creación Dinámica</p>
+                        <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest">{t("nav.aiGenerator") || "Generador IA"}</span>
+                        <p className="text-[11px] font-bold text-nexus-text truncate w-full">{t("nav.dynamicCreation") || "Creación Dinámica"}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-4 gap-1.5 w-full">
                       {[
-                        { id: 'bottts', label: 'Robots' },
-                        { id: 'pixel-art', label: 'Pixeles' },
-                        { id: 'avataaars', label: 'Gente' },
-                        { id: 'micah', label: 'Abstract' }
+                        { id: 'bottts', label: t('nav.bottts') || 'Robots' },
+                        { id: 'pixel-art', label: t('nav.pixelArt') || 'Pixeles' },
+                        { id: 'avataaars', label: t('nav.avataaars') || 'Gente' },
+                        { id: 'micah', label: t('nav.abstract') || 'Abstract' }
                       ].map((style) => (
                         <button
                           key={style.id}
@@ -612,7 +612,7 @@ export default function Navbar({
                             setAiPresetSeed(val);
                             setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val || 'nexus')}`);
                           }}
-                          placeholder="Semilla creativa..."
+                          placeholder={t("nav.creativeSeed") || "Semilla creativa..."}
                           className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-3.5 py-2 sm:py-2.5 text-nexus-text text-[11px] font-mono outline-none focus:border-cyan-400"
                         />
                       </div>
@@ -624,7 +624,7 @@ export default function Navbar({
                           setInputAvatar(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val)}`);
                         }}
                         className="p-2 sm:p-2.5 bg-nexus-surface hover:bg-nexus-card-hover border border-nexus-border rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
-                        title="Randomizar semilla"
+                        title={t("nav.randomSeed") || "Randomizar semilla"}
                       >
                         <Shuffle className="w-4 h-4" />
                       </button>
@@ -664,7 +664,7 @@ export default function Navbar({
                 {/* Username Input */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest">Id de Usuario</label>
+                    <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest">{t("nav.userId") || "Id de Usuario"}</label>
                     {inputUsername.length >= 3 ? (
                       <span className="text-[8px] uppercase font-mono text-green-400 font-black flex items-center gap-0.5">✓ VÁLIDO</span>
                     ) : (
@@ -679,34 +679,34 @@ export default function Navbar({
                     maxLength={15}
                     className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-nexus-text text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all font-mono"
                   />
-                  <span className="text-[8px] text-nexus-text-sec font-extrabold block mt-1.5 uppercase tracking-wider">Solo letras, números y guiños bajos (_).</span>
+                  <span className="text-[8px] text-nexus-text-sec font-extrabold block mt-1.5 uppercase tracking-wider">{t("nav.userHint") || "Solo letras, números y guiños bajos (_)."}</span>
                 </div>
 
                 {/* Real name / display name Input */}
                 <div>
-                  <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5">Nombre Visible</label>
+                  <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5">{t("nav.displayName") || "Nombre Visible"}</label>
                   <input 
                     type="text" 
                     value={inputRealName} 
                     onChange={e => setInputRealName(e.target.value)} 
-                    placeholder="Tu Nombre / Alias"
+                    placeholder={t("nav.nameHint") || "Tu Nombre / Alias"}
                     className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-nexus-text text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all"
                   />
                 </div>
 
                 {/* Description / Bio */}
                 <div>
-                  <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5">Biografía corta</label>
+                  <label className="block text-[9px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5">{t("nav.shortBio") || "Biografía corta"}</label>
                   <textarea 
                     value={inputBio} 
                     onChange={e => setInputBio(e.target.value)} 
-                    placeholder="¡Hola! Bienvenidos a mi rincón de juegos..."
+                    placeholder={t("nav.bioHint") || "¡Hola! Bienvenidos a mi rincón de juegos..."}
                     maxLength={100}
                     rows={2}
                     className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-nexus-text text-xs sm:text-[13px] font-semibold outline-none focus:border-cyan-400 transition-all resize-none shadow-inner"
                   />
                   <div className="flex justify-between text-[8px] text-nexus-text-sec font-mono mt-1 font-extrabold">
-                    <span>MÁXIMO 100 CAR.</span>
+                    <span>{t("nav.maxChars") || "MÁXIMO 100 CAR."}</span>
                     <span>{inputBio.length}/100</span>
                   </div>
                 </div>

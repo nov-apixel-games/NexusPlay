@@ -6,6 +6,7 @@ import AppGrid from '../AppGrid';
 import { supabase } from '../../lib/supabase';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
 import { useOfflineStore } from '../../store/useOfflineStore';
+import { useAppStore } from '../../store/useAppStore';
 
 
 export function AppDetailView({ 
@@ -40,6 +41,7 @@ export function AppDetailView({
   const hasDownloaded = !!downloadedVersion;
 
   const { offlineApps, downloadingAppIds, saveOffline, removeOffline } = useOfflineStore();
+  const { t } = useAppStore();
   const isDownloadedOffline = !!offlineApps[app.id];
   const isDownloadingOffline = downloadingAppIds.includes(app.id);
 
@@ -288,7 +290,7 @@ export function AppDetailView({
                       <div className={`absolute -inset-1 ${isUpdateAvailable ? 'bg-green-500' : 'bg-nexus-cyan'} rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500`}></div>
                       <button className={`relative w-full sm:w-64 flex items-center justify-center gap-3 py-4 ${isUpdateAvailable ? 'bg-green-500 hover:bg-green-400' : 'bg-nexus-cyan hover:bg-cyan-400'} text-nexus-bg rounded-2xl font-black text-lg transition-all active:scale-95 shadow-xl`}>
                         <Download className="w-6 h-6" />
-                        {isUpdateAvailable ? 'ACTUALIZAR' : 'INSTALAR'}
+                        {isUpdateAvailable ? (t("app.update") || "ACTUALIZAR") : (t("app.install") || "INSTALAR")}
                       </button>
                     </a>
                   ) : (
@@ -310,17 +312,17 @@ export function AppDetailView({
                             : 'border-nexus-border text-nexus-text-sec hover:text-nexus-text hover:border-nexus-text-sec box-border'
                       }`}
                     >
-                       {isDownloadingOffline ? <><Loader2 className="w-5 h-5 animate-spin" /> Descargando...</>
-                       : isDownloadedOffline ? <><Trash2 className="w-5 h-5" /> Eliminar Offline</>
-                       : <><CloudDownload className="w-5 h-5" /> Guardar Offline</>}
+                       {isDownloadingOffline ? <><Loader2 className="w-5 h-5 animate-spin" /> {t("app.downloading") || "Descargando..."}</>
+                       : isDownloadedOffline ? <><Trash2 className="w-5 h-5" /> {t("app.removeOffline") || "Eliminar Offline"}</>
+                       : <><CloudDownload className="w-5 h-5" /> {t("app.saveOffline") || "Guardar Offline"}</>}
                     </button>
                   )}
                   
                   <div className="flex items-center gap-3 px-6 py-4 bg-nexus-card border border-nexus-border rounded-2xl text-xs font-bold text-nexus-text-sec">
                     <ShieldCheck className="w-5 h-5 text-nexus-cyan" />
                     <div>
-                      <p className="text-nexus-text">Nexus Protect</p>
-                      <p className="opacity-60">Escaneado y seguro</p>
+                      <p className="text-nexus-text">{t("app.nexusProtect") || "Nexus Protect"}</p>
+                      <p className="opacity-60">{t("app.scannedSafe") || "Escaneado y seguro"}</p>
                     </div>
                   </div>
                 </div>
@@ -330,7 +332,7 @@ export function AppDetailView({
             {/* Screenshots Slider */}
             {app.screenshots && app.screenshots.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-black text-nexus-text-sec uppercase tracking-[0.2em] ml-1">Vista Previa</h3>
+                <h3 className="text-sm font-black text-nexus-text-sec uppercase tracking-[0.2em] ml-1">{t("app.preview") || "Vista Previa"}</h3>
                 <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar snap-x snap-mandatory">
                   {app.screenshots.map((img, idx) => (
                     <motion.div 
@@ -366,7 +368,7 @@ export function AppDetailView({
                 )}
                 <div className={`relative transition-all duration-500 overflow-hidden ${showFullDesc ? '' : 'max-h-40'}`}>
                   <p className="text-nexus-text-sec leading-relaxed whitespace-pre-wrap text-lg">
-                    {app.full_description || app.description || 'Sin descripción detallada.'}
+                    {app.full_description || app.description || (t('app.noDesc') || 'Sin descripción detallada.')}
                   </p>
                   {!showFullDesc && (
                     <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-slate-900 to-transparent"></div>
@@ -390,7 +392,7 @@ export function AppDetailView({
                     Novedades
                   </h3>
                   <div className="bg-nexus-card rounded-2xl p-6 border border-nexus-border">
-                    <p className="text-nexus-cyan font-bold mb-2">Versión {app.version}</p>
+                    <p className="text-nexus-cyan font-bold mb-2">{t("app.version") || "Versión"} {app.version}</p>
                     <p className="text-nexus-text-sec leading-relaxed">
                       {app.changelog || app.whatsNew}
                     </p>
@@ -412,19 +414,19 @@ export function AppDetailView({
               {/* Specs Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-nexus-border">
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Tamaño</span>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("app.size") || "Tamaño"}</span>
                   <p className="text-nexus-text font-bold text-lg">{app.size || '78 MB'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Versión</span>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("app.version") || "Versión"}</span>
                   <p className="text-nexus-text font-bold text-lg">{app.version || '1.0.0'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Req. Min</span>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("app.minReq") || "Req. Min"}</span>
                   <p className="text-nexus-text font-bold text-lg">{app.min_android || 'Android 8.0'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">Contenido</span>
+                  <span className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{t("app.content") || "Contenido"}</span>
                   <p className="text-nexus-text font-bold text-lg">+13</p>
                 </div>
               </div>
@@ -434,11 +436,11 @@ export function AppDetailView({
           {/* Sidebar Right: Ratings & Reviews */}
           <div className="lg:col-span-4 space-y-8">
             <div className="premium-card p-8 space-y-6">
-              <h3 className="text-xl font-black text-nexus-text">Calificaciones</h3>
+              <h3 className="text-xl font-black text-nexus-text">{t("app.ratingsTitle") || "Calificaciones"}</h3>
               <div className="flex items-center gap-6">
                 <div className="text-center space-y-1">
                   <p className="text-5xl font-black text-nexus-text">{reviewStats.total > 0 ? reviewStats.average.toFixed(1) : '0.0'}</p>
-                  <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{reviewStats.total} Reseñas</p>
+                  <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest">{reviewStats.total} {t("app.reviewsStr") || "Reseñas"}</p>
                 </div>
                 <div className="flex-1 space-y-2">
                   {[5,4,3,2,1].map(star => {
@@ -463,12 +465,12 @@ export function AppDetailView({
 
             {/* Public Review */}
             <div className="premium-card p-8 space-y-6">
-              <h3 className="text-xl font-black text-nexus-text italic">Opiniones Reales</h3>
+              <h3 className="text-xl font-black text-nexus-text italic">{t("app.realReviews") || "Opiniones Reales"}</h3>
               
               {userId && !hasReviewed && (
                 <div className="space-y-4 p-5 bg-nexus-surface rounded-2xl border border-nexus-border mb-6">
                   <div className="flex justify-between items-center">
-                    <p className="text-sm font-bold text-nexus-text-sec">Deja tu reseña:</p>
+                    <p className="text-sm font-bold text-nexus-text-sec">{t("app.leaveReview") || "Deja tu reseña:"}</p>
                     <div className="flex gap-1 cursor-pointer">
                       {[1,2,3,4,5].map(s => (
                         <Star 
@@ -482,7 +484,7 @@ export function AppDetailView({
                   <textarea 
                     value={newReview}
                     onChange={(e) => setNewReview(e.target.value)}
-                    placeholder="¿Qué te pareció esta app?"
+                    placeholder={t("app.reviewPlaceholder") || "¿Qué te pareció esta app?"}
                     className="w-full bg-nexus-surface border border-nexus-border rounded-xl p-3 text-sm text-nexus-text placeholder-slate-500 focus:outline-none focus:border-nexus-cyan transition-colors resize-none"
                     rows={2}
                   />
@@ -491,7 +493,7 @@ export function AppDetailView({
                     disabled={!newReview.trim()}
                     className="w-full py-2.5 bg-nexus-cyan text-nexus-bg font-black text-xs uppercase rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                   >
-                    <Send className="w-4 h-4" /> Enviar Opinión
+                    <Send className="w-4 h-4" /> {t("app.sendReview") || "Enviar Opinión"}
                   </button>
                 </div>
               )}
@@ -499,7 +501,7 @@ export function AppDetailView({
               <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
                  {reviews.length === 0 ? (
                    <div className="text-center py-6 text-nexus-text-sec italic text-sm">
-                     Sin reseñas todavía. ¡Sé el primero en opinar!
+                     {t("app.noReviews") || "Sin reseñas todavía. ¡Sé el primero en opinar!"}
                    </div>
                  ) : (
                    reviews.map(rev => (
@@ -540,8 +542,8 @@ export function AppDetailView({
         {relatedApps.length > 0 && (
           <div className="mt-20 space-y-10">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-black text-nexus-text tracking-tighter">Apps Recomendadas</h2>
-              <button className="text-nexus-cyan font-black text-xs uppercase tracking-widest border-b border-nexus-cyan/30 pb-1">Ver todas</button>
+              <h2 className="text-3xl font-black text-nexus-text tracking-tighter">{t("app.recommended") || "Apps Recomendadas"}</h2>
+              <button className="text-nexus-cyan font-black text-xs uppercase tracking-widest border-b border-nexus-cyan/30 pb-1">{t("app.seeAll") || "Ver todas"}</button>
             </div>
             <AppGrid apps={relatedApps} onAppClick={onAppClick} />
           </div>

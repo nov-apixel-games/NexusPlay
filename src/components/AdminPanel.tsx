@@ -17,6 +17,8 @@ import {
   AdminModeration, AdminAds, AdminSettings, AdminAI, AdminNotifications, AdminDatabaseTools
 } from './admin/AdminViews2';
 
+import { useAppStore } from '../store/useAppStore';
+
 interface AdminPanelProps {
   onBack: () => void;
   userProfile: any;
@@ -28,6 +30,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequests, setDevRequests, aiConfig }: AdminPanelProps) {
+  const { t } = useAppStore();
   const isAdmin = userProfile?.role === 'admin';
   const [activeTab, setActiveTab] = useState('dashboard');
   const [messages, setMessages] = useState<any[]>([]);
@@ -249,10 +252,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       <div className="fixed inset-0 z-50 bg-nexus-bg text-red-500 flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 to-slate-950">
         <div className="bg-nexus-card/50 p-12 rounded-3xl border border-red-500/20 backdrop-blur-md flex flex-col items-center text-center shadow-[0_0_50px_rgba(220,38,38,0.1)]">
           <Shield className="w-20 h-20 mb-6 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
-          <h1 className="text-4xl font-black mb-4 tracking-widest uppercase text-nexus-text">Acceso Denegado</h1>
-          <p className="text-red-400 mb-8 max-w-md font-light text-lg">Área clasificada. Se requiere nivel de autorización supremo para visualizar este contenido.</p>
+          <h1 className="text-4xl font-black mb-4 tracking-widest uppercase text-nexus-text">{t("admin.denied") || "Acceso Denegado"}</h1>
+          <p className="text-red-400 mb-8 max-w-md font-light text-lg">{t("admin.deniedDesc") || "Área clasificada. Se requiere nivel de autorización supremo para visualizar este contenido."}</p>
           <button onClick={onBack} className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-nexus-text font-bold py-4 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95">
-            <ChevronLeft className="w-5 h-5" /> Retirarse
+            <ChevronLeft className="w-5 h-5" /> {t("admin.retreat") || "Retirarse"}
           </button>
         </div>
       </div>
@@ -412,20 +415,20 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   // UI y Render
   const menu = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart },
-    { id: 'apps', label: 'Aplicaciones', icon: Smartphone },
-    { id: 'users', label: 'Usuarios', icon: Users },
-    { id: 'notifications', label: 'Notificaciones', icon: MessageSquare },
-    { id: 'devs', label: 'Peticiones Dev', icon: Code },
-    { id: 'reviews', label: 'Reseñas y Moderación', icon: Star },
-    { id: 'db_tools', label: 'Base de Datos', icon: Database },
-    { id: 'monetization', label: 'Monetización', icon: DollarSign },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'infra', label: 'Infraestructura', icon: Activity },
-    { id: 'messages', label: 'Reportes', icon: MessageSquare },
-    { id: 'logs', label: 'Logs Sistema', icon: List },
+    { id: 'dashboard', label: t('admin.tabDash') || 'Dashboard', icon: BarChart },
+    { id: 'apps', label: t('admin.tabApps') || 'Aplicaciones', icon: Smartphone },
+    { id: 'users', label: t('admin.tabUsers') || 'Usuarios', icon: Users },
+    { id: 'notifications', label: t('admin.tabNotifs') || 'Notificaciones', icon: MessageSquare },
+    { id: 'devs', label: t('admin.tabDevReqs') || 'Peticiones Dev', icon: Code },
+    { id: 'reviews', label: t('admin.tabReviews') || 'Reseñas y Moderación', icon: Star },
+    { id: 'db_tools', label: t('admin.tabDb') || 'Base de Datos', icon: Database },
+    { id: 'monetization', label: t('admin.tabMonetiz') || 'Monetización', icon: DollarSign },
+    { id: 'analytics', label: t('admin.tabAnalytics') || 'Analytics', icon: TrendingUp },
+    { id: 'infra', label: t('admin.tabInfra') || 'Infraestructura', icon: Activity },
+    { id: 'messages', label: t('admin.tabMessages') || 'Reportes', icon: MessageSquare },
+    { id: 'logs', label: t('admin.tabLogs') || 'Logs Sistema', icon: List },
     { id: 'ai', label: 'NEXUS AI', icon: BrainCircuit },
-    { id: 'settings', label: 'Configuración', icon: Settings },
+    { id: 'settings', label: t('admin.tabSettings') || 'Configuración', icon: Settings },
   ];
 
   // Helper chart data real
@@ -454,7 +457,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                    <AlertTriangle className="w-8 h-8 text-red-500" />
                 </div>
              </div>
-             <h3 className="text-2xl font-black text-center text-nexus-text mb-2 uppercase tracking-tighter">Confirmar Purga</h3>
+             <h3 className="text-2xl font-black text-center text-nexus-text mb-2 uppercase tracking-tighter">{t("admin.confirmPurge") || "Confirmar Purga"}</h3>
              <p className="text-nexus-text-sec text-center mb-6">¿Estás absolutamente seguro de que deseas obliterar la aplicación <span className="text-red-400 font-bold">"{appToDelete.name}"</span>? Esta acción es irreversible, eliminará los archivos binarios de visualización (Cloudinary) y borrará los registros cruzados en la base de datos maestra (Supabase).</p>
              
              {deleteError && (
@@ -469,14 +472,14 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   onClick={() => setAppToDelete(null)}
                   disabled={isDeleting}
                   className="flex-1 px-4 py-3 rounded-xl border border-nexus-border hover:bg-nexus-card font-bold text-nexus-text transition-colors disabled:opacity-50"
-                >Cancelar</button>
+                >{t("admin.cancel") || "Cancelar"}</button>
                 <button 
                   onClick={handleAppDeleteConfirm}
                   disabled={isDeleting}
                   className="flex-1 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-nexus-text font-black shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isDeleting ? <div className="w-5 h-5 border-2 border-nexus-border border-t-white rounded-full animate-spin" /> : <Trash2 className="w-5 h-5" />}
-                  {isDeleting ? 'Purgando...' : 'PURGAR APP'}
+                  {isDeleting ? (t('admin.purging') || 'Purgando...') : (t('admin.purgeApp') || 'PURGAR APP')}
                 </button>
              </div>
           </div>
@@ -510,7 +513,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
             </div>
             <div>
               <h2 className="text-xl md:text-2xl font-black text-red-500 tracking-tighter drop-shadow-sm">NEXUS<span className="text-nexus-text">ADMIN</span></h2>
-              <span className="text-[9px] md:text-[10px] text-red-400/80 uppercase tracking-[0.2em] font-black block">Acceso Nivel 5</span>
+              <span className="text-[9px] md:text-[10px] text-red-400/80 uppercase tracking-[0.2em] font-black block">{t("admin.level5") || "Acceso Nivel 5"}</span>
             </div>
           </div>
           <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-2 text-nexus-text-sec hover:text-nexus-text bg-nexus-card/50 hover:bg-nexus-card-hover rounded-lg transition-colors">
@@ -567,20 +570,20 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
              <div className="space-y-8 animate-fade-in">
                 <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 w-full lg:max-w-none">
                   <div>
-                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Directorio de Entidades</h3>
-                    <p className="text-red-400 text-sm md:text-base">Control maestro de software publicadas.</p>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.dirEntity") || "Directorio de Entidades"}</h3>
+                    <p className="text-red-400 text-sm md:text-base">{t("admin.controlMaster") || "Control maestro de software publicadas."}</p>
                   </div>
                   <div className="relative w-full sm:max-w-sm">
                     <input 
                       type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Identificador ID o Nombre..."
+                      placeholder={t("admin.searchId") || "Identificador ID o Nombre..."}
                       className="w-full bg-nexus-surface border border-red-900/30 text-nexus-text rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-red-500 text-sm md:text-base"
                     />
                     <Search className="w-4 h-4 text-nexus-text-sec absolute left-4 top-1/2 -translate-y-1/2" />
                   </div>
                 </header>
                 <div className="space-y-4 w-full">
-                  {apps.length === 0 && <p className="text-nexus-text-sec bg-nexus-surface/40 p-10 rounded-3xl border border-red-500/10 text-center">Sin resultados.</p>}
+                  {apps.length === 0 && <p className="text-nexus-text-sec bg-nexus-surface/40 p-10 rounded-3xl border border-red-500/10 text-center">{t("admin.noResults") || "Sin resultados."}</p>}
                   {apps.filter(x => x.name.toLowerCase().includes(searchQuery.toLowerCase())).map(app => (
                     <div key={app.id} className={`bg-nexus-card/40 border ${app.featured ? 'border-amber-500/30' : 'border-red-500/10'} p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-red-500/30 transition-colors shadow-lg backdrop-blur-sm`}>
                        <div className="flex items-center gap-5">
@@ -598,24 +601,24 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                        <div className="flex flex-wrap gap-2 shrink-0">
                          {app.status === 'pending' && (
                            <>
-                             <button onClick={() => handleAppStatus(app.id, 'published')} className="bg-green-950/30 border border-green-900/30 text-green-500 hover:bg-green-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all">Aprobar</button>
-                             <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-orange-950/30 border border-orange-900/30 text-orange-500 hover:bg-orange-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all">Rechazar</button>
+                             <button onClick={() => handleAppStatus(app.id, 'published')} className="bg-green-950/30 border border-green-900/30 text-green-500 hover:bg-green-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all">{t("admin.approve") || "Aprobar"}</button>
+                             <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-orange-950/30 border border-orange-900/30 text-orange-500 hover:bg-orange-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all">{t("admin.reject") || "Rechazar"}</button>
                            </>
                          )}
                          {app.status === 'published' && (
                            <>
                              <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-nexus-card text-nexus-text-sec border border-nexus-border hover:bg-nexus-card-hover hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
-                               <EyeOff className="w-3 h-3" /> Ocultar
+                               <EyeOff className="w-3 h-3" /> {t("admin.hide") || "Ocultar"}
                              </button>
                              <button onClick={() => toggleFeatured(app)} className={`${app.featured ? 'bg-amber-900/20 text-amber-500 border-amber-900/30 hover:bg-amber-900 hover:text-nexus-text' : 'bg-nexus-card text-amber-500/70 border-nexus-border hover:bg-amber-900/20 hover:text-amber-500'} border px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1`}>
-                                <Star className="w-3 h-3" /> {app.featured ? 'Normalizar' : 'Destacar'}
+                                <Star className="w-3 h-3" /> {app.featured ? (t('admin.norm') || 'Normalizar') : (t('admin.feat') || 'Destacar')}
                              </button>
                            </>
                          )}
                          <a href={`/app/${app.id}`} target="_blank" rel="noreferrer" className="bg-blue-950/30 border border-blue-900/30 text-blue-500 hover:bg-blue-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
-                            <Eye className="w-3 h-3" /> Ver
+                            <Eye className="w-3 h-3" /> {t("admin.view") || "Ver"}
                          </a>
-                         <button onClick={() => alert("Función Editar en desarrollo")} className="bg-gray-950/30 border border-gray-900/30 text-nexus-text-sec hover:bg-gray-700 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                         <button onClick={() => alert("Función " + (t("admin.edit") || "Editar") + " en desarrollo")} className="bg-gray-950/30 border border-gray-900/30 text-nexus-text-sec hover:bg-gray-700 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
                              <Edit className="w-3 h-3" /> Editar
                           </button>
                           <button onClick={() => setAppToDelete(app)} className="bg-red-950/30 border border-red-900/30 text-red-500 hover:bg-red-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 group">
@@ -632,12 +635,12 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {activeTab === 'monetization' && (
              <div className="space-y-8 animate-fade-in w-full">
                 <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Monetización y AdSense</h3>
-                  <p className="text-red-400 text-sm md:text-base">Gestión real de anuncios y configuración de red publicitaria.</p>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.monAds") || "Monetización y AdSense"}</h3>
+                  <p className="text-red-400 text-sm md:text-base">{t("admin.monAdsDesc") || "Gestión real de anuncios y configuración de red publicitaria."}</p>
                 </header>
 
                 <div className="bg-nexus-card/40 border border-red-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm shadow-xl">
-                   <h4 className="text-xl font-bold text-nexus-text mb-6">Estado de Configuración AdSense</h4>
+                   <h4 className="text-xl font-bold text-nexus-text mb-6">{t("admin.adsState") || "Estado de Configuración AdSense"}</h4>
                    
                    <div className="space-y-4 max-w-lg">
                       <div className="flex items-center gap-4 mb-6">
@@ -650,7 +653,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                           />
                           <div className="w-14 h-7 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 outline-none border border-red-900/40"></div>
                         </label>
-                        <span className={`font-bold ${adsConfig.active ? 'text-green-500' : 'text-nexus-text-sec'}`}>{adsConfig.active ? 'Monetización Activa' : 'Monetización Pausada'}</span>
+                        <span className={`font-bold ${adsConfig.active ? 'text-green-500' : 'text-nexus-text-sec'}`}>{adsConfig.active ? (t('admin.adsActive') || 'Monetización Activa') : (t('admin.adsPaused') || 'Monetización Pausada')}</span>
                       </div>
 
                       {adsConfig.active && (
@@ -666,23 +669,23 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                         </div>
                       )}
                       
-                      <button onClick={saveAdsConfig} className="bg-red-900/50 hover:bg-red-600 text-nexus-text font-bold px-8 py-3 rounded-xl mt-6 border border-red-900/50 shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all">Guardar Configuración</button>
+                      <button onClick={saveAdsConfig} className="bg-red-900/50 hover:bg-red-600 text-nexus-text font-bold px-8 py-3 rounded-xl mt-6 border border-red-900/50 shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all">{t("admin.saveConfig") || "Guardar Configuración"}</button>
                    </div>
                 </div>
 
                 {!adsConfig.active ? (
                    <div className="p-10 border border-red-900/20 bg-red-950/10 rounded-3xl mt-6 text-center">
                      <DollarSign className="w-12 h-12 mx-auto mb-4 text-red-900/50" />
-                     <p className="text-nexus-text-sec max-w-md mx-auto">AdSense no configurado o inactivo. No se generarán ingresos en las aplicaciones.</p>
+                     <p className="text-nexus-text-sec max-w-md mx-auto">{t("admin.notConfig") || "AdSense no configurado o inactivo. No..."}</p>
                    </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div className="bg-nexus-surface/40 border border-green-500/20 p-6 md:p-8 rounded-3xl shadow-xl backdrop-blur-sm">
-                      <p className="text-xs font-black text-green-400 uppercase tracking-widest mb-2">Publisher ID Guardado</p>
+                      <p className="text-xs font-black text-green-400 uppercase tracking-widest mb-2">{t("admin.pubIdSaved") || "Publisher ID Guardado"}</p>
                       <p className="text-xl font-mono text-nexus-text">{adsConfig.publisherId || 'Pendiente'}</p>
                     </div>
                     <div className="bg-nexus-card/40 border border-blue-500/20 p-6 md:p-8 rounded-3xl shadow-xl backdrop-blur-sm">
-                      <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-2">Red de Anuncios</p>
+                      <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-2">{t("admin.adNetwork") || "Red de Anuncios"}</p>
                       <p className="text-xl font-black text-nexus-text">Google AdSense</p>
                     </div>
                   </div>
@@ -694,12 +697,12 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {activeTab === 'reviews' && (
              <div className="space-y-8 animate-fade-in w-full">
                 <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Central de Moderación</h3>
-                  <p className="text-red-400 text-sm md:text-base">Control de calidad y bloqueo de reseñas y comentarios.</p>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.modCenter") || "Central de Moderación"}</h3>
+                  <p className="text-red-400 text-sm md:text-base">{t("admin.modDesc") || "Control de calidad y bloqueo de reseñas y comentarios."}</p>
                 </header>
                 
                 <div className="space-y-4 md:space-y-6">
-                  {allReviews.length === 0 && <p className="text-nexus-text-sec bg-nexus-card/40 p-8 md:p-10 rounded-2xl md:rounded-3xl border border-red-500/10 text-center">No hay reseñas publicadas en la plataforma.</p>}
+                  {allReviews.length === 0 && <p className="text-nexus-text-sec bg-nexus-card/40 p-8 md:p-10 rounded-2xl md:rounded-3xl border border-red-500/10 text-center">{t("admin.noReviews") || "No hay reseñas publicadas en la plataforma."}</p>}
                   {allReviews.map(rev => {
                     // Match app name
                     const relatedApp = apps.find(a => a.id === rev.app_id);
@@ -733,13 +736,13 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {activeTab === 'analytics' && (
              <div className="space-y-8 animate-fade-in w-full">
                 <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Telemetría Avanzada (Real)</h3>
-                  <p className="text-red-400 text-sm md:text-base">Métricas, crecimiento y engagement extraídos directamente de la base de datos.</p>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.telemetry") || "Telemetría Avanzada (Real)"}</h3>
+                  <p className="text-red-400 text-sm md:text-base">{t("admin.telemetryDesc") || "Métricas, crecimiento y engagement extraídos directamente de la base de datos."}</p>
                 </header>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                    <div className="bg-nexus-card border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl w-full">
-                      <h4 className="text-xl font-bold text-nexus-text mb-8">Nuevos Usuarios (Últimos 7 días)</h4>
+                      <h4 className="text-xl font-bold text-nexus-text mb-8">{t("admin.newUsers") || "Nuevos Usuarios (Últimos 7 días)"}</h4>
                       <div className="w-full h-72">
                          <ResponsiveContainer width="100%" height="100%">
                            <AreaChart data={last7Days} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -760,7 +763,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                    </div>
 
                    <div className="bg-nexus-card border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl w-full">
-                      <h4 className="text-xl font-bold text-nexus-text mb-8">Nuevas Aplicaciones (Últimos 7 días)</h4>
+                      <h4 className="text-xl font-bold text-nexus-text mb-8">{t("admin.newApps") || "Nuevas Aplicaciones (Últimos 7 días)"}</h4>
                       <div className="w-full h-72">
                          <ResponsiveContainer width="100%" height="100%">
                            <LineChart data={last7Days} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -776,7 +779,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                 </div>
 
                 <div className="bg-nexus-card border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl">
-                   <h4 className="text-xl font-bold text-nexus-text mb-6">Top Entidades Más Descargadas (Real)</h4>
+                   <h4 className="text-xl font-bold text-nexus-text mb-6">{t("admin.topApps") || "Top Entidades Más Descargadas (Real)"}</h4>
                    <div className="space-y-4">
                      {apps.filter(a => a.status === 'published' && parseInt(String(a.downloads || 0)) > 0).sort((a,b) => parseInt(String(b.downloads || 0)) - parseInt(String(a.downloads || 0))).slice(0, 3).map((app, i) => (
                        <div key={app.id} className="flex items-center justify-between p-4 bg-nexus-surface border border-nexus-border rounded-2xl">
@@ -790,7 +793,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                           </div>
                           <div className="text-right">
                              <p className="font-black text-lg text-nexus-text">{app.downloads || 0}</p>
-                             <p className="text-xs text-nexus-text-sec uppercase tracking-widest">Instalaciones Reales</p>
+                             <p className="text-xs text-nexus-text-sec uppercase tracking-widest">{t("admin.realInstalls") || "Instalaciones Reales"}</p>
                           </div>
                        </div>
                      ))}
@@ -807,7 +810,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
              <div className="space-y-8 animate-fade-in w-full">
                 <header className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
                   <div>
-                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Sistema e Infraestructura</h3>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.sysInfra") || "Sistema e Infraestructura"}</h3>
                     <p className="text-red-400 text-sm md:text-base">Métricas en tiempo real de los servicios y dependencias.</p>
                   </div>
                   <button onClick={checkInfra} className="bg-red-950/30 hover:bg-red-900/60 border border-red-900/40 text-red-400 rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-2">
@@ -826,7 +829,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                         )}
                      </div>
                      <Database className={`w-12 h-12 mb-4 ${infraStats.isSupabaseUp ? 'text-green-500/80' : 'text-red-500'}`} />
-                     <h4 className="text-2xl font-black text-nexus-text mb-2">Base de Datos</h4>
+                     <h4 className="text-2xl font-black text-nexus-text mb-2">{t("admin.db") || "Base de Datos"}</h4>
                      <p className="text-nexus-text-sec text-sm max-w-sm mb-6">Supabase PostgreSQL y funciones Serverless de autenticación.</p>
                      
                      <div className="grid grid-cols-2 gap-4 border-t border-nexus-border pt-6">
@@ -859,7 +862,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                         )}
                      </div>
                      <UploadCloud className={`w-12 h-12 mb-4 ${infraStats.isCloudinaryUp ? 'text-blue-500/80' : 'text-red-500'}`} />
-                     <h4 className="text-2xl font-black text-nexus-text mb-2">Almacenamiento CDN</h4>
+                     <h4 className="text-2xl font-black text-nexus-text mb-2">{t("admin.cdn") || "Almacenamiento CDN"}</h4>
                      <p className="text-nexus-text-sec text-sm max-w-sm mb-6">Cloudinary Media Delivery, transformación y persistencia binaria.</p>
                      
                      <div className="grid grid-cols-2 gap-4 border-t border-nexus-border pt-6">
@@ -966,7 +969,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {activeTab === 'devs' && (
              <div className="space-y-8 animate-fade-in">
                 <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Cola de Credenciales Dev</h3>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.devQueue") || "Cola de Credenciales Dev"}</h3>
                   <p className="text-red-400 text-sm md:text-base">Peticiones de acceso API y consola.</p>
                 </header>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
@@ -1001,7 +1004,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {activeTab === 'messages' && (
              <div className="space-y-8 animate-fade-in">
                 <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Transmisiones Externas</h3>
+                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.extTrans") || "Transmisiones Externas"}</h3>
                   <p className="text-red-400 text-sm md:text-base">Buzón de comunicaciones y reportes.</p>
                 </header>
                 <div className="space-y-4 md:space-y-6">
@@ -1030,7 +1033,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
              <div className="space-y-8 animate-fade-in">
                 <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
                   <div>
-                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">Registros del Sistema</h3>
+                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.sysLogs") || "Registros del Sistema"}</h3>
                     <p className="text-red-400 text-sm md:text-base">Monitoreo absoluto de actividades críticas.</p>
                   </div>
                   <button onClick={() => { localStorage.removeItem('nexus_admin_logs'); setLogs([]); }} className="bg-nexus-card hover:bg-red-900/40 text-nexus-text-sec hover:text-nexus-text px-4 py-2 rounded-xl text-sm font-bold transition-all border border-transparent hover:border-red-900/30 flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
@@ -1042,11 +1045,11 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                      <table className="w-full text-left text-sm text-nexus-text-sec">
                         <thead className="bg-nexus-surface text-xs uppercase font-black tracking-widest text-red-600 border-b border-red-900/20">
                           <tr>
-                            <th className="px-6 py-5">Timestamp</th>
-                            <th className="px-6 py-5">Categoría</th>
-                            <th className="px-6 py-5">Entidad</th>
-                            <th className="px-6 py-5">Detalle</th>
-                            <th className="px-6 py-5">Estado</th>
+                            <th className="px-6 py-5">{t("admin.logCol1") || "Timestamp"}</th>
+                            <th className="px-6 py-5">{t("admin.logCol2") || "Categoría"}</th>
+                            <th className="px-6 py-5">{t("admin.logCol3") || "Entidad"}</th>
+                            <th className="px-6 py-5">{t("admin.logCol4") || "Detalle"}</th>
+                            <th className="px-6 py-5">{t("admin.logCol5") || "Estado"}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-red-900/10 font-mono">

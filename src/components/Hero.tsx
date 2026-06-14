@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 
 export default function Hero({ 
   storeName = 'NexusPlay', 
-  slogan = 'La plataforma digital de nueva generación',
+  slogan = t("hero.slogan") || 'La plataforma digital de nueva generación',
   onAction 
 }: { 
   storeName?: string, 
@@ -45,7 +45,7 @@ export default function Hero({
               <div className="absolute w-full h-full rounded-full bg-cyan-400 animate-ping opacity-60" />
               <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-nexus-glow" />
             </div>
-            <span className="text-[11px] sm:text-[13px] font-black text-cyan-300 uppercase tracking-[0.2em] drop-shadow-md">Nexus AI 2.0 • Sistema Activo</span>
+            <span className="text-[11px] sm:text-[13px] font-black text-cyan-300 uppercase tracking-[0.2em] drop-shadow-md">{t("hero.aiSystem") || "Nexus AI 2.0 • Sistema Activo"}</span>
           </div>
         </motion.div>
 
@@ -77,7 +77,7 @@ export default function Hero({
           className="text-lg sm:text-2xl md:text-3xl text-nexus-text font-medium mb-8 sm:mb-10 max-w-3xl leading-relaxed drop-shadow-lg px-4"
         >
           {slogan} <br className="hidden sm:block" />
-          <span className="text-cyan-400/80 font-normal">Experiencia premium sin límites.</span>
+          <span className="text-cyan-400/80 font-normal">{t("hero.premium") || "Experiencia premium sin límites."}</span>
         </motion.p>
         
         <motion.div 
@@ -90,9 +90,9 @@ export default function Hero({
           <span className="text-cyan-500/50">•</span>
           <span className="hover:text-indigo-300 transition-colors cursor-default drop-shadow-sm">{t('nav.sidebar.community')}</span>
           <span className="text-indigo-500/50">•</span>
-          <span className="hover:text-blue-300 transition-colors cursor-default drop-shadow-sm">Recompensas</span>
+          <span className="hover:text-blue-300 transition-colors cursor-default drop-shadow-sm">{t("hero.rewards") || "Recompensas"}</span>
           <span className="text-blue-500/50 hidden sm:inline">•</span>
-          <span className="hover:text-purple-300 transition-colors cursor-default drop-shadow-sm hidden sm:inline">Inteligencia</span>
+          <span className="hover:text-purple-300 transition-colors cursor-default drop-shadow-sm hidden sm:inline">{t("hero.intelligence") || "Inteligencia"}</span>
         </motion.div>
 
         <motion.div 
@@ -101,15 +101,15 @@ export default function Hero({
           transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
           className="flex flex-wrap justify-center gap-3 sm:gap-6 z-10 relative px-2"
         >
-          <QuickAction icon={Compass} label="Explorar Hub" 
+          <QuickAction icon={Compass} label={t("hero.exploreHub") || "Explorar Hub"} 
              color="from-cyan-600/20 to-blue-600/20 text-cyan-300 border-cyan-500/40 hover:border-cyan-400 hover:from-cyan-500/30 hover:to-blue-500/30 shadow-nexus-glow hover:shadow-nexus-glow ring-1 ring-cyan-500/10" 
              onClick={() => onAction?.('explore')} />
           
-          <QuickAction icon={Trophy} label="Rankings" 
+          <QuickAction icon={Trophy} label={t("hero.rankings") || "Rankings"} 
              color="from-yellow-600/10 to-orange-600/10 text-yellow-300 border-yellow-500/30 hover:border-yellow-400 hover:from-yellow-500/20 hover:to-orange-500/20 shadow-[0_0_20px_rgba(250,204,21,0.15)] hover:shadow-[0_0_30px_rgba(250,204,21,0.3)] ring-1 ring-yellow-500/10" 
              onClick={() => onAction?.('ranking')} />
           
-          <QuickAction icon={Zap} label="Eventos XP" 
+          <QuickAction icon={Zap} label={t("hero.eventsXP") || "Eventos XP"} 
              color="from-indigo-600/10 to-purple-600/10 text-indigo-300 border-indigo-500/30 hover:border-indigo-400 hover:from-indigo-500/20 hover:to-purple-500/20 shadow-[0_0_20px_rgba(99,102,241,0.15)] hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] ring-1 ring-indigo-500/10" 
              onClick={() => onAction?.('events')} />
         </motion.div>

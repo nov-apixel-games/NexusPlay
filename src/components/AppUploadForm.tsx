@@ -56,28 +56,28 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!files.apk || !files.icon) {
-      alert("Por favor selecciona el APK y el Icono de la aplicación.");
+      alert(t("upload.errorSelectAPK") || "Por favor selecciona el APK y el Icono de la aplicación.");
       return;
     }
 
     setIsUploading(true);
-    setStatus('Iniciando subida directa...');
+    setStatus(t("upload.step1") || 'Iniciando subida directa...');
     setUploadProgress(5);
 
     try {
       // 1. Upload Icon Directly
       const cleanAppName = formData.app_name.trim().replace(/\s+/g, '-');
-      setStatus('Paso 1: Subiendo icono a la nube...');
+      setStatus(t("upload.step1"));
       const iconUpload = await uploadToCloudinary(files.icon, `NexusStore/${cleanAppName}/icono`);
       setUploadProgress(15);
 
       // 2. Upload Screenshots Directly
-      setStatus(`Paso 2: Subiendo capturas (0/${files.screenshots.length})...`);
+      setStatus(`${t("upload.step2")} (0/${files.screenshots.length})...`);
       const screenshotUrls: string[] = [];
       const screenshotPublicIds: string[] = [];
       
       for (let i = 0; i < files.screenshots.length; i++) {
-        setStatus(`Paso 2: Subiendo capturas (${i + 1}/${files.screenshots.length})...`);
+        setStatus(`${t("upload.step2")} (${i + 1}/${files.screenshots.length})...`);
         const ssUpload = await uploadToCloudinary(files.screenshots[i], `NexusStore/${cleanAppName}/screenshots`);
         screenshotUrls.push(ssUpload.secure_url);
         screenshotPublicIds.push(ssUpload.public_id);
@@ -85,7 +85,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
       }
 
       // 3. Prepare GitHub Release (Get Upload URL)
-      setStatus('Paso 3: Preparando almacén para el APK...');
+      setStatus(t("upload.step3"));
       const prepareResponse = await fetch('/api/github-release-prepare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,13 +98,13 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
       if (!prepareResponse.ok) {
         const errData = await prepareResponse.json();
-        throw new Error(errData.error || "No se pudo preparar el lanzamiento en GitHub");
+        throw new Error(errData.error || t("upload.errorStep3"));
       }
       const { release_id } = await prepareResponse.json();
       setUploadProgress(35);
 
       // 4. CHUNKED UPLOAD TO SERVER (Server will assemble and proxy to GitHub)
-      setStatus('Paso 4: Iniciando subida fragmentada del APK (Para archivos grandes)...');
+      setStatus(t("upload.step4"));
       
       const CHUNK_SIZE = 20 * 1024 * 1024; // 20MB chunks to stay safe under 32MB limit
       const currentFile = files.apk as File;
@@ -127,7 +127,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
         chunkFormData.append('app_name', formData.app_name);
         chunkFormData.append('version', formData.version);
 
-        setStatus(`Paso 4: Subiendo fragmento ${i + 1} de ${totalChunks}...`);
+        setStatus(`${t("upload.step4Chunk")} ${i + 1} de ${totalChunks}...`);
         
         const chunkResponse = await fetch('/api/github-upload-chunk', {
           method: 'POST',
@@ -136,7 +136,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
         if (!chunkResponse.ok) {
           const errData = await chunkResponse.json();
-          throw new Error(errData.error || `Error en fragmento ${i + 1}`);
+          throw new Error(errData.error || `${t("upload.errorChunk")} ${i + 1}`);
         }
 
         const chunkResult = await chunkResponse.json();
@@ -151,12 +151,12 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
       }
 
       if (!apkDownloadUrl) {
-        throw new Error("No se recibió la URL de descarga al completar la subida");
+        throw new Error(t("upload.errorNoUrl"));
       }
       setUploadProgress(90);
 
       // 5. Finalize with server (Supabase registration)
-      setStatus('Paso 5: Registrando aplicación...');
+      setStatus(t("upload.step5"));
       
       const finalizeResponse = await fetch('/api/upload-app', {
         method: 'POST',
@@ -179,12 +179,12 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
       if (!finalizeResponse.ok) {
         const text = await finalizeResponse.text();
-        throw new Error(`Error al finalizar registro: ${text.substring(0, 100)}`);
+        throw new Error(`${t("upload.errorFinal")}: ${text.substring(0, 100)}`);
       }
       
       const finalizeResult = await finalizeResponse.json();
       setUploadProgress(100);
-      setStatus('¡Todo listo! Aplicación publicada exitosamente.');
+      setStatus(t("upload.success"));
       
       setTimeout(() => {
         onSuccess(finalizeResult.app);
@@ -203,8 +203,8 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-black text-nexus-text">Detalles de la Publicación</h1>
-            <p className="text-nexus-text-sec text-sm mt-1">Sube tu APK y nosotros nos encargamos del alojamiento global.</p>
+            <h1 className="text-2xl font-black text-nexus-text">{t("upload.detailsTitle") || "Detalles de la Publicación"}</h1>
+            <p className="text-nexus-text-sec text-sm mt-1">{t("upload.detailsDesc") || "Sube tu APK y nosotros nos encargamos del alojamiento global."}</p>
           </div>
         </div>
 
@@ -215,7 +215,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Nombre de la App</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.appName") || "Nombre de la App"}</label>
                 <input 
                   required
                   type="text" 
@@ -226,7 +226,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Compañía / Estudio</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.company") || "Compañía / Estudio"}</label>
                 <input 
                   required
                   type="text" 
@@ -240,7 +240,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Versión</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("app.version") || "Versión"}</label>
                 <input 
                   required
                   type="text" 
@@ -251,23 +251,23 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Categoría</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.category") || "Categoría"}</label>
                 <select 
                   value={formData.category}
                   onChange={e => setFormData({...formData, category: e.target.value})}
                   className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text text-sm"
                 >
                   <option className="bg-nexus-bg" value="Juegos">{t('nav.games')}</option>
-                  <option className="bg-nexus-bg" value="Herramientas">Herramientas</option>
-                  <option className="bg-nexus-bg" value="Productividad">Productividad</option>
-                  <option className="bg-nexus-bg" value="Redes Sociales">Redes Sociales</option>
-                  <option className="bg-nexus-bg" value="Entretenimiento">Entretenimiento</option>
+                  <option className="bg-nexus-bg" value="Herramientas">{t("uploadtools.tools") || "Herramientas"}</option>
+                  <option className="bg-nexus-bg" value="Productividad">{t("uploadtools.prod") || "Productividad"}</option>
+                  <option className="bg-nexus-bg" value="Redes Sociales">{t("uploadtools.social") || "Redes Sociales"}</option>
+                  <option className="bg-nexus-bg" value="Entretenimiento">{t("uploadtools.ent") || "Entretenimiento"}</option>
                 </select>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">Descripción</label>
+              <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.description") || "Descripción"}</label>
               <textarea 
                 required
                 rows={3}
@@ -283,11 +283,11 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* APK */}
             <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
-              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-orange-400 opacity-80"><Package className="w-4 h-4" /> Archivo APK</h3>
+              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-orange-400 opacity-80"><Package className="w-4 h-4" /> {t("upload.apkFile") || "Archivo APK"}</h3>
               {!files.apk ? (
                 <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-nexus-border rounded-2xl cursor-pointer hover:bg-nexus-card transition-colors">
                   <Upload className="w-6 h-6 text-nexus-text-sec mb-2" />
-                  <span className="text-xs font-bold text-nexus-text-sec">Subir APK</span>
+                  <span className="text-xs font-bold text-nexus-text-sec">{t("upload.uploadApk") || "Subir APK"}</span>
                   <input type="file" accept=".apk" onChange={e => handleFileChange(e, 'apk')} className="hidden" />
                 </label>
               ) : (
@@ -308,11 +308,11 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
             {/* Icono */}
             <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
-              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-cyan-400 opacity-80"><Smartphone className="w-4 h-4" /> Icono</h3>
+              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-cyan-400 opacity-80"><Smartphone className="w-4 h-4" /> {t("upload.iconStr") || "Icono"}</h3>
               {!files.icon ? (
                 <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-nexus-border rounded-2xl cursor-pointer hover:bg-nexus-card transition-colors">
                   <ImageIcon className="w-6 h-6 text-nexus-text-sec mb-2" />
-                  <span className="text-xs font-bold text-nexus-text-sec">Subir Icono</span>
+                  <span className="text-xs font-bold text-nexus-text-sec">{t("upload.uploadIcon") || "Subir Icono"}</span>
                   <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'icon')} className="hidden" />
                 </label>
               ) : (
@@ -331,7 +331,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
           {/* Capturas de Pantalla */}
           <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
-            <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-purple-400 opacity-80"><ImageIcon className="w-4 h-4" /> Capturas de Pantalla (Máx 8)</h3>
+            <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-purple-400 opacity-80"><ImageIcon className="w-4 h-4" /> {t("upload.screenshotsMax") || "Capturas de Pantalla (Máx 8)"}</h3>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
               {files.screenshots.map((file, idx) => (
                 <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden bg-nexus-card border border-nexus-border">
@@ -388,11 +388,11 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           >
             {isUploading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> PROCESANDO SUBIDA...
+                <Loader2 className="w-5 h-5 animate-spin" /> {t("upload.processing") || "PROCESANDO SUBIDA..."}
               </>
             ) : (
               <>
-                <Check className="w-5 h-5" /> PUBLICAR APLICACIÓN
+                <Check className="w-5 h-5" /> {t("upload.publishBtn") || "PUBLICAR APLICACIÓN"}
               </>
             )}
           </button>
