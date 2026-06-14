@@ -14,9 +14,7 @@ import {
   X,
   Orbit,
 } from "lucide-react";
-import { useStudioStore, Entity, BuiltInAsset } from "../store/useStudioStore";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stage } from "@react-three/drei";
+import { useStudioStore, BuiltInAsset } from "../store/useStudioStore";
 import {
   uploadToSupabaseWithProgress,
   deleteAssetFromStorage,
@@ -595,7 +593,7 @@ export const BottomPanel = ({
                             let success = false;
                             while (retryCount <= 1 && !success) {
                               try {
-                                console.log(`[Upload Panel Diagnostics] Intento ${retryCount + 1}: Iniciando subida de ${file.name}`);
+;
                                 
                                 const result = await uploadToSupabaseWithProgress(file, "assets", (progress) => {
                                   const percent = Math.round((progress.loaded / progress.total) * 100);
@@ -605,7 +603,7 @@ export const BottomPanel = ({
                                 
                                 const isModel = file.name.match(/\.(glb|gltf|fbx|obj|zip)$/i);
                                 const secureUrl = result.url;
-                                console.log(`[Upload Panel Diagnostics] Subida a Supabase exitosa para ${file.name}. URL: ${secureUrl}`);
+;
 
                                 const supabaseDiagnostic = await addCustomAsset({
                                   id: `supabase|${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -621,7 +619,7 @@ export const BottomPanel = ({
                                   optimizedForMobile: true,
                                 });
                                 
-                                console.log(`[Upload Panel Diagnostics] Custom asset agregado al store para ${file.name}. Resultado Supabase: ${supabaseDiagnostic}`);
+;
                                 success = true;
                               } catch (err: any) {
                                 console.error(`[Upload Panel Diagnostics] catch block para ${file.name} en intento ${retryCount + 1}:`, err);
@@ -633,7 +631,7 @@ export const BottomPanel = ({
                                 });
                                 if (retryCount < 1) {
                                   retryCount++;
-                                  console.log(`[Upload Panel Diagnostics] Incrementando retryCount a ${retryCount}`);
+;
                                   setUploadStatus(`Reintentando ${file.name}...`);
                                 } else {
                                   console.error(`[Upload Panel Diagnostics] Límite de reintentos alcanzado para ${file.name}.`);
@@ -858,7 +856,7 @@ export const BottomPanel = ({
                                   await deleteAssetFromStorage(previewAsset.storagePath);
                                 } else if (previewAsset.id.includes("cloudinary|") || previewAsset.id.includes("supabase|")) {
                                   // Retrocompatibility: If it doesn't have storagePath but feels like it was uploaded, just try removing from local DB, because we can't reliably delete without storagePath.
-                                  console.log("[Delete] No storage path found, only removing from local DB.");
+;
                                 }
                               } catch(e: any) {
                                 console.error("[Delete Error]", e);
@@ -917,7 +915,7 @@ export const BottomPanel = ({
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`p-3 rounded ${msg.startsWith("Usuario") ? "bg-neutral-800 text-nexus-text" : msg.includes("Error") ? "bg-red-900/20 text-red-400 border border-red-800/30" : "bg-blue-900/20 text-blue-300 border border-blue-800/30"}`}
+                  className={`p-3 rounded ${msg?.startsWith("Usuario") ? "bg-neutral-800 text-nexus-text" : msg?.includes("Error") ? "bg-red-900/20 text-red-400 border border-red-800/30" : "bg-blue-900/20 text-blue-300 border border-blue-800/30"}`}
                 >
                   {msg}
                 </div>

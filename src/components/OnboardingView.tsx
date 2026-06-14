@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { Camera, Check, Loader2, AlertTriangle, ArrowRight, Globe, MapPin } from 'lucide-react';
+import { Camera, Check, Loader2, AlertTriangle, Globe, MapPin } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 interface OnboardingViewProps {

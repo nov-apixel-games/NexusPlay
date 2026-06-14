@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useStudioStore, Entity } from '../store/useStudioStore';
-import { Box, Circle, Hexagon, Image as ImageIcon, Type, Trash2, Copy, Plus, MoreVertical, Edit2 } from 'lucide-react';
+import { useStudioStore } from '../store/useStudioStore';
+import { Box, Circle, Hexagon, Image as ImageIcon, Type, Trash2, Copy, Plus, Edit2 } from 'lucide-react';
 
 export const ExplorerPanel = ({ mobile }: { mobile?: boolean }) => {
   const { engineMode, entities, addEntity, removeEntity, selectedEntityId, selectEntity, scenes, activeSceneId, addScene, setActiveScene, removeScene, renameScene, duplicateScene } = useStudioStore();

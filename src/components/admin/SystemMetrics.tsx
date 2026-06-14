@@ -1,8 +1,10 @@
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAppStore } from '../../store/useAppStore';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
-import { Database, Cloud, Zap, BarChart3 } from 'lucide-react';
+import { Database, Zap } from 'lucide-react';
 
 export function SystemMetrics() {
+  const { t } = useAppStore();
     const [data, setData] = useState<any[]>([]);
     const [vercelAvailable, setVercelAvailable] = useState(false);
 
@@ -87,7 +89,7 @@ export function SystemMetrics() {
                             </AreaChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-nexus-text-sec">Cargando datos reales...</div>
+                        <div className="w-full h-full flex items-center justify-center text-nexus-text-sec">{t('app.loading')}</div>
                     )}
                 </div>
             </div>

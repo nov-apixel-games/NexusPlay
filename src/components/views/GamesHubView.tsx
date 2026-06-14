@@ -1,10 +1,8 @@
 import { useAppStore } from '../../store/useAppStore';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
-  Gamepad2, Play, Plus, Star, Trophy, Clock, Search, Heart, 
-  Share2, MessageSquare, ExternalLink, Zap, Crosshair, Sparkles, Trash2, CheckCircle2,
-  Compass, Sliders, Globe
+  Gamepad2, Play, Plus, Star, Clock, Heart, MessageSquare, Zap, Sparkles, Trash2, CheckCircle2, Sliders, Globe
 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import PublishingWizard from '../PublishingWizard';
@@ -53,7 +51,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
       const recents = savedGames.filter(g => g.lastPlayed !== undefined)
         .sort((a, b) => new Date(b.lastPlayed!).getTime() - new Date(a.lastPlayed!).getTime());
       
-      const favs = savedGames.filter(g => !g.id.startsWith('draft_')); // Los borradores se guardan por separado
+      const favs = savedGames.filter(g => !g.id?.startsWith('draft_')); // Los borradores se guardan por separado
       
       setRecentGames(recents);
       setFavorites(favs);

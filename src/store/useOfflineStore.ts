@@ -39,19 +39,19 @@ export const useOfflineStore = create<OfflineState>()(
             const scriptMatches = html.matchAll(/<script[^>]+src=["']([^"']+)["']/g);
             for (const match of scriptMatches) {
                let url = match[1];
-               if (!url.startsWith('http')) url = new URL(url, app.downloadUrl).href;
+               if (!url?.startsWith('http')) url = new URL(url, app.downloadUrl).href;
                urlsToCache.push(url);
             }
             const linkMatches = html.matchAll(/<link[^>]+href=["']([^"']+)["']/g);
             for (const match of linkMatches) {
                let url = match[1];
-               if (!url.startsWith('http')) url = new URL(url, app.downloadUrl).href;
+               if (!url?.startsWith('http')) url = new URL(url, app.downloadUrl).href;
                urlsToCache.push(url);
             }
             const imgMatches = html.matchAll(/<img[^>]+src=["']([^"']+)["']/g);
             for (const match of imgMatches) {
                let url = match[1];
-               if (!url.startsWith('http')) url = new URL(url, app.downloadUrl).href;
+               if (!url?.startsWith('http')) url = new URL(url, app.downloadUrl).href;
                urlsToCache.push(url);
             }
           }
@@ -116,13 +116,13 @@ export const useOfflineStore = create<OfflineState>()(
                  const scriptMatches = html.matchAll(/<script[^>]+src=["']([^"']+)["']/g);
                  for (const match of scriptMatches) {
                     let url = match[1];
-                    if (!url.startsWith('http')) url = new URL(url, app.downloadUrl).href;
+                    if (!url?.startsWith('http')) url = new URL(url, app.downloadUrl).href;
                     urlsToRemove.push(url);
                  }
                  const linkMatches = html.matchAll(/<link[^>]+href=["']([^"']+)["']/g);
                  for (const match of linkMatches) {
                     let url = match[1];
-                    if (!url.startsWith('http')) url = new URL(url, app.downloadUrl).href;
+                    if (!url?.startsWith('http')) url = new URL(url, app.downloadUrl).href;
                     urlsToRemove.push(url);
                  }
                }

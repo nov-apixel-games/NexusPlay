@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { 
-  MonitorPlay, Settings, ShieldAlert, CheckCircle, XCircle, Code, Eye, 
-  FileText, BrainCircuit, Send, Trash2, History, Sparkles, Copy, 
-  RotateCcw, Activity, Database, AlertTriangle, Search, BarChart3, 
-  Cloud, Terminal, Zap, Fingerprint, RefreshCw, Layers, Upload, Download
+  MonitorPlay, Settings, ShieldAlert, CheckCircle, XCircle, 
+  FileText, BrainCircuit, Send, Sparkles, Copy, 
+  RotateCcw, Activity, Database, AlertTriangle, Terminal, Zap, Fingerprint, RefreshCw, Layers, Upload, Download
 } from 'lucide-react';
-import { AppItem, UserItem } from '../../types';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 import { supabase } from '../../lib/supabase';
 

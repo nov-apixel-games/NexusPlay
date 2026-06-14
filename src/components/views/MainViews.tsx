@@ -1,10 +1,9 @@
 import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect, useRef } from 'react';
-import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Edit2, Camera, X, Check, Shuffle, Upload, Users } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import AppGrid, { AppCard } from '../AppGrid';
-import { AppItem, Category } from '../../types';
-import { CATEGORIES } from '../../data';
+import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Camera, Check, Shuffle, Upload, Users } from 'lucide-react';
+import { motion } from 'motion/react';
+import { AppCard } from '../AppGrid';
+import { AppItem } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 
@@ -604,7 +603,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                          e.preventDefault();
                          setIsDragActive(false);
                          const file = e.dataTransfer.files?.[0];
-                         if (file && file.type.startsWith('image/')) {
+                         if (file && file.type?.startsWith('image/')) {
                            try {
                              setUploading(true);
                              setError(null);
@@ -1197,9 +1196,9 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
       setHasSearched(true);
       
       const searchTerm = `%${debouncedQuery}%`;
-      console.log(`[Buscador NexusPlay] Iniciando búsqueda con término original: "${debouncedQuery}"`);
-      console.log(`[Buscador NexusPlay] Consulta construida (ilike): ${searchTerm}`);
-      console.log(`[Buscador NexusPlay] Columnas a buscar: app_name, company_name, category, description`);
+;
+;
+;
 
       const { data, error } = await supabase
         .from('apps')
@@ -1210,7 +1209,7 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
       if (error) {
          console.error(`[Buscador NexusPlay] ERROR EXACTO de Supabase:`, error);
       } else if (data) {
-         console.log(`[Buscador NexusPlay] Resultados encontrados: ${data.length}`);
+;
          const mapped = data.map(d => ({
             id: d.id,
             name: d.app_name,

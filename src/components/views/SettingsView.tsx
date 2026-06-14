@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   Settings, ChevronLeft, User, Lock, Bell, Palette, Flag, 
-  Smartphone, Monitor, Eye, DownloadCloud, Activity, Zap, ShieldAlert,
-  Save, AlertCircle, Database, Trash2, HardDrive, RefreshCw, Cpu
+  Smartphone, Monitor, Eye, DownloadCloud, ShieldAlert,
+  Save, Trash2, HardDrive, RefreshCw, Cpu
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { SupportEmailBox } from '../SupportEmailBox';

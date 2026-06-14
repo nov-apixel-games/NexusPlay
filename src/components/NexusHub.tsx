@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  MessageSquare, Users, Plus, Hash, Settings, MoreVertical, 
-  Trash2, X, Send, Pin, Shield, AlertTriangle, UserMinus, Search, Menu, ChevronLeft, Image as ImageIcon,
-  Activity, Clock, Smile, Volume2, Lock, Bot, Compass, Flame, Star, Sparkles, Gamepad2, Zap, Timer
+import { Users, Plus, Hash, 
+  Trash2, X, Send, Shield, AlertTriangle, ChevronLeft, Image as ImageIcon, Lock, Bot, Flame, Zap, Timer
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserItem } from '../types';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useAppStore } from '../store/useAppStore';
 
@@ -103,9 +100,9 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-nexus-card h-[100dvh] w-full overflow-hidden text-center fixed top-0 left-0 z-[100]">
          <Shield className="w-20 h-20 text-cyan-500 mb-6" />
-         <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t('community.restricted') || "Inicia sesión requerida"}</h2>
-         <p className="text-nexus-text-sec max-w-lg mb-8">{t('community.loginRequired') || "Debes iniciar sesión para usar Nexus Hub y conectarte con la comunidad."}</p>
-         <button onClick={onBack} className="px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">{t('nav.home') || "Volver al inicio"}</button>
+         <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t('community.restricted')}</h2>
+         <p className="text-nexus-text-sec max-w-lg mb-8">{t('community.loginRequired')}</p>
+         <button onClick={onBack} className="px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">{t('nav.home')}</button>
       </div>
     );
   }
@@ -114,8 +111,8 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-nexus-card h-[100dvh] w-full overflow-hidden text-center fixed inset-0 z-[100000] pointer-events-auto overscroll-none">
          <AlertTriangle className="w-20 h-20 text-red-500 mb-6" />
-         <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t("hub.dbMissing") || "Falta Base de Datos"}</h2>
-         <p className="text-nexus-text-sec max-w-lg mb-4">{t("hub.dbMissingDesc") || "Las tablas de Nexus Hub no existen en tu base de datos de Supabase."}</p>
+         <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t("hub.dbMissing")}</h2>
+         <p className="text-nexus-text-sec max-w-lg mb-4">{t("hub.dbMissingDesc")}</p>
          <button onClick={onBack} className="mt-4 px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">Volver al inicio</button>
       </div>
     );
@@ -176,7 +173,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
   const validCommunities = communities.filter((c: any) => c.image_url);
   const recommended = validCommunities.slice(0, 4);
   const activeNow = validCommunities.slice().reverse().slice(0, 3);
-  const username = userProfile?.username || session?.user?.email?.split('@')[0] || 'Jugador';
+  const username = userProfile?.username || session?.user?.email?.split('@')[0];
 
 
   return (
@@ -196,7 +193,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
            </div>
         </div>
         <button onClick={onCreateClick} className="px-3 py-2 sm:px-5 sm:py-3 bg-cyan-500 hover:bg-cyan-400 text-nexus-bg font-black uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all shadow-nexus-glow animate-pulse flex items-center gap-1.5">
-           <Plus className="w-4 h-4"/> <span className="hidden sm:inline">{t('hub.startServer') || t("hub.startServer") || "INICIAR SERVER"}</span>
+           <Plus className="w-4 h-4"/> <span className="hidden sm:inline">{t('hub.startServer') || t("hub.startServer")}</span>
         </button>
       </header>
 
@@ -204,7 +201,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
         <div className="max-w-7xl mx-auto space-y-12 mt-8">
            {/* Active/Trending Showcase */}
            <section>
-             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Flame className="w-4 h-4 sm:w-5 sm:h-5"/> {t('hub.featuredSectors') || t("hub.featuredSectors") || "SECTORES DESTACADOS"}</h2>
+             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Flame className="w-4 h-4 sm:w-5 sm:h-5"/> {t('hub.featuredSectors') || t("hub.featuredSectors")}</h2>
              <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-6 pt-2 px-2 -mx-2">
                {recommended.map((c: any) => (
                  <div key={c.id} onClick={() => onSelect(c)} className="snap-center shrink-0 w-[280px] sm:w-[400px] h-[200px] sm:h-[240px] rounded-[24px] relative group cursor-pointer border border-cyan-500/20 hover:border-cyan-400 shadow-nexus-glow overflow-hidden transition-all duration-300">
@@ -224,7 +221,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
 
            {/* All Communities as Sci-fi Panels */}
            <section>
-             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Zap className="w-4 h-4 sm:w-5 sm:h-5"/> {t('hub.globalDatabanks') || t("hub.globalDatabanks") || "DATABANKS GLOBALES"}</h2>
+             <h2 className="text-xs sm:text-sm font-black text-cyan-500 uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-nexus-glow"><Zap className="w-4 h-4 sm:w-5 sm:h-5"/> {t('hub.globalDatabanks') || t("hub.globalDatabanks")}</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {communities.map((c: any) => (
                   <div key={c.id} onClick={() => onSelect(c)} className="group bg-nexus-surface backdrop-blur-md border border-nexus-border/50 hover:border-cyan-400/80 rounded-[20px] p-4 sm:p-5 cursor-pointer transition-all hover:bg-cyan-950/20 hover:shadow-nexus-glow flex gap-4 relative overflow-hidden">
@@ -242,9 +239,9 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                         <h4 className="text-base sm:text-lg font-black text-nexus-text truncate uppercase tracking-tight group-hover:text-cyan-400 drop-shadow-sm">{c.name}</h4>
                         <p className="text-[10px] sm:text-[11px] text-nexus-text-sec font-mono mt-1 line-clamp-1">{c.description}</p>
                         <div className="flex items-center gap-2 mt-3">
-                           <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-[#0ff] bg-cyan-950/50 px-2 py-0.5 rounded border border-nexus-border">{t('hub.active') || "Activo"}</span>
+                           <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-[#0ff] bg-cyan-950/50 px-2 py-0.5 rounded border border-nexus-border">{t('hub.active')}</span>
                            {isAdmin && (
-                             <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" title={t('hub.deleteBase') || "Eliminar Base"}>
+                             <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" title={t('hub.deleteBase')}>
                                <Trash2 className="w-4 h-4"/>
                              </button>
                            )}
@@ -294,12 +291,12 @@ interface ParsedMsg {
 function parseMessageContent(content: string): ParsedMsg {
   if (!content) return { text: '', channel: 'general', image_url: null };
   const trimmed = content.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+  if (trimmed?.startsWith('{') && trimmed?.endsWith('}')) {
     try {
       const parsed = JSON.parse(trimmed);
       return {
-        text: parsed.text || '',
-        channel: parsed.channel || 'general',
+        text: parsed.text,
+        channel: parsed.channel,
         image_url: parsed.image_url || null
       };
     } catch (e) {
@@ -602,9 +599,9 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
       deleted_by_admin: false,
       created_at: new Date().toISOString(),
       profiles: {
-        username: userProfile?.username || session.user.email?.split('@')[0] || 'Tú',
-        avatar_url: userProfile?.avatar_url || session.user.user_metadata?.avatar_url || '',
-        role: userProfile?.role || 'user'
+        username: userProfile?.username || session.user.email?.split('@')[0],
+        avatar_url: userProfile?.avatar_url || session.user.user_metadata?.avatar_url,
+        role: userProfile?.role
       }
     };
     
@@ -626,7 +623,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
         } catch (uploadErr: any) {
            console.error("Cloudinary Error, intentando solución alterna...", uploadErr);
            // Retry with unsigned if signed failed (though we don't have preset, we just throw real error)
-           throw new Error(`Fallo al enviar imagen: ${uploadErr.message || 'Desconocido'}`);
+           throw new Error(`Fallo al enviar imagen: ${uploadErr.message}`);
         }
       }
 
@@ -645,9 +642,9 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
         setMessages(prev => prev.map(m => m.id === tempId ? { ...realMsg, profiles: userProfile } : m));
         
         // AI Integration
-        if (textContent.startsWith('!ia ')) {
+        if (textContent?.startsWith('!ia ')) {
            try {
-               const prompt = textContent.replace('!ia ', '').trim();
+               const prompt = textContent?.replace('!ia ', '').trim();
                const res = await fetch('/api/nexus-ai', {
                    method: 'POST',
                    headers: { 'Content-Type': 'application/json' },
@@ -669,7 +666,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
       }
     } catch (err: any) {
       console.error("Error INSERT message:", err);
-      setErrorMsg(`Error al enviar: ${err.message || 'Bloqueado por reglas de base de datos'}`);
+      setErrorMsg(`Error al enviar: ${err.message}`);
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setNewMessage(textContent);
       if (imageFile) {
@@ -826,7 +823,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                       <h2 className="text-lg sm:text-2xl font-black text-nexus-text uppercase tracking-tighter drop-shadow-nexus-glow truncate">{currentCommunity.name}</h2>
                       <p className="text-[9px] sm:text-[10px] font-mono text-cyan-400 capitalize flex items-center gap-1.5 whitespace-nowrap">
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
-                        {onlineCount} {t('community.membersOnline') || "EN RED"} <span className="opacity-50">| {memberCount} {t('community.members') || "MIEMBROS"}</span>
+                        {onlineCount} {t('community.membersOnline')} <span className="opacity-50">| {memberCount} {t('community.members')}</span>
                       </p>
                    </div>
                 </div>
@@ -836,7 +833,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
              <div className="hidden sm:flex items-center gap-4 shrink-0 border-l border-nexus-border/50 pl-4 ml-4">
                  {isJoined && (
                    <button onClick={handleLeave} disabled={isJoining} className="text-[10px] font-black uppercase text-red-500 hover:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg mr-2 transition-colors">
-                     {t('community.leave') || "Dejar de Seguir"}
+                     {t('community.leave')}
                    </button>
                  )}
                  <div className="text-right">
@@ -902,14 +899,14 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
               <div className="w-24 h-24 bg-cyan-950/30 rounded-full flex items-center justify-center border border-nexus-border/50 shadow-nexus-glow mb-6">
                  <Shield className="w-10 h-10 text-cyan-600" />
               </div>
-              <h3 className="text-xl font-black text-cyan-400 uppercase tracking-widest mb-3">{t('community.restricted') || "Acceso Restringido"}</h3>
-              <p className="text-sm font-mono text-cyan-600 uppercase tracking-widest mb-8 text-center px-4">{t('community.mustJoin') || "Debes seguir esta comunidad para participar."}</p>
+              <h3 className="text-xl font-black text-cyan-400 uppercase tracking-widest mb-3">{t('community.restricted')}</h3>
+              <p className="text-sm font-mono text-cyan-600 uppercase tracking-widest mb-8 text-center px-4">{t('community.mustJoin')}</p>
               <button 
                 onClick={handleJoin} 
                 disabled={isJoining}
                 className="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-nexus-bg font-black uppercase text-sm tracking-widest rounded-[12px] shadow-nexus-glow transition-all"
               >
-                {isJoining ? (t('community.processing') || 'Procesando...') : (t('community.join') || 'Seguir Comunidad')}
+                {isJoining ? (t('community.processing')) : (t('community.join'))}
               </button>
            </div>
          ) : (
@@ -920,7 +917,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                   <div className="w-20 h-20 bg-cyan-950/30 rounded-full flex items-center justify-center border border-nexus-border/50 shadow-nexus-glow mb-4">
                      <Lock className="w-8 h-8 text-cyan-700" />
                   </div>
-                  <p className="text-cyan-600 font-mono text-[10px] uppercase tracking-widest">{t("community.emptyTransmission") || "TRANSMISIÓN VACÍA"}</p>
+                  <p className="text-cyan-600 font-mono text-[10px] uppercase tracking-widest">{t("community.emptyTransmission")}</p>
                </div>
              )}
     
@@ -944,7 +941,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                           </div>
                         ) : msg.profiles?.avatar_url ? (
                             <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-[5px] grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"/>
-                         ) : <span className="text-cyan-500 font-mono font-bold text-xs sm:text-sm">{(msg.profiles?.username || 'U')[0]?.toUpperCase()}</span>}
+                         ) : <span className="text-cyan-500 font-mono font-bold text-xs sm:text-sm">{(msg.profiles?.username)[0]?.toUpperCase()}</span>}
                      </div>
 
                      {/* Content Bubble HUD */}
@@ -953,7 +950,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                            {isAI ? (
                              <span className="text-[9px] sm:text-[11px] font-black italic text-indigo-400 uppercase tracking-widest text-shadow-[0_0_5px_rgba(99,102,241,0.5)]">AI.SYS</span>
                            ) : (
-                             <span className="text-[10px] sm:text-[12px] font-black text-cyan-100 tracking-wider">{(msg.profiles?.username || 'USER').toUpperCase()}</span>
+                             <span className="text-[10px] sm:text-[12px] font-black text-cyan-100 tracking-wider">{(msg.profiles?.username).toUpperCase()}</span>
                            )}
                            <span className="text-[8px] sm:text-[9px] font-mono text-cyan-800 tracking-widest">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         </div>
@@ -1100,8 +1097,8 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
         <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/20 rounded-2xl flex items-center justify-center mb-6">
            <Hash className="w-8 h-8 text-cyan-400" />
         </div>
-        <h3 className="text-3xl font-black text-nexus-text italic tracking-tight mb-2">{t("hub.newCommunity") || "Nueva Comunidad"}</h3>
-        <p className="text-nexus-text-sec mb-8 font-medium">{t("hub.startTopic") || "Inicia un tema y construye una nueva audiencia en Nexus."}</p>
+        <h3 className="text-3xl font-black text-nexus-text italic tracking-tight mb-2">{t("hub.newCommunity")}</h3>
+        <p className="text-nexus-text-sec mb-8 font-medium">{t("hub.startTopic")}</p>
 
         {createError && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-2xl flex items-center gap-3">
@@ -1116,7 +1113,7 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
             setCreateError(null);
             
             if (!selectedFile) {
-               setCreateError(t("hub.reqLogo") || "El logo de la comunidad es obligatorio.");
+               setCreateError(t("hub.reqLogo"));
                return;
             }
 
@@ -1132,7 +1129,7 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
               const uploadRes = await uploadToCloudinary(selectedFile, `NexusHub/${cleanName}/icon`);
               
               if (!uploadRes || (!uploadRes.secure_url && !uploadRes.url)) {
-                throw new Error(t("hub.upImageFail") || "No se pudo subir la imagen. Por favor, intenta de nuevo.");
+                throw new Error(t("hub.upImageFail"));
               }
               
               const image_url = uploadRes.secure_url || uploadRes.url;
@@ -1142,12 +1139,12 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
               }]).select().single();
               
               if (error) {
-                setCreateError(error.message || t("hub.createFailName") || "Error al crear comunidad. Verifica que el nombre sea único.");
+                setCreateError(error.message || t("hub.createFailName"));
               } else if (data) {
                 onSuccess(data);
               }
             } catch (err: any) {
-               setCreateError(err?.message || t("hub.unexpectFail") || "Ocurrió un error inesperado.");
+               setCreateError(err?.message || t("hub.unexpectFail"));
             } finally {
               setIsCreating(false);
             }
@@ -1156,7 +1153,7 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
         >
            {/* Upload Logo Section */}
            <div className="flex flex-col items-center mb-6">
-              <label htmlFor="logo-upload" className="block text-[11px] font-bold text-nexus-text-sec uppercase tracking-widest mb-3 w-full text-left">{t("hub.commLogo") || "Logo de Comunidad *"}</label>
+              <label htmlFor="logo-upload" className="block text-[11px] font-bold text-nexus-text-sec uppercase tracking-widest mb-3 w-full text-left">{t("hub.commLogo")}</label>
               <div 
                 className={`w-28 h-28 rounded-3xl border-2 border-dashed ${previewUrl ? 'border-cyan-500' : 'border-nexus-border hover:border-cyan-500/50'} flex items-center justify-center cursor-pointer transition-colors relative overflow-hidden group`}
                 onClick={() => document.getElementById('logo-upload')?.click()}
@@ -1171,7 +1168,7 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
                 ) : (
                   <div className="flex flex-col items-center text-nexus-text-sec group-hover:text-cyan-400 transition-colors">
                     <ImageIcon className="w-8 h-8 mb-2" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{t("hub.upload") || "SUBIR"}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{t("hub.upload")}</span>
                   </div>
                 )}
               </div>
@@ -1186,8 +1183,8 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
            </div>
 
            <div>
-             <label className="block text-[11px] font-bold text-nexus-text-sec uppercase tracking-widest mb-2">{t("hub.commNameT") || "Nombre de la comunidad *"}</label>
-             <input name="name" required disabled={isCreating} className="w-full bg-nexus-surface border-2 border-transparent focus:border-cyan-500/50 rounded-xl px-5 py-3.5 text-nexus-text focus:outline-none transition-all placeholder:text-gray-600 font-medium shadow-inner" placeholder={t("hub.commNameP") || "P. ej., Torneo Valorant"} />
+             <label className="block text-[11px] font-bold text-nexus-text-sec uppercase tracking-widest mb-2">{t("hub.commNameT")}</label>
+             <input name="name" required disabled={isCreating} className="w-full bg-nexus-surface border-2 border-transparent focus:border-cyan-500/50 rounded-xl px-5 py-3.5 text-nexus-text focus:outline-none transition-all placeholder:text-gray-600 font-medium shadow-inner" placeholder={t("hub.commNameP")} />
            </div>
            <div>
              <label className="block text-[11px] font-bold text-nexus-text-sec uppercase tracking-widest mb-2">Acerca de</label>

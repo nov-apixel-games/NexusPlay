@@ -1,7 +1,7 @@
+import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect } from 'react';
 import { 
-  BarChart3, Users, Download, Zap, Smartphone, CheckCircle, 
-  XCircle, Edit, Trash2, Star, ShieldAlert, BadgeCheck, Code 
+  BarChart3, Users, Download, Smartphone, Trash2, ShieldAlert 
 } from 'lucide-react';
 import { AppItem, UserItem } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -77,6 +77,7 @@ function ProgressBar({ label, value, color }: any) {
 }
 
 export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUsers: (u: any[]) => void, addToast: any }) {
+  const { t } = useAppStore();
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
     const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', id);
@@ -205,7 +206,7 @@ export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUse
           
           {users.length === 0 && (
             <div className="p-8 text-center text-nexus-text-sec font-medium">
-               No hay usuarios registrados o cargando...
+               {t('admin.noUsers')}
             </div>
           )}
         </div>

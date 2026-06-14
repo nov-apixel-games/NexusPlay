@@ -1,5 +1,5 @@
 import { useAppStore } from '../store/useAppStore';
-import { Compass, Trophy, PlusSquare, Zap, Star, Hexagon } from 'lucide-react';
+import { Compass, Trophy, Zap, Hexagon } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Hero({ 

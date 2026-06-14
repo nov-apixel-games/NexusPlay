@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { Wifi, WifiOff, RefreshCw, Database } from 'lucide-react';
+import { WifiOff, RefreshCw, Database } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function OfflineIndicator() {
@@ -10,7 +10,7 @@ export default function OfflineIndicator() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('SW Registered: ' + r);
+;
     },
     onRegisterError(error) {
       console.error('SW registration error', error);

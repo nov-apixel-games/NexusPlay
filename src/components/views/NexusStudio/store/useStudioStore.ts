@@ -283,7 +283,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
   addCustomAsset: async (asset) => {
     let supabaseDiagnostic = "No user session";
-    console.log(`[Store Diagnostics] addCustomAsset iniciado para: ${asset.name}, id: ${asset.id}`);
+;
     
     // Normalize references for UI
     const finalAsset = {
@@ -298,7 +298,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user?.id) {
-        console.log(`[Store Diagnostics] Usuario auth detectado (${session.user.id}), intentando insertar en Supabase studio_assets...`);
+;
         const { error: insertError } = await supabase.from("studio_assets").insert({
           id: asset.id,
           name: asset.name,
@@ -315,7 +315,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           console.error(`[Store Diagnostics] Error al insertar en Supabase:`, insertError);
           supabaseDiagnostic = `Error Supabase: ${insertError.message}`;
         } else {
-          console.log(`[Store Diagnostics] Inserción en Supabase exitosa para: ${asset.name}`);
+;
           supabaseDiagnostic = "Exitoso";
         }
       } else {
@@ -324,7 +324,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
       const currentState = get().customAssets;
       await idb.set("nexus_custom_assets", currentState);
-      console.log(`[Store Diagnostics] idb.set completado para customAssets.`);
+;
       return supabaseDiagnostic;
     } catch (e: any) {
       console.error("[Store Diagnostics] Failed to save to Supabase/idb catch block:", e);

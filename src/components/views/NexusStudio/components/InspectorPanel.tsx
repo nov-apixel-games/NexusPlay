@@ -1,5 +1,5 @@
 import React from 'react';
-import { useStudioStore, Entity, Entity3D, Entity2D } from '../store/useStudioStore';
+import { useStudioStore, Entity3D, Entity2D } from '../store/useStudioStore';
 
 export const InspectorPanel = ({ mobile }: { mobile?: boolean }) => {
   const { entities, selectedEntityId, updateEntity, engineMode } = useStudioStore();

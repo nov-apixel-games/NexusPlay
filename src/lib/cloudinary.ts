@@ -1,5 +1,5 @@
 const compressImage = async (file: File): Promise<File> => {
-  if (!file.type.startsWith("image/")) return file;
+  if (!file.type?.startsWith("image/")) return file;
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -51,40 +51,40 @@ const compressImage = async (file: File): Promise<File> => {
 };
 
 export const uploadToCloudinary = async (file: File, folder: string) => {
-  console.log(`[Cloudinary Diagnostics] === INICIO DE UPLOAD ===`);
-  console.log(`[Cloudinary Diagnostics] Archivo: ${file.name}, Tamaño: ${file.size} bytes, Tipo: ${file.type}`);
+;
+;
 
   const isImage =
-    file.type.startsWith("image/") &&
+    file.type?.startsWith("image/") &&
     !file.name.match(/\.(glb|gltf|fbx|obj)$/i);
     
-  console.log(`[Cloudinary Diagnostics] isImage detectado: ${isImage}`);
+;
   
   const processedFile = isImage ? await compressImage(file) : file;
-  console.log(`[Cloudinary Diagnostics] Procesamiento inicial completado. Tamaño resultante: ${processedFile.size} bytes`);
+;
 
   // Decide resource_type
   let resourceType = "auto"; // Cloudinary can auto-detect mostly, but for 3D models 'raw' or 'auto' works. Let's use 'auto' or 'image' for images.
   if (!isImage) {
     if (file.name.match(/\.(glb|gltf|fbx|obj|zip)$/i)) resourceType = "raw";
-    else if (file.type.startsWith("video/")) resourceType = "video";
+    else if (file.type?.startsWith("video/")) resourceType = "video";
   } else {
     resourceType = "image";
   }
   
-  console.log(`[Cloudinary Diagnostics] resourceType final: ${resourceType}`);
+;
 
   // Try signed upload first
   try {
     const sigURL = `/api/cloudinary-signature?folder=${encodeURIComponent(folder || "avatars")}`;
-    console.log(`[Cloudinary Diagnostics] Fetching signature from: ${sigURL}`);
+;
     const sigResponse = await fetch(sigURL);
     
-    console.log(`[Cloudinary Diagnostics] Signature fetch response status: ${sigResponse.status}`);
+;
     
     if (sigResponse.ok) {
       const sigData = await sigResponse.json();
-      console.log(`[Cloudinary Diagnostics] Signature data received:`, sigData);
+;
       
       if (sigData && sigData.signature) {
         console.log(
@@ -98,12 +98,12 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
         formData.append("folder", sigData.folder);
 
         const signedUploadURL = `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/${resourceType}/upload`;
-        console.log(`[Cloudinary Diagnostics] Endpoint final Cloudinary: ${signedUploadURL}`);
+;
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
         
-        console.log(`[Cloudinary Diagnostics] Iniciando fetch() a Cloudinary (timeout de 30s)...`);
+;
         const startTime = Date.now();
         
         try {
@@ -113,8 +113,8 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
             signal: controller.signal
           });
           clearTimeout(timeoutId);
-          console.log(`[Cloudinary Diagnostics] Fin de fetch(). Tiempo transcurrido: ${Date.now() - startTime}ms`);
-          console.log(`[Cloudinary Diagnostics] response.status: ${uploadResponse.status} ${uploadResponse.statusText}, ok: ${uploadResponse.ok}`);
+;
+;
 
           if (uploadResponse.ok) {
             const resJson = await uploadResponse.json();
@@ -171,7 +171,7 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   
-  console.log(`[Cloudinary Diagnostics] Iniciando fetch() a Cloudinary (timeout de 30s)...`);
+;
   const startTime = Date.now();
 
   try {
@@ -182,8 +182,8 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
     });
     
     clearTimeout(timeoutId);
-    console.log(`[Cloudinary Diagnostics] Fin de fetch(). Tiempo transcurrido: ${Date.now() - startTime}ms`);
-    console.log(`[Cloudinary Diagnostics] response.status: ${uploadResponse.status} ${uploadResponse.statusText}, ok: ${uploadResponse.ok}`);
+;
+;
 
     if (!uploadResponse.ok) {
       let errData: any;
@@ -200,7 +200,7 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
     }
 
     const json = await uploadResponse.json();
-    console.log(`[Cloudinary Diagnostics] Subida no firmada exitosa, JSON de respuesta completo:`, json);
+;
     return json;
   } catch (err: any) {
     clearTimeout(timeoutId);

@@ -19,8 +19,8 @@ const applyTheme = (t: string) => {
   
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', activeTheme);
-    console.log("[Theme] Current theme:", activeTheme);
-    console.log("[Theme] Applied to document");
+;
+;
   }
 };
 

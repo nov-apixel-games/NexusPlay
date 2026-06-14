@@ -1,5 +1,5 @@
 import DeveloperConsole from './DeveloperConsole';
-import { AppItem, DevRequest } from '../types';
+import { AppItem } from '../types';
 
 interface DeveloperPanelProps {
   userId: string;

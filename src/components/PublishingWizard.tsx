@@ -1,9 +1,9 @@
 import { useAppStore } from '../store/useAppStore';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { 
-  Upload, X, Check, Loader2, Package, Image as ImageIcon, Smartphone, 
+  Upload, X, Check, Loader2, Package, Image as ImageIcon, 
   Info, ArrowRight, ArrowLeft, Trash2, Layout, Eye, ShieldCheck, 
-  AlertCircle, ChevronRight, Share2, Globe, Sparkles, Plus
+  AlertCircle, Share2, Globe, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToCloudinary } from '../lib/cloudinary';

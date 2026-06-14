@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useStudioStore, Entity, Entity3D, Entity2D } from '../store/useStudioStore';
+import { useStudioStore, Entity3D, Entity2D } from '../store/useStudioStore';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sky, Grid, TransformControls, useGLTF, Html } from '@react-three/drei';
 import { Physics, RigidBody } from '@react-three/rapier';
@@ -30,8 +30,8 @@ class ModelErrorBoundary extends React.Component<{ url: string, entityName: stri
     
     // Attempting a quick fetch to check if the file is reachable and check its headers
     fetch(this.props.url, { method: "HEAD" }).then(res => {
-      console.log(`[Nexus Studio Diagnostics] HEAD request to URL status: ${res.status}`);
-      console.log(`[Nexus Studio Diagnostics] Content-Type: ${res.headers.get("Content-Type")}`);
+;
+;
     }).catch(e => {
       console.error(`[Nexus Studio Diagnostics] Validation HEAD fetch failed:`, e);
     });

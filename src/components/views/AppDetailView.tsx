@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Download, ShieldCheck, Share2, Info, CheckCircle2, AlertTriangle, MonitorPlay, Heart, History, User, Send, ThumbsUp, X, Trash2, CloudOff, CloudDownload, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, Download, ShieldCheck, Share2, Info, CheckCircle2, MonitorPlay, Heart, History, Send, X, Trash2, CloudDownload, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppItem } from '../../types';
 import AppGrid from '../AppGrid';
@@ -70,7 +70,7 @@ export function AppDetailView({
       if (!error && data) {
         // En-memory join with public profiles to fetch real and updated user profile photos
         const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
-        let profilesMap: Record<string, { username: string; avatar_url: string; real_name?: string }> = {};
+        const profilesMap: Record<string, { username: string; avatar_url: string; real_name?: string }> = {};
 
         if (userIds.length > 0) {
           const { data: pData } = await supabase
@@ -97,7 +97,7 @@ export function AppDetailView({
         setReviews(reviewsWithProfiles);
         
         let sum = 0;
-        let dist: any = {1:0, 2:0, 3:0, 4:0, 5:0};
+        const dist: any = {1:0, 2:0, 3:0, 4:0, 5:0};
         
         data.forEach(r => {
            sum += r.rating;

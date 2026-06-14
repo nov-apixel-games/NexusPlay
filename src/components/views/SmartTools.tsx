@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Copy, Plus, Trash2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { X, Plus, Trash2 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 // Bloc de notas
 export function NotesApp({ onClose }: { onClose: () => void }) {

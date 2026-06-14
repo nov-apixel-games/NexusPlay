@@ -11,7 +11,8 @@ export const uploadToSupabaseWithProgress = async (
   folder: string,
   onProgress: (event: UploadProgressEvent) => void
 ): Promise<{ path: string; url: string }> => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
+(async () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session?.user) {
@@ -34,8 +35,8 @@ export const uploadToSupabaseWithProgress = async (
       const uploadUrl = `${envUrl}/storage/v1/object/studio-assets/${filePath}`;
 
       const xhr = new XMLHttpRequest();
-      let startTime = Date.now();
-      let lastLoaded = 0;
+      const startTime = Date.now();
+      const lastLoaded = 0;
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
@@ -92,6 +93,7 @@ export const uploadToSupabaseWithProgress = async (
     } catch (e) {
       reject(e);
     }
+  })().catch(reject);
   });
 };
 

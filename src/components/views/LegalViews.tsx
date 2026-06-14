@@ -8,7 +8,7 @@ import { useAppStore } from '../../store/useAppStore';
 export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   const { t } = useAppStore();
   return (
-    <LegalPage title={t("footer.privacy") || "Política de Privacidad"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
+    <LegalPage title={t("footer.privacy")} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-nexus-text mb-4">1. Introducción</h2>
         <p>En {storeName}, la privacidad de nuestros usuarios y desarrolladores es nuestra prioridad. Esta Política de Privacidad explica cómo recopilamos, utilizamos, almacenamos y protegemos la información personal cuando utilizas nuestra plataforma digital.</p>
@@ -86,7 +86,7 @@ export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; on
 export function TermsAndConditionsView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   const { t } = useAppStore();
   return (
-    <LegalPage title={t("footer.terms") || "Términos y Condiciones"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
+    <LegalPage title={t("footer.terms")} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-nexus-text mb-4">1. Aceptación de los Términos</h2>
         <p>Al crear una cuenta en {storeName} o acceder a nuestra plataforma, aceptas de manera expresa y vinculante estos Términos y Condiciones. Si no estás de acuerdo con ellos, no utilices nuestros servicios.</p>
@@ -154,7 +154,7 @@ export function TermsAndConditionsView({ storeName, onBack }: { storeName: strin
 export function CookiePolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   const { t } = useAppStore();
   return (
-    <LegalPage title={t("footer.cookies") || "Política de Cookies"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
+    <LegalPage title={t("footer.cookies")} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-nexus-text mb-4">1. Introducción</h2>
         <p>En {storeName}, utilizamos cookies y tecnologías similares para mejorar tu experiencia, garantizar la seguridad y asegurar el correcto funcionamiento de nuestra plataforma. Esta política explica qué son, cómo las usamos y qué control tienes sobre ellas.</p>
@@ -218,6 +218,7 @@ export function CookiePolicyView({ storeName, onBack }: { storeName: string; onB
 }
 
 export function AboutView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
+  const { t } = useAppStore();
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -230,7 +231,7 @@ export function AboutView({ storeName, onBack }: { storeName: string; onBack: ()
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Volver
+        {t('contact.back')}
       </button>
       <div className="text-center mb-20">
         <h1 className="text-5xl md:text-6xl font-black text-nexus-text mb-6 tracking-tighter">Sobre {storeName}</h1>
@@ -302,6 +303,7 @@ export function AboutView({ storeName, onBack }: { storeName: string; onBack: ()
 }
 
 export function ContactView({ onBack }: { onBack: () => void }) {
+  const { t } = useAppStore();
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', category: 'Soporte Técnico', message: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
 
@@ -317,7 +319,7 @@ export function ContactView({ onBack }: { onBack: () => void }) {
       setFormData({ name: '', email: '', subject: '', category: 'Soporte Técnico', message: '' });
       setTimeout(() => setStatus('idle'), 4000);
     } catch (err) {
-      alert('Error enviando mensaje: ' + (err as Error).message);
+      alert(t('contact.form.error') + (err as Error).message);
       setStatus('idle');
     }
   };
@@ -334,11 +336,11 @@ export function ContactView({ onBack }: { onBack: () => void }) {
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Volver
+        {t('contact.back')}
       </button>
       <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-black text-nexus-text mb-4 tracking-tight">Contacto NexusPlay</h1>
-        <p className="text-lg text-nexus-text-sec max-w-lg mx-auto font-light">Estamos aquí para ayudarte. Completa el formulario y te responderemos lo antes posible.</p>
+        <h1 className="text-4xl md:text-5xl font-black text-nexus-text mb-4 tracking-tight">{t('contact.title')}</h1>
+        <p className="text-lg text-nexus-text-sec max-w-lg mx-auto font-light">{t('contact.subtitle')}</p>
       </div>
 
       <div className="bg-nexus-card p-8 md:p-12 rounded-3xl border border-nexus-border shadow-2xl">
@@ -347,50 +349,50 @@ export function ContactView({ onBack }: { onBack: () => void }) {
             <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
               <CheckCircle className="w-12 h-12 text-green-400" />
             </div>
-            <h2 className="text-3xl font-black text-nexus-text mb-2">Mensaje enviado</h2>
-            <p className="text-nexus-text-sec text-lg">Nos pondremos en contacto contigo pronto.</p>
+            <h2 className="text-3xl font-black text-nexus-text mb-2">{t('contact.success.title')}</h2>
+            <p className="text-nexus-text-sec text-lg">{t('contact.success.desc')}</p>
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><User className="w-4 h-4 text-cyan-500"/> Nombre</label>
-                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all font-medium" placeholder="Tu nombre" />
+                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><User className="w-4 h-4 text-cyan-500"/> {t('contact.form.name')}</label>
+                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all font-medium" placeholder={t('contact.form.namePlaceholder')} />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><Mail className="w-4 h-4 text-cyan-500"/> Correo Electrónico</label>
-                <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all font-medium" placeholder="tu@correo.com" />
+                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><Mail className="w-4 h-4 text-cyan-500"/> {t('contact.form.email')}</label>
+                <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all font-medium" placeholder={t('contact.form.emailPlaceholder')} />
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><Tag className="w-4 h-4 text-cyan-500"/> Asunto</label>
-                <input required type="text" value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all font-medium" placeholder="Asunto del mensaje" />
+                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><Tag className="w-4 h-4 text-cyan-500"/> {t('contact.form.subject')}</label>
+                <input required type="text" value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all font-medium" placeholder={t('contact.form.subjectPlaceholder')} />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><Tag className="w-4 h-4 text-cyan-500"/> Categoría</label>
+                <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><Tag className="w-4 h-4 text-cyan-500"/> {t('contact.form.category')}</label>
                 <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="h-14 bg-nexus-surface border border-nexus-border rounded-xl px-4 text-nexus-text focus:outline-none focus:border-cyan-400 transition-all appearance-none cursor-pointer font-medium">
-                  <option value="Soporte Técnico" className="bg-black">Soporte Técnico</option>
-                  <option value="Problemas de cuenta" className="bg-black">Problemas de cuenta</option>
-                  <option value="Desarrolladores" className="bg-black">Desarrolladores</option>
-                  <option value="Reportar aplicación" className="bg-black">Reportar aplicación</option>
-                  <option value="Sugerencias" className="bg-black">Sugerencias</option>
-                  <option value="Otro" className="bg-black">Otro</option>
+                  <option value="Soporte Técnico" className="bg-black">{t('contact.cat.support')}</option>
+                  <option value="Problemas de cuenta" className="bg-black">{t('contact.cat.account')}</option>
+                  <option value="Desarrolladores" className="bg-black">{t('contact.cat.devs')}</option>
+                  <option value="Reportar aplicación" className="bg-black">{t('contact.cat.report')}</option>
+                  <option value="Sugerencias" className="bg-black">{t('contact.cat.ideas')}</option>
+                  <option value="Otro" className="bg-black">{t('contact.cat.other')}</option>
                 </select>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><MessageSquare className="w-4 h-4 text-cyan-500"/> Mensaje</label>
-              <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} className="min-h-[160px] bg-nexus-surface border border-nexus-border rounded-xl p-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all resize-none font-medium" placeholder="Describe tu consulta detalladamente..."></textarea>
+              <label className="text-sm font-bold text-nexus-text-sec flex items-center gap-2"><MessageSquare className="w-4 h-4 text-cyan-500"/> {t('contact.form.message')}</label>
+              <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} className="min-h-[160px] bg-nexus-surface border border-nexus-border rounded-xl p-4 text-nexus-text focus:outline-none focus:border-cyan-400 focus:bg-nexus-surface-hover transition-all resize-none font-medium" placeholder={t('contact.form.messagePlaceholder')}></textarea>
             </div>
 
             <button disabled={status === 'sending'} type="submit" className="w-full h-14 mt-4 bg-cyan-600 text-nexus-text font-black uppercase tracking-wider rounded-xl hover:bg-cyan-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50">
               {status === 'sending' ? (
-                <>Enviando... <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /></>
+                <>{t('contact.form.sending')} <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /></>
               ) : (
-                <>Enviar Mensaje <Send className="w-5 h-5" /></>
+                <>{t('contact.form.send')} <Send className="w-5 h-5" /></>
               )}
             </button>
           </form>
@@ -399,17 +401,18 @@ export function ContactView({ onBack }: { onBack: () => void }) {
 
       <div className="mt-12">
         <div className="text-center mb-6">
-           <h3 className="font-bold text-nexus-text mb-2 text-xl">¿Prefieres escribirnos directamente?</h3>
-           <p className="text-sm text-nexus-text-sec font-medium">Usa nuestro correo oficial y obtén ayuda personalizada.</p>
+           <h3 className="font-bold text-nexus-text mb-2 text-xl">{t('contact.preferDirect')}</h3>
+           <p className="text-sm text-nexus-text-sec font-medium">{t('contact.emailHelp')}</p>
         </div>
         <SupportEmailBox category="Soporte Técnico Formulario" />
       </div>
-      <p className="text-center text-nexus-text-sec mt-8 text-sm font-medium tracking-wide uppercase">Tiempo estimado de respuesta: 24 a 72 horas</p>
+      <p className="text-center text-nexus-text-sec mt-8 text-sm font-medium tracking-wide uppercase">{t('contact.responseTime')}</p>
     </motion.div>
   );
 }
 
 export function LegalPage({ title, lastUpdated, children, onBack }: any) {
+  const { t } = useAppStore();
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -422,11 +425,11 @@ export function LegalPage({ title, lastUpdated, children, onBack }: any) {
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Volver
+        {t('contact.back')}
       </button>
       <div className="border-b border-nexus-border pb-8 mb-10">
         <h1 className="text-4xl md:text-5xl font-black text-nexus-text tracking-tight mb-4">{title}</h1>
-        <p className="text-sm font-medium text-cyan-400/80 uppercase tracking-widest">Última actualización: {lastUpdated}</p>
+        <p className="text-sm font-medium text-cyan-400/80 uppercase tracking-widest">{t('legal.lastUpdate')} {lastUpdated}</p>
       </div>
       <div className="prose prose-invert prose-p:text-nexus-text prose-headings:text-nexus-text prose-a:text-cyan-400 prose-li:text-nexus-text prose-strong:text-nexus-text max-w-none text-base md:text-lg">
         {children}
@@ -436,6 +439,7 @@ export function LegalPage({ title, lastUpdated, children, onBack }: any) {
 }
 
 export function HelpView({ onBack }: { onBack: () => void }) {
+  const { t } = useAppStore();
   const faqs = [
     { q: '¿Cómo descargo una aplicación?', a: 'Busca la aplicación que deseas, entra a su página de detalles y presiona el botón "Obtener" o "Instalar".' },
     { q: '¿Es seguro usar NexusPlay?', a: 'Absolutamente. Todas las aplicaciones pasan por un estricto proceso de revisión antes de ser publicadas en nuestra tienda.' },
@@ -455,7 +459,7 @@ export function HelpView({ onBack }: { onBack: () => void }) {
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Volver
+        {t('contact.back')}
       </button>
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-black text-nexus-text mb-4 tracking-tight">Centro de Ayuda</h1>

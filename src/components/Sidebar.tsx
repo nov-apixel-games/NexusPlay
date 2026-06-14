@@ -1,7 +1,7 @@
 import { 
   Home, Compass, Trophy, Gamepad2, 
   User, Users, Download, Heart, Shield, LogOut, X, BrainCircuit, Settings,
-  Sparkles, Layers, Box, Cpu, Zap
+  Sparkles, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '../store/useAppStore';

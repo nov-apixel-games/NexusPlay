@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { 
-  Bot, TrendingUp, Sparkles, Wand2, ArrowRight, Zap, Target,
-  Calculator, Lock, QrCode, Clipboard, Compass, Trophy, Star,
-  Activity, Clock, Compass as ExploreIcon, MessageSquare, Heart, Coins
+  Bot, TrendingUp, Sparkles, Wand2, Zap,
+  Calculator, QrCode, Clipboard, Trophy, Star, Coins
 } from 'lucide-react';
 import { AppItem } from '../../types';
-import { AppCard } from '../AppGrid';
 import { useAppStore } from '../../store/useAppStore';
 import { NotesApp, CalculatorApp, QrApp, CurrencyApp } from './SmartTools';
 

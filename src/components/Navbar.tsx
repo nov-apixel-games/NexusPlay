@@ -1,4 +1,4 @@
-import { Search, Bell, LogIn, LogOut, User as UserIcon, Sparkles, X, Edit2, User, Mail, Camera, Check, Loader2, Trophy, Upload, Shuffle } from 'lucide-react';
+import { Search, Bell, LogIn, User as UserIcon, Sparkles, Camera, Check, Loader2, Upload, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
@@ -501,7 +501,7 @@ export default function Navbar({
                       e.preventDefault();
                       setIsDragActive(false);
                       const file = e.dataTransfer.files?.[0];
-                      if (file && file.type.startsWith('image/')) {
+                      if (file && file.type?.startsWith('image/')) {
                         try {
                           setUploadingImage(true);
                           setEditError(null);

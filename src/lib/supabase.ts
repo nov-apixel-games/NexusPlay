@@ -7,8 +7,8 @@ const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const dummyUrl = 'https://unconfigured-placeholder.supabase.co';
 const dummyKey = 'unconfigured-placeholder-anon-key';
 
-let supabaseUrl = envUrl || dummyUrl;
-let supabaseAnonKey = envKey || dummyKey;
+const supabaseUrl = envUrl || dummyUrl;
+const supabaseAnonKey = envKey || dummyKey;
 
 // Check if valid URL (no fallbacks or placeholders)
 export const isSupabaseConfigured = Boolean(
@@ -23,11 +23,11 @@ export const isSupabaseConfigured = Boolean(
   !envKey.includes('your_')
 );
 
-console.log("=== SUPABASE INIT AUDIT ===");
-console.log("VITE_SUPABASE_URL present:", Boolean(envUrl && envUrl.trim() !== ''));
-console.log("URL:", isSupabaseConfigured ? supabaseUrl : 'INVALID/MISSING');
-console.log("Is Configured:", isSupabaseConfigured);
-console.log("===========================");
+;
+;
+;
+;
+;
 
 export const supabase = createClient(
   supabaseUrl,

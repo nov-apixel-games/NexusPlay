@@ -1,0 +1,159 @@
+src/components/views/GameStudioEditor.tsx:1045:    setObjects(prev => prev.map(obj => {
+src/components/views/GameStudioEditor.tsx:1304:             {objects.filter(o => o.id === selectedObjectId).map(obj => (
+src/components/views/GameStudioEditor.tsx:1317:                       onChange={(e) => setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, x: Number(e.target.value) } : o))}
+src/components/views/GameStudioEditor.tsx:1326:                       onChange={(e) => setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, y: Number(e.target.value) } : o))}
+src/components/views/GameStudioEditor.tsx:1338:                       onChange={e => setObjects(prev => prev.map(o => o.id === obj.id ? {...o, width: Number(e.target.value)} : o))} 
+src/components/views/GameStudioEditor.tsx:1347:                       onChange={e => setObjects(prev => prev.map(o => o.id === obj.id ? {...o, height: Number(e.target.value)} : o))} 
+src/components/views/GameStudioEditor.tsx:1356:                      {['#22d3ee', '#fbbf24', '#f43f5e', '#38bdf8', '#0284c7', '#db2777'].map(col => (
+src/components/views/GameStudioEditor.tsx:1359:                          onClick={() => setObjects(prev => prev.map(o => o.id === obj.id ? { ...o, color: col } : o))}
+src/components/views/SmartHubView.tsx:81:             {apps.length > 0 ? apps.slice(0, 3).map(app => (
+src/components/views/SmartHubView.tsx:108:               {tools.map(tool => (
+src/components/views/SmartHubView.tsx:124:                {trendingApps.slice(0, 4).map((app, i) => (
+src/components/views/SettingsView.tsx:229:                     {['es', 'en', 'pt'].map((langKey) => (
+src/components/views/NexusStudio/components/BottomPanel.tsx:524:              {BUILT_IN_CATEGORIES.map((cat) => (
+src/components/views/NexusStudio/components/BottomPanel.tsx:541:              {["Modelos 3D", "Texturas", "Audio", "Scripts", "Prefabs"].map(
+src/components/views/NexusStudio/components/BottomPanel.tsx:662:                {filteredAssets.map((asset) => (
+src/components/views/NexusStudio/components/BottomPanel.tsx:917:              {messages.map((msg, i) => (
+src/components/views/NexusStudio/components/Viewport.tsx:280:          {entities3D.map(e => (
+src/components/views/NexusStudio/components/Viewport.tsx:292:        entities3D.map(e => (
+src/components/views/NexusStudio/components/ExplorerPanel.tsx:68:          {scenes.map(s => (
+src/components/views/NexusStudio/components/ExplorerPanel.tsx:142:        {currentEntities.map(entity => (
+src/components/views/NexusStudio/store/useStudioStore.ts:187:        .map((e) => ({ ...e, id: uuidv4(), sceneId: newSceneId }));
+src/components/views/NexusStudio/store/useStudioStore.ts:195:      scenes: state.scenes.map((s) =>
+src/components/views/NexusStudio/store/useStudioStore.ts:223:      entities: state.entities.map((e) =>
+src/components/views/NexusStudio/store/useStudioStore.ts:369:          const mapped = data.map((d) => ({
+src/components/views/NexusStudio/store/useStudioStore.ts:384:        const restoredAssets = savedAssets.map((asset) => {
+src/components/views/MainViews.tsx:44:        {['Todos', 'Acción', 'Aventura', 'Estrategia', 'RPG', 'Deportes'].map(cat => (
+src/components/views/MainViews.tsx:52:        {filtered.map(app => (
+src/components/views/MainViews.tsx:79:         items = reviews.map(r => {
+src/components/views/MainViews.tsx:95:      const appItems = recentApps.map(a => ({
+src/components/views/MainViews.tsx:129:            {feedItems.length > 0 ? feedItems.map(item => (
+src/components/views/MainViews.tsx:177:                {trends.map((app, idx) => (
+src/components/views/MainViews.tsx:199:          {packs.length > 0 ? packs.map(pack => (
+src/components/views/MainViews.tsx:214:                     {pack.apps.map(app => (
+src/components/views/MainViews.tsx:265:        {sortedByDownloads.map((app, idx) => (
+src/components/views/MainViews.tsx:688:                         ].map((style) => (
+src/components/views/MainViews.tsx:742:                         {PROFILE_AVATAR_PRESETS.map((preset, index) => {
+src/components/views/MainViews.tsx:929:        {downloadedApps.map(app => {
+src/components/views/MainViews.tsx:1003:        {cols.map((c, i) => {
+src/components/views/MainViews.tsx:1013:                   {filteredApps.map(app => (
+src/components/views/MainViews.tsx:1047:               {newlyUpdated.map(app => (
+src/components/views/MainViews.tsx:1111:             {missions.map(mission => (
+src/components/views/MainViews.tsx:1151:             {[1,2,3,4].map(idx => (
+src/components/views/MainViews.tsx:1214:         const mapped = data.map(d => ({
+src/components/views/MainViews.tsx:1292:                 {['Juegos de acción', 'Minecraft', 'Herramientas', 'Estilo de vida', 'Aventura'].map(tag => (
+src/components/views/MainViews.tsx:1311:              {results.map(app => (
+src/components/views/AppDetailView.tsx:72:        const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+src/components/views/AppDetailView.tsx:92:        const reviewsWithProfiles = data.map(r => ({
+src/components/views/AppDetailView.tsx:337:                  {app.screenshots.map((img, idx) => (
+src/components/views/AppDetailView.tsx:406:                  {app.tags.map((tag: string) => (
+src/components/views/AppDetailView.tsx:446:                  {[5,4,3,2,1].map(star => {
+src/components/views/AppDetailView.tsx:475:                      {[1,2,3,4,5].map(s => (
+src/components/views/AppDetailView.tsx:507:                   reviews.map(rev => (
+src/components/views/AppDetailView.tsx:522:                          {[1,2,3,4,5].map(s => (
+src/components/views/LegalViews.tsx:279:            ].map((item, idx) => (
+src/components/views/LegalViews.tsx:470:        {faqs.map((faq, idx) => (
+src/components/views/SmartTools.tsx:31:    setNotes(notes.map(n => n.id === activeNote ? { ...n, [field]: value } : n));
+src/components/views/SmartTools.tsx:47:            {notes.map(n => (
+src/components/views/SmartTools.tsx:108:          {btns.map(b => (
+src/components/views/ProfileView.tsx:73:         const commIds = data.map(d => d.community_id);
+src/components/views/ProfileView.tsx:386:             {offlineAppsList.map(app => (
+src/components/views/ProfileView.tsx:440:             {followedCommunities.map(comm => (
+src/components/views/GamesHubView.tsx:227:            ].map(tab => (
+src/components/views/GamesHubView.tsx:294:                    {apps.map((game) => {
+src/components/views/GamesHubView.tsx:353:                    {recentGames.map((game) => (
+src/components/views/GamesHubView.tsx:395:                  {[(t('gameshub.all')||'Todos'), (t('gameshub.models3d')||'Modelos 3D'), (t('gameshub.textures')||'Texturas'), (t('gameshub.logicScripts')||'Scripts Lógicos'), (t('gameshub.terrains')||'Terrenos'), (t('gameshub.sounds')||'Sonidos')].map((cat, i) => (
+src/components/views/GamesHubView.tsx:406:                   ].map((asset, i) => (
+src/components/views/GamesHubView.tsx:433:                     ].map((feed, i) => (
+src/components/views/GamesHubView.tsx:448:                       {["ZeroDev", "NexusTeam", "Artisan3D"].map((n, i) => (
+src/components/views/GamesHubView.tsx:474:                    {localDrafts.map((draft) => (
+src/components/views/GamesHubView.tsx:549:               ].map((t, i) => (
+src/components/Navbar.tsx:122:    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+src/components/Navbar.tsx:318:                           notifications.map(notif => (
+src/components/Navbar.tsx:585:                      ].map((style) => (
+src/components/Navbar.tsx:639:                      {AVATAR_PRESETS.map((preset, index) => {
+src/components/DeveloperAnalytics.tsx:133:               {apps.length > 0 ? apps.map(app => (
+src/components/DeveloperConsole.tsx:65:        const ratings = data.filter(app => app.rating).map(app => parseFloat(app.rating));
+src/components/DeveloperConsole.tsx:137:          {menuItems.map(item => {
+src/components/DeveloperConsole.tsx:238:                          ].map((stat, idx) => (
+src/components/DeveloperConsole.tsx:262:                                {apps.slice(0, 3).map((app) => (
+src/components/DeveloperConsole.tsx:368:                            {apps.map(app => (
+src/components/admin/AdminAppsView.tsx:20:    setApps(apps.map(a => a.id === id ? { ...a, featured: !a.featured } : a));
+src/components/admin/AdminAppsView.tsx:103:    setApps(apps.map(a => a.id === id ? { ...a, status } : a));
+src/components/admin/AdminAppsView.tsx:126:              {apps.map(app => (
+src/components/admin/AdminViews2.tsx:14:    setReports(reports.map((r: any) => r.id === id ? { ...r, status: 'resolved' } : r));
+src/components/admin/AdminViews2.tsx:36:            {activeReports.map((report: any) => (
+src/components/admin/AdminViews2.tsx:296:        setApps && setApps(apps.map((a: any) => a.id === targetId ? { ...a, featured: extraArg } : a));
+src/components/admin/AdminViews2.tsx:303:          setApps && setApps(apps.map((a: any) => a.id === targetId ? { ...a, status: extraArg } : a));
+src/components/admin/AdminViews2.tsx:308:        setUsers && setUsers(users.map((u: any) => u.id === targetId ? { ...u, role: newRole } : u));
+src/components/admin/AdminViews2.tsx:383:Apps Pendientes (Nombres): ${pendingApps.map((a:any) => a.name).join(', ')}
+src/components/admin/AdminViews2.tsx:425:          ...messages.filter(m => !m.isSystem && !m.commandObj).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+src/components/admin/AdminViews2.tsx:492:                  {quickActions.map((qa, idx) => (
+src/components/admin/AdminViews2.tsx:506:                {messages.map((m, i) => {
+src/components/admin/AdminViews2.tsx:595:                {quickActions.map((qa, idx) => (
+src/components/admin/AdminViews2.tsx:729:      const notifications = usersToNotify.map((u: any) => ({
+src/components/admin/AdminViews2.tsx:763:              {users.map((u: any) => (
+src/components/admin/AdminContactView.tsx:40:      setMessages(prev => prev.map(m => m.id === id ? {...m, read: true} : m));
+src/components/admin/AdminContactView.tsx:68:        {messages.map((msg) => (
+src/components/admin/AdminViews1.tsx:89:    setUsers(users.map(u => u.id === id ? { ...u, status: newStatus as any } : u));
+src/components/admin/AdminViews1.tsx:99:    setUsers(users.map(u => u.id === id ? { ...u, role: role as 'user' | 'developer' | 'admin' } : u));
+src/components/admin/AdminViews1.tsx:141:              {users.map(user => {
+src/components/AdminPanel.tsx:274:      setApps((prev: AppItem[]) => prev.map(a => a.id === id ? { ...a, status } : a));
+src/components/AdminPanel.tsx:291:       setApps((prev: AppItem[]) => prev.map(a => a.id === app.id ? { ...a, featured: newFeatured } : a));
+src/components/AdminPanel.tsx:353:       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role } : u));
+src/components/AdminPanel.tsx:395:          setUsers(prev => prev.map(u => u.id === req.userId ? { ...u, role: 'developer' } : u));
+src/components/AdminPanel.tsx:401:    setDevRequests(devRequests.map(r => r.id === req.id ? { ...r, status } : r));
+src/components/AdminPanel.tsx:435:  const last7Days = Array.from({length: 7}).map((_, i) => {
+src/components/AdminPanel.tsx:524:           {menu.map(m => (
+src/components/AdminPanel.tsx:546:        {toasts.map(t => (
+src/components/AdminPanel.tsx:587:                  {apps.filter(x => x.name.toLowerCase().includes(searchQuery.toLowerCase())).map(app => (
+src/components/AdminPanel.tsx:706:                  {allReviews.map(rev => {
+src/components/AdminPanel.tsx:784:                     {apps.filter(a => a.status === 'published' && parseInt(String(a.downloads || 0)) > 0).sort((a,b) => parseInt(String(b.downloads || 0)) - parseInt(String(a.downloads || 0))).slice(0, 3).map((app, i) => (
+src/components/AdminPanel.tsx:977:                  {devRequests.filter(r => r.status === 'pending').map(req => (
+src/components/AdminPanel.tsx:1012:                  {messages.map(msg => (
+src/components/AdminPanel.tsx:1056:                          {logs.map(log => (
+src/components/Toast.tsx:21:        {toasts.map(t => (
+src/components/CategorySection.tsx:42:          {displayCategories.map((cat, i) => {
+src/components/AppGrid.tsx:151:          {apps.map((app) => (
+src/components/PublishingWizard.tsx:121:        screenshots: prev.screenshots.map(s => s.id === tempId ? { ...s, url: res.secure_url, publicId: res.public_id } : s)
+src/components/PublishingWizard.tsx:191:          screenshots: files.screenshots.map(s => s.url),
+src/components/PublishingWizard.tsx:192:          screenshots_public_ids: files.screenshots.map(s => s.publicId),
+src/components/PublishingWizard.tsx:250:          {steps.map((step, idx) => {
+src/components/PublishingWizard.tsx:429:                        {files.screenshots.map((ss) => (
+src/components/PublishingWizard.tsx:541:                              ].map(perm => (
+src/components/PublishingWizard.tsx:642:                             {files.screenshots.length > 0 ? files.screenshots.map((ss, idx) => (
+src/components/NexusAIChat.tsx:120:      const catalogue = apps.map(a => ({
+src/components/NexusAIChat.tsx:128:      const historyLog = messages.slice(-10).map(m => ({ role: m.role, text: m.text }));
+src/components/NexusAIChat.tsx:307:             .map(conv => (
+src/components/NexusAIChat.tsx:414:                    {quickButtons.map((btn, i) => (
+src/components/NexusAIChat.tsx:428:                {messages.map((msg) => (
+src/components/NexusAIChat.tsx:502:                           {msg.recommendedApps.map(app => (
+src/components/NexusHub.tsx:209:               {recommended.map((c: any) => (
+src/components/NexusHub.tsx:229:                {communities.map((c: any) => (
+src/components/NexusHub.tsx:273:    return parts[1].split(',').map((c: string) => c.trim()).filter(Boolean);
+src/components/NexusHub.tsx:394:    const msgIds = messages.map(m => m.id);
+src/components/NexusHub.tsx:466:          setMessages(prev => prev.map(p => p.id === msg.id ? { ...p, ...msg } : p));
+src/components/NexusHub.tsx:519:           setMessages(prev => prev.map(msg => {
+src/components/NexusHub.tsx:645:        setMessages(prev => prev.map(m => m.id === tempId ? { ...realMsg, profiles: userProfile } : m));
+src/components/NexusHub.tsx:854:             {channels.map(chanName => (
+src/components/NexusHub.tsx:927:             {filteredMessages.map((msg, index) => {
+src/components/NexusHub.tsx:998:                               {msgReactions.map(([emoji, meta]: any) => (
+src/components/NexusHub.tsx:1010:                              {['👍', '🔥', '😆'].map(emoji => (
+src/components/Sidebar.tsx:126:                {MENU_ITEMS.map((section, idx) => (
+src/components/Sidebar.tsx:130:                      {section.items.map((item, i) => (
+src/components/AppUploadForm.tsx:336:              {files.screenshots.map((file, idx) => (
+src/hooks/useConversations.ts:57:          const mapped = data.map(d => ({
+src/hooks/useConversations.ts:136:      setConversations(prev => prev.map(c => {
+src/hooks/useConversations.ts:165:    const updated = conversations.map(c => c.id === id ? { ...c, title: newTitle } : c);
+src/hooks/useConversations.ts:172:    const updated = conversations.map(c => c.id === id ? { ...c, isPinned: !c.isPinned } : c);
+src/store/useFavoritesStore.ts:28:        set({ favoriteIds: new Set(data.map(d => d.app_id)), initialized: true });
+src/store/useOfflineStore.ts:67:          await Promise.all(uniqueUrls.map(async (url) => {
+src/store/useOfflineStore.ts:135:          await Promise.all(urlsToRemove.map(url => cache.delete(url)));
+src/App.tsx:336:          setApps(prev => prev.map(a => a.id === updatedApp.id ? updatedApp : a));
+src/App.tsx:499:        setApps(data.map(mapDbAppToAppItem));
+src/App.tsx:510:          setApps(parsed.map(mapDbAppToAppItem));
+src/App.tsx:549:      const mappedDevReqs = reqs.data.map(d => ({
+src/App.tsx:564:      setUsers(usrs.data.map(u => ({
+src/App.tsx:731:                {publishedApps.length > 0 ? [...publishedApps].sort((a, b) => new Date(b.updated_at || b.date || 0).getTime() - new Date(a.updated_at || a.date || 0).getTime()).slice(0, 8).map(app => {
+src/App.tsx:792:                 {publishedApps.length > 0 ? publishedApps.sort((a,b) => parseInt(String(b.downloads).replace(/\D/g,'')) - parseInt(String(a.downloads).replace(/\D/g,''))).slice(0, 8).map(app => (
+src/App.tsx:835:                 {publishedApps.length > 0 ? publishedApps.slice(-8).reverse().map(app => (

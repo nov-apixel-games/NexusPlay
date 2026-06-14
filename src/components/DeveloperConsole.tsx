@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, Package, Upload, Users, Settings, LogOut, 
-  ChevronRight, ArrowRight, ArrowLeft, Star, Download, Sparkles, ShieldCheck,
-  AlertCircle, MessageSquare, Activity, Plus, Smartphone, Globe,
-  RefreshCw, Trash2, Edit, ExternalLink, Search, Filter, Check, Menu, X as CloseIcon
+  LayoutDashboard, Package, Upload, Settings, LogOut, 
+  ChevronRight, ArrowRight, ArrowLeft, Star, Download, ShieldCheck, MessageSquare, Activity, Plus, Smartphone, Trash2, Edit, ExternalLink, Search, Filter, Check, Menu, X as CloseIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';

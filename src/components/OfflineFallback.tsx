@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { WifiOff, Gamepad2, ArrowLeft, RefreshCw, Layers } from 'lucide-react';
+import { WifiOff, Gamepad2, ArrowLeft, Layers } from 'lucide-react';
 
 interface OfflineFallbackProps {
   onBack: () => void;

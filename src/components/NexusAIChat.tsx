@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BrainCircuit, Send, User, Trash2, ArrowLeft, Star, Download, Cpu, Gamepad2, Battery, BookOpen, MessageSquarePlus, Copy, Share2, RotateCcw, Check, Menu, X, MessageSquare, Pin, Search, Edit2 } from 'lucide-react';
+import { BrainCircuit, Send, Trash2, ArrowLeft, Star, Download, Cpu, Gamepad2, Battery, MessageSquarePlus, Copy, Share2, RotateCcw, Check, Menu, X, MessageSquare, Pin, Search, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { AppItem } from '../types';

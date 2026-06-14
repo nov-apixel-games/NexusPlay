@@ -40,7 +40,7 @@ export function useConversations(userId: string) {
     async function loadFromDB() {
       if (!isSupabaseConfigured || userId === 'anonymous') return;
       try {
-        console.log(`[Diagnostic] Iniciando carga de conversaciones desde Supabase para userId: ${userId}`);
+;
         const { data, error } = await supabase
           .from('ai_conversations')
           .select('*')
@@ -53,7 +53,7 @@ export function useConversations(userId: string) {
         }
 
         if (data && data.length > 0) {
-          console.log(`[Diagnostic] Conversaciones cargadas desde DB: ${data.length}`);
+;
           const mapped = data.map(d => ({
             id: d.id,
             userId: d.user_id,
@@ -89,7 +89,7 @@ export function useConversations(userId: string) {
   const syncToDB = async (conv: Conversation) => {
     if (!isSupabaseConfigured || userId === 'anonymous') return;
     try {
-      console.log(`[Diagnostic] Sincronizando historial a Supabase (conv ID: ${conv.id})`);
+;
       const payload = {
         id: conv.id,
         user_id: conv.userId,
@@ -104,7 +104,7 @@ export function useConversations(userId: string) {
       if (error) {
          console.error(`[Diagnostic] Error syncing to DB (ai_conversations):`, error.message, error.details || '');
       } else {
-         console.log(`[Diagnostic] Historial guardado correctamente en Supabase.`);
+;
       }
     } catch (e) {
       console.error("[Diagnostic] Error crítico en syncToDB:", e);
@@ -148,7 +148,7 @@ export function useConversations(userId: string) {
     
     if (updatedConv) {
        syncToDB(updatedConv);
-       console.log(`[Diagnostic] Mensaje añadido al historial: ${message.role} (${message.id})`);
+;
     }
   };
 

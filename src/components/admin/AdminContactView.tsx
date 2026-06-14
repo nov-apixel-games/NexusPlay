@@ -1,11 +1,13 @@
+import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Check, Trash2, Mail } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
 import { ToastType } from '../Toast';
 
 export function AdminContactView({ addToast }: { addToast: (msg: string, type: ToastType) => void }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useAppStore();
 
   useEffect(() => {
     fetchMessages();
@@ -57,7 +59,7 @@ export function AdminContactView({ addToast }: { addToast: (msg: string, type: T
     }
   };
 
-  if (loading) return <div className="text-nexus-text text-center py-20">Cargando mensajes...</div>;
+  if (loading) return <div className="text-nexus-text text-center py-20">{t('app.loading')}</div>;
 
   return (
     <div className="space-y-6">

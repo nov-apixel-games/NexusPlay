@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Shield, Trash2, CheckCircle, XCircle, ChevronLeft, BarChart, 
   Smartphone, Users, Code, MessageSquare, List, Settings, BrainCircuit,
-  Star, Activity, AlertTriangle, Terminal, Search, Database, Menu, X,
-  DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, Play, UploadCloud,
-  Zap, Server
+  Star, Activity, AlertTriangle, Search, Database, Menu, X,
+  DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, UploadCloud, Server
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteFromCloudinary, deleteFolderFromCloudinary } from '../lib/cloudinary';
-import { AppItem, DevRequest, UserItem } from '../types';
+import { AppItem, DevRequest } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { 
   AdminDashboard, AdminUsers 
 } from './admin/AdminViews1';
-import { 
-  AdminModeration, AdminAds, AdminSettings, AdminAI, AdminNotifications, AdminDatabaseTools
+import { AdminSettings, AdminAI, AdminNotifications, AdminDatabaseTools
 } from './admin/AdminViews2';
 
 import { useAppStore } from '../store/useAppStore';
@@ -266,27 +264,27 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   // Gestión de Apps
   const handleAppStatus = async (id: string, status: 'published' | 'rejected') => {
-    console.log(`[ACCIÓN INICIADA] Cambiar estado de app ${id} a ${status}`);
+;
     const { error } = await supabase.from('apps').update({ status }).eq('id', id);
     if (!error) {
-      console.log(`[RESPUESTA SUPABASE] Éxito. Estado actualizado.`);
+;
       addLog('ESTADO APP', id, `Estado cambiado a ${status}`, 'success');
       setApps((prev: AppItem[]) => prev.map(a => a.id === id ? { ...a, status } : a));
     } else {
-      console.log(`[ERROR EXACTO] Supabase:`, error);
+;
       addLog('ESTADO APP', id, `Error: ${error.message}`, 'error');
     }
   };
 
   const toggleFeatured = async (app: AppItem) => {
     const newFeatured = !app.featured;
-    console.log(`[ACCIÓN INICIADA] Destacar/No Destacar app ${app.name} -> ${newFeatured}`);
+;
     const { error } = await supabase.from('apps').update({ featured: newFeatured }).eq('id', app.id);
     if (error) {
-       console.log(`[ERROR EXACTO] Supabase:`, error);
+;
        addLog('DESTACAR APP', app.name, `Error: ${error.message}`, 'error');
     } else {
-       console.log(`[RESPUESTA SUPABASE] Éxito. featured=${newFeatured}`);
+;
        addLog('DESTACAR APP', app.name, `App marcada como featured=${newFeatured}`, 'success');
        setApps((prev: AppItem[]) => prev.map(a => a.id === app.id ? { ...a, featured: newFeatured } : a));
     }
@@ -297,7 +295,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     
     setIsDeleting(true);
     setDeleteError('');
-    console.log(`[ACCIÓN INICIADA] ELIMINAR APP: ${appToDelete.name}`);
+;
     addLog('ELIMINAR APP', appToDelete.name, `Iniciada secuencia de purga profunda...`, 'info');
 
     try {
@@ -305,19 +303,19 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       let clFolder = true;
       const folderName = appToDelete.name.trim() || appToDelete.developer?.trim() || 'unknown_app';
       clFolder = await deleteFolderFromCloudinary(folderName);
-      console.log(`[RESPUESTA CLOUDINARY] Carpeta borrada: ${clFolder}`);
+;
 
       // Por si acaso, intentamos borrar los IDs individuales también para asegurar que no queden rastros antiguos
       let clIcon = true;
       if (appToDelete.iconPublicId) {
          clIcon = await deleteFromCloudinary(appToDelete.iconPublicId);
-         console.log(`[RESPUESTA CLOUDINARY] Icono borrado (individual): ${clIcon}`);
+;
       }
       let clScreens = true;
       for (const pid of (appToDelete.screenshotsPublicIds || [])) {
          const sr = await deleteFromCloudinary(pid);
          if (!sr) clScreens = false;
-         console.log(`[RESPUESTA CLOUDINARY] Captura (${pid}) borrada (individual): ${sr}`);
+;
       }
 
       const { error } = await supabase.from('apps').delete().eq('id', appToDelete.id);
@@ -326,13 +324,13 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
          throw new Error(`Fallo en BD: ${error.message}`);
       }
 
-      console.log(`[RESPUESTA SUPABASE] Éxito. Entidad Purgada.`);
+;
       addLog('ELIMINAR APP', appToDelete.name, `Purgada. Cloudinary Icon: ${clIcon} Screens: ${clScreens}`, 'success');
 
       setApps((prev: AppItem[]) => prev.filter(a => a.id !== appToDelete.id));
       setAppToDelete(null);
     } catch (e: any) {
-      console.log(`[ERROR EXACTO] Excepción: `, e);
+;
       setDeleteError(e.message);
       addLog('ELIMINAR APP', appToDelete.name, `Crash Crítico: ${e.message}`, 'error');
     } finally {
@@ -342,13 +340,13 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   // Gestión de Usuarios
   const setRole = async (user: any, role: string) => {
-    console.log(`[ACCIÓN INICIADA] Cambiando rol de ${user.email} a ${role}`);
+;
     const { error } = await supabase.from('profiles').update({ role }).eq('id', user.id);
     if (error) {
-       console.log(`[ERROR EXACTO] Supabase: `, error);
+;
        addLog('CAMBIO ROL USUARIO', user.email || user.id, `Error: ${error.message}`, 'error');
     } else {
-       console.log(`[RESPUESTA SUPABASE] Éxito`);
+;
        addLog('CAMBIO ROL USUARIO', user.email || user.id, `Rol cambiado a ${role}`, 'success');
        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role } : u));
     }
@@ -356,16 +354,16 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   const deleteUser = async (user: any) => {
     if (!window.confirm(`¿Eliminar definitivamente al usuario ${user.email}? Esto afectará sus relaciones.`)) return;
-    console.log(`[ACCIÓN INICIADA] ELIMINAR USUARIO: ${user.email}`);
+;
     
     // Solo borramos la entrada de profiles.
     const { error } = await supabase.from('profiles').delete().eq('id', user.id);
     if (error) {
-       console.log(`[ERROR EXACTO] `, error);
+;
        addLog('ELIMINAR USUARIO', user.email || user.id, `Fallo: ${error.message}`, 'error');
        alert("Error eliminando perfil: " + error.message);
     } else {
-       console.log(`[RESPUESTA SUPABASE] Éxito`);
+;
        addLog('ELIMINAR USUARIO', user.email || user.id, `Usuario eliminado`, 'success');
        setUsers(prev => prev.filter(u => u.id !== user.id));
     }
@@ -374,11 +372,11 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
   // Gestión de Desarrolladores
   const handleDevRequest = async (req: DevRequest, approve: boolean) => {
     const status = approve ? 'approved' : 'rejected';
-    console.log(`[ACCIÓN INICIADA] Resolver solicitud Dev de ${req.userId} a ${status}`);
+;
 
     const { error } = await supabase.from('developer_requests').update({ status }).eq('id', req.id);
     if (error) {
-        console.log(`[ERROR EXACTO] `, error);
+;
         addLog('SOLICITUD DEV', req.name, `Error BD: ${error.message}`, 'error');
         return;
     }
@@ -386,10 +384,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     if (approve) {
        const { error: rErr } = await supabase.from('profiles').update({ role: 'developer' }).eq('id', req.userId);
        if (rErr) {
-          console.log(`[ERROR EXACTO] No se pudo cambiar rol:`, rErr);
+;
           addLog('SOLICITUD DEV', req.name, `Solicitud aprobada pero falló cambiar rol: ${rErr.message}`, 'error');
        } else {
-          console.log(`[RESPUESTA SUPABASE] Éxito completo.`);
+;
           addLog('SOLICITUD DEV', req.name, `Aprobada y rol actualizado.`, 'success');
           // Actualizar local
           setUsers(prev => prev.map(u => u.id === req.userId ? { ...u, role: 'developer' } : u));
@@ -1111,7 +1109,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   model: 'gemini-2.5-flash'
                }}
                setConfig={(newConf: any) => {
-                  console.log("Config ignored on frontend");
+;
                }}
                addToast={addToast} 
              />

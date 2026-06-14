@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Download, Sparkles, ChevronRight, Gamepad2, TrendingUp } from 'lucide-react';
+import { Star, Download, Sparkles, TrendingUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { DEMO_APPS } from '../data';
 import { AppItem } from '../types';
@@ -52,7 +52,7 @@ export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: (
           <span className="text-gray-600">•</span>
           <div className="flex items-center gap-0.5 bg-nexus-card px-1.5 py-0.5 rounded-md">
              <Download className="w-3 h-3" />
-             <span>{app.download_count?.toString() || app.downloads || '0'}</span>
+             <span>{app.download_count?.toString() || app.downloads}</span>
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
          
          <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1.5 shadow-lg">
            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
-           <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">{t("app.popular") || "Popular"}</span>
+           <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">{t("app.popular")}</span>
          </div>
          <div className="absolute top-3 right-3 z-20">
            <FavoriteButton appId={app.id} />
@@ -113,7 +113,7 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
                 <Star className="w-3.5 h-3.5 fill-yellow-400" /> {app.rating}
              </div>
              <div className="flex items-center gap-1 bg-nexus-card text-nexus-text px-2 py-1 rounded-[8px] text-[11px] font-black">
-                <Download className="w-3.5 h-3.5" /> {app.download_count?.toString() || app.downloads || '0'}
+                <Download className="w-3.5 h-3.5" /> {app.download_count?.toString() || app.downloads}
              </div>
            </div>
            
@@ -141,9 +141,9 @@ export default function AppGrid({ apps = DEMO_APPS, onAppClick }: { apps?: AppIt
           <div className="w-20 h-20 bg-nexus-card rounded-[24px] border border-nexus-border flex items-center justify-center mb-5 shadow-inner">
             <Sparkles className="w-10 h-10 text-cyan-500/50" />
           </div>
-          <h3 className="text-xl font-black text-nexus-text mb-2 tracking-tight">{t("home.emptyUniverse") || "El universo digital está vacío"}</h3>
+          <h3 className="text-xl font-black text-nexus-text mb-2 tracking-tight">{t("home.emptyUniverse")}</h3>
           <p className="text-nexus-text-sec text-[15px] max-w-md font-medium leading-relaxed">
-            Se el primer desarrollador en lanzar tu app en NexusPlay y marca el inicio de una nueva era.
+            {t("home.emptyDesc")}
           </p>
         </div>
       ) : (

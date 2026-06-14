@@ -56,12 +56,12 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!files.apk || !files.icon) {
-      alert(t("upload.errorSelectAPK") || "Por favor selecciona el APK y el Icono de la aplicación.");
+      alert(t("upload.errorSelectAPK"));
       return;
     }
 
     setIsUploading(true);
-    setStatus(t("upload.step1") || 'Iniciando subida directa...');
+    setStatus(t("upload.step1"));
     setUploadProgress(5);
 
     try {
@@ -203,8 +203,8 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-black text-nexus-text">{t("upload.detailsTitle") || "Detalles de la Publicación"}</h1>
-            <p className="text-nexus-text-sec text-sm mt-1">{t("upload.detailsDesc") || "Sube tu APK y nosotros nos encargamos del alojamiento global."}</p>
+            <h1 className="text-2xl font-black text-nexus-text">{t("upload.detailsTitle")}</h1>
+            <p className="text-nexus-text-sec text-sm mt-1">{t("upload.detailsDesc")}</p>
           </div>
         </div>
 
@@ -215,7 +215,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.appName") || "Nombre de la App"}</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.appName")}</label>
                 <input 
                   required
                   type="text" 
@@ -226,7 +226,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.company") || "Compañía / Estudio"}</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.company")}</label>
                 <input 
                   required
                   type="text" 
@@ -240,7 +240,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("app.version") || "Versión"}</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("app.version")}</label>
                 <input 
                   required
                   type="text" 
@@ -251,23 +251,23 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.category") || "Categoría"}</label>
+                <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.category")}</label>
                 <select 
                   value={formData.category}
                   onChange={e => setFormData({...formData, category: e.target.value})}
                   className="w-full bg-nexus-surface border border-nexus-border p-2.5 rounded-xl focus:border-cyan-500 outline-none text-nexus-text text-sm"
                 >
                   <option className="bg-nexus-bg" value="Juegos">{t('nav.games')}</option>
-                  <option className="bg-nexus-bg" value="Herramientas">{t("uploadtools.tools") || "Herramientas"}</option>
-                  <option className="bg-nexus-bg" value="Productividad">{t("uploadtools.prod") || "Productividad"}</option>
-                  <option className="bg-nexus-bg" value="Redes Sociales">{t("uploadtools.social") || "Redes Sociales"}</option>
-                  <option className="bg-nexus-bg" value="Entretenimiento">{t("uploadtools.ent") || "Entretenimiento"}</option>
+                  <option className="bg-nexus-bg" value="Herramientas">{t("uploadtools.tools")}</option>
+                  <option className="bg-nexus-bg" value="Productividad">{t("uploadtools.prod")}</option>
+                  <option className="bg-nexus-bg" value="Redes Sociales">{t("uploadtools.social")}</option>
+                  <option className="bg-nexus-bg" value="Entretenimiento">{t("uploadtools.ent")}</option>
                 </select>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.description") || "Descripción"}</label>
+              <label className="text-[10px] font-black text-nexus-text-sec uppercase ml-1">{t("upload.description")}</label>
               <textarea 
                 required
                 rows={3}
@@ -283,11 +283,11 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* APK */}
             <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
-              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-orange-400 opacity-80"><Package className="w-4 h-4" /> {t("upload.apkFile") || "Archivo APK"}</h3>
+              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-orange-400 opacity-80"><Package className="w-4 h-4" /> {t("upload.apkFile")}</h3>
               {!files.apk ? (
                 <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-nexus-border rounded-2xl cursor-pointer hover:bg-nexus-card transition-colors">
                   <Upload className="w-6 h-6 text-nexus-text-sec mb-2" />
-                  <span className="text-xs font-bold text-nexus-text-sec">{t("upload.uploadApk") || "Subir APK"}</span>
+                  <span className="text-xs font-bold text-nexus-text-sec">{t("upload.uploadApk")}</span>
                   <input type="file" accept=".apk" onChange={e => handleFileChange(e, 'apk')} className="hidden" />
                 </label>
               ) : (
@@ -308,11 +308,11 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
             {/* Icono */}
             <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
-              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-cyan-400 opacity-80"><Smartphone className="w-4 h-4" /> {t("upload.iconStr") || "Icono"}</h3>
+              <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-cyan-400 opacity-80"><Smartphone className="w-4 h-4" /> {t("upload.iconStr")}</h3>
               {!files.icon ? (
                 <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-nexus-border rounded-2xl cursor-pointer hover:bg-nexus-card transition-colors">
                   <ImageIcon className="w-6 h-6 text-nexus-text-sec mb-2" />
-                  <span className="text-xs font-bold text-nexus-text-sec">{t("upload.uploadIcon") || "Subir Icono"}</span>
+                  <span className="text-xs font-bold text-nexus-text-sec">{t("upload.uploadIcon")}</span>
                   <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'icon')} className="hidden" />
                 </label>
               ) : (
@@ -331,7 +331,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
 
           {/* Capturas de Pantalla */}
           <div className="glass-panel p-5 rounded-2xl border-nexus-border space-y-4 bg-nexus-card">
-            <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-purple-400 opacity-80"><ImageIcon className="w-4 h-4" /> {t("upload.screenshotsMax") || "Capturas de Pantalla (Máx 8)"}</h3>
+            <h3 className="font-bold text-sm flex items-center gap-2 uppercase tracking-wider text-purple-400 opacity-80"><ImageIcon className="w-4 h-4" /> {t("upload.screenshotsMax")}</h3>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
               {files.screenshots.map((file, idx) => (
                 <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden bg-nexus-card border border-nexus-border">
@@ -388,11 +388,11 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
           >
             {isUploading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> {t("upload.processing") || "PROCESANDO SUBIDA..."}
+                <Loader2 className="w-5 h-5 animate-spin" /> {t("upload.processing")}
               </>
             ) : (
               <>
-                <Check className="w-5 h-5" /> {t("upload.publishBtn") || "PUBLICAR APLICACIÓN"}
+                <Check className="w-5 h-5" /> {t("upload.publishBtn")}
               </>
             )}
           </button>

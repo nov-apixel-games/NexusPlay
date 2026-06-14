@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, Square, Save, Upload, RotateCcw, Check, Move, MousePointer2, PlusCircle, Settings, ChevronLeft, Globe, RefreshCcw, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Play, Square, Save, Upload, Check, Move, PlusCircle, Settings, ChevronLeft, Globe, Sparkles } from 'lucide-react';
+import { motion } from 'motion/react';
 import { saveGameDraft } from '../../lib/offlineDb';
 
 interface GameStudioEditorProps {

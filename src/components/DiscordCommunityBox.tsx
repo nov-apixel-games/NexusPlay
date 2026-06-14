@@ -1,6 +1,8 @@
 import React from 'react';
+import { useAppStore } from '../store/useAppStore';
 
 export function DiscordCommunityBox() {
+  const { t } = useAppStore();
   const discordLink = 'https://discord.gg/4bupZb5qq';
 
   return (
@@ -16,8 +18,8 @@ export function DiscordCommunityBox() {
         </div>
         
         <div className="flex-1 min-w-0 text-center sm:text-left">
-           <p className="text-xs font-black text-[#5865F2] uppercase tracking-widest mb-1">Comunidad Discord</p>
-           <h4 className="text-[13px] sm:text-[14px] text-nexus-text-sec truncate mb-1">Únete a la comunidad oficial de NexusPlay</h4>
+           <p className="text-xs font-black text-[#5865F2] uppercase tracking-widest mb-1">{t('contact.discordCommunity')}</p>
+           <h4 className="text-[13px] sm:text-[14px] text-nexus-text-sec truncate mb-1">{t('contact.discordDesc')}</h4>
            <h4 className="text-[14px] font-bold text-nexus-text truncate font-mono">discord.gg/4bupZb5qq</h4>
         </div>
 
@@ -28,7 +30,7 @@ export function DiscordCommunityBox() {
              rel="noreferrer"
              className="px-6 h-10 w-full sm:w-auto rounded-xl bg-nexus-card/80 hover:bg-nexus-card/80 flex items-center justify-center border border-nexus-border/30 text-[#5865F2] hover:text-[#7f8afe] font-bold text-sm transition-all active:scale-95 shadow-[0_0_15px_rgba(88,101,242,0.2)]"
            >
-             Unirse
+             {t('contact.join')}
            </a>
         </div>
       </div>

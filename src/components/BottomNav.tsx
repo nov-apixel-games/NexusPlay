@@ -1,4 +1,4 @@
-import { Home, Compass, Gamepad2, User, Users, AppWindow } from 'lucide-react';
+import { Home, Gamepad2, User, Users, AppWindow } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 interface BottomNavProps {

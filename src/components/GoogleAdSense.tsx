@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function GoogleAdSense() {
@@ -20,7 +20,7 @@ export default function GoogleAdSense() {
           script.id = scriptId;
           
           document.head.appendChild(script);
-          console.log('[AdSense] Script injected from DB:', publisherId);
+;
         }
       }
     }

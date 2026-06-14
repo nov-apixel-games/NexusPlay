@@ -179,7 +179,7 @@ export default function App() {
         document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
       }
 
-      console.log("Cierre de sesión profundo completado.");
+;
     } catch (e) {
       console.warn("Error en proceso de logout:", e);
     }
@@ -216,7 +216,7 @@ export default function App() {
     // Verify session
     if (isSupabaseConfigured && navigator.onLine) {
       supabase.auth.getSession().then(({ data: { session: fetchedSession } }: any) => {
-        console.log("[Auth] Session loaded at startup:", !!fetchedSession);
+;
         setSession(fetchedSession);
         if (fetchedSession?.user) {
           fetchUserProfile(fetchedSession.user.id, fetchedSession.user.email).finally(() => {
@@ -294,11 +294,11 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log(`[Diagnostic] Auth event: ${_event}, Session valid: ${!!session}`);
+;
       
       switch (_event) {
         case 'SIGNED_IN':
-          console.log("[Diagnostic] SIGNED_IN event triggered.");
+;
           setSession(session);
           if (session?.user) {
             fetchUserProfile(session.user.id, session.user.email);
@@ -306,12 +306,12 @@ export default function App() {
           }
           break;
         case 'SIGNED_OUT':
-          console.log("[Diagnostic] SIGNED_OUT event triggered.");
+;
           setSession(null);
           setUserProfile(null);
           break;
         case 'TOKEN_REFRESHED':
-          console.log("[Diagnostic] TOKEN_REFRESHED event triggered.");
+;
           setSession(session);
           break;
         default:
@@ -356,20 +356,20 @@ export default function App() {
       const freshSession = sessionResponse.data.session;
       
       const currentSession = freshSession || session;
-      const finalEmail = email || currentSession?.user?.email || '';
-      console.log("Intentando cargar perfil:", userId);
+      const finalEmail = email || currentSession?.user?.email;
+;
 
       // 1. Intentar obtener perfil existente
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
       
       if (error) {
         console.warn("Error de red/permisos al cargar perfil:", error.message);
-        setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] || 'Usuario' });
+        setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] });
         return;
       }
 
       const userMetadata = currentSession?.user?.user_metadata || {};
-      const metaName = userMetadata?.full_name || userMetadata?.name || '';
+      const metaName = userMetadata?.full_name || userMetadata?.name;
       const metaAvatar = userMetadata?.avatar_url || userMetadata?.picture || null;
       let onboardingCompleted = false;
 
@@ -383,17 +383,17 @@ export default function App() {
         onboardingCompleted = true;
       }
 
-      console.log(`[Diagnostic] user_metadata:`, userMetadata);
-      console.log(`[Diagnostic] onboarding_completed: ${onboardingCompleted}, profile_data_exists: ${!!data}`);
+;
+;
 
       if (!onboardingCompleted) {
-        console.log("Perfil nuevo sin onboarding. Mostrar onboarding...");
+;
         setOnboardingSession(currentSession);
         setShowOnboarding(true);
       } else if (!data) {
         // Fallback for missing profile
         console.warn("Perfil sin datos en BD");
-        setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] || 'Usuario' });
+        setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] });
       } else {
         // Asegurar admin por email si es necesario
         if (finalEmail === 'elmenorjn@gmail.com' && data.role !== 'admin') {
@@ -450,7 +450,7 @@ export default function App() {
     } catch (e: any) {
       console.error("Fallo crítico en fetchUserProfile:", e);
       // Fallback fallback to ensure we don't break the app offline
-      setUserProfile({ id: userId, email: email || 'offline@nexus.play', role: 'user', username: (email || 'Usuario').split('@')[0] });
+      setUserProfile({ id: userId, email: email, role: 'user', username: (email).split('@')[0] });
     }
   };
 
@@ -499,7 +499,7 @@ export default function App() {
         setApps(data.map(mapDbAppToAppItem));
         localStorage.setItem('nexus_cached_apps', JSON.stringify(data));
       } else {
-        throw new Error(error?.message || "Error al leer de Supabase");
+        throw new Error(error?.message);
       }
     } catch (e: any) {
       console.warn("[Offline Cache] No se pudo leer de Supabase. Cargando copia en caché...", e.message || e);
@@ -660,8 +660,8 @@ export default function App() {
   const publishedApps = apps.filter(a => a.status === 'published');
 
   const renderActiveView = (view: string) => {
-    if (view.startsWith('app/')) {
-      const appId = view.split('/')[1];
+    if (view?.startsWith('app/')) {
+      const appId = view?.split('/')[1];
       const app = apps.find(a => a.id === appId);
       if (app) {
          // Derive back label from history
@@ -751,7 +751,7 @@ export default function App() {
                            </div>
                            <div className="absolute top-3 right-3 bg-nexus-surface/90 backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center shadow-lg">
                              <span className="text-[9px] font-mono tracking-widest uppercase text-nexus-text-sec flex items-center gap-1">
-                               v{app.version || '1.0'} 
+                               v{app.version} 
                                <span className={(!app.version_code || app.version_code < 10) ? "text-emerald-400" : "text-blue-400"}>({app.version_code || 1})</span>
                                <span className="ml-1 opacity-70">
                                  {(!app.version_code || app.version_code < 10) ? 'Menor' : 'Mayor'}
@@ -789,7 +789,7 @@ export default function App() {
                </div>
                
                <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-8 pt-4 snap-x snap-mandatory no-scrollbar w-full relative flex-nowrap pl-6 -ml-6 pr-6">
-                 {publishedApps.length > 0 ? publishedApps.sort((a,b) => parseInt(String(b.downloads).replace(/\D/g,'') || '0') - parseInt(String(a.downloads).replace(/\D/g,'') || '0')).slice(0, 8).map(app => (
+                 {publishedApps.length > 0 ? publishedApps.sort((a,b) => parseInt(String(b.downloads).replace(/\D/g,'')) - parseInt(String(a.downloads).replace(/\D/g,''))).slice(0, 8).map(app => (
                     <div key={app.id} className="snap-start shrink-0">
                       <div 
                         onClick={() => handleAppClick(app)}
@@ -804,7 +804,7 @@ export default function App() {
                            <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent"></div>
                            <div className="absolute top-3 right-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1 shadow-lg">
                              <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                             <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">Hot</span>
+                             <span className="text-[10px] font-black text-nexus-text tracking-widest uppercase">{t('home.hot')}</span>
                            </div>
                          </div>
                          <div className="p-4 sm:p-5 flex items-start gap-4 -mt-8 relative z-10">
@@ -817,7 +817,7 @@ export default function App() {
                       </div>
                     </div>
                  )) : (
-                    <div className="py-10 text-center text-nexus-text-sec font-medium w-full">Cargando tendencias...</div>
+                    <div className="py-10 text-center text-nexus-text-sec font-medium w-full">{t('home.loadingTrends')}</div>
                  )}
                </div>
             </div>
@@ -847,7 +847,7 @@ export default function App() {
                                  <span className="text-[10px] text-nexus-text-sec font-black tracking-widest">{app.rating}</span>
                                  <span className="text-yellow-400 text-[10px]">★</span>
                                </div>
-                               <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-md border border-blue-500/20">Nuevo</span>
+                               <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-md border border-blue-500/20">{t('home.newBadge')}</span>
                             </div>
                          </div>
                       </div>
@@ -1018,7 +1018,7 @@ export default function App() {
             <div className="absolute top-2 left-2 right-2 bottom-2 border-4 border-emerald-500/10 rounded-full"></div>
             <div className="absolute top-2 left-2 right-2 bottom-2 border-4 border-b-emerald-400 border-t-transparent border-r-transparent border-l-transparent rounded-full animate-spin [animation-direction:reverse] [animation-duration:1.5s]"></div>
           </div>
-          <h2 className="text-sm font-bold tracking-widest text-cyan-400/85 animate-pulse uppercase">Cargando NexusPlay</h2>
+          <h2 className="text-sm font-bold tracking-widest text-cyan-400/85 animate-pulse uppercase">{t('app.loading')}</h2>
           <p className="text-[10px] text-nexus-text-sec mt-2 font-mono uppercase tracking-widest">Sincronizando servicios</p>
         </div>
       </div>
@@ -1140,7 +1140,7 @@ export default function App() {
 
       {isFullScreenView ? (
          <div className="flex-1 w-full h-screen">
-            <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-nexus-card">Cargando Módulo...</div>}>
+            <Suspense fallback={<div className="flex w-full h-full items-center justify-center font-mono text-cyan-400 animate-pulse bg-nexus-card">{t('app.loading')}</div>}>
               {renderActiveView(baseView)}
             </Suspense>
          </div>
@@ -1155,7 +1155,7 @@ export default function App() {
               transition={{ duration: 0.2 }}
               className="flex-1 w-full flex flex-col"
             >
-              <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">Cargando Sección...</div>}>
+              <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">{t('app.loading')}</div>}>
                 {renderActiveView(baseView)}
               </Suspense>
             </motion.div>
@@ -1171,19 +1171,19 @@ export default function App() {
             onClose={handleBack}
             fullScreen={activeView === 'nexus-ai'}
           >
-             <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">Cargando...</div>}>
+             <Suspense fallback={<div className="flex h-[50vh] items-center justify-center font-mono text-cyan-400 animate-pulse">{t('app.loading')}</div>}>
                {renderActiveView(activeView)}
              </Suspense>
           </ModalWrapper>
         )}
       </AnimatePresence>
 
-      {!isFullScreenView && !activeView.startsWith('app/') && (
+      {!isFullScreenView && !activeView?.startsWith('app/') && (
         <Footer onNavigate={handleAction} />
       )}
 
       {showDevPanel && session && (
-        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-nexus-surface font-mono text-cyan-400 animate-pulse">Cargando Panel Dev...</div>}>
+        <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-nexus-surface font-mono text-cyan-400 animate-pulse">{t('app.loading')}</div>}>
           <DeveloperPanel 
             userId={session.user.id}
             userProfile={userProfile}

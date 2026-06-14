@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Mail, Copy, CheckCircle, ExternalLink } from 'lucide-react';
+import { useAppStore } from '../store/useAppStore';
+import { Copy, CheckCircle, ExternalLink } from 'lucide-react';
 
-export function SupportEmailBox({ category = 'Soporte NexusPlay' }: { category?: string }) {
+export function SupportEmailBox({ category }: { category?: string }) {
+  const { t } = useAppStore();
+  const defaultCategory = t('contact.defaultSubject') || 'Soporte NexusPlay';
+  const finalCategory = category || defaultCategory;
   const [copied, setCopied] = useState(false);
   const email = 'support.nexusplay@gmail.com';
   
@@ -11,7 +15,7 @@ export function SupportEmailBox({ category = 'Soporte NexusPlay' }: { category?:
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(category)}`;
+  const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(finalCategory)}`;
 
   return (
     <div className="relative group w-full h-full max-w-md mx-auto mb-6 lg:my-6">
@@ -26,7 +30,7 @@ export function SupportEmailBox({ category = 'Soporte NexusPlay' }: { category?:
         </div>
         
         <div className="flex-1 min-w-0 text-center sm:text-left">
-           <p className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-1">Correo Oficial</p>
+           <p className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-1">{t('contact.officialEmail')}</p>
            <h4 className="text-[15px] sm:text-[17px] font-bold text-nexus-text truncate font-mono">{email}</h4>
         </div>
 
@@ -34,7 +38,7 @@ export function SupportEmailBox({ category = 'Soporte NexusPlay' }: { category?:
            <button 
              onClick={handleCopy} 
              className="w-10 h-10 rounded-xl bg-nexus-card hover:bg-nexus-card-hover flex items-center justify-center border border-nexus-border text-nexus-text-sec hover:text-nexus-text transition-all active:scale-95"
-             title="Copiar correo"
+             title="{t('contact.copyEmail')}"
            >
              {copied ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}
            </button>
