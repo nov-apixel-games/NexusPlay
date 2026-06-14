@@ -1072,6 +1072,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
 // ============================================================================
 
 function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
+  const { t } = useAppStore();
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

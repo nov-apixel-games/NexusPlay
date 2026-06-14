@@ -895,6 +895,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
 }
 
 export function DownloadsView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const { t } = useAppStore();
   const [downloadedApps, setDownloadedApps] = useState<AppItem[]>([]);
 
   useEffect(() => {
@@ -1025,6 +1026,7 @@ export function CollectionsView({ apps, onAppClick }: { apps?: AppItem[], onAppC
 }
 
 export function EventsView({ apps, onAppClick }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const { t } = useAppStore();
   const newlyUpdated = apps?.filter(a => a.previous_versions && a.previous_versions.length > 0).slice(0, 3) || [];
   
   return (
@@ -1167,6 +1169,7 @@ export function AchievementsView({ userProfile }: { userProfile?: any }) {
 }
 
 export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void, onBack?: () => void, initialQuery?: string }) {
+  const { t } = useAppStore();
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [results, setResults] = useState<AppItem[]>([]);

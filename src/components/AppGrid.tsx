@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { DEMO_APPS } from '../data';
 import { AppItem } from '../types';
 import { FavoriteButton } from './FavoriteButton';
+import { useAppStore } from '../store/useAppStore';
 
 export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: () => void }) => {
   return (
@@ -62,6 +63,7 @@ export const AppCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: (
 AppCard.displayName = 'AppCard';
 
 export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppItem, onClick?: () => void }) => {
+  const { t } = useAppStore();
   return (
     <motion.div 
       whileHover={{ y: -4 }}
@@ -130,6 +132,7 @@ export const FeaturedHorizontalCard = React.memo(({ app, onClick }: { app: AppIt
 FeaturedHorizontalCard.displayName = 'FeaturedHorizontalCard';
 
 export default function AppGrid({ apps = DEMO_APPS, onAppClick }: { apps?: AppItem[], onAppClick?: (app: AppItem) => void }) {
+  const { t } = useAppStore();
   return (
     <section className="pb-16 -mx-6 px-6 overflow-hidden">
       {apps.length === 0 ? (

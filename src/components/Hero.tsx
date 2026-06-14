@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 
 export default function Hero({ 
   storeName = 'NexusPlay', 
-  slogan = t("hero.slogan") || 'La plataforma digital de nueva generación',
+  slogan: propSlogan,
   onAction 
 }: { 
   storeName?: string, 
@@ -12,6 +12,8 @@ export default function Hero({
   onAction?: (action: string) => void
 }) {
   const { t } = useAppStore();
+  const slogan = propSlogan || t("hero.slogan") || 'La plataforma digital de nueva generación';
+
   return (
     <section className="relative pt-28 pb-20 px-6 overflow-hidden min-h-[85vh] flex items-center justify-center">
       {/* Dynamic Sci-Fi Background Elements */}

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-// ... existing imports ...
 import { supabase } from '../../lib/supabase';
 import { Send, CheckCircle, Mail, MessageSquare, Tag, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SupportEmailBox } from '../SupportEmailBox';
+import { useAppStore } from '../../store/useAppStore';
 
 export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
+  const { t } = useAppStore();
   return (
     <LegalPage title={t("footer.privacy") || "Política de Privacidad"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
@@ -83,6 +84,7 @@ export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; on
 }
 
 export function TermsAndConditionsView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
+  const { t } = useAppStore();
   return (
     <LegalPage title={t("footer.terms") || "Términos y Condiciones"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
@@ -150,6 +152,7 @@ export function TermsAndConditionsView({ storeName, onBack }: { storeName: strin
 }
 
 export function CookiePolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
+  const { t } = useAppStore();
   return (
     <LegalPage title={t("footer.cookies") || "Política de Cookies"} lastUpdated="15 de Mayo, 2026" onBack={onBack}>
       <section className="mb-8">
