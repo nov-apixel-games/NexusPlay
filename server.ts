@@ -474,7 +474,7 @@ app.post("/api/delete-folder", async (req, res) => {
       await cloudinary.api.delete_folder(folder + "/screenshots");
       await cloudinary.api.delete_folder(folder);
     } catch (e) {
-      // Ignore
+      console.warn(`[Backend] Could not delete Cloudinary subfolders for "${folder}" (may not exist):`, e);
     }
 
     res.json({ success: true });

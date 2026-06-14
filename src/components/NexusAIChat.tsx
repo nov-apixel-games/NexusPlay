@@ -194,7 +194,9 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
                    recommendedIds = parsed;
                    cleanText = responseText.replace(matchArrayAtEnd[0], '').trim();
                 }
-             } catch(e) {}
+             } catch(e) {
+                console.warn("[NexusAI] Could not parse trailing array from response:", e);
+             }
          }
       }
 

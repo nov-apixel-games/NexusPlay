@@ -68,6 +68,7 @@ export async function saveOfflineGame(game: OfflineGame): Promise<void> {
     });
   } catch (e) {
     console.error('[IndexedDB] No se pudo guardar el juego offline:', e);
+    throw e;
   }
 }
 
@@ -101,6 +102,7 @@ export async function deleteOfflineGame(id: string): Promise<void> {
     });
   } catch (e) {
     console.error('[IndexedDB] Error eliminando juego offline:', e);
+    throw e;
   }
 }
 
@@ -118,6 +120,7 @@ export async function saveGameDraft(draft: GameDraft): Promise<void> {
     });
   } catch (e) {
     console.error('[IndexedDB] No se pudo guardar borrador del juego:', e);
+    throw e;
   }
 }
 
@@ -151,6 +154,7 @@ export async function deleteGameDraft(id: string): Promise<void> {
     });
   } catch (e) {
     console.error('[IndexedDB] Error eliminando borrador:', e);
+    throw e;
   }
 }
 
@@ -168,6 +172,7 @@ export async function setLocalConfig(key: string, value: any): Promise<void> {
     });
   } catch (e) {
     console.error('[IndexedDB] No se pudo guardar config:', e);
+    throw e;
   }
 }
 
