@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import { authFetch } from '../lib/supabase';
 
 interface PublishingWizardProps {
   developerId: string;
@@ -129,7 +130,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
   const removeScreenshot = async (id: string, publicId: string) => {
     if (publicId) {
       try {
-        await fetch('/api/delete-image', {
+        await authFetch('/api/delete-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ public_id: publicId })
@@ -176,7 +177,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
       // Register in Supabase
       setStatus(t("wiz.finishing") || 'Finalizando y publicando en NexusPlay...');
-      const registerRes = await fetch('/api/upload-app', {
+      const registerRes = await authFetch('/api/upload-app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

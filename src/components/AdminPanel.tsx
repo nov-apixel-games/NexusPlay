@@ -5,7 +5,7 @@ import {
   Star, Activity, AlertTriangle, Search, Database, Menu, X,
   DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, UploadCloud, Server
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, authFetch } from '../lib/supabase';
 import { deleteFromCloudinary, deleteFolderFromCloudinary } from '../lib/cloudinary';
 import { AppItem, DevRequest } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -166,11 +166,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   const checkInfra = async () => {
      try {
-       const { data: { session } } = await supabase.auth.getSession();
-       const token = session?.access_token;
-       const res = await fetch('/api/system-stats', {
-          headers: token ? { "Authorization": `Bearer ${token}` } : {}
-       });
+       const res = await authFetch('/api/system-stats');
        const data = await res.json();
        if (data.success) {
          setNodeStats(data.systemInfo);

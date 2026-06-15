@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Upload, X, Check, Loader2, Package, Image as ImageIcon, Smartphone, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import { authFetch } from '../lib/supabase';
 
 interface AppUploadFormProps {
   onSuccess: (app: any) => void;
@@ -158,7 +159,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
       // 5. Finalize with server (Supabase registration)
       setStatus(t("upload.step5"));
       
-      const finalizeResponse = await fetch('/api/upload-app', {
+      const finalizeResponse = await authFetch('/api/upload-app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

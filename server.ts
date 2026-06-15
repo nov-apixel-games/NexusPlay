@@ -45,24 +45,13 @@ if (cloudNameEnv.includes('your_')) cloudNameEnv = '';
 if (apiKeyEnv.includes('your_')) apiKeyEnv = '';
 if (apiSecretEnv.includes('your_')) apiSecretEnv = '';
 
-// Fix for swapped credentials or using default account with missing parts
-const IS_DEFAULT_CONFIG = 
-  !cloudNameEnv || 
-  cloudNameEnv === 'dnpnmhmht' || 
-  apiKeyEnv === '719435337158523' || 
-  cloudNameEnv === '719435337158523' || // Swapped
-  apiKeyEnv === 'dnpnmhmht';           // Swapped
+const CLOUD_NAME = cloudNameEnv;
+const CLOUDINARY_API_KEY = apiKeyEnv;
+const CLOUDINARY_API_SECRET = apiSecretEnv;
 
-if (IS_DEFAULT_CONFIG) {
-  console.log("[Cloudinary] Using default account configuration (detected from env or fallbacks)");
-  cloudNameEnv = 'dnpnmhmht';
-  apiKeyEnv = '719435337158523';
-  apiSecretEnv = 'NTAKR4xesWwzwm74bY-TNwwp6To';
+if (!CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+  console.warn("[Cloudinary] Missing credentials — set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET env vars.");
 }
-
-const CLOUD_NAME = cloudNameEnv || 'dnpnmhmht';
-const CLOUDINARY_API_KEY = apiKeyEnv || '719435337158523';
-const CLOUDINARY_API_SECRET = apiSecretEnv || 'NTAKR4xesWwzwm74bY-TNwwp6To';
 
 cloudinary.config({
   cloud_name: CLOUD_NAME,
@@ -179,48 +168,45 @@ const nexusAiLimiter = rateLimit({
   message: { success: false, error: "Límite de solicitudes alcanzado. Por favor, intenta de nuevo más tarde." }
 });
 
-app.use(express.json({ limit: '2000mb' }));
-app.use(express.urlencoded({ limit: '2000mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use('/api/', apiLimiter);
 app.use('/api/nexus-ai', nexusAiLimiter);
 
-const requireAdmin = async (req: any, res: any, next: any) => {
+// Authentication middleware: validates Supabase JWT and attaches user to req
+async function requireAuth(req: any, res: any, next: any) {
   const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ error: "No authorization header" });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
-  const token = authHeader.split(" ")[1];
-  
-  const supBase = getSupabase();
-  if (!supBase) {
-    return res.status(500).json({ error: "Supabase no configurado en el servidor." });
+  const token = authHeader.replace('Bearer ', '');
+  const supabase = getSupabase();
+  if (!supabase) {
+    return res.status(503).json({ error: 'Auth service unavailable' });
   }
-
-  try {
-    const { data: { user }, error: userErr } = await supBase.auth.getUser(token);
-    if (userErr || !user) {
-      return res.status(401).json({ error: "Token inválido" });
-    }
-
-    const { data: profile } = await supBase.from("profiles").select("role").eq("id", user.id).single();
-    const isAdmin = profile?.role === "admin" || user.email === "elmenorjn@gmail.com";
-
-    if (!isAdmin) {
-      // Registrar log de acceso denegado (opcional, lo haremos desde el cliente por ahora o aquí mismo si hubiera tabla)
-      return res.status(403).json({ error: "Acceso denegado: Se requiere rol de administrador" });
-    }
-    
-    req.adminUser = user;
-
-    next();
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
-};
+  req.user = user;
+  next();
+}
+
+async function requireAdmin(req: any, res: any, next: any) {
+  const supabase = getSupabase();
+  if (!supabase || !req.user) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', req.user.id).single();
+  if (!profile || profile.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}
 
 // Helper for Cloudinary Signature
-app.get("/api/cloudinary-signature", (req, res) => {
+app.get("/api/cloudinary-signature", requireAuth, (req: any, res: any) => {
   try {
     if (!CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
       console.error("[Backend] Cloudinary no está configurado (faltan variables de entorno)");
@@ -276,7 +262,7 @@ app.use((req, res, next) => {
 });
 
 // API Route: Register App (All data already uploaded by client)
-app.post("/api/upload-app", (req, res, next) => {
+app.post("/api/upload-app", requireAuth, (req: any, res: any, next: any) => {
   console.log(`[Backend] Recibiendo registro final de app...`);
   next();
 }, async (req: any, res: any) => {
@@ -405,15 +391,9 @@ ${JSON.stringify(catalogue, null, 2)}`;
   } catch (error: any) {
     console.error("[Nexus AI Error]", error);
     
-    // Devolvemos el error detallado
     res.status(500).json({ 
       success: false,
-      error: error.message || "Error al procesar la recomendación de IA",
-      details: {
-        code: error?.status || error?.code || 500,
-        status: error?.statusText || "ERROR",
-        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
-      }
+      error: "Error al procesar la recomendación de IA"
     });
   }
 });
@@ -469,7 +449,7 @@ Solo debes devolver un arreglo JSON válido envuelto en \`\`\`json y \`\`\`.`;
 });
 
 // API Route: Secure Image Deletion
-app.post("/api/delete-image", async (req, res) => {
+app.post("/api/delete-image", requireAuth, async (req: any, res: any) => {
   const { public_id } = req.body;
   
   if (!public_id) {
@@ -492,7 +472,7 @@ app.post("/api/delete-image", async (req, res) => {
 });
 
 // API Route: Delete App Folder
-app.post("/api/delete-folder", requireAdmin, async (req, res) => {
+app.post("/api/delete-folder", requireAuth, async (req: any, res: any) => {
   const { folder } = req.body;
   
   if (!folder) {
@@ -519,7 +499,7 @@ app.post("/api/delete-folder", requireAdmin, async (req, res) => {
 });
 
 // API Route: System & Storage Stats
-app.get("/api/system-stats", requireAdmin, async (req, res) => {
+app.get("/api/system-stats", requireAuth, requireAdmin, async (req: any, res: any) => {
   try {
      let cloudinaryUsage = null;
      try {
@@ -553,7 +533,7 @@ app.get("/api/system-stats", requireAdmin, async (req, res) => {
        processUptime: process.uptime(),
        serverUptime: os.uptime(),
        loadAvg: os.loadavg(),
-       vercelAvailable: !!process.env.VERCEL_TOKEN
+       vercelAvailable: false
      };
 
      res.json({ success: true, systemInfo, cloudinaryUsage });
@@ -566,13 +546,15 @@ app.get("/api/system-stats", requireAdmin, async (req, res) => {
 app.use((err: any, req: any, res: any, next: any) => {
   console.error("[Global Error Handled]", err);
   res.status(err.status || 500).json({ 
-    error: err.message || "Internal Server Error",
-    details: typeof err === 'object' ? err : String(err)
+    error: "Internal Server Error"
   });
 });
 
-app.post("/api/delete-account", async (req, res) => {
+app.post("/api/delete-account", requireAuth, async (req: any, res: any) => {
   const { userId } = req.body;
+  if (req.user.id !== userId) {
+    return res.status(403).json({ error: 'You can only delete your own account' });
+  }
   if (!userId) {
     return res.status(400).json({ error: "Falta userId" });
   }

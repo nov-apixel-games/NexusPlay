@@ -48,3 +48,21 @@ export const supabase = createClient(
   }
 );
 
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers = await getAuthHeaders();
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...(options.headers || {}),
+    },
+  });
+}
+

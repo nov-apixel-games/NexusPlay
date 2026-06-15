@@ -4,21 +4,16 @@ import {
   BarChart3, Users, Download, Smartphone, Trash2, ShieldAlert 
 } from 'lucide-react';
 import { AppItem, UserItem } from '../../types';
-import { supabase } from '../../lib/supabase';
+import { supabase, authFetch } from '../../lib/supabase';
 import { SystemMetrics } from './SystemMetrics';
 
 export function AdminDashboard({ apps, users }: { apps: AppItem[], users: UserItem[] }) {
   const [sysStats, setSysStats] = useState<any>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const token = session?.access_token;
-      fetch('/api/system-stats', {
-        headers: token ? { "Authorization": `Bearer ${token}` } : {}
-      }).then(res => res.json()).then(json => {
-        if (json.success) setSysStats(json);
-      }).catch(e => console.error(e));
-    });
+    authFetch('/api/system-stats').then(res => res.json()).then(json => {
+      if (json.success) setSysStats(json);
+    }).catch(e => console.error(e));
   }, []);
 
   const totalDownloads = apps.reduce((acc, current) => acc + (current.download_count || 0), 0);
@@ -109,12 +104,10 @@ export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUse
     
     // Attempt backend delete via API if available, or direct if RLS allows (unlikely to allow full auth delete directly from client without service key)
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const resp = await fetch('/api/delete-account', {
+      const resp = await authFetch('/api/delete-account', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ userId: id })
       });
