@@ -135,7 +135,7 @@ export default function AuthModal({ onClose, onSuccess, onNavigate }: AuthModalP
         <button 
           onClick={onClose} 
           className="absolute top-6 right-6 p-2 bg-nexus-bg hover:bg-nexus-card-hover rounded-full transition-colors text-nexus-text-sec hover:text-nexus-text z-10"
-        >
+         type="button" >
           <X className="w-5 h-5" />
         </button>
 

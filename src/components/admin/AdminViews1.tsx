@@ -11,9 +11,14 @@ export function AdminDashboard({ apps, users }: { apps: AppItem[], users: UserIt
   const [sysStats, setSysStats] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/api/system-stats').then(res => res.json()).then(json => {
-      if (json.success) setSysStats(json);
-    }).catch(e => console.error(e));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const token = session?.access_token;
+      fetch('/api/system-stats', {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+      }).then(res => res.json()).then(json => {
+        if (json.success) setSysStats(json);
+      }).catch(e => console.error(e));
+    });
   }, []);
 
   const totalDownloads = apps.reduce((acc, current) => acc + (current.download_count || 0), 0);
@@ -104,9 +109,13 @@ export function AdminUsers({ users, setUsers, addToast }: { users: any[], setUse
     
     // Attempt backend delete via API if available, or direct if RLS allows (unlikely to allow full auth delete directly from client without service key)
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch('/api/delete-account', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ userId: id })
       });
       if (resp.ok) {

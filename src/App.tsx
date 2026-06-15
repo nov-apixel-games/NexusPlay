@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import GoogleAdSense from './components/GoogleAdSense';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -36,6 +36,7 @@ import AuthModal from './components/AuthModal';
 import { OnboardingView } from './components/OnboardingView';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
+import DoubleVerificationModal from './components/admin/DoubleVerificationModal';
 
 import { useAppStore } from './store/useAppStore';
 
@@ -68,6 +69,19 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = useCallback((message: string, type: ToastType) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
   useEffect(() => {
     const handleRequireLogin = () => setShowAuthModal(true);
     const handleShowToast = (e: Event) => {
@@ -82,7 +96,7 @@ export default function App() {
       window.removeEventListener('require-login', handleRequireLogin);
       window.removeEventListener('show-toast', handleShowToast);
     };
-  }, []);
+  }, [addToast]);
 
   const { fetchFavorites, clearFavorites, favoriteIds } = useFavoritesStore();
 
@@ -92,7 +106,7 @@ export default function App() {
     } else {
       clearFavorites();
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, fetchFavorites, clearFavorites]);
 
   // Data fetching state
   const [apps, setApps] = useState<AppItem[]>([]);
@@ -100,14 +114,14 @@ export default function App() {
   const [webLogo, setWebLogo] = useState('https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
-  const fetchSiteSettings = async () => {
+  const fetchSiteSettings = useCallback(async () => {
     try {
       if (!navigator.onLine) throw new Error("Offline");
       
       const fetchPromise = supabase.from('site_settings').select('*').single();
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000));
       
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as { data: any, error: any };
 
       if (!error && data) {
         if (data.platform_name) {
@@ -127,25 +141,13 @@ export default function App() {
       const localMaintenance = localStorage.getItem('nexus_maintenance_mode') === 'true';
       if (localMaintenance) setMaintenanceMode(localMaintenance);
     }
-  };
+  }, []);
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  const [lastAdminActivity, setLastAdminActivity] = useState(Date.now());
   
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
-  const addToast = (message: string, type: ToastType) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
-
   const DEFAULT_AI_CONFIG: AIConfig = {
     enabled: true,
     apiKey: '',
@@ -158,6 +160,7 @@ export default function App() {
     // 1. Limpieza total de estados locales
     setSession(null);
     setUserProfile(null);
+    setIsAdminVerified(false);
     setActiveView('home');
     setShowDevPanel(false);
     setIsSidebarOpen(false);
@@ -254,6 +257,7 @@ export default function App() {
     }, 4000);
 
     return () => clearTimeout(fallbackTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSupabaseConfigured]);
 
   useEffect(() => {
@@ -344,9 +348,10 @@ export default function App() {
       subscription.unsubscribe();
       supabase.removeChannel(appsSubscription);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once to persist session listener
 
-  const fetchUserProfile = async (userId: string, email?: string) => {
+  const fetchUserProfile = useCallback(async (userId: string, email?: string) => {
     try {
       if (!navigator.onLine) {
         throw new Error("Offline fetch profile fallback");
@@ -450,9 +455,14 @@ export default function App() {
     } catch (e: any) {
       console.error("Fallo crítico en fetchUserProfile:", e);
       // Fallback fallback to ensure we don't break the app offline
-      setUserProfile({ id: userId, email: email, role: 'user', username: (email).split('@')[0] });
+      if (email) {
+        setUserProfile({ id: userId, email: email, role: 'user', username: email.split('@')[0] });
+      } else {
+        setUserProfile({ id: userId, email: '', role: 'user', username: 'guest' });
+      }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
   const mapDbAppToAppItem = (d: any): AppItem => ({
     id: d.id,
@@ -490,7 +500,7 @@ export default function App() {
         throw new Error("Dispositivo sin conexión a internet");
       }
       
-      const fetchPromise = supabase.from('apps').select('*').order('created_at', { ascending: false });
+      const fetchPromise = supabase.from('apps').select('*').limit(500).order('created_at', { ascending: false }).limit(500);
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout de conexión al cargar juegos")), 8000));
       
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
@@ -538,12 +548,13 @@ export default function App() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAllData = async () => {
     const [reqs, usrs] = await Promise.all([
-      supabase.from('developer_requests').select('*').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('*')
+      supabase.from('developer_requests').select('*').limit(500).order('created_at', { ascending: false }).limit(500),
+      supabase.from('profiles').select('*').limit(500)
     ]);
     if (reqs.data) {
       const mappedDevReqs = reqs.data.map(d => ({
@@ -615,6 +626,7 @@ export default function App() {
         addToast('Acceso restringido. Requiere permisos de administrador.', 'error');
         return;
       }
+      setLastAdminActivity(Date.now());
       setViewHistory(prev => [...prev, id]);
       setActiveView(id);
     } else if (id === 'dev-panel') {
@@ -629,6 +641,37 @@ export default function App() {
       setActiveView(id);
     }
   };
+
+  useEffect(() => {
+    if (activeView === 'admin-panel' && isAdminVerified) {
+      const interval = setInterval(() => {
+        if (Date.now() - lastAdminActivity > 5 * 60 * 1000) { // 5 minutes inactivity
+          setIsAdminVerified(false);
+          setActiveView('home');
+          addToast("Sesión de administrador cerrada por inactividad", "info");
+        }
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [activeView, isAdminVerified, lastAdminActivity, addToast]);
+
+  useEffect(() => {
+    const handleActivity = () => {
+      if (activeView === 'admin-panel') {
+        setLastAdminActivity(Date.now());
+      }
+    };
+    if (activeView === 'admin-panel') {
+      window.addEventListener('mousemove', handleActivity);
+      window.addEventListener('keydown', handleActivity);
+      window.addEventListener('click', handleActivity);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+    };
+  }, [activeView]);
 
   const handleAppClick = (app: AppItem) => {
     const nextView = `app/${app.id}`;
@@ -738,9 +781,9 @@ export default function App() {
                       >
                          <div className="h-[140px] relative overflow-hidden bg-nexus-surface">
                            {app.screenshots && app.screenshots.length > 0 ? (
-                             <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
+                             <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" alt="" />
                            ) : (
-                             <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" />
+                             <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" alt="" />
                            )}
                            <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent"></div>
                            <div className="absolute top-3 left-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1.5 shadow-lg">
@@ -760,7 +803,7 @@ export default function App() {
                            </div>
                          </div>
                          <div className="p-4 sm:p-5 flex items-start gap-4 -mt-8 relative z-10">
-                           <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-nexus-surface border border-nexus-border group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" />
+                           <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-nexus-surface border border-nexus-border group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" alt="" />
                            <div className="flex-1 min-w-0 pt-8">
                              <h3 className="font-black text-lg text-nexus-text truncate group-hover:text-emerald-400 transition-colors">{app.name}</h3>
                              <p className="text-xs text-nexus-text-sec truncate font-medium">{app.developer}</p>
@@ -797,9 +840,9 @@ export default function App() {
                       >
                          <div className="h-[140px] relative overflow-hidden bg-nexus-surface">
                            {app.screenshots && app.screenshots.length > 0 ? (
-                             <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
+                             <img src={app.screenshots[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" alt="" />
                            ) : (
-                             <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" />
+                             <img src={app.icon} className="w-full h-full object-cover blur-md group-hover:scale-110 transition-transform duration-700 opacity-40 group-hover:opacity-60" alt="" />
                            )}
                            <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent"></div>
                            <div className="absolute top-3 right-3 bg-nexus-surface backdrop-blur-md px-2 py-1 rounded-lg border border-nexus-border flex items-center gap-1 shadow-lg">
@@ -808,7 +851,7 @@ export default function App() {
                            </div>
                          </div>
                          <div className="p-4 sm:p-5 flex items-start gap-4 -mt-8 relative z-10">
-                           <img src={app.icon} className="w-14 h-14 rounded-2xl shadow-lg border-2 border-nexus-border bg-nexus-card shrink-0" />
+                           <img src={app.icon} className="w-14 h-14 rounded-2xl shadow-lg border-2 border-nexus-border bg-nexus-card shrink-0" alt="" />
                            <div className="flex-1 min-w-0 pt-8">
                              <h3 className="font-black text-nexus-text text-[16px] truncate group-hover:text-purple-400 transition-colors">{app.name}</h3>
                              <p className="text-[12px] text-nexus-text-sec font-medium truncate mt-0.5">{app.developer}</p>
@@ -838,7 +881,7 @@ export default function App() {
                         onClick={() => handleAppClick(app)}
                         className="flex flex-row items-center overflow-hidden bg-nexus-card border border-nexus-border hover:border-blue-500/40 rounded-[20px] cursor-pointer transition-all duration-300 shadow-md hover:shadow-[0_10px_30px_rgba(59,130,246,0.15)] group hover:bg-nexus-card p-4 w-[280px] sm:w-[340px]"
                       >
-                         <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-nexus-surface group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" />
+                         <img src={app.icon} className="w-16 h-16 rounded-[16px] object-cover bg-nexus-surface group-hover:scale-105 transition-transform duration-500 shadow-md shrink-0" alt="" />
                          <div className="ml-4 flex-1 min-w-0">
                             <h4 className="text-[15px] font-black text-nexus-text truncate group-hover:text-blue-400 transition-colors">{app.name}</h4>
                             <p className="text-[11px] font-bold tracking-widest uppercase text-blue-500/80 truncate mt-1">{app.category}</p>
@@ -887,6 +930,16 @@ export default function App() {
               onGoToGames={() => setActiveView('games-hub')} 
               title="Panel de Administración Bloqueado"
               description="El panel de control administrativo y la aprobación de apps requieren sincronización directa con los servicios en la nube de Supabase."
+            />
+          );
+        }
+        if (!isAdminVerified) {
+          return (
+            <DoubleVerificationModal 
+               user={session?.user} 
+               onSuccess={() => setIsAdminVerified(true)} 
+               onFail={() => { setActiveView('home'); addToast('Biometría de seguridad rechazada.', 'error'); }} 
+               onClose={() => setActiveView('home')} 
             />
           );
         }

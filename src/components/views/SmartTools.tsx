@@ -36,12 +36,12 @@ export function NotesApp({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-nexus-card w-full max-w-2xl h-[80vh] rounded-2xl flex border border-nexus-border overflow-hidden shadow-2xl relative">
-        <button onClick={onClose} className="absolute top-2 right-2 p-2 hover:bg-nexus-bg rounded-lg z-10"><X className="w-5 h-5" /></button>
+        <button onClick={onClose} className="absolute top-2 right-2 p-2 hover:bg-nexus-bg rounded-lg z-10" type="button" ><X className="w-5 h-5" /></button>
         
         <div className="w-1/3 border-r border-nexus-border bg-nexus-bg/50 flex flex-col">
           <div className="p-4 border-b border-nexus-border flex justify-between items-center">
             <h3 className="font-bold">Bloc de Notas</h3>
-            <button onClick={addNote} className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30"><Plus className="w-4 h-4" /></button>
+            <button onClick={addNote} className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30" type="button" ><Plus className="w-4 h-4" /></button>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {notes.map(n => (
@@ -81,7 +81,49 @@ export function CalculatorApp({ onClose }: { onClose: () => void }) {
 
   const calculate = () => {
     try {
-      const result = eval(display.replace('x', '*'));
+      const expr = display.replace(/x/g, '*').replace(/[^0-9+\-*\/().]/g, '');
+      if (!expr) return;
+
+      const evaluate = (exp: string): number => {
+        const tokens = exp.match(/\d+\.\d+|\d+|[+\-*\/()]/g) || [];
+        const output: (number | string)[] = [];
+        const ops: string[] = [];
+        const prec: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
+
+        for (const t of tokens) {
+          if (!isNaN(parseFloat(t))) {
+            output.push(parseFloat(t));
+          } else if (t === '(') {
+            ops.push(t);
+          } else if (t === ')') {
+            while (ops.length > 0 && ops[ops.length - 1] !== '(') output.push(ops.pop()!);
+            ops.pop();
+          } else {
+            while (ops.length > 0 && ops[ops.length - 1] !== '(' && prec[ops[ops.length - 1]] >= prec[t]) {
+              output.push(ops.pop()!);
+            }
+            ops.push(t);
+          }
+        }
+        while (ops.length > 0) output.push(ops.pop()!);
+
+        const stack: number[] = [];
+        for (const t of output) {
+          if (typeof t === 'number') {
+            stack.push(t);
+          } else {
+            const b = stack.pop() || 0;
+            const a = stack.pop() || 0;
+            if (t === '+') stack.push(a + b);
+            if (t === '-') stack.push(a - b);
+            if (t === '*') stack.push(a * b);
+            if (t === '/') stack.push(a / b);
+          }
+        }
+        return stack[0] || 0;
+      };
+
+      const result = evaluate(expr);
       setEquation(display + ' =');
       setDisplay(String(result));
     } catch {
@@ -96,7 +138,7 @@ export function CalculatorApp({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-nexus-card w-full max-w-sm rounded-[2rem] border border-nexus-border overflow-hidden shadow-2xl relative p-6">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-nexus-bg rounded-lg"><X className="w-5 h-5" /></button>
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-nexus-bg rounded-lg" type="button" ><X className="w-5 h-5" /></button>
         <h3 className="font-bold opacity-50 mb-6">Calculadora</h3>
         
         <div className="bg-nexus-bg rounded-2xl p-4 mb-6 flex flex-col items-end min-h-[90px] border border-nexus-border">
@@ -126,7 +168,7 @@ export function QrApp({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-nexus-card w-full max-w-md rounded-2xl border border-nexus-border overflow-hidden shadow-2xl relative p-6 text-center">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-nexus-bg rounded-lg"><X className="w-5 h-5" /></button>
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-nexus-bg rounded-lg" type="button" ><X className="w-5 h-5" /></button>
         <h3 className="font-bold text-xl. mb-2">Código QR</h3>
         <p className="text-sm text-nexus-text-sec mb-6">Genera un QR para compartir rápidamente</p>
         
@@ -148,7 +190,7 @@ export function CurrencyApp({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-nexus-card w-full max-w-sm rounded-[2rem] border border-nexus-border overflow-hidden shadow-2xl relative p-6">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-nexus-bg rounded-lg"><X className="w-5 h-5" /></button>
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-nexus-bg rounded-lg" type="button" ><X className="w-5 h-5" /></button>
         <h3 className="font-bold mb-6">Conversor Moneda</h3>
         
         <div className="space-y-4">

@@ -33,11 +33,15 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
       import('../../lib/supabase').then(async ({ supabase }) => {
           
           if (userProfile?.id) {
-             const res = await fetch('/api/delete-account', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ userId: userProfile.id })
-             });
+         const { data: { session } } = await supabase.auth.getSession();
+         const res = await fetch('/api/delete-account', {
+           method: 'POST',
+           headers: { 
+             'Content-Type': 'application/json',
+             'Authorization': `Bearer ${session?.access_token}`
+           },
+           body: JSON.stringify({ userId: userProfile.id })
+         });
              
              if (!res.ok) {
                // Fallback: Delete profile from client-side where we have RLS permissions
@@ -180,7 +184,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
           <Settings className="w-8 h-8 text-cyan-400 drop-shadow-nexus-glow" />
           <h1 className="text-2xl sm:text-3xl font-black text-nexus-text tracking-tight">{t('nav.settings')}</h1>
         </div>
-        <button onClick={onBack} className="group flex items-center gap-2 px-4 py-2 bg-nexus-card hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-xl transition-all border border-transparent hover:border-cyan-500/30">
+        <button onClick={onBack} className="group flex items-center gap-2 px-4 py-2 bg-nexus-card hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-xl transition-all border border-transparent hover:border-cyan-500/30" type="button" >
           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> {t("nav.back") || "Volver"}
         </button>
       </div>
@@ -263,7 +267,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                         <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">{t("settings.email") || "Correo Electrónico"}</label>
                         <input value={email} disabled className="w-full bg-nexus-card-hover border border-nexus-border rounded-xl px-4 py-2 opacity-70" placeholder="Email" />
                       </div>
-                      <button onClick={handleSaveProfile} className="flex items-center gap-2 px-6 py-2 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors">
+                      <button onClick={handleSaveProfile} className="flex items-center gap-2 px-6 py-2 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors" type="button" >
                         <Save className="w-4 h-4" /> Guardar Cambios
                       </button>
                    </div>
@@ -276,7 +280,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                         <label className="text-xs font-bold text-nexus-text-sec uppercase mb-1 block">{t("settings.newPassword") || "Nueva Contraseña"}</label>
                         <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-nexus-bg border border-nexus-border rounded-xl px-4 py-2" placeholder="********" />
                       </div>
-                      <button onClick={handleSavePassword} className="flex items-center gap-2 px-6 py-2 bg-nexus-card border border-nexus-border text-nexus-text rounded-xl font-bold hover:bg-nexus-card-hover transition-colors">
+                      <button onClick={handleSavePassword} className="flex items-center gap-2 px-6 py-2 bg-nexus-card border border-nexus-border text-nexus-text rounded-xl font-bold hover:bg-nexus-card-hover transition-colors" type="button" >
                         Actualizar Contraseña
                       </button>
                    </div>
@@ -325,14 +329,14 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                       <div className="p-5 border border-nexus-border bg-nexus-card rounded-xl">
                         <h4 className="font-bold mb-2">{t("settings.clearHistory") || "Eliminar Historial"}</h4>
                         <p className="text-xs text-nexus-text-sec mb-4 h-8">{t("settings.clearAiDesc") || "Limpiar toda la conversación guardada localmente de Nexus AI."}</p>
-                        <button onClick={clearAiHistory} className="w-full flex items-center justify-center gap-2 py-2 bg-nexus-bg hover:bg-red-500/10 text-red-500 border border-nexus-border rounded-lg font-bold text-sm transition-colors">
+                        <button onClick={clearAiHistory} className="w-full flex items-center justify-center gap-2 py-2 bg-nexus-bg hover:bg-red-500/10 text-red-500 border border-nexus-border rounded-lg font-bold text-sm transition-colors" type="button" >
                           <Trash2 className="w-4 h-4"/> {t("settings.clear") || "Limpiar"}
                         </button>
                       </div>
                       <div className="p-5 border border-nexus-border bg-nexus-card rounded-xl">
                         <h4 className="font-bold mb-2">{t("settings.exportChat") || "Exportar Conversación"}</h4>
                         <p className="text-xs text-nexus-text-sec mb-4 h-8">{t("settings.exportDesc") || "Descargar el JSON de tus consultas actuales."}</p>
-                        <button onClick={exportAiHistory} className="w-full flex items-center justify-center gap-2 py-2 bg-nexus-bg hover:bg-blue-500/10 text-blue-400 border border-nexus-border rounded-lg font-bold text-sm transition-colors">
+                        <button onClick={exportAiHistory} className="w-full flex items-center justify-center gap-2 py-2 bg-nexus-bg hover:bg-blue-500/10 text-blue-400 border border-nexus-border rounded-lg font-bold text-sm transition-colors" type="button" >
                           <DownloadCloud className="w-4 h-4"/> {t("settings.exportDetails") || "Exportar Detalles"}
                         </button>
                       </div>
@@ -358,7 +362,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                          {isInstallable ? (
                            <span className="font-bold text-lg text-emerald-400">{t("settings.appInstalled") || "App Instalada"}</span>
                          ) : (
-                           <button onClick={handleInstallPwa} className="px-3 py-1 bg-indigo-500 text-white rounded font-bold text-sm">{t("settings.installApp") || "Instalar App"}</button>
+                           <button onClick={handleInstallPwa} className="px-3 py-1 bg-indigo-500 text-white rounded font-bold text-sm" type="button" >{t("settings.installApp") || "Instalar App"}</button>
                          )}
                        </div>
                     </div>
@@ -375,12 +379,12 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                           </div>
                        </div>
                        <div className="flex-1" />
-                       <button onClick={clearPwaCache} className="px-4 py-2 border border-nexus-border bg-nexus-surface hover:bg-nexus-bg rounded-xl text-sm font-bold flex items-center gap-2">
+                       <button onClick={clearPwaCache} className="px-4 py-2 border border-nexus-border bg-nexus-surface hover:bg-nexus-bg rounded-xl text-sm font-bold flex items-center gap-2" type="button" >
                          <RefreshCw className="w-4 h-4" /> {t('settings.clearCache') || 'Vaciar Caché'}
                        </button>
                     </div>
                     
-                    <button onClick={updateApp} className="w-full flex items-center justify-between p-4 bg-nexus-card hover:bg-nexus-bg border border-nexus-border rounded-xl transition-colors">
+                    <button onClick={updateApp} className="w-full flex items-center justify-between p-4 bg-nexus-card hover:bg-nexus-bg border border-nexus-border rounded-xl transition-colors" type="button" >
                       <span className="font-bold text-sm text-nexus-text">{t("settings.checkUpdates") || "Buscar Actualizaciones de Cliente"}</span>
                       <ChevronLeft className="w-4 h-4 rotate-180 text-nexus-text-sec" />
                     </button>
@@ -455,7 +459,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
                 onClick={handleDeleteAccount}
                 disabled={isDeleting || deleteConfirmation.trim().toUpperCase() !== 'ELIMINAR'}
                 className="px-6 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 focus:ring-4 ring-red-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
+               type="button" >
                 {isDeleting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -474,7 +478,7 @@ export function SettingsView({ onBack, userProfile }: SettingsViewProps) {
 
 function TabButton({ active, onClick, icon: Icon, label }: any) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left ${active ? 'bg-nexus-card-hover text-nexus-text border-[1.5px] border-nexus-border shadow-sm' : 'bg-transparent text-nexus-text-sec hover:bg-nexus-bg border-[1.5px] border-transparent hover:text-nexus-text'}`}>
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left ${active ? 'bg-nexus-card-hover text-nexus-text border-[1.5px] border-nexus-border shadow-sm' : 'bg-transparent text-nexus-text-sec hover:bg-nexus-bg border-[1.5px] border-transparent hover:text-nexus-text'}`} type="button" >
       <Icon className={`w-5 h-5 ${active ? 'text-cyan-400 drop-shadow-sm' : ''}`} /> {label}
     </button>
   );

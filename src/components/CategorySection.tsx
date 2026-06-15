@@ -33,7 +33,7 @@ export default function CategorySection({ apps = [], onCategoryClick, onSeeAll }
              <Zap className="w-6 h-6 text-cyan-400 drop-shadow-nexus-glow" />
              {t('categories.explore') || "Explorar Categorías"}
           </h2>
-          <button onClick={onSeeAll} className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-nexus-card hover:bg-nexus-card-hover text-cyan-400 font-bold text-xs tracking-wide transition-all border border-cyan-500/10 hover:border-cyan-500/30 shadow-sm hover:shadow-nexus-glow group">
+          <button onClick={onSeeAll} className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-nexus-card hover:bg-nexus-card-hover text-cyan-400 font-bold text-xs tracking-wide transition-all border border-cyan-500/10 hover:border-cyan-500/30 shadow-sm hover:shadow-nexus-glow group" type="button" >
              {t('categories.seeCatalog') || "Ver Catálogo"} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -66,7 +66,7 @@ export default function CategorySection({ apps = [], onCategoryClick, onSeeAll }
           })}
         </div>
         
-        <button onClick={onSeeAll} className="w-full sm:hidden mt-6 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-nexus-card hover:bg-nexus-card-hover text-cyan-400 font-black text-xs uppercase tracking-widest transition-all border border-cyan-500/10 active:scale-[0.98]">
+        <button onClick={onSeeAll} className="w-full sm:hidden mt-6 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-nexus-card hover:bg-nexus-card-hover text-cyan-400 font-black text-xs uppercase tracking-widest transition-all border border-cyan-500/10 active:scale-[0.98]" type="button" >
             {t('categories.seeAllAreas') || "Ver todas las áreas"} <ChevronRight className="w-4 h-4" />
         </button>
       </div>

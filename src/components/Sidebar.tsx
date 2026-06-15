@@ -89,7 +89,7 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, u
                     {platformName}
                   </h1>
                 </div>
-                <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text-sec hover:text-nexus-text transition-all cursor-pointer">
+                <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text-sec hover:text-nexus-text transition-all cursor-pointer" type="button" >
                   <X className="w-5 h-5" />
                 </button>
               </div>

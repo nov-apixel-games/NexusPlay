@@ -238,7 +238,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
             </div>
           </div>
           
-          <button onClick={onCancel} className="p-2 hover:bg-nexus-card rounded-full transition-colors shrink-0">
+          <button onClick={onCancel} className="p-2 hover:bg-nexus-card rounded-full transition-colors shrink-0" type="button" >
             <X className="w-6 h-6 text-nexus-text-sec" />
           </button>
         </div>
@@ -595,7 +595,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                         {/* App Header Preview */}
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center lg:items-start text-center lg:text-left">
                            <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 rounded-2xl sm:rounded-[2.5rem] bg-nexus-card p-1 bg-gradient-to-br from-cyan-500/20 to-transparent shrink-0">
-                             <img src={files.iconUrl || 'https://via.placeholder.com/200'} className="w-full h-full rounded-2xl sm:rounded-[2.2rem] object-cover shadow-2xl" />
+                             <img src={files.iconUrl || 'https://via.placeholder.com/200'} className="w-full h-full rounded-2xl sm:rounded-[2.2rem] object-cover shadow-2xl" alt="" />
                            </div>
                            <div className="flex-1 space-y-4 w-full">
                              <div>
@@ -640,7 +640,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                            <h4 className="text-[10px] font-black text-nexus-text-sec uppercase tracking-[0.2em] ml-1">Preview</h4>
                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6 lg:mx-0 lg:px-0">
                              {files.screenshots.length > 0 ? files.screenshots.map((ss, idx) => (
-                               <img key={idx} src={ss.url} className="h-64 sm:h-96 lg:h-[400px] rounded-2xl lg:rounded-3xl object-cover border border-nexus-border shadow-xl shrink-0" />
+                               <img key={idx} src={ss.url} className="h-64 sm:h-96 lg:h-[400px] rounded-2xl lg:rounded-3xl object-cover border border-nexus-border shadow-xl shrink-0" alt="" />
                              )) : (
                                <div className="h-64 sm:h-96 w-44 sm:w-56 bg-nexus-card rounded-2xl lg:rounded-3xl border border-dashed border-nexus-border flex items-center justify-center text-gray-700 italic text-[10px] shrink-0">
                                  Sin capturas
@@ -693,7 +693,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
              onClick={handleBack}
              disabled={currentStep === 'info' || isPublishing}
              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 font-black text-[10px] uppercase transition-all rounded-xl ${currentStep === 'info' || isPublishing ? 'hidden' : 'text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card'}`}
-           >
+            type="button" >
              <ArrowLeft className="w-4 h-4" /> {t("wiz.back") || "Anterior"}
            </button>
  
@@ -720,7 +720,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                onClick={handlePublish}
                disabled={isPublishing}
                className={`w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-cyan-500 text-nexus-bg font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl shadow-xl shadow-cyan-500/20 active:scale-95 transition-all ${isPublishing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cyan-400 hover:shadow-cyan-400/40'}`}
-             >
+              type="button" >
                {isPublishing ? (
                  <> <Loader2 className="w-5 h-5 animate-spin" /> {t("wiz.processingText") || "PROCESANDO..."}</>
                ) : (
@@ -731,7 +731,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
              <button 
                onClick={handleNext}
                className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-white text-nexus-bg font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl hover:bg-cyan-400 active:scale-95 transition-all shadow-xl shadow-white/5"
-             >
+              type="button" >
                SIGUIENTE <ArrowRight className="w-5 h-5" />
              </button>
            )}

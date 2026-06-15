@@ -43,7 +43,7 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
     try {
       const { data, error } = await supabase
         .from('apps')
-        .select('*')
+        .select('*').limit(500)
         .eq('developer_id', userId)
         .order('created_at', { ascending: false });
 
@@ -170,7 +170,7 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
                    <p className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">{userProfile?.role}</p>
                 </div>
              </div>
-             <button onClick={onClose} className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500 hover:text-nexus-text transition-all text-[10px] font-black uppercase tracking-widest">
+             <button onClick={onClose} className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500 hover:text-nexus-text transition-all text-[10px] font-black uppercase tracking-widest" type="button" >
                <LogOut className="w-4 h-4" /> {t("nav.logout") || "Cerrar Sesión"}
              </button>
           </div>
@@ -190,10 +190,10 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
               {/* Top Bar */}
               <div className="h-20 shrink-0 border-b border-nexus-border flex items-center justify-between px-4 lg:px-12 bg-nexus-surface">
                 <div className="flex items-center gap-3 lg:gap-4">
-                  <button onClick={onClose} className="p-2 hover:bg-nexus-card rounded-xl hidden lg:flex items-center justify-center text-nexus-text-sec hover:text-nexus-text transition-colors">
+                  <button onClick={onClose} className="p-2 hover:bg-nexus-card rounded-xl hidden lg:flex items-center justify-center text-nexus-text-sec hover:text-nexus-text transition-colors" type="button" >
                      <ArrowLeft className="w-6 h-6" />
                   </button>
-                  <button onClick={onClose} className="p-2 hover:bg-nexus-card rounded-xl lg:hidden flex items-center justify-center text-nexus-text-sec hover:text-nexus-text transition-colors">
+                  <button onClick={onClose} className="p-2 hover:bg-nexus-card rounded-xl lg:hidden flex items-center justify-center text-nexus-text-sec hover:text-nexus-text transition-colors" type="button" >
                      <ArrowLeft className="w-6 h-6" />
                   </button>
                   <button onClick={() => setIsSidebarOpen(true)} className="p-2 lg:hidden hover:bg-nexus-card rounded-xl">
@@ -259,7 +259,7 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
                               <div className="grid grid-cols-1 gap-4">
                                 {apps.slice(0, 3).map((app) => (
                                   <div key={app.id} className="p-4 lg:p-6 bg-nexus-card/50 border border-nexus-border rounded-3xl flex items-center gap-4 lg:gap-6 hover:bg-nexus-card/50 transition-all">
-                                     <img src={app.icon_url} className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl object-cover shrink-0" />
+                                     <img src={app.icon_url} className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl object-cover shrink-0" alt="" />
                                      <div className="flex-1 min-w-0">
                                         <h4 className="text-base lg:text-lg font-black text-nexus-text truncate uppercase tracking-tight">{app.app_name}</h4>
                                         <p className="text-[10px] lg:text-xs text-nexus-text-sec flex items-center gap-2">
@@ -368,7 +368,7 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
                                  <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
                                  
                                  <div className="flex items-start justify-between relative z-10">
-                                    <img src={app.icon_url} className="w-16 h-16 lg:w-24 lg:h-24 rounded-2xl lg:rounded-3xl object-cover shadow-2xl" />
+                                    <img src={app.icon_url} className="w-16 h-16 lg:w-24 lg:h-24 rounded-2xl lg:rounded-3xl object-cover shadow-2xl" alt="" />
                                     <div className="flex gap-2">
                                        <button className="p-2 lg:p-3 bg-nexus-card hover:bg-cyan-500 hover:text-nexus-bg rounded-xl transition-all">
                                           <Edit className="w-4 h-4 lg:w-5 lg:h-5" />

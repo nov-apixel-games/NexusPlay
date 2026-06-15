@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 const compressImage = async (file: File): Promise<File> => {
   if (!file.type?.startsWith("image/")) return file;
 
@@ -235,9 +237,15 @@ export const deleteFromCloudinary = async (publicId: string) => {
 
 export const deleteFolderFromCloudinary = async (folder: string) => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
     const response = await fetch("/api/delete-folder", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ folder }),
     });
     const result = await response.json();

@@ -184,7 +184,7 @@ export function GamesHubView({ onBack, apps = [], session, userProfile }: GamesH
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <button onClick={onBack} className="p-2 sm:p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-xl text-nexus-text-sec hover:text-nexus-text transition-all group mr-2 cursor-pointer">
+              <button onClick={onBack} className="p-2 sm:p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-xl text-nexus-text-sec hover:text-nexus-text transition-all group mr-2 cursor-pointer" type="button" >
                  <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
               <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex flex-shrink-0 items-center justify-center">

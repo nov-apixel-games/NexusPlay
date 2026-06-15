@@ -103,7 +103,7 @@ function AdSection({ title, active, onToggle, description = "Modifica la visibil
           <button 
             onClick={onToggle}
             className={`w-12 h-6 rounded-full transition-colors relative shadow-lg ${active ? 'bg-red-600' : 'bg-red-950/50 border border-red-900/30'}`}
-          >
+           type="button" >
             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${active ? 'left-7 drop-shadow-lg' : 'left-1'}`} />
           </button>
         </div>
@@ -223,7 +223,7 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
             <div>
               <h4 className="font-bold text-red-400">Modo Mantenimiento {localSettings.maintenanceMode && '(Activo)'}</h4>
               <p className="text-sm text-red-200/50 mt-1 mb-3">Si activas esto, nadie salvo los administradores podrán acceder a la plataforma.</p>
-              <button onClick={toggleMaintenance} className={`px-4 py-2 font-bold rounded-xl text-sm transition-colors active:scale-95 ${localSettings.maintenanceMode ? 'bg-red-950 hover:bg-black text-red-500 border border-red-900/50' : 'bg-red-600 hover:bg-red-500 text-nexus-text shadow-[0_0_15px_rgba(220,38,38,0.4)]'}`}>
+              <button onClick={toggleMaintenance} className={`px-4 py-2 font-bold rounded-xl text-sm transition-colors active:scale-95 ${localSettings.maintenanceMode ? 'bg-red-950 hover:bg-black text-red-500 border border-red-900/50' : 'bg-red-600 hover:bg-red-500 text-nexus-text shadow-[0_0_15px_rgba(220,38,38,0.4)]'}`} type="button" >
                 {localSettings.maintenanceMode ? 'Desactivar Modo Seguro' : 'Activar Modo Seguro'}
               </button>
             </div>
@@ -231,7 +231,7 @@ export function AdminSettings({ settings, setSettings, addToast }: any) {
         </div>
         
         <div className="pt-4 border-t border-red-900/20">
-          <button onClick={save} className="w-full h-12 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-nexus-text font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+          <button onClick={save} className="w-full h-12 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-nexus-text font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-[0_0_20px_rgba(220,38,38,0.3)]" type="button" >
             Guardar Cambios
           </button>
         </div>
@@ -690,7 +690,7 @@ Si la petición NO es una ACCIÓN que modifique estado (solo lectura/charla), re
                 <button 
                   onClick={save}
                   className="w-full py-3 bg-nexus-cyan hover:bg-cyan-400 text-nexus-bg font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 text-[10px]"
-                >
+                 type="button" >
                   Guardar
                 </button>
                 <button 
@@ -846,7 +846,7 @@ export function AdminDatabaseTools({ addToast }: any) {
         <div className="glass-panel p-6 rounded-3xl border-red-900/20 bg-nexus-card/80">
            <h3 className="text-lg font-bold mb-4 flex justify-between items-center text-red-100">
              <span>Volúmenes de Datos (Filas)</span>
-             <button onClick={fetchStats} className="p-2 bg-nexus-surface hover:bg-nexus-surface-hover rounded-xl text-nexus-text transition-colors">
+             <button onClick={fetchStats} className="p-2 bg-nexus-surface hover:bg-nexus-surface-hover rounded-xl text-nexus-text transition-colors" type="button" >
                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
              </button>
            </h3>

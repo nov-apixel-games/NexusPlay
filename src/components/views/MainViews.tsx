@@ -106,7 +106,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
     };
     
     fetchFeed();
-  }, [apps]);
+  }, [apps, t]);
 
   const packs: any[] = [];
 
@@ -129,7 +129,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
               <div key={item.id} className="glass-panel p-5 sm:p-6 rounded-3xl border-nexus-border hover:border-cyan-500/30 transition-all bg-nexus-card">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-cyan-900 flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
-                    {item.avatar ? <img src={item.avatar} className="w-full h-full object-cover" /> : item.user[0]}
+                    {item.avatar ? <img src={item.avatar} className="w-full h-full object-cover" alt="" /> : item.user[0]}
                   </div>
                   <div>
                     <h3 className="font-bold text-nexus-text leading-tight flex items-center gap-2">
@@ -176,7 +176,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                 {trends.map((app, idx) => (
                    <div key={app.id} onClick={() => onAppClick?.(app)} className="flex items-center gap-3 cursor-pointer group">
                       <div className="w-6 font-black text-nexus-text-sec group-hover:text-cyan-400 transition-colors">#{idx+1}</div>
-                      <img src={app.icon} className="w-10 h-10 rounded-xl object-cover" />
+                      <img src={app.icon} className="w-10 h-10 rounded-xl object-cover" alt="" />
                       <div className="flex-1 min-w-0">
                          <p className="text-sm font-bold text-nexus-text truncate">{app.name}</p>
                          <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest">{t(`cat.${app.category}`) || app.category}</p>
@@ -198,7 +198,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
           {packs.length > 0 ? packs.map(pack => (
              <div key={pack.id} className="glass-panel rounded-[2rem] overflow-hidden border-nexus-border shadow-2xl relative group">
                 <div className="h-48 sm:h-64 relative w-full overflow-hidden">
-                   <img src={pack.banner} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
+                   <img src={pack.banner} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" alt="" />
                    <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent" />
                    <div className="absolute top-4 right-4 bg-nexus-surface backdrop-blur-md px-3 py-1.5 rounded-xl border border-nexus-border flex items-center gap-2">
                        <Heart className="w-4 h-4 text-red-500" />
@@ -212,7 +212,7 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                      {pack.apps.map(app => (
                         <div key={app.id} onClick={() => onAppClick?.(app)} className="bg-nexus-card border border-nexus-border rounded-2xl p-3 flex items-center gap-3 cursor-pointer hover:bg-nexus-card-hover transition-colors">
-                           <img src={app.icon} className="w-10 h-10 rounded-xl object-cover shadow-sm" />
+                           <img src={app.icon} className="w-10 h-10 rounded-xl object-cover shadow-sm" alt="" />
                            <div className="min-w-0">
                               <h4 className="font-bold text-sm text-nexus-text truncate">{app.name}</h4>
                               <p className="text-xs text-nexus-text-sec capitalize truncate">{t(`cat.${app.category}`) || app.category}</p>
@@ -359,7 +359,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
         <button 
           onClick={onLoginClick}
           className="mt-4 px-8 py-3 bg-cyan-500 text-nexus-bg font-bold rounded-xl hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
-        >
+         type="button" >
           Iniciar sesión / Registrarse
         </button>
       </div>
@@ -437,7 +437,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       {/* Profile Banner & Info */}
       <div className="glass-panel rounded-[2rem] border-nexus-border overflow-hidden">
         <div className="h-32 sm:h-48 bg-gradient-to-br from-cyan-900/40 to-purple-900/40 relative">
-           <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&q=80&w=2800" className="w-full h-full object-cover opacity-30" />
+           <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&q=80&w=2800" className="w-full h-full object-cover opacity-30" alt="" />
            <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent" />
         </div>
         
@@ -793,7 +793,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                        onClick={handleSaveProfile} 
                        disabled={saving || uploading || username.length < 3} 
                        className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-nexus-bg font-black uppercase tracking-widest rounded-xl text-[11px] transition-all duration-300 shadow-nexus-glow flex items-center justify-center gap-2 cursor-pointer"
-                     >
+                      type="button" >
                        {saving ? (
                          <>
                            <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
@@ -918,7 +918,7 @@ export function DownloadsView({ apps, onAppClick }: { apps: AppItem[], onAppClic
           <button 
             onClick={clearHistory}
             className="text-sm text-red-400 hover:text-red-300 font-bold transition-colors"
-          >
+           type="button" >
             Limpiar Historial
           </button>
         )}
@@ -1045,7 +1045,7 @@ export function EventsView({ apps, onAppClick }: { apps?: AppItem[], onAppClick?
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                {newlyUpdated.map(app => (
                  <div key={app.id} onClick={() => onAppClick?.(app)} className="glass-panel p-5 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-nexus-card transition-all hover:scale-[1.02]">
-                    <img src={app.icon} className="w-12 h-12 rounded-[1rem] object-cover" />
+                    <img src={app.icon} className="w-12 h-12 rounded-[1rem] object-cover" alt="" />
                     <div>
                       <h4 className="font-bold text-nexus-text text-lg">{app.name}</h4>
                       <p className="text-nexus-cyan font-bold text-xs uppercase tracking-wider">Nueva v{app.version}</p>
@@ -1202,7 +1202,7 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
 
       const { data, error } = await supabase
         .from('apps')
-        .select('*')
+        .select('*').limit(500)
         .eq('status', 'published')
         .or(`app_name.ilike.${searchTerm},company_name.ilike.${searchTerm},category.ilike.${searchTerm},description.ilike.${searchTerm}`);
 
@@ -1250,7 +1250,7 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
         <button 
           onClick={onBack}
           className="p-2 -ml-2 rounded-full hover:bg-nexus-card-hover text-nexus-text-sec hover:text-nexus-text transition-colors"
-        >
+         type="button" >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <div className="flex-1 relative">
@@ -1313,7 +1313,7 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
                    onClick={() => onAppClick?.(app)} 
                    className="flex items-center gap-4 bg-transparent hover:bg-nexus-card rounded-2xl p-3 cursor-pointer transition-colors group"
                 >
-                  <img src={app.icon} className="w-12 h-12 sm:w-14 sm:h-14 rounded-[1rem] object-cover shadow-sm border border-nexus-border group-hover:scale-105 transition-transform" />
+                  <img src={app.icon} className="w-12 h-12 sm:w-14 sm:h-14 rounded-[1rem] object-cover shadow-sm border border-nexus-border group-hover:scale-105 transition-transform" alt="" />
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <h3 className="text-base sm:text-lg font-bold text-nexus-text leading-tight truncate mb-0.5">{app.name}</h3>
                     <p className="text-xs sm:text-sm text-nexus-text-sec truncate mb-1">
@@ -1346,12 +1346,12 @@ export function SearchView({ onAppClick, onBack, initialQuery = '' }: { apps?: A
         </div>
       </div>
       
-      <style dangerouslySetInnerHTML={{__html: `
+      <style>{`
         @keyframes loading {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(400%); }
         }
-      `}} />
+      `}</style>
     </motion.div>
   );
 }

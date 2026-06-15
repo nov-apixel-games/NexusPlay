@@ -37,13 +37,13 @@ export default function OfflineFallback({ onBack, onGoToGames, title, descriptio
         <button
           onClick={onBack}
           className="flex items-center justify-center gap-2 bg-nexus-card hover:bg-nexus-card border border-nexus-border text-nexus-text font-bold px-6 py-3.5 rounded-2xl transition-all w-full sm:w-auto"
-        >
+         type="button" >
           <ArrowLeft className="w-5 h-5 text-nexus-text-sec" /> Volver al Inicio
         </button>
         <button
           onClick={onGoToGames}
           className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-nexus-text font-black px-6 py-3.5 rounded-2xl transition-all shadow-lg hover:shadow-nexus-glow w-full sm:w-auto"
-        >
+         type="button" >
           <Gamepad2 className="w-5 h-5" /> Entrar al Games Hub
         </button>
       </div>

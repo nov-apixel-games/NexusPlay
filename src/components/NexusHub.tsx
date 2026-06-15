@@ -55,7 +55,7 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
 
   const fetchCommunities = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase.from('communities').select('*').order('name');
+    const { data, error } = await supabase.from('communities').select('*').limit(500).order('name');
     
     if (error && error.code === '42P01') {
       console.error("🚨 TABLA INEXISTENTE DETECTADA (42P01) 🚨");
@@ -102,7 +102,7 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
          <Shield className="w-20 h-20 text-cyan-500 mb-6" />
          <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t('community.restricted')}</h2>
          <p className="text-nexus-text-sec max-w-lg mb-8">{t('community.loginRequired')}</p>
-         <button onClick={onBack} className="px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">{t('nav.home')}</button>
+         <button onClick={onBack} className="px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl" type="button" >{t('nav.home')}</button>
       </div>
     );
   }
@@ -113,7 +113,7 @@ export default function NexusHub({ session, userProfile, onBack }: NexusHubProps
          <AlertTriangle className="w-20 h-20 text-red-500 mb-6" />
          <h2 className="text-2xl font-black text-nexus-text uppercase italic tracking-tighter mb-4">{t("hub.dbMissing")}</h2>
          <p className="text-nexus-text-sec max-w-lg mb-4">{t("hub.dbMissingDesc")}</p>
-         <button onClick={onBack} className="mt-4 px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl">Volver al inicio</button>
+         <button onClick={onBack} className="mt-4 px-6 py-2 bg-nexus-card-hover hover:bg-nexus-card text-nexus-text rounded-xl" type="button" >Volver al inicio</button>
       </div>
     );
   }
@@ -184,7 +184,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
 
       <header className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-4 sticky top-0 z-30 bg-nexus-surface backdrop-blur-md border-b border-nexus-border/50">
         <div className="flex items-center gap-3 sm:gap-4">
-           <button onClick={onBack} className="w-10 h-10 sm:w-12 sm:h-12 bg-nexus-surface border border-cyan-500/30 hover:bg-cyan-900/40 rounded-xl flex items-center justify-center transition-all shadow-nexus-glow">
+           <button onClick={onBack} className="w-10 h-10 sm:w-12 sm:h-12 bg-nexus-surface border border-cyan-500/30 hover:bg-cyan-900/40 rounded-xl flex items-center justify-center transition-all shadow-nexus-glow" type="button" >
              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
            </button>
            <div className="relative">
@@ -192,7 +192,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
              <p className="text-[8px] sm:text-[10px] text-cyan-400 font-mono tracking-widest bg-cyan-950/80 px-2 py-0.5 rounded border border-nexus-border absolute -bottom-3 sm:-bottom-1 left-0">SYS.ONLINE</p>
            </div>
         </div>
-        <button onClick={onCreateClick} className="px-3 py-2 sm:px-5 sm:py-3 bg-cyan-500 hover:bg-cyan-400 text-nexus-bg font-black uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all shadow-nexus-glow animate-pulse flex items-center gap-1.5">
+        <button onClick={onCreateClick} className="px-3 py-2 sm:px-5 sm:py-3 bg-cyan-500 hover:bg-cyan-400 text-nexus-bg font-black uppercase text-[10px] sm:text-xs tracking-widest rounded-xl transition-all shadow-nexus-glow animate-pulse flex items-center gap-1.5" type="button" >
            <Plus className="w-4 h-4"/> <span className="hidden sm:inline">{t('hub.startServer') || t("hub.startServer")}</span>
         </button>
       </header>
@@ -205,7 +205,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
              <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-6 pt-2 px-2 -mx-2">
                {recommended.map((c: any) => (
                  <div key={c.id} onClick={() => onSelect(c)} className="snap-center shrink-0 w-[280px] sm:w-[400px] h-[200px] sm:h-[240px] rounded-[24px] relative group cursor-pointer border border-cyan-500/20 hover:border-cyan-400 shadow-nexus-glow overflow-hidden transition-all duration-300">
-                    <img src={c.image_url} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 mix-blend-screen" />
+                    <img src={c.image_url} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 mix-blend-screen" alt="" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                     <div className="absolute top-4 right-4 bg-nexus-surface border border-cyan-500/50 text-cyan-400 px-2 py-1 rounded text-[9px] font-black tracking-widest shadow-nexus-glow uppercase animate-pulse">
                       LIVE
@@ -228,7 +228,7 @@ function CommunitiesDashboard({ communities, isLoading, onSelect, onCreateClick,
                      <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/5 blur-2xl group-hover:bg-cyan-500/20 transition-all rounded-full pointer-events-none"></div>
                      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-black rounded-[14px] border border-nexus-border overflow-hidden relative shadow-inner">
                         {c.image_url ? (
-                           <img src={c.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 mix-blend-screen group-hover:scale-110 transition-transform duration-500"/>
+                           <img src={c.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 mix-blend-screen group-hover:scale-110 transition-transform duration-500"alt="" />
                         ) : (
                            <div className="w-full h-full flex items-center justify-center">
                               <span className="text-cyan-800 font-black text-2xl group-hover:text-cyan-500 transition-colors uppercase">{c.name[0]}</span>
@@ -391,7 +391,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
     const msgIds = messages.map(m => m.id);
     const { data, error } = await supabase
       .from('message_reactions')
-      .select('*')
+      .select('*').limit(500)
       .in('message_id', msgIds);
     if (data) {
       setReactions(data);
@@ -408,7 +408,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
     const init = async () => {
       try {
         const { data: memberData } = await supabase.from('community_members')
-          .select('*')
+          .select('*').limit(500)
           .eq('community_id', community.id)
           .eq('user_id', session.user.id)
           .single();
@@ -808,13 +808,13 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
        <header className="shrink-0 bg-nexus-surface backdrop-blur-xl border-b border-nexus-border/80 flex flex-col justify-center px-2 sm:px-6 py-2 sm:py-4 z-20 shadow-nexus-glow">
           <div className="flex items-center justify-between mb-3 mt- safe-top">
              <div className="flex items-center gap-2 sm:gap-4 flex-1 overflow-hidden">
-                <button onClick={onBack} className="p-2 sm:p-2.5 border border-nexus-border rounded-lg text-cyan-500 hover:bg-cyan-950/50 hover:text-cyan-300 transition-colors shrink-0 shadow-inner">
+                <button onClick={onBack} className="p-2 sm:p-2.5 border border-nexus-border rounded-lg text-cyan-500 hover:bg-cyan-950/50 hover:text-cyan-300 transition-colors shrink-0 shadow-inner" type="button" >
                    <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
                 <div className="flex items-center gap-3 min-w-0" onClick={() => setIsSidebarOpen(true)}>
                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black border border-cyan-500/50 rounded-[10px] shrink-0 overflow-hidden shadow-nexus-glow">
                       {currentCommunity.image_url ? (
-                        <img src={currentCommunity.image_url} className="w-full h-full object-cover" />
+                        <img src={currentCommunity.image_url} className="w-full h-full object-cover" alt="" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-cyan-400 font-black text-xl uppercase">{currentCommunity.name[0]}</div>
                       )}
@@ -832,7 +832,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
              {/* HUD elements */}
              <div className="hidden sm:flex items-center gap-4 shrink-0 border-l border-nexus-border/50 pl-4 ml-4">
                  {isJoined && (
-                   <button onClick={handleLeave} disabled={isJoining} className="text-[10px] font-black uppercase text-red-500 hover:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg mr-2 transition-colors">
+                   <button onClick={handleLeave} disabled={isJoining} className="text-[10px] font-black uppercase text-red-500 hover:text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg mr-2 transition-colors" type="button" >
                      {t('community.leave')}
                    </button>
                  )}
@@ -905,7 +905,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                 onClick={handleJoin} 
                 disabled={isJoining}
                 className="px-8 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-nexus-bg font-black uppercase text-sm tracking-widest rounded-[12px] shadow-nexus-glow transition-all"
-              >
+               type="button" >
                 {isJoining ? (t('community.processing')) : (t('community.join'))}
               </button>
            </div>
@@ -940,7 +940,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                              <Bot className="w-4 h-4 sm:w-5 sm:h-5 " />
                           </div>
                         ) : msg.profiles?.avatar_url ? (
-                            <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-[5px] grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"/>
+                            <img src={msg.profiles.avatar_url} className="w-full h-full object-cover rounded-[5px] grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"alt="" />
                          ) : <span className="text-cyan-500 font-mono font-bold text-xs sm:text-sm">{(msg.profiles?.username)[0]?.toUpperCase()}</span>}
                      </div>
 
@@ -971,7 +971,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
                                
                                {parsed.image_url && (
                                  <div className="relative mt-3 inline-block">
-                                   <img src={parsed.image_url} onClick={() => window.open(parsed.image_url||'', '_blank')} className="w-full max-w-[200px] sm:max-w-[280px] rounded-lg border border-nexus-border/50 hover:border-cyan-500/50 grayscale hover:grayscale-0 transition-all cursor-pointer shadow-lg" />
+                                   <img src={parsed.image_url} onClick={() => window.open(parsed.image_url||'', '_blank')} alt="" className="w-full max-w-[200px] sm:max-w-[280px] rounded-lg border border-nexus-border/50 hover:border-cyan-500/50 grayscale hover:grayscale-0 transition-all cursor-pointer shadow-lg" />
                                    <div className="absolute top-2 right-2 bg-nexus-overlay backdrop-blur border border-red-500/50 text-red-400 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(239,68,68,0.3)] pointer-events-none uppercase tracking-widest flex items-center gap-1">
                                      <Timer className="w-3 h-3" /> 7d
                                    </div>
@@ -1025,7 +1025,7 @@ function ChatRoom({ community, communities, onSelectCommunity, session, userProf
          <div className="p-3 sm:p-5 shrink-0 relative bg-black border-t border-nexus-border/50 z-20 pb-safe">
              {chatImagePreviewUrl && (
                <div className="absolute bottom-full left-4 bg-nexus-card/80 backdrop-blur-md border border-nexus-border p-2 rounded-t-xl flex gap-3 items-center shadow-lg">
-                  <img src={chatImagePreviewUrl} className="w-14 h-14 object-cover rounded-lg border border-nexus-border" />
+                  <img src={chatImagePreviewUrl} className="w-14 h-14 object-cover rounded-lg border border-nexus-border" alt="" />
                   <button onClick={() => {setChatImageFile(null); setChatImagePreviewUrl(null);}} className="w-6 h-6 bg-red-950 rounded-full flex items-center justify-center text-red-500 hover:text-red-300 transition-colors"><X className="w-3 h-3"/></button>
                </div>
              )}
@@ -1090,7 +1090,7 @@ function CreateCommunityModal({ session, isAdmin, onClose, onSuccess }: any) {
         className="bg-nexus-card sm:border border-nexus-border sm:rounded-3xl rounded-t-3xl w-full h-[90vh] sm:h-auto sm:max-w-md p-6 sm:p-8 relative shadow-2xl overflow-y-auto"
       >
         <div className="w-12 h-1.5 bg-gray-800 rounded-full mx-auto sm:hidden mb-6"></div>
-        <button onClick={onClose} className="absolute top-6 right-6 text-nexus-text-sec hover:text-nexus-text transition-colors bg-nexus-card rounded-full p-2" disabled={isCreating}>
+        <button onClick={onClose} className="absolute top-6 right-6 text-nexus-text-sec hover:text-nexus-text transition-colors bg-nexus-card rounded-full p-2" disabled={isCreating} type="button" >
           <X className="w-5 h-5" />
         </button>
 

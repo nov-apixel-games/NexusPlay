@@ -318,7 +318,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
               ) : (
                 <div className="flex items-center justify-between p-2 bg-nexus-surface border border-nexus-border rounded-xl">
                   <div className="flex items-center gap-3">
-                    <img src={URL.createObjectURL(files.icon)} className="w-10 h-10 rounded-lg object-cover" />
+                    <img src={URL.createObjectURL(files.icon)} className="w-10 h-10 rounded-lg object-cover" alt="" />
                     <p className="text-xs font-bold text-nexus-text truncate max-w-[120px]">{files.icon.name}</p>
                   </div>
                   <button type="button" onClick={() => removeFile('icon')} className="p-1.5 hover:bg-red-500/10 text-red-400 rounded-lg">
@@ -335,7 +335,7 @@ export default function AppUploadForm({ onSuccess, onCancel, developerId }: AppU
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
               {files.screenshots.map((file, idx) => (
                 <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden bg-nexus-card border border-nexus-border">
-                   <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
+                   <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="" />
                    <button 
                     type="button"
                     onClick={() => removeFile('screenshots', idx)} 

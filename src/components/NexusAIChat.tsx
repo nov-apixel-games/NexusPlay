@@ -353,7 +353,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
 
         <header className="h-16 shrink-0 border-b border-nexus-border bg-nexus-card/80 backdrop-blur-md flex items-center justify-between px-4 z-20 sticky top-0 transition-colors">
           <div className="flex items-center gap-3">
-             <button onClick={onBack} className="p-2 -ml-2 text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card-hover rounded-full transition-all active:scale-95">
+             <button onClick={onBack} className="p-2 -ml-2 text-nexus-text-sec hover:text-nexus-text hover:bg-nexus-card-hover rounded-full transition-all active:scale-95" type="button" >
                 <ArrowLeft className="w-5 h-5" />
              </button>
              <div 

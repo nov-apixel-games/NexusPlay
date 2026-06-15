@@ -221,13 +221,13 @@ export function AppDetailView({
           <button 
             onClick={onBack}
             className="flex items-center gap-3 px-6 py-3 bg-nexus-card hover:bg-nexus-cyan/10 border border-nexus-border hover:border-nexus-cyan/30 rounded-2xl transition-all font-black text-xs uppercase tracking-widest group shadow-lg"
-          >
+           type="button" >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-nexus-cyan" />
             <span>{backLabel}</span>
           </button>
           
           <div className="flex items-center gap-3">
-             <button onClick={toggleFavorite} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-red-500 cursor-pointer">
+             <button onClick={toggleFavorite} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-red-500 cursor-pointer" type="button" >
                <Heart className={`w-5 h-5 ${favoriteIds.has(app.id) ? 'fill-red-500 text-red-500' : ''}`} />
              </button>
              <button className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-2xl border border-nexus-border transition-all text-nexus-text-sec hover:text-nexus-cyan cursor-pointer">
@@ -492,7 +492,7 @@ export function AppDetailView({
                     onClick={submitReview}
                     disabled={!newReview.trim()}
                     className="w-full py-2.5 bg-nexus-cyan text-nexus-bg font-black text-xs uppercase rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  >
+                   type="button" >
                     <Send className="w-4 h-4" /> {t("app.sendReview") || "Enviar Opinión"}
                   </button>
                 </div>

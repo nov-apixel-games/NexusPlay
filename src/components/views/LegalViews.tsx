@@ -229,7 +229,7 @@ export function AboutView({ storeName, onBack }: { storeName: string; onBack: ()
       <button 
         onClick={onBack}
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
-      >
+       type="button" >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
         {t('contact.back')}
       </button>
@@ -334,7 +334,7 @@ export function ContactView({ onBack }: { onBack: () => void }) {
       <button 
         onClick={onBack}
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
-      >
+       type="button" >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
         {t('contact.back')}
       </button>
@@ -423,7 +423,7 @@ export function LegalPage({ title, lastUpdated, children, onBack }: any) {
       <button 
         onClick={onBack}
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
-      >
+       type="button" >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
         {t('contact.back')}
       </button>
@@ -457,7 +457,7 @@ export function HelpView({ onBack }: { onBack: () => void }) {
       <button 
         onClick={onBack}
         className="mb-8 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-nexus-text-sec hover:text-cyan-400 transition-colors"
-      >
+       type="button" >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
         {t('contact.back')}
       </button>

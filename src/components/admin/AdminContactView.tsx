@@ -17,7 +17,7 @@ export function AdminContactView({ addToast }: { addToast: (msg: string, type: T
     try {
       const { data, error } = await supabase
         .from('contact_messages')
-        .select('*')
+        .select('*').limit(500)
         .order('created_at', { ascending: false });
       
       if (error) throw error;

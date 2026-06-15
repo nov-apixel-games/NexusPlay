@@ -723,7 +723,7 @@ export const BottomPanel = ({
                           <img
                             src={previewAsset.thumbnail}
                             className="w-full h-full object-cover opacity-20 blur-sm scale-105 saturate-200"
-                          />
+                          alt="" />
                         )}
                       </div>
 
@@ -934,7 +934,7 @@ export const BottomPanel = ({
                 onClick={handleGenerate}
                 disabled={isLoading}
                 className={`bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-nexus-text px-4 ${mobile ? "py-3 text-base" : "py-2 text-sm"} rounded font-bold flex items-center justify-center gap-2`}
-              >
+               type="button" >
                 {isLoading ? (
                   <Loader2 className="animate-spin" size={18} />
                 ) : (

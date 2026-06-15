@@ -135,7 +135,7 @@ function QuickAction({ icon: Icon, label, color, onClick }: { icon: any, label: 
     <button 
       onClick={onClick} 
       className={`group relative flex items-center gap-2 sm:gap-3 px-5 sm:px-7 py-3 sm:py-4 rounded-[16px] sm:rounded-[20px] bg-gradient-to-br border transition-all duration-300 ease-out hover:-translate-y-1 active:scale-[0.98] ${color} backdrop-blur-xl overflow-hidden`}
-    >
+     type="button" >
       <div className="absolute inset-0 bg-nexus-card opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="relative flex items-center justify-center p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-nexus-surface shadow-inner group-hover:scale-110 transition-transform duration-300">
          <Icon className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md" />

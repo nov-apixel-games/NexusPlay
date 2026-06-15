@@ -48,6 +48,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       setAvatarUrl(userProfile?.avatar_url || metadata.avatar_url || '');
       setBio(userProfile?.bio || metadata.bio || '');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userProfile, session]);
 
   const { favoriteIds } = useFavoritesStore();
@@ -59,6 +60,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
        loadRealStats(session.user.id);
        loadFollowedCommunities(session.user.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, favoriteIds.size]);
   
   const loadFollowedCommunities = async (userId: string) => {
@@ -181,7 +183,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
         </div>
         <h1 className="text-3xl font-black">{t('profile.title') || 'Tu Cuenta Nexus'}</h1>
         <p className="text-nexus-text-sec max-w-sm">{t('profile.desc') || 'Inicia sesión para acceder.'}</p>
-        <button onClick={onLoginClick} className="mt-4 px-8 py-3 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20">
+        <button onClick={onLoginClick} className="mt-4 px-8 py-3 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20" type="button" >
           {t('menu.login') || 'Iniciar sesión'}
         </button>
       </div>
@@ -268,7 +270,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                         <button onClick={() => { setIsEditing(false); setError(null); }} className="w-full sm:w-auto px-6 py-3 bg-nexus-card border border-nexus-border text-nexus-text rounded-xl font-black hover:bg-nexus-card-hover transition-colors">
                           Cancelar
                         </button>
-                        <button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full sm:w-auto px-8 py-3 bg-cyan-500 text-white font-black rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors shadow-lg shadow-cyan-500/20">
+                        <button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full sm:w-auto px-8 py-3 bg-cyan-500 text-white font-black rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors shadow-lg shadow-cyan-500/20" type="button" >
                           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                           {saving ? t("profile.saving") || "Guardando..." : t("profile.save") || "Guardar Perfil"}
                         </button>
@@ -290,10 +292,10 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                        <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm group">
                           <Edit3 className="w-4 h-4 group-hover:scale-110 transition-transform text-cyan-400" /> {t("profile.edit") || "Editar"}
                        </button>
-                       <button onClick={onSettingsClick} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm">
+                       <button onClick={onSettingsClick} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm" type="button" >
                           <Settings className="w-4 h-4 text-nexus-text-sec" />
                        </button>
-                       <button onClick={onLogoutClick} className="w-full sm:w-auto px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-2xl font-black flex items-center justify-center gap-2 transition-all sm:ml-auto">
+                       <button onClick={onLogoutClick} className="w-full sm:w-auto px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-2xl font-black flex items-center justify-center gap-2 transition-all sm:ml-auto" type="button" >
                           <LogOut className="w-4 h-4" /> {t("profile.logout") || "Salir"}
                        </button>
                     </div>
@@ -441,7 +443,7 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
                <div key={comm.id} className="bg-nexus-bg border border-nexus-border p-4 rounded-[1.5rem] flex items-center gap-4">
                   <div className="w-12 h-12 bg-black border border-cyan-500/50 rounded-[12px] shrink-0 overflow-hidden relative">
                      {comm.image_url ? (
-                       <img src={comm.image_url} className="w-full h-full object-cover" />
+                       <img src={comm.image_url} className="w-full h-full object-cover" alt="" />
                      ) : (
                        <div className="w-full h-full flex items-center justify-center text-cyan-400 font-black text-xl uppercase">{comm.name?.[0]}</div>
                      )}

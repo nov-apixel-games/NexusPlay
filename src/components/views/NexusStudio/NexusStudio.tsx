@@ -53,7 +53,7 @@ export const NexusStudio: React.FC<NexusStudioProps> = ({ onBack }) => {
           <button onClick={appState === 'play' ? () => setAppState('edit') : () => setAppState('play')} className={`p-2 rounded min-h-[40px] min-w-[40px] flex items-center justify-center ${appState === 'play' ? 'bg-red-600' : 'bg-green-600'} text-nexus-text`}>
             {appState === 'play' ? <Square size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
           </button>
-          <button onClick={onBack} className="bg-red-900/30 text-red-500 hover:bg-red-900 hover:text-nexus-text p-2 rounded min-h-[40px] px-4 flex items-center justify-center font-bold text-xs transition-colors">
+          <button onClick={onBack} className="bg-red-900/30 text-red-500 hover:bg-red-900 hover:text-nexus-text p-2 rounded min-h-[40px] px-4 flex items-center justify-center font-bold text-xs transition-colors" type="button" >
             Salir
           </button>
         </div>

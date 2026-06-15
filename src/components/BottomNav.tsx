@@ -27,7 +27,7 @@ export default function BottomNav({ activeView, onNavigate }: BottomNavProps) {
 
 function NavItem({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center w-[54px] pt-1 transition-all ${active ? 'text-cyan-400 -translate-y-1' : 'text-nexus-text-sec hover:text-nexus-text'}`}>
+    <button onClick={onClick} className={`flex flex-col items-center justify-center w-[54px] pt-1 transition-all ${active ? 'text-cyan-400 -translate-y-1' : 'text-nexus-text-sec hover:text-nexus-text'}`} type="button" >
       <Icon className={`w-5 h-5 mb-1 transition-transform ${active ? 'scale-110' : ''}`} />
       <span className={`text-[9px] font-black tracking-wider uppercase truncate w-full px-1 ${active ? 'opacity-100' : 'opacity-80'}`}>{label}</span>
       {active && <div className="w-1 h-1 bg-cyan-400 rounded-full mt-1 shadow-nexus-glow"></div>}

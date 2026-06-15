@@ -363,7 +363,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       if (session?.user?.id) {
         const { data, error } = await supabase
           .from("studio_assets")
-          .select("*")
+          .select('*').limit(500)
           .eq("user_id", session.user.id);
         if (data && !error) {
           const mapped = data.map((d) => ({

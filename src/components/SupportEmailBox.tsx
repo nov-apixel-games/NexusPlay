@@ -39,7 +39,7 @@ export function SupportEmailBox({ category }: { category?: string }) {
              onClick={handleCopy} 
              className="w-10 h-10 rounded-xl bg-nexus-card hover:bg-nexus-card-hover flex items-center justify-center border border-nexus-border text-nexus-text-sec hover:text-nexus-text transition-all active:scale-95"
              title="{t('contact.copyEmail')}"
-           >
+            type="button" >
              {copied ? <CheckCircle className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}
            </button>
            

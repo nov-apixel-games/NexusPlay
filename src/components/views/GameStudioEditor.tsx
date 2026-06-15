@@ -1089,7 +1089,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
       {/* Dynamic Header */}
       <div className="bg-nexus-card border-b border-nexus-border py-4 pt-8 sm:pt-4 px-6 flex items-center justify-between z-[100] shrink-0 shadow-lg">
          <div className="flex items-center gap-4">
-           <button onClick={onBack} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-full text-nexus-text-sec hover:text-nexus-text transition-all cursor-pointer">
+           <button onClick={onBack} className="p-3 bg-nexus-card hover:bg-nexus-card-hover rounded-full text-nexus-text-sec hover:text-nexus-text transition-all cursor-pointer" type="button" >
               <ChevronLeft className="w-5 h-5 animate-pulse" />
            </button>
            <div>
@@ -1102,11 +1102,11 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
          
          <div className="flex items-center gap-3">
            {mode === 'edit' ? (
-             <button onClick={startPlayMode} className="flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-nexus-bg px-5 py-2.5 rounded-xl font-bold font-mono shadow-nexus-glow transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
+             <button onClick={startPlayMode} className="flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-nexus-bg px-5 py-2.5 rounded-xl font-bold font-mono shadow-nexus-glow transition-all transform hover:scale-105 active:scale-95 cursor-pointer" type="button" >
                <Play className="w-4.5 h-4.5 fill-black" /> PROBAR JUEGO
              </button>
            ) : (
-             <button onClick={stopPlayMode} className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-nexus-text px-5 py-2.5 rounded-xl font-bold font-mono shadow-[0_0_20px_rgba(244,63,94,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
+             <button onClick={stopPlayMode} className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-nexus-text px-5 py-2.5 rounded-xl font-bold font-mono shadow-[0_0_20px_rgba(244,63,94,0.4)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer" type="button" >
                <Square className="w-4.5 h-4.5 fill-white" /> PARAR EDITOR
              </button>
            )}
@@ -1184,7 +1184,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                      <button
                        onClick={startPlayMode}
                        className="px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-nexus-bg font-black uppercase tracking-wider rounded-xl transition-all transform hover:scale-105 cursor-pointer"
-                     >
+                      type="button" >
                        Reintentar Partida
                      </button>
                   </div>
@@ -1203,7 +1203,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                     <button 
                       onClick={buyClickUpgrade}
                       className="w-full bg-cyan-950/20 hover:bg-cyan-950/40 border border-cyan-500/25 p-3 rounded-xl flex items-center justify-between text-left transition-all active:scale-95 cursor-pointer"
-                    >
+                     type="button" >
                        <div>
                           <div className="text-xs font-bold text-nexus-text font-mono">🔨 Martillo de Bronce</div>
                           <div className="text-[10px] text-cyan-300 font-semibold font-mono">+$1 / click permanente</div>
@@ -1216,7 +1216,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                     <button 
                       onClick={buyAutoUpgrade}
                       className="w-full bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/25 p-3 rounded-xl flex items-center justify-between text-left transition-all active:scale-95 cursor-pointer"
-                    >
+                     type="button" >
                        <div>
                           <div className="text-xs font-bold text-nexus-text font-mono">⚙ Taladro Automatizado</div>
                           <div className="text-[10px] text-purple-300 font-semibold font-mono">+$2 / segundo auto</div>
@@ -1231,7 +1231,7 @@ export function GameStudioEditor({ initialTemplate, onBack }: GameStudioEditorPr
                     <button 
                       onClick={resetClickerProgress}
                       className="flex-1 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-[10px] font-bold font-mono py-2 rounded-lg text-center cursor-pointer transition-colors"
-                    >
+                     type="button" >
                       RESETEAR PROGRESO
                     </button>
                  </div>
@@ -1390,7 +1390,7 @@ function ToolbarBtn({ icon: Icon, label, onClick, color = "text-nexus-text", act
       onClick={onClick}
       className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center flex-col gap-1 transition-all group cursor-pointer ${active ? 'bg-nexus-card-hover border border-nexus-border' : 'bg-transparent hover:bg-nexus-card border border-transparent'}`}
       title={label}
-    >
+     type="button" >
       <Icon className={`w-5.5 h-5.5 ${color} group-hover:scale-110 transition-transform`} />
     </button>
   );

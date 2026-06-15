@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = user_id AND role = 'admin'
+    SELECT 1 FROM public.profiles WHERE id = user_id AND (role = 'admin' OR email = 'elmenorjn@gmail.com')
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
@@ -141,6 +141,25 @@ ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 DROP POLICY IF EXISTS "Users can update own profile." ON public.profiles;
 CREATE POLICY "Users can update own profile." 
 ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Prevent non-admins from changing their own role
+CREATE OR REPLACE FUNCTION public.check_profile_role_update()
+RETURNS trigger AS $$
+BEGIN
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    -- If the user changing the role is not an admin, and is not assigning the initial role
+    IF NOT public.is_admin(auth.uid()) AND NEW.id = auth.uid() THEN
+      NEW.role = OLD.role;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_prevent_role_escalation ON public.profiles;
+CREATE TRIGGER trg_prevent_role_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE PROCEDURE public.check_profile_role_update();
 
 DROP POLICY IF EXISTS "Users can delete own profile." ON public.profiles;
 CREATE POLICY "Users can delete own profile." 
@@ -315,9 +334,33 @@ DROP POLICY IF EXISTS "Users can delete their own reviews." ON public.reviews;
 CREATE POLICY "Users can delete their own reviews." 
 ON public.reviews FOR DELETE USING (auth.uid() = user_id OR public.is_admin(auth.uid()));
 
--- Permitir a los usuarios actualizar los votos útiles
+-- Remove broad UPDATE policy as it allowed any user to modify any review's comment
 DROP POLICY IF EXISTS "Users can update helpful_count." ON public.reviews;
-CREATE POLICY "Users can update helpful_count." 
+
+-- Create trigger to restrict non-owners to ONLY be able to change helpful_count
+CREATE OR REPLACE FUNCTION public.check_review_update()
+RETURNS trigger AS $$
+BEGIN
+  IF auth.uid() != OLD.user_id AND NOT public.is_admin(auth.uid()) THEN
+    -- They can only change helpful_count
+    IF NEW.comment IS DISTINCT FROM OLD.comment 
+       OR NEW.rating IS DISTINCT FROM OLD.rating 
+       OR NEW.user_id IS DISTINCT FROM OLD.user_id 
+       OR NEW.app_id IS DISTINCT FROM OLD.app_id THEN
+      RAISE EXCEPTION 'Not authorized to modify review content';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_restrict_review_updates ON public.reviews;
+CREATE TRIGGER trg_restrict_review_updates
+  BEFORE UPDATE ON public.reviews
+  FOR EACH ROW EXECUTE PROCEDURE public.check_review_update();
+
+-- Allow users to update reviews (trigger will restrict to helpful_count if not owner)
+CREATE POLICY "Anyone authenticated can update reviews (restricted by trigger)" 
 ON public.reviews FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 -- ==========================================
@@ -522,3 +565,21 @@ BEGIN
   DELETE FROM auth.users WHERE id = auth.uid();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TABLE IF NOT EXISTS public.admin_access_logs (
+id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+email TEXT,
+browser TEXT,
+ip_address TEXT,
+verification_result BOOLEAN,
+created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE public.admin_access_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can view logs" ON public.admin_access_logs;
+CREATE POLICY "Admins can view logs" ON public.admin_access_logs FOR SELECT USING (public.is_admin(auth.uid()) OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND email = 'elmenorjn@gmail.com'));
+DROP POLICY IF EXISTS "Users can insert their own logs" ON public.admin_access_logs;
+CREATE POLICY "Users can insert their own logs" ON public.admin_access_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Admins can update dev requests" ON public.dev_requests;
+CREATE POLICY "Admins can update dev requests" ON public.dev_requests FOR UPDATE USING (public.is_admin(auth.uid()));

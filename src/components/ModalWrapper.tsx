@@ -29,7 +29,7 @@ export function ModalWrapper({ children, onClose, fullScreen }: ModalWrapperProp
              <button 
                onClick={onClose} 
                className="p-3 sm:p-2 bg-nexus-card/90 sm:bg-nexus-card/50 hover:bg-red-500 rounded-full hover:text-white transition-colors shadow-lg border border-nexus-border backdrop-blur-xl"
-             >
+              type="button" >
                <X className="w-6 h-6 sm:w-5 sm:h-5" />
              </button>
           </div>

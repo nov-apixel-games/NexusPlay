@@ -29,7 +29,25 @@ interface AdminPanelProps {
 
 export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequests, setDevRequests, aiConfig }: AdminPanelProps) {
   const { t } = useAppStore();
-  const isAdmin = userProfile?.role === 'admin';
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'elmenorjn@gmail.com';
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-nexus-bg text-nexus-text flex items-center justify-center p-6">
+        <div className="bg-nexus-surface rounded-2xl p-8 max-w-md w-full border border-red-500/30 text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold font-display text-white mb-2">Acceso Denegado</h2>
+          <p className="text-nexus-text-sec mb-6">No tienes los privilegios necesarios para acceder al panel de administración.</p>
+          <button onClick={onBack} className="w-full bg-nexus-card hover:bg-nexus-surface text-white py-3 rounded-xl transition-colors border border-nexus-border">
+            Volver al Inicio
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [messages, setMessages] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -148,7 +166,11 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   const checkInfra = async () => {
      try {
-       const res = await fetch('/api/system-stats');
+       const { data: { session } } = await supabase.auth.getSession();
+       const token = session?.access_token;
+       const res = await fetch('/api/system-stats', {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {}
+       });
        const data = await res.json();
        if (data.success) {
          setNodeStats(data.systemInfo);
@@ -191,7 +213,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   const fetchAllReviews = async () => {
     try {
-      const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase.from('reviews').select('*').limit(500).order('created_at', { ascending: false }).limit(500);
       if (data) setAllReviews(data);
     } catch(e) {}
   };
@@ -208,7 +230,24 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
         el = document.createElement('div');
         el.id = 'nexus-maintenance-banner';
         el.className = 'fixed top-0 left-0 w-full bg-red-600 text-nexus-text font-black text-center py-1.5 z-[9999] uppercase tracking-[0.3em] text-xs shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center justify-center gap-4 animate-pulse';
-        el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> MODO MANTENIMIENTO ACTIVO - SISTEMA BLOQUEADO';
+        el.textContent = ' MODO MANTENIMIENTO ACTIVO - SISTEMA BLOQUEADO';
+        const svgInfo = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgInfo.setAttribute("width", "14");
+        svgInfo.setAttribute("height", "14");
+        svgInfo.setAttribute("viewBox", "0 0 24 24");
+        svgInfo.setAttribute("fill", "none");
+        svgInfo.setAttribute("stroke", "currentColor");
+        svgInfo.setAttribute("stroke-width", "2");
+        const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathLine.setAttribute("d", "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z");
+        const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", "12"); line1.setAttribute("y1", "9"); line1.setAttribute("x2", "12"); line1.setAttribute("y2", "13");
+        const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line2.setAttribute("x1", "12"); line2.setAttribute("y1", "17"); line2.setAttribute("x2", "12.01"); line2.setAttribute("y2", "17");
+        svgInfo.appendChild(pathLine);
+        svgInfo.appendChild(line1);
+        svgInfo.appendChild(line2);
+        el.insertBefore(svgInfo, el.firstChild);
         document.body.appendChild(el);
       }
     } else {
@@ -226,12 +265,12 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
   };
 
   const fetchMessages = async () => {
-    const { data } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('contact_messages').select('*').limit(500).order('created_at', { ascending: false }).limit(500);
     if (data) setMessages(data);
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('profiles').select('*').limit(500).order('created_at', { ascending: false }).limit(500);
     if (data) setUsers(data);
   };
 
@@ -252,7 +291,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
           <Shield className="w-20 h-20 mb-6 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
           <h1 className="text-4xl font-black mb-4 tracking-widest uppercase text-nexus-text">{t("admin.denied") || "Acceso Denegado"}</h1>
           <p className="text-red-400 mb-8 max-w-md font-light text-lg">{t("admin.deniedDesc") || "Área clasificada. Se requiere nivel de autorización supremo para visualizar este contenido."}</p>
-          <button onClick={onBack} className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-nexus-text font-bold py-4 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95">
+          <button onClick={onBack} className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-nexus-text font-bold py-4 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95" type="button" >
             <ChevronLeft className="w-5 h-5" /> {t("admin.retreat") || "Retirarse"}
           </button>
         </div>
@@ -475,7 +514,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                   onClick={handleAppDeleteConfirm}
                   disabled={isDeleting}
                   className="flex-1 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-nexus-text font-black shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                >
+                 type="button" >
                   {isDeleting ? <div className="w-5 h-5 border-2 border-nexus-border border-t-white rounded-full animate-spin" /> : <Trash2 className="w-5 h-5" />}
                   {isDeleting ? (t('admin.purging') || 'Purgando...') : (t('admin.purgeApp') || 'PURGAR APP')}
                 </button>
@@ -533,7 +572,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            ))}
         </div>
         <div className="p-4 md:p-6 border-t border-nexus-border bg-nexus-card/40">
-           <button onClick={onBack} className="w-full flex items-center justify-center gap-3 bg-nexus-card/50 hover:bg-nexus-card-hover border border-nexus-border/50 text-nexus-text font-black py-4 rounded-xl transition-all shadow-lg active:scale-95 group uppercase tracking-widest text-[10px] md:text-xs">
+           <button onClick={onBack} className="w-full flex items-center justify-center gap-3 bg-nexus-card/50 hover:bg-nexus-card-hover border border-nexus-border/50 text-nexus-text font-black py-4 rounded-xl transition-all shadow-lg active:scale-95 group uppercase tracking-widest text-[10px] md:text-xs" type="button" >
              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform text-nexus-text-sec" /> Retirarse
            </button>
         </div>
@@ -667,7 +706,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                         </div>
                       )}
                       
-                      <button onClick={saveAdsConfig} className="bg-red-900/50 hover:bg-red-600 text-nexus-text font-bold px-8 py-3 rounded-xl mt-6 border border-red-900/50 shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all">{t("admin.saveConfig") || "Guardar Configuración"}</button>
+                      <button onClick={saveAdsConfig} className="bg-red-900/50 hover:bg-red-600 text-nexus-text font-bold px-8 py-3 rounded-xl mt-6 border border-red-900/50 shadow-[0_0_15px_rgba(220,38,38,0.2)] transition-all" type="button" >{t("admin.saveConfig") || "Guardar Configuración"}</button>
                    </div>
                 </div>
 
@@ -811,7 +850,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
                     <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.sysInfra") || "Sistema e Infraestructura"}</h3>
                     <p className="text-red-400 text-sm md:text-base">Métricas en tiempo real de los servicios y dependencias.</p>
                   </div>
-                  <button onClick={checkInfra} className="bg-red-950/30 hover:bg-red-900/60 border border-red-900/40 text-red-400 rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-2">
+                  <button onClick={checkInfra} className="bg-red-950/30 hover:bg-red-900/60 border border-red-900/40 text-red-400 rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-2" type="button" >
                     <Activity className="w-4 h-4" /> Refrescar Ping
                   </button>
                 </header>

@@ -43,7 +43,7 @@ export function useConversations(userId: string) {
 ;
         const { data, error } = await supabase
           .from('ai_conversations')
-          .select('*')
+          .select('*').limit(500)
           .eq('user_id', userId)
           .order('updated_at', { ascending: false });
 

@@ -79,7 +79,7 @@ export default function Navbar({
 
     const fetchNotifications = async () => {
       const { data } = await supabase.from('notifications')
-        .select('*')
+        .select('*').limit(500)
         .eq('user_id', userProfile.id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -235,7 +235,7 @@ export default function Navbar({
         <button 
           onClick={onMenuClick}
           className="group flex items-center gap-3 sm:gap-4 transition-transform hover:scale-105 active:scale-95"
-        >
+         type="button" >
           {displayLogo ? (
             <div className="relative">
               <div className="absolute inset-0 bg-purple-500 rounded-xl blur-[12px] opacity-40 group-hover:opacity-70 group-hover:blur-[16px] transition-all duration-300"></div>
@@ -278,7 +278,7 @@ export default function Navbar({
         <button 
           onClick={onSearchClick}
           className="md:hidden p-2 text-nexus-text-sec hover:text-cyan-400 transition-colors"
-        >
+         type="button" >
           <Search className="w-6 h-6" />
         </button>
         {isAuth ? (
@@ -362,7 +362,7 @@ export default function Navbar({
           <button 
              onClick={onLoginClick}
              className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-5 sm:px-6 py-2 sm:py-2.5 rounded-[12px] sm:rounded-[14px] text-[13px] sm:text-[14px] uppercase tracking-widest font-black transition-all text-nexus-text shadow-nexus-glow hover:shadow-nexus-glow active:scale-95"
-          >
+           type="button" >
              <LogIn className="w-4 h-4"/> <span className="hidden sm:inline">{t('auth.login')}</span>
           </button>
         )}
@@ -728,7 +728,7 @@ export default function Navbar({
                   onClick={handleSaveProfile} 
                   disabled={isSaving || uploadingImage || inputUsername.length < 3} 
                   className="flex-1 sm:flex-none py-3 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-nexus-bg font-black uppercase tracking-widest rounded-xl text-[10px] sm:text-[11px] transition-all duration-300 shadow-nexus-glow flex items-center justify-center gap-2 cursor-pointer"
-                >
+                 type="button" >
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> <span className="hidden sm:inline">Guardando...</span>

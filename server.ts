@@ -185,6 +185,40 @@ app.use(express.urlencoded({ limit: '2000mb', extended: true }));
 app.use('/api/', apiLimiter);
 app.use('/api/nexus-ai', nexusAiLimiter);
 
+const requireAdmin = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "No authorization header" });
+  }
+  const token = authHeader.split(" ")[1];
+  
+  const supBase = getSupabase();
+  if (!supBase) {
+    return res.status(500).json({ error: "Supabase no configurado en el servidor." });
+  }
+
+  try {
+    const { data: { user }, error: userErr } = await supBase.auth.getUser(token);
+    if (userErr || !user) {
+      return res.status(401).json({ error: "Token inválido" });
+    }
+
+    const { data: profile } = await supBase.from("profiles").select("role").eq("id", user.id).single();
+    const isAdmin = profile?.role === "admin" || user.email === "elmenorjn@gmail.com";
+
+    if (!isAdmin) {
+      // Registrar log de acceso denegado (opcional, lo haremos desde el cliente por ahora o aquí mismo si hubiera tabla)
+      return res.status(403).json({ error: "Acceso denegado: Se requiere rol de administrador" });
+    }
+    
+    req.adminUser = user;
+
+    next();
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Helper for Cloudinary Signature
 app.get("/api/cloudinary-signature", (req, res) => {
   try {
@@ -458,7 +492,7 @@ app.post("/api/delete-image", async (req, res) => {
 });
 
 // API Route: Delete App Folder
-app.post("/api/delete-folder", async (req, res) => {
+app.post("/api/delete-folder", requireAdmin, async (req, res) => {
   const { folder } = req.body;
   
   if (!folder) {
@@ -485,7 +519,7 @@ app.post("/api/delete-folder", async (req, res) => {
 });
 
 // API Route: System & Storage Stats
-app.get("/api/system-stats", async (req, res) => {
+app.get("/api/system-stats", requireAdmin, async (req, res) => {
   try {
      let cloudinaryUsage = null;
      try {
@@ -542,6 +576,12 @@ app.post("/api/delete-account", async (req, res) => {
   if (!userId) {
     return res.status(400).json({ error: "Falta userId" });
   }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "No authorization header" });
+  }
+  const token = authHeader.split(" ")[1];
   
   const supBase = getSupabase();
   if (!supBase) {
@@ -549,6 +589,18 @@ app.post("/api/delete-account", async (req, res) => {
   }
 
   try {
+    const { data: { user }, error: userErr } = await supBase.auth.getUser(token);
+    if (userErr || !user) {
+      return res.status(401).json({ error: "Token inválido" });
+    }
+
+    const { data: profile } = await supBase.from("profiles").select("role").eq("id", user.id).single();
+    const isAdmin = profile?.role === "admin" || user.email === "elmenorjn@gmail.com";
+
+    if (user.id !== userId && !isAdmin) {
+      return res.status(403).json({ error: "No autorizado para eliminar esta cuenta" });
+    }
+
     const { error: delAuthErr } = await supBase.auth.admin.deleteUser(userId);
     if (delAuthErr) {
        console.warn("[Backend] No se pudo borrar auth user:", delAuthErr.message);

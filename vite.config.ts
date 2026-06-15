@@ -45,6 +45,20 @@ export default defineConfig(({ mode }) => {
               },
             },
             {
+              urlPattern: /^https:\/\/.*\.supabase\.(co|js)\/rest\/v1\/.*/i,
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "supabase-api-cache",
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 24 * 60 * 60, // 24 hours offline fallback
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
               urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
               handler: "CacheFirst",
               options: {

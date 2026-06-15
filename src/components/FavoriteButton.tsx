@@ -36,7 +36,7 @@ export function FavoriteButton({ appId, className = '' }: FavoriteButtonProps) {
       onClick={handleClick}
       className={`relative justify-center rounded-full p-2 bg-nexus-card/80 backdrop-blur-md border border-nexus-border/50 hover:bg-nexus-card-hover transition-colors overflow-hidden group z-30 ${className}`}
       title={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
-    >
+     type="button" >
       <AnimatePresence>
          {isAnimating && isFavorite && (
             <motion.div
