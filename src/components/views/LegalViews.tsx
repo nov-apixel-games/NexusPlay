@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { useAppStore } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 import { Send, CheckCircle, Mail, MessageSquare, Tag, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SupportEmailBox } from '../SupportEmailBox';
-import { useAppStore } from '../../store/useAppStore';
 
 export function PrivacyPolicyView({ storeName, onBack }: { storeName: string; onBack: () => void }) {
   const { t } = useAppStore();
