@@ -132,11 +132,13 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             "three-core": ["three"],
-            "three-fiber": ["@react-three/fiber", "@react-three/drei"],
+            "three-fiber": ["@react-three/fiber", "@react-three/drei", "@react-three/rapier"],
             "react-vendor": ["react", "react-dom"],
             lucide: ["lucide-react"],
             supabase: ["@supabase/supabase-js"],
             recharts: ["recharts"],
+            phaser: ["phaser"],
+            monaco: ["@monaco-editor/react"],
           },
         },
       },
