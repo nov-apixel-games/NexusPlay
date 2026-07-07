@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Shield, ScanFace, X, Loader2, Fingerprint } from 'lucide-react';
+import { Shield, X, Loader2, KeyRound } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface DoubleVerificationModalProps {
@@ -11,48 +11,10 @@ interface DoubleVerificationModalProps {
 }
 
 export default function DoubleVerificationModal({ onSuccess, onFail, onClose, user }: DoubleVerificationModalProps) {
-  const [status, setStatus] = useState<'idle' | 'scanning' | 'success' | 'checking_webauthn'>('idle');
+  const [status, setStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
   const [errorText, setErrorText] = useState('');
-
-  useEffect(() => {
-    // Attempt real WebAuthn if supported, otherwise fallback to "simulated face scan / PIN"
-    const checkWebAuthn = async () => {
-      if (window.PublicKeyCredential) {
-        setStatus('checking_webauthn');
-        try {
-          // Just a dummy check, since we haven't registered a device, this will likely fail
-          // But it satisfies the prompt of "trying" webauthn or equivalent
-          const isAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          if (isAvailable) {
-            // Attempt to prompt local passkey (FaceID / TouchID / Windows Hello)
-            try {
-              const res = await navigator.credentials.get({
-                publicKey: {
-                  challenge: new Uint8Array(32),
-                  timeout: 60000,
-                  userVerification: 'required'
-                }
-              });
-              if (res) {
-                 await logAccess(true);
-                 setStatus('success');
-                 setTimeout(onSuccess, 1000);
-                 return;
-              }
-            } catch (e: any) {
-              console.warn("WebAuthn failed, falling back", e);
-              // Fallback to our simulated scan
-            }
-          }
-        } catch (e) {
-             console.warn("Error checking WebAuthn", e);
-        }
-      }
-      setStatus('idle');
-    };
-    checkWebAuthn();
-  }, []);
-
+  const [pin, setPin] = useState('');
+  
   const getSystemInfo = () => {
     const na = navigator.userAgent;
     let browser = "Desconocido";
@@ -91,22 +53,47 @@ export default function DoubleVerificationModal({ onSuccess, onFail, onClose, us
     }
   };
 
-  const handleSimulatedScan = async () => {
-    setStatus('scanning');
+  const handleVerify = async () => {
+    if (pin.length !== 6) {
+      setErrorText('El PIN debe tener 6 dígitos');
+      return;
+    }
+
+    setStatus('verifying');
     setErrorText('');
     
-    // Simulate Face Scan delay
-    setTimeout(async () => {
-      // Success condition: Admin can access (We already know they are admin based on role, so we just allow it after the mock scan)
-      await logAccess(true);
-      setStatus('success');
-      setTimeout(onSuccess, 1000);
-    }, 2500);
+    try {
+      const { data, error } = await supabase.rpc('verify_admin_pin', { p_pin: pin });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        await logAccess(true);
+        setStatus('success');
+        setTimeout(onSuccess, 1000);
+      } else {
+        await logAccess(false);
+        setErrorText('PIN incorrecto.');
+        setStatus('idle');
+        setPin('');
+      }
+    } catch (e: any) {
+      await logAccess(false);
+      setErrorText(e.message || 'Error al verificar el PIN');
+      setStatus('idle');
+      setPin('');
+      if (e.message && e.message.includes('bloqueada')) {
+        setTimeout(onFail, 3000); // Kick out if blocked
+      }
+    }
   };
 
-  const handleFail = async () => {
-    await logAccess(false);
-    onFail();
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && pin.length === 6) {
+      handleVerify();
+    }
   };
 
   return (
@@ -124,24 +111,17 @@ export default function DoubleVerificationModal({ onSuccess, onFail, onClose, us
           <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/50">
             <Shield className="w-8 h-8 text-red-500" />
           </div>
+          
           <h2 className="text-2xl font-bold font-display text-white mb-2">Panel de Administración</h2>
           <p className="text-nexus-text-sec text-sm mb-6">
-            Doble verificación requerida para acceder al sistema administrativo.
+            Doble verificación requerida. Ingrese su PIN de seguridad de 6 dígitos.
           </p>
 
-          {status === 'checking_webauthn' ? (
+          {status === 'verifying' ? (
              <div className="py-8 flex flex-col justify-center items-center">
                 <Loader2 className="w-12 h-12 text-red-500 animate-spin mb-4" />
-                <p className="text-nexus-text font-mono text-sm">Esperando credencial del sistema...</p>
+                <p className="text-nexus-text font-mono text-sm">Verificando credenciales...</p>
              </div>
-          ) : status === 'scanning' ? (
-            <div className="py-8 relative">
-              <div className="w-32 h-32 mx-auto rounded-full border-4 border-dashed border-red-500 animate-spin-slow"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <ScanFace className="w-12 h-12 text-red-500 animate-pulse" />
-              </div>
-              <p className="text-red-400 font-mono text-sm mt-6 animate-pulse">Escaneando biometría del administrador...</p>
-            </div>
           ) : status === 'success' ? (
             <div className="py-8 relative">
               <div className="w-32 h-32 mx-auto rounded-full border-4 border-green-500"></div>
@@ -152,14 +132,36 @@ export default function DoubleVerificationModal({ onSuccess, onFail, onClose, us
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-nexus-text-sec w-5 h-5" />
+                <input 
+                  type="password" 
+                  maxLength={6}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                  onKeyDown={handleKeyDown}
+                  placeholder="••••••"
+                  className="w-full bg-nexus-bg border border-nexus-border rounded-xl py-3 pl-10 pr-4 text-white text-center text-2xl tracking-widest focus:outline-none focus:border-red-500 transition-colors"
+                  autoFocus
+                />
+              </div>
               <button 
-                onClick={handleSimulatedScan}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-4 rounded-xl flex items-center justify-center gap-3 transition-colors"
+                onClick={handleVerify}
+                disabled={pin.length !== 6}
+                className="w-full bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
               >
-                <Fingerprint className="w-5 h-5" />
-                Iniciar Reconocimiento
+                Verificar PIN
               </button>
-              {errorText && <p className="text-red-400 text-sm">{errorText}</p>}
+              
+              {errorText && (
+                <motion.p 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-400 text-sm font-medium mt-2"
+                >
+                  {errorText}
+                </motion.p>
+              )}
             </div>
           )}
         </div>
