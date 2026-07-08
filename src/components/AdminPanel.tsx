@@ -3,7 +3,8 @@ import {
   Shield, Trash2, CheckCircle, XCircle, ChevronLeft, BarChart, 
   Smartphone, Users, Code, MessageSquare, List, Settings, BrainCircuit,
   Star, Activity, AlertTriangle, Search, Database, Menu, X,
-  DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, UploadCloud, Server
+  DollarSign, TrendingUp, Download, Eye, EyeOff, Edit, UploadCloud, Server,
+  ShieldAlert
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { deleteFromCloudinary, deleteFolderFromCloudinary } from '../lib/cloudinary';

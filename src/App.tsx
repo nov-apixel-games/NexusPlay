@@ -36,6 +36,7 @@ import AuthModal from './components/AuthModal';
 import { OnboardingView } from './components/OnboardingView';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
+import DoubleVerificationModal from './components/admin/DoubleVerificationModal';
 
 import { useAppStore } from './store/useAppStore';
 
@@ -144,8 +145,9 @@ export default function App() {
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  const [lastAdminActivity, setLastAdminActivity] = useState(Date.now());
   
-    
   const DEFAULT_AI_CONFIG: AIConfig = {
     enabled: true,
     apiKey: '',
@@ -643,6 +645,19 @@ export default function App() {
 
 
   useEffect(() => {
+    if (activeView === 'admin-panel' && isAdminVerified) {
+      const interval = setInterval(() => {
+        if (Date.now() - lastAdminActivity > 5 * 60 * 1000) { // 5 minutes inactivity
+          setIsAdminVerified(false);
+          setActiveView('home');
+          addToast("Sesión de administrador cerrada por inactividad", "info");
+        }
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [activeView, isAdminVerified, lastAdminActivity, addToast]);
+
+  useEffect(() => {
     const handleActivity = () => {
       if (activeView === 'admin-panel') {
         setLastAdminActivity(Date.now());
@@ -917,6 +932,16 @@ export default function App() {
               onGoToGames={() => setActiveView('games-hub')} 
               title="Panel de Administración Bloqueado"
               description="El panel de control administrativo y la aprobación de apps requieren sincronización directa con los servicios en la nube de Supabase."
+            />
+          );
+        }
+        if (!isAdminVerified) {
+          return (
+            <DoubleVerificationModal 
+               user={session?.user} 
+               onSuccess={() => setIsAdminVerified(true)} 
+               onFail={() => { setActiveView('home'); addToast('Biometría de seguridad rechazada.', 'error'); }} 
+               onClose={() => setActiveView('home')} 
             />
           );
         }
