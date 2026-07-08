@@ -37,8 +37,6 @@ import { OnboardingView } from './components/OnboardingView';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
 import DoubleVerificationModal from './components/admin/DoubleVerificationModal';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-
 import { useAppStore } from './store/useAppStore';
 
 import { ModalWrapper } from './components/ModalWrapper';
@@ -1140,7 +1138,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-nexus-text font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
-      <SpeedInsights />
       <GoogleAdSense />
       <OfflineIndicator />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
