@@ -127,6 +127,29 @@ export default function Navbar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Mark all notifications as read automatically when opening the tray or when a new one arrives while open
+  useEffect(() => {
+    if (showNotifications && notifications.some(n => !n.read)) {
+      const markAllAsRead = async () => {
+        const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+        if (unreadIds.length === 0) return;
+
+        // Optimistically set all to read locally to immediately remove the red dot
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+        try {
+          await supabase
+            .from('notifications')
+            .update({ read: true })
+            .in('id', unreadIds);
+        } catch (error) {
+          console.error('Error marking all notifications as read:', error);
+        }
+      };
+      markAllAsRead();
+    }
+  }, [showNotifications, notifications]);
+
   const markAsRead = async (id: string) => {
     await supabase.from('notifications').update({ read: true }).eq('id', id);
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -318,7 +341,7 @@ export default function Navbar({
                          <h3 className="font-black text-nexus-text text-[15px] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-400" /> {t('nav.notifications') || 'Notificaciones'}</h3>
                          {unreadCount > 0 && <span className="text-[10px] font-black tracking-widest bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-lg uppercase border border-cyan-500/20">{unreadCount} {t('nav.new') || 'Nuevas'}</span>}
                        </div>
-                       <div className="max-h-80 overflow-y-auto no-scrollbar">
+                       <div className="max-h-96 overflow-y-auto pr-1">
                          {notifications.length === 0 ? (
                            <div className="p-10 text-center flex flex-col items-center gap-3">
                              <Sparkles className="w-8 h-8 text-gray-600" />
@@ -332,7 +355,7 @@ export default function Navbar({
                                 className={`p-4 sm:p-5 border-b border-nexus-border cursor-pointer transition-colors ${notif.read ? 'opacity-50 hover:bg-nexus-card hover:opacity-100' : 'bg-cyan-900/10 hover:bg-cyan-900/20 border-l-[3px] border-l-cyan-500'}`}
                              >
                                  <div className="font-black text-[13px] text-nexus-text mb-1 drop-shadow-sm">{notif.title}</div>
-                                 <div className="text-[12px] text-nexus-text-sec leading-relaxed font-medium">{notif.message}</div>
+                                 <div className="text-[12px] text-nexus-text-sec leading-relaxed font-medium break-words whitespace-pre-wrap">{notif.message}</div>
                              </div>
                            ))
                          )}
