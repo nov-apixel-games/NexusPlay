@@ -1,7 +1,7 @@
 import { AppItem, Category, UserItem } from './types';
 
 export const MOCK_USERS: UserItem[] = [
-  { id: '1', email: 'elmenorjn@gmail.com', name: 'Admin Nexus', role: 'admin', status: 'active', joinedAt: '2026-05-01' },
+  { id: '1', email: 'admin@nexusplay.com', name: 'Admin Nexus', role: 'admin', status: 'active', joinedAt: '2026-05-01' },
   { id: '2', email: 'dev@studio.com', name: 'Studio Dev', role: 'developer', status: 'active', joinedAt: '2026-05-10' },
   { id: '3', email: 'gamer_x@email.com', name: 'GamerX', role: 'user', status: 'active', joinedAt: '2026-05-12' },
   { id: '4', email: 'spam@fake.com', name: 'Spam Bot', role: 'user', status: 'suspended', joinedAt: '2026-05-13' },

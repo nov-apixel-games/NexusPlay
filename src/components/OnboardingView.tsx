@@ -97,7 +97,7 @@ export function OnboardingView({ session, onComplete }: OnboardingViewProps) {
 
     setIsSaving(true);
     try {
-      const role = email === 'elmenorjn@gmail.com' ? 'admin' : 'user';
+      const role = 'user';
 
       // Actualizar metadata de auth con la info adicional que no cabe en profiles local
       await supabase.auth.updateUser({

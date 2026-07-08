@@ -17,12 +17,28 @@ import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 import { ShieldAlert, Heart, Menu, Search, Bell, DownloadCloud, UploadCloud } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Footer from './components/Footer';
-import { ContactView, LegalPage, HelpView, PrivacyPolicyView, TermsAndConditionsView, CookiePolicyView, AboutView } from './components/views/LegalViews';
-import { GamesView, ExploreView, RankingView, DownloadsView, EventsView, AchievementsView, CollectionsView, SearchView } from './components/views/MainViews';
-import { ProfileView } from './components/views/ProfileView';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+const ContactView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.ContactView })));
+const LegalPage = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.LegalPage })));
+const HelpView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.HelpView })));
+const PrivacyPolicyView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.PrivacyPolicyView })));
+const TermsAndConditionsView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.TermsAndConditionsView })));
+const CookiePolicyView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.CookiePolicyView })));
+const AboutView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.AboutView })));
+
+const GamesView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.GamesView })));
+const ExploreView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.ExploreView })));
+const RankingView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.RankingView })));
+const DownloadsView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.DownloadsView })));
+const EventsView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.EventsView })));
+const AchievementsView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.AchievementsView })));
+const CollectionsView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.CollectionsView })));
+const SearchView = lazy(() => import('./components/views/MainViews').then(m => ({ default: m.SearchView })));
+
+const ProfileView = lazy(() => import('./components/views/ProfileView').then(m => ({ default: m.ProfileView })));
 
 const NexusHub = lazy(() => import('./components/NexusHub'));
 const DeveloperPanel = lazy(() => import('./components/DeveloperPanel'));
@@ -32,8 +48,8 @@ const GamesHubView = lazy(() => import('./components/views/GamesHubView').then(m
 const AppDetailView = lazy(() => import('./components/views/AppDetailView').then(m => ({ default: m.AppDetailView })));
 const SettingsView = lazy(() => import('./components/views/SettingsView').then(m => ({ default: m.SettingsView })));
 const SmartHubView = lazy(() => import('./components/views/SmartHubView').then(m => ({ default: m.SmartHubView })));
-import AuthModal from './components/AuthModal';
-import { OnboardingView } from './components/OnboardingView';
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const OnboardingView = lazy(() => import('./components/OnboardingView').then(m => ({ default: m.OnboardingView })));
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
 import DoubleVerificationModal from './components/admin/DoubleVerificationModal';
@@ -398,55 +414,50 @@ export default function App() {
         console.warn("Perfil sin datos en BD");
         setUserProfile({ id: userId, email: finalEmail, role: 'user', username: finalEmail.split('@')[0] });
       } else {
-        // Asegurar admin por email si es necesario
-        if (finalEmail === 'elmenorjn@gmail.com' && data.role !== 'admin') {
-          const { data: updated } = await supabase.from('profiles').update({ role: 'admin' }).eq('id', userId).select().single();
-          setUserProfile(updated || { ...data, role: 'admin' });
-        } else {
-          // Si tiene datos nuevos de Google y no están seteados, actualizarlos opcionalmente
-          let needsUpdate = false;
-          const updates: any = {};
-          if (metaName && !data.real_name) {
-            updates.real_name = metaName;
-            needsUpdate = true;
-          }
-          if (metaAvatar && !data.avatar_url) {
-            updates.avatar_url = metaAvatar;
-            needsUpdate = true;
-          }
+        // Removido check de admin quemado. El rol ahora se controla únicamente desde Supabase.
+        // Si tiene datos nuevos de Google y no están seteados, actualizarlos opcionalmente
+        let needsUpdate = false;
+        const updates: any = {};
+        if (metaName && !data.real_name) {
+          updates.real_name = metaName;
+          needsUpdate = true;
+        }
+        if (metaAvatar && !data.avatar_url) {
+          updates.avatar_url = metaAvatar;
+          needsUpdate = true;
+        }
 
-          if (needsUpdate) {
-            let updErr: any = null;
-            let updated: any = null;
-            let attempts = 0;
-            while (attempts < 3) {
-              const res = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
-              updErr = res.error;
-              updated = res.data;
-              
-              if (!updErr) {
-                break;
-              }
-              if (updErr.message && updErr.message.includes('schema cache')) {
-                attempts++;
-                console.warn(`[App Profile Autosync] Schema cache error. Retrying attempt ${attempts} in 600ms...`);
-                await new Promise(r => setTimeout(r, 600));
-              } else {
-                break;
-              }
+        if (needsUpdate) {
+          let updErr: any = null;
+          let updated: any = null;
+          let attempts = 0;
+          while (attempts < 3) {
+            const res = await supabase.from('profiles').update(updates).eq('id', userId).select().single();
+            updErr = res.error;
+            updated = res.data;
+            
+            if (!updErr) {
+              break;
             }
-
-            if (updErr) {
-              setUserProfile(data);
+            if (updErr.message && updErr.message.includes('schema cache')) {
+              attempts++;
+              console.warn(`[App Profile Autosync] Schema cache error. Retrying attempt ${attempts} in 600ms...`);
+              await new Promise(r => setTimeout(r, 600));
             } else {
-              setUserProfile(updated || { ...data, ...updates });
+              break;
             }
-          } else {
-            setUserProfile(data);
           }
+
+          if (updErr) {
+            setUserProfile(data);
+          } else {
+            setUserProfile(updated || { ...data, ...updates });
+          }
+        } else {
+          setUserProfile(data);
         }
         
-        if (data.role === 'admin' || data.email === 'elmenorjn@gmail.com') {
+        if (data.role === 'admin') {
           fetchAllData();
         }
       }
@@ -1113,11 +1124,13 @@ export default function App() {
     return (
       <div className="min-h-screen bg-nexus-bg flex flex-col items-center justify-center p-6 text-center">
         {showAuthModal && (
-          <AuthModal 
-            onClose={() => setShowAuthModal(false)} 
-            onSuccess={() => window.location.reload()}
-            onNavigate={(view) => setShowAuthModal(false)}
-          />
+          <Suspense fallback={null}>
+            <AuthModal 
+              onClose={() => setShowAuthModal(false)} 
+              onSuccess={() => window.location.reload()}
+              onNavigate={(view) => setShowAuthModal(false)}
+            />
+          </Suspense>
         )}
         <div className="w-24 h-24 mb-8 bg-yellow-500/10 rounded-full flex items-center justify-center border border-yellow-500/20 shadow-[0_0_50px_rgba(234,179,8,0.2)]">
           <ShieldAlert className="w-12 h-12 text-yellow-500 animate-pulse" />
@@ -1142,13 +1155,15 @@ export default function App() {
       <OfflineIndicator />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showOnboarding && onboardingSession && (
-        <OnboardingView 
-          session={onboardingSession} 
-          onComplete={(profile) => {
-             setUserProfile(profile);
-             setShowOnboarding(false);
-          }} 
-        />
+        <Suspense fallback={null}>
+          <OnboardingView 
+            session={onboardingSession} 
+            onComplete={(profile) => {
+               setUserProfile(profile);
+               setShowOnboarding(false);
+            }} 
+          />
+        </Suspense>
       )}
       {/* Background Abstract Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
@@ -1261,17 +1276,19 @@ export default function App() {
 
       {/* Render AuthModal globally on top */}
       {showAuthModal && !showOnboarding && (
-        <AuthModal 
-          onClose={() => setShowAuthModal(false)} 
-          onSuccess={() => {
-            setShowAuthModal(false);
-            addToast('Sesión iniciada correctamente', 'success');
-          }}
-          onNavigate={(view) => {
-            setShowAuthModal(false);
-            setActiveView(view);
-          }}
-        />
+        <Suspense fallback={null}>
+          <AuthModal 
+            onClose={() => setShowAuthModal(false)} 
+            onSuccess={() => {
+              setShowAuthModal(false);
+              addToast('Sesión iniciada correctamente', 'success');
+            }}
+            onNavigate={(view) => {
+              setShowAuthModal(false);
+              setActiveView(view);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

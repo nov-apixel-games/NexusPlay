@@ -45,24 +45,14 @@ if (cloudNameEnv.includes('your_')) cloudNameEnv = '';
 if (apiKeyEnv.includes('your_')) apiKeyEnv = '';
 if (apiSecretEnv.includes('your_')) apiSecretEnv = '';
 
-// Fix for swapped credentials or using default account with missing parts
-const IS_DEFAULT_CONFIG = 
-  !cloudNameEnv || 
-  cloudNameEnv === 'dnpnmhmht' || 
-  apiKeyEnv === '719435337158523' || 
-  cloudNameEnv === '719435337158523' || // Swapped
-  apiKeyEnv === 'dnpnmhmht';           // Swapped
-
-if (IS_DEFAULT_CONFIG) {
-  console.log("[Cloudinary] Using default account configuration (detected from env or fallbacks)");
-  cloudNameEnv = 'dnpnmhmht';
-  apiKeyEnv = '719435337158523';
-  apiSecretEnv = 'NTAKR4xesWwzwm74bY-TNwwp6To';
+if (!cloudNameEnv || !apiKeyEnv || !apiSecretEnv) {
+  console.error("CRITICAL ERROR: Cloudinary credentials are not properly configured in environment variables. Refusing to start.");
+  process.exit(1);
 }
 
-const CLOUD_NAME = cloudNameEnv || 'dnpnmhmht';
-const CLOUDINARY_API_KEY = apiKeyEnv || '719435337158523';
-const CLOUDINARY_API_SECRET = apiSecretEnv || 'NTAKR4xesWwzwm74bY-TNwwp6To';
+const CLOUD_NAME = cloudNameEnv;
+const CLOUDINARY_API_KEY = apiKeyEnv;
+const CLOUDINARY_API_SECRET = apiSecretEnv;
 
 cloudinary.config({
   cloud_name: CLOUD_NAME,
@@ -179,11 +169,36 @@ const nexusAiLimiter = rateLimit({
   message: { success: false, error: "Límite de solicitudes alcanzado. Por favor, intenta de nuevo más tarde." }
 });
 
-app.use(express.json({ limit: '2000mb' }));
-app.use(express.urlencoded({ limit: '2000mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use('/api/', apiLimiter);
 app.use('/api/nexus-ai', nexusAiLimiter);
+
+const requireAuth = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "No authorization header" });
+  }
+  const token = authHeader.split(" ")[1];
+  
+  const supBase = getSupabase();
+  if (!supBase) {
+    return res.status(500).json({ error: "Supabase no configurado en el servidor." });
+  }
+
+  try {
+    const { data: { user }, error: userErr } = await supBase.auth.getUser(token);
+    if (userErr || !user) {
+      return res.status(401).json({ error: "Token inválido" });
+    }
+    
+    req.user = user;
+    next();
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 const requireAdmin = async (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
@@ -204,7 +219,7 @@ const requireAdmin = async (req: any, res: any, next: any) => {
     }
 
     const { data: profile } = await supBase.from("profiles").select("role").eq("id", user.id).single();
-    const isAdmin = profile?.role === "admin" || user.email === "elmenorjn@gmail.com";
+    const isAdmin = profile?.role === "admin";
 
     if (!isAdmin) {
       // Registrar log de acceso denegado (opcional, lo haremos desde el cliente por ahora o aquí mismo si hubiera tabla)
@@ -276,7 +291,7 @@ app.use((req, res, next) => {
 });
 
 // API Route: Register App (All data already uploaded by client)
-app.post("/api/upload-app", (req, res, next) => {
+app.post("/api/upload-app", requireAuth, (req, res, next) => {
   console.log(`[Backend] Recibiendo registro final de app...`);
   next();
 }, async (req: any, res: any) => {
@@ -595,7 +610,7 @@ app.post("/api/delete-account", async (req, res) => {
     }
 
     const { data: profile } = await supBase.from("profiles").select("role").eq("id", user.id).single();
-    const isAdmin = profile?.role === "admin" || user.email === "elmenorjn@gmail.com";
+    const isAdmin = profile?.role === "admin";
 
     if (user.id !== userId && !isAdmin) {
       return res.status(403).json({ error: "No autorizado para eliminar esta cuenta" });

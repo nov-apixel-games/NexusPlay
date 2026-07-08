@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = user_id AND (role = 'admin' OR email = 'elmenorjn@gmail.com')
+    SELECT 1 FROM public.profiles WHERE id = user_id AND (role = 'admin')
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
@@ -577,7 +577,7 @@ created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 ALTER TABLE public.admin_access_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins can view logs" ON public.admin_access_logs;
-CREATE POLICY "Admins can view logs" ON public.admin_access_logs FOR SELECT USING (public.is_admin(auth.uid()) OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND email = 'elmenorjn@gmail.com'));
+CREATE POLICY "Admins can view logs" ON public.admin_access_logs FOR SELECT USING (public.is_admin(auth.uid()));
 DROP POLICY IF EXISTS "Users can insert their own logs" ON public.admin_access_logs;
 CREATE POLICY "Users can insert their own logs" ON public.admin_access_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
 

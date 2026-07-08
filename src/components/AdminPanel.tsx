@@ -31,7 +31,7 @@ interface AdminPanelProps {
 
 export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequests, setDevRequests, aiConfig }: AdminPanelProps) {
   const { t } = useAppStore();
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'elmenorjn@gmail.com';
+  const isAdmin = userProfile?.role === 'admin';
 
   if (!isAdmin) {
     return (

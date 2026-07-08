@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToCloudinary } from '../lib/cloudinary';
+import { supabase } from '../lib/supabase';
 
 interface PublishingWizardProps {
   developerId: string;
@@ -174,11 +175,17 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
     try {
       setPublishProgress(60);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       // Register in Supabase
       setStatus(t("wiz.finishing") || 'Finalizando y publicando en NexusPlay...');
       const registerRes = await fetch('/api/upload-app', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           app_name: formData.app_name,
           company_name: formData.company_name,
