@@ -52,13 +52,6 @@ export default function OfflineIndicator() {
     },
   });
 
-  // Auto-apply the update when a new version is ready
-  useEffect(() => {
-    if (needRefresh) {
-      updateServiceWorker(true);
-    }
-  }, [needRefresh, updateServiceWorker]);
-
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [cacheSize, setCacheSize] = useState<string>('0 MB');
 
@@ -122,14 +115,14 @@ export default function OfflineIndicator() {
           <div className="bg-blue-500/95 backdrop-blur-md border border-blue-500/30 text-nexus-text rounded-xl px-4 py-2 shadow-[0_5px_20px_rgba(59,130,246,0.3)] flex items-center gap-3">
             <RefreshCw className="w-5 h-5 animate-spin shrink-0" />
             <div className="flex flex-col">
-              <span className="text-xs font-black tracking-wider uppercase">Actualización</span>
-              <span className="text-[10px] opacity-90">Nueva versión lista ({cacheSize})</span>
+              <span className="text-xs font-black tracking-wider uppercase">Nueva versión disponible</span>
+              <span className="text-[10px] opacity-90">Actualiza para ver los últimos cambios ({cacheSize})</span>
             </div>
             <button 
               onClick={() => updateServiceWorker(true)}
-              className="bg-nexus-card hover:bg-nexus-card rounded-md px-3 py-1.5 text-[10px] ml-2 cursor-pointer transition-all uppercase font-bold"
+              className="bg-nexus-card hover:bg-nexus-card rounded-md px-3 py-1.5 text-[10px] ml-2 cursor-pointer transition-all uppercase font-bold text-white hover:bg-white/20"
             >
-              Recargar
+              Actualizar
             </button>
           </div>
         )}

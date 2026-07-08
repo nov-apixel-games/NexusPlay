@@ -11,10 +11,10 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: "autoUpdate",
-        injectRegister: "auto",
+        registerType: "prompt",
+        injectRegister: null,
         workbox: {
-          skipWaiting: true,
+          skipWaiting: false,
           clientsClaim: true,
           globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff,woff2,ttf}"],
           globIgnores: [
