@@ -103,57 +103,6 @@ async function deleteCloudinaryImage(url: string) {
   }
 }
 
-// Background Task: Image Cleanup (Every 12 hours)
-setInterval(async () => {
-    try {
-      const supabase = getSupabase();
-      if (!supabase) return;
-
-      console.log("[Cleanup] Ejecutando limpieza automática de imágenes expiradas (>7 días)...");
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: oldMessages, error } = await supabase
-        .from('messages')
-        .select('*')
-        .lte('created_at', sevenDaysAgo.toISOString())
-        .like('content', '%"image_url":"https://%');
-
-      if (error || !oldMessages || oldMessages.length === 0) {
-        console.log("[Cleanup] No hay mensajes con imágenes para borrar.");
-        return;
-      }
-
-      for (const msg of oldMessages) {
-        try {
-          const parsed = JSON.parse(msg.content);
-          if (parsed.image_url) {
-            await deleteCloudinaryImage(parsed.image_url);
-            
-            // Edit message to remove image but keep text
-            const newContent = {
-              text: parsed.text || "Imagen expirada",
-              channel: parsed.channel,
-              image_url: null,
-              expired: true
-            };
-            
-            await supabase
-              .from('messages')
-              .update({ content: JSON.stringify(newContent) })
-              .eq('id', msg.id);
-              
-            console.log(`[Cleanup] Mensaje ${msg.id} limpiado correctamente.`);
-          }
-        } catch(e) {
-           console.error("[Cleanup] Falló parseo o borrado en msg", msg.id, e);
-        }
-      }
-    } catch(err) {
-       console.error("[Cleanup] Error general:", err);
-    }
-}, 12 * 60 * 60 * 1000); // 12 hours
-
 export const app = express();
 
 const apiLimiter = rateLimit({

@@ -78,9 +78,10 @@ export default function Navbar({
     }
 
     const fetchNotifications = async () => {
-      const { data } = await supabase.from('notifications')
+            const { data } = await supabase.from('notifications')
         .select('*').limit(500)
         .eq('user_id', userProfile.id)
+        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(10);
       if (data) setNotifications(data);
@@ -88,14 +89,23 @@ export default function Navbar({
 
     fetchNotifications();
 
-    const channel = supabase.channel('user_notifs')
+        const channel = supabase.channel('user_notifs')
       .on('postgres_changes', { 
-        event: 'INSERT', 
+        event: '*', 
         schema: 'public', 
         table: 'notifications', 
         filter: `user_id=eq.${userProfile.id}` 
       }, (payload) => {
-        setNotifications(prev => [payload.new, ...prev].slice(0, 10));
+        if (payload.eventType === 'INSERT') {
+          // Check if it's already expired just in case
+          if (new Date(payload.new.expires_at) > new Date()) {
+            setNotifications(prev => [payload.new, ...prev].slice(0, 10));
+          }
+        } else if (payload.eventType === 'DELETE') {
+          setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+        } else if (payload.eventType === 'UPDATE') {
+          setNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new : n));
+        }
       })
       .subscribe();
 
