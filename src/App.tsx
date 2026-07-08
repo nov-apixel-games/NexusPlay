@@ -37,6 +37,7 @@ import { OnboardingView } from './components/OnboardingView';
 import OfflineFallback from './components/OfflineFallback';
 import OfflineIndicator from './components/OfflineIndicator';
 import DoubleVerificationModal from './components/admin/DoubleVerificationModal';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { useAppStore } from './store/useAppStore';
 
@@ -145,8 +146,6 @@ export default function App() {
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [isAdminVerified, setIsAdminVerified] = useState(false);
-  const [lastAdminActivity, setLastAdminActivity] = useState(Date.now());
   
   const DEFAULT_AI_CONFIG: AIConfig = {
     enabled: true,
@@ -160,7 +159,6 @@ export default function App() {
     // 1. Limpieza total de estados locales
     setSession(null);
     setUserProfile(null);
-    setIsAdminVerified(false);
     setActiveView('home');
     setShowDevPanel(false);
     setIsSidebarOpen(false);
@@ -626,7 +624,6 @@ export default function App() {
         addToast('Acceso restringido. Requiere permisos de administrador.', 'error');
         return;
       }
-      setLastAdminActivity(Date.now());
       setViewHistory(prev => [...prev, id]);
       setActiveView(id);
     } else if (id === 'dev-panel') {
@@ -641,39 +638,6 @@ export default function App() {
       setActiveView(id);
     }
   };
-
-
-
-  useEffect(() => {
-    if (activeView === 'admin-panel' && isAdminVerified) {
-      const interval = setInterval(() => {
-        if (Date.now() - lastAdminActivity > 5 * 60 * 1000) { // 5 minutes inactivity
-          setIsAdminVerified(false);
-          setActiveView('home');
-          addToast("Sesión de administrador cerrada por inactividad", "info");
-        }
-      }, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [activeView, isAdminVerified, lastAdminActivity, addToast]);
-
-  useEffect(() => {
-    const handleActivity = () => {
-      if (activeView === 'admin-panel') {
-        setLastAdminActivity(Date.now());
-      }
-    };
-    if (activeView === 'admin-panel') {
-      window.addEventListener('mousemove', handleActivity);
-      window.addEventListener('keydown', handleActivity);
-      window.addEventListener('click', handleActivity);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleActivity);
-      window.removeEventListener('keydown', handleActivity);
-      window.removeEventListener('click', handleActivity);
-    };
-  }, [activeView]);
 
   const handleAppClick = (app: AppItem) => {
     const nextView = `app/${app.id}`;
@@ -925,6 +889,10 @@ export default function App() {
         }
         return <NexusHub session={session} userProfile={userProfile} onBack={() => setActiveView('home')} />;
       case 'admin-panel':
+        if (!isAdmin) {
+          setTimeout(() => setActiveView('home'), 0);
+          return null;
+        }
         if (isOffline) {
           return (
             <OfflineFallback 
@@ -932,16 +900,6 @@ export default function App() {
               onGoToGames={() => setActiveView('games-hub')} 
               title="Panel de Administración Bloqueado"
               description="El panel de control administrativo y la aprobación de apps requieren sincronización directa con los servicios en la nube de Supabase."
-            />
-          );
-        }
-        if (!isAdminVerified) {
-          return (
-            <DoubleVerificationModal 
-               user={session?.user} 
-               onSuccess={() => setIsAdminVerified(true)} 
-               onFail={() => { setActiveView('home'); addToast('Biometría de seguridad rechazada.', 'error'); }} 
-               onClose={() => setActiveView('home')} 
             />
           );
         }
@@ -1133,6 +1091,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-nexus-text font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
+      <SpeedInsights />
       <GoogleAdSense />
       <OfflineIndicator />
       <ToastContainer toasts={toasts} removeToast={removeToast} />

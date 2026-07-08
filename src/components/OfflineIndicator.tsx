@@ -9,13 +9,55 @@ export default function OfflineIndicator() {
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
+    onRegisteredSW(swUrl, r) {
+      if (!r) return;
+      const checkUpdate = () => {
+        r.update().catch(err => console.error('Error updating SW:', err));
+      };
+      // Check on load
+      checkUpdate();
+
+      // Check on visibility/focus
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkUpdate();
+        }
+      });
+      window.addEventListener('focus', checkUpdate);
+      
+      // Periodic check every 15 minutes
+      setInterval(checkUpdate, 15 * 60 * 1000);
+    },
     onRegistered(r) {
-;
+      if (!r) return;
+      const checkUpdate = () => {
+        r.update().catch(err => console.error('Error updating SW:', err));
+      };
+      // Check on load
+      checkUpdate();
+
+      // Check on visibility/focus
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkUpdate();
+        }
+      });
+      window.addEventListener('focus', checkUpdate);
+
+      // Periodic check every 15 minutes
+      setInterval(checkUpdate, 15 * 60 * 1000);
     },
     onRegisterError(error) {
       console.error('SW registration error', error);
     },
   });
+
+  // Auto-apply the update when a new version is ready
+  useEffect(() => {
+    if (needRefresh) {
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
 
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [cacheSize, setCacheSize] = useState<string>('0 MB');

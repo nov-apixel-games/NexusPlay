@@ -12,8 +12,10 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: "autoUpdate",
-        injectRegister: "script",
+        injectRegister: "auto",
         workbox: {
+          skipWaiting: true,
+          clientsClaim: true,
           globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff,woff2,ttf}"],
           globIgnores: [
             "**/node_modules/**/*",
