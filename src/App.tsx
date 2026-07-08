@@ -146,6 +146,8 @@ export default function App() {
   const [devRequests, setDevRequests] = useState<DevRequest[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  const [hasPinConfigured, setHasPinConfigured] = useState<boolean | null>(null);
   
   const DEFAULT_AI_CONFIG: AIConfig = {
     enabled: true,
@@ -585,6 +587,31 @@ export default function App() {
   const isDeveloper = userProfile?.role === 'developer' || isAdmin;
 
   useEffect(() => {
+    if (activeView !== 'admin-panel') {
+      setIsAdminVerified(false);
+      setHasPinConfigured(null);
+    }
+  }, [activeView]);
+
+  useEffect(() => {
+    if (activeView === 'admin-panel' && hasPinConfigured === null && session) {
+      const checkPin = async () => {
+        try {
+          const { data, error } = await supabase.rpc('is_admin_pin_configured');
+          if (error) {
+            setHasPinConfigured(false);
+          } else {
+            setHasPinConfigured(!!data);
+          }
+        } catch {
+          setHasPinConfigured(false);
+        }
+      };
+      checkPin();
+    }
+  }, [activeView, hasPinConfigured, session]);
+
+  useEffect(() => {
     if (isSidebarOpen || showDevPanel || showAuthModal || showOnboarding) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
@@ -900,6 +927,28 @@ export default function App() {
               onGoToGames={() => setActiveView('games-hub')} 
               title="Panel de Administración Bloqueado"
               description="El panel de control administrativo y la aprobación de apps requieren sincronización directa con los servicios en la nube de Supabase."
+            />
+          );
+        }
+
+        if (hasPinConfigured === null) {
+          return (
+            <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 border-4 border-t-red-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto"></div>
+                <p className="text-nexus-text-sec font-mono text-sm animate-pulse">Verificando seguridad...</p>
+              </div>
+            </div>
+          );
+        }
+
+        if (hasPinConfigured && !isAdminVerified) {
+          return (
+            <DoubleVerificationModal 
+               user={session?.user} 
+               onSuccess={() => setIsAdminVerified(true)} 
+               onFail={() => { setActiveView('home'); addToast('Biometría de seguridad rechazada o PIN incorrecto.', 'error'); }} 
+               onClose={() => setActiveView('home')} 
             />
           );
         }

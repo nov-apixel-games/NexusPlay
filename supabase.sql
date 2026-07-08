@@ -583,3 +583,112 @@ CREATE POLICY "Users can insert their own logs" ON public.admin_access_logs FOR 
 
 DROP POLICY IF EXISTS "Admins can update dev requests" ON public.dev_requests;
 CREATE POLICY "Admins can update dev requests" ON public.dev_requests FOR UPDATE USING (public.is_admin(auth.uid()));
+
+-- ==========================================
+-- ADMIN PIN SECURITY MODULE
+-- ==========================================
+
+-- Enable pgcrypto extension for bcrypt hash generation
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Create admin_pins table to hold hashed pins securely
+CREATE TABLE IF NOT EXISTS public.admin_pins (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    pin_hash TEXT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS on the table to restrict direct selects/inserts
+ALTER TABLE public.admin_pins ENABLE ROW LEVEL SECURITY;
+
+-- 1. Function: Check if admin PIN is configured for the current user
+DROP FUNCTION IF EXISTS public.is_admin_pin_configured();
+CREATE OR REPLACE FUNCTION public.is_admin_pin_configured()
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_has_pin BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1 FROM public.admin_pins WHERE user_id = auth.uid()
+    ) INTO v_has_pin;
+    
+    RETURN v_has_pin;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 2. Function: Set, update, or remove the admin PIN
+DROP FUNCTION IF EXISTS public.set_admin_pin(text, text);
+CREATE OR REPLACE FUNCTION public.set_admin_pin(new_pin TEXT, current_pin TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_current_hash TEXT;
+    v_is_admin BOOLEAN;
+BEGIN
+    -- Only administrators are allowed to perform this action
+    SELECT public.is_admin(auth.uid()) INTO v_is_admin;
+    IF NOT v_is_admin THEN
+        RAISE EXCEPTION 'Solo los administradores pueden realizar esta acción';
+    END IF;
+
+    -- Retrieve existing pin hash for this user
+    SELECT pin_hash INTO v_current_hash FROM public.admin_pins WHERE user_id = auth.uid();
+
+    -- If a PIN is currently configured, we MUST authenticate with current_pin
+    IF v_current_hash IS NOT NULL THEN
+        IF current_pin IS NULL OR current_pin = '' THEN
+            RAISE EXCEPTION 'El PIN actual es obligatorio para realizar cambios';
+        END IF;
+        
+        -- Verify current PIN
+        IF v_current_hash != crypt(current_pin, v_current_hash) THEN
+            RAISE EXCEPTION 'El PIN actual es incorrecto';
+        END IF;
+    END IF;
+
+    -- Determine operation (delete vs insert/update)
+    IF new_pin IS NULL OR new_pin = '' THEN
+        -- Delete PIN
+        DELETE FROM public.admin_pins WHERE user_id = auth.uid();
+    ELSE
+        -- Validate PIN constraints (exactly 6 digits)
+        IF length(new_pin) != 6 OR new_pin ~ '\D' THEN
+            RAISE EXCEPTION 'El PIN debe tener exactamente 6 dígitos numéricos';
+        END IF;
+
+        -- Write hashed PIN securely
+        INSERT INTO public.admin_pins (user_id, pin_hash, updated_at)
+        VALUES (auth.uid(), crypt(new_pin, gen_salt('bf', 8)), now())
+        ON CONFLICT (user_id) DO UPDATE
+        SET pin_hash = EXCLUDED.pin_hash, updated_at = now();
+    END IF;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 3. Function: Verify the admin PIN
+DROP FUNCTION IF EXISTS public.verify_admin_pin(text);
+CREATE OR REPLACE FUNCTION public.verify_admin_pin(p_pin TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_pin_hash TEXT;
+    v_is_admin BOOLEAN;
+BEGIN
+    -- Only administrators are allowed to verify admin pins
+    SELECT public.is_admin(auth.uid()) INTO v_is_admin;
+    IF NOT v_is_admin THEN
+        RAISE EXCEPTION 'Solo los administradores pueden realizar esta acción';
+    END IF;
+
+    -- Get hashed PIN
+    SELECT pin_hash INTO v_pin_hash FROM public.admin_pins WHERE user_id = auth.uid();
+
+    IF v_pin_hash IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Verify the input PIN matches the hash
+    RETURN v_pin_hash = crypt(p_pin, v_pin_hash);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
