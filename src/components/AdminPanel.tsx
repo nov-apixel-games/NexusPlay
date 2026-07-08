@@ -16,6 +16,7 @@ import { AdminSettings, AdminAI, AdminNotifications, AdminDatabaseTools
 } from './admin/AdminViews2';
 
 import { useAppStore } from '../store/useAppStore';
+import { AdminSecurity } from './admin/AdminSecurity';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -466,6 +467,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     { id: 'logs', label: t('admin.tabLogs') || 'Logs Sistema', icon: List },
     { id: 'ai', label: 'NEXUS AI', icon: BrainCircuit },
     { id: 'settings', label: t('admin.tabSettings') || 'Configuración', icon: Settings },
+    { id: 'security', label: 'Seguridad del Panel', icon: ShieldAlert },
   ];
 
   // Helper chart data real
@@ -1112,6 +1114,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            )}
 
            {/* SETTINGS */}
+           {activeTab === 'security' && (
+             <AdminSecurity addToast={addToast} />
+           )}
+           
            {activeTab === 'settings' && (
              <AdminSettings 
                 settings={{ 
