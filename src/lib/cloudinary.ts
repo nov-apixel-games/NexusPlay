@@ -79,8 +79,13 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
   // Try signed upload first
   try {
     const sigURL = `/api/cloudinary-signature?folder=${encodeURIComponent(folder || "avatars")}`;
-;
-    const sigResponse = await fetch(sigURL);
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const sigResponse = await fetch(sigURL, {
+      headers: {
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      }
+    });
     
 ;
     
@@ -222,9 +227,14 @@ export const uploadToCloudinary = async (file: File, folder: string) => {
 
 export const deleteFromCloudinary = async (publicId: string) => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const response = await fetch("/api/delete-image", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ public_id: publicId }),
     });
     const result = await response.json();

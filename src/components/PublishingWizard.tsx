@@ -130,9 +130,14 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
   const removeScreenshot = async (id: string, publicId: string) => {
     if (publicId) {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
         await fetch('/api/delete-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({ public_id: publicId })
         });
       } catch (e) { console.warn("Failed to delete from Cloudinary:", e); }

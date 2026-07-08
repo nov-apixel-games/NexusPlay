@@ -68,14 +68,13 @@ ${JSON.stringify(catalogue, null, 2)}`;
   } catch (error: any) {
     console.error("[Nexus AI Error]", error);
     
-    // Devolvemos el error detallado
+    const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
     res.status(500).json({ 
       success: false,
-      error: error.message || "Error al procesar la recomendación de IA",
-      details: {
+      error: "Error al procesar la recomendación de IA",
+      details: isProd ? undefined : {
         code: error?.status || error?.code || 500,
-        status: error?.statusText || "ERROR",
-        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
+        status: error?.statusText || "ERROR"
       }
     });
   }

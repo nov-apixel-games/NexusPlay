@@ -23,8 +23,26 @@ export const uploadApp = async (req: any, res: any) => {
       throw new Error("Supabase no está configurado.");
     }
 
-    const finalScreenshots = typeof screenshots === 'string' ? JSON.parse(screenshots) : screenshots;
-    const finalScreenshotIds = typeof screenshots_public_ids === 'string' ? JSON.parse(screenshots_public_ids) : screenshots_public_ids;
+    // BOLA/IDOR Mitigation: Ensure user is only posting apps for their own ID unless they are admin
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", req.user.id).single();
+    const isAdmin = profile?.role === "admin";
+    if (req.user.id !== developer_id && !isAdmin) {
+      return res.status(403).json({ error: "No autorizado para publicar apps en nombre de otro desarrollador" });
+    }
+
+    let finalScreenshots = [];
+    let finalScreenshotIds = [];
+    try {
+      finalScreenshots = typeof screenshots === 'string' ? JSON.parse(screenshots) : (screenshots || []);
+    } catch (e) {
+      console.warn("[Backend] Error parsing screenshots JSON:", e);
+    }
+    
+    try {
+      finalScreenshotIds = typeof screenshots_public_ids === 'string' ? JSON.parse(screenshots_public_ids) : (screenshots_public_ids || []);
+    } catch (e) {
+      console.warn("[Backend] Error parsing screenshots_public_ids JSON:", e);
+    }
 
     const { data: appData, error: dbError } = await supabase
       .from('apps')

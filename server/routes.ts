@@ -23,7 +23,7 @@ router.use('/', apiLimiter);
 router.use('/nexus-ai', nexusAiLimiter);
 
 // Public / general configuration endpoints
-router.get("/cloudinary-signature", getCloudinarySignature);
+router.get("/cloudinary-signature", requireAuth, getCloudinarySignature);
 router.get("/supabase-config", getSupabaseConfig);
 
 // App routes
@@ -37,7 +37,7 @@ router.post("/nexus-ai", nexusAiChat);
 router.post("/nexus-3d-ai", nexus3dAi);
 
 // Cloudinary image/folder management routes
-router.post("/delete-image", deleteImage);
+router.post("/delete-image", requireAuth, deleteImage);
 router.post("/delete-folder", requireAdmin, deleteFolder);
 
 // Admin system stats route
