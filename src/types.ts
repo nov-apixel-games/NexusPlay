@@ -50,6 +50,7 @@ export interface UserItem {
   role: 'user' | 'developer' | 'admin';
   status: 'active' | 'suspended';
   joinedAt: string;
+  created_at?: string;
 }
 
 export interface DevRequest {

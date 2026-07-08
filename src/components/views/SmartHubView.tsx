@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { 
   Bot, TrendingUp, Sparkles, Wand2, Zap,
@@ -6,7 +6,19 @@ import {
 } from 'lucide-react';
 import { AppItem } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
-import { NotesApp, CalculatorApp, QrApp, CurrencyApp } from './SmartTools';
+
+const NotesApp = lazy(() => import('./SmartTools').then(m => ({ default: m.NotesApp })));
+const CalculatorApp = lazy(() => import('./SmartTools').then(m => ({ default: m.CalculatorApp })));
+const QrApp = lazy(() => import('./SmartTools').then(m => ({ default: m.QrApp })));
+const CurrencyApp = lazy(() => import('./SmartTools').then(m => ({ default: m.CurrencyApp })));
+
+const parseDownloads = (dStr: string) => {
+  if (!dStr) return 0;
+  let n = parseFloat(dStr);
+  if (dStr.toLowerCase().includes('m')) n *= 1000000;
+  if (dStr.toLowerCase().includes('k')) n *= 1000;
+  return isNaN(n) ? 0 : n;
+};
 
 interface SmartHubViewProps {
   onBack: () => void;
@@ -18,18 +30,15 @@ interface SmartHubViewProps {
 export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHubViewProps) {
   const t = useAppStore(state => state.t);
   const [activeTool, setActiveTool] = useState<string | null>(null);
-  
-  const parseDownloads = (dStr: string) => {
-    if (!dStr) return 0;
-    let n = parseFloat(dStr);
-    if (dStr.toLowerCase().includes('m')) n *= 1000000;
-    if (dStr.toLowerCase().includes('k')) n *= 1000;
-    return isNaN(n) ? 0 : n;
-  };
 
   // Trending content
-  const trendingApps = [...apps].sort((a, b) => parseDownloads(b.downloads) - parseDownloads(a.downloads)).slice(0, 4);
-  const featuredAIApps = apps.filter(a => a.category?.toLowerCase() === 'ia' || a.category?.toLowerCase() === 'ai' || a.name.toLowerCase().includes('ai ')).slice(0, 3);
+  const trendingApps = useMemo(() => {
+    return [...apps].sort((a, b) => parseDownloads(b.downloads) - parseDownloads(a.downloads)).slice(0, 4);
+  }, [apps]);
+
+  const featuredAIApps = useMemo(() => {
+    return apps.filter(a => a.category?.toLowerCase() === 'ia' || a.category?.toLowerCase() === 'ai' || a.name.toLowerCase().includes('ai ')).slice(0, 3);
+  }, [apps]);
   
   const news = [
     { id: 1, title: 'El auge de la IA en móviles', excerpt: 'Las apps potenciadas con IA rompen récord de descargas este trimestre.', date: 'Hoy' },
@@ -47,10 +56,26 @@ export function SmartHubView({ onBack, apps, onAppClick, userProfile }: SmartHub
   return (
     <div className="pb-24 pt-4 px-4 min-h-screen bg-nexus-bg">
       <AnimatePresence>
-        {activeTool === 'calc' && <CalculatorApp onClose={() => setActiveTool(null)} />}
-        {activeTool === 'notes' && <NotesApp onClose={() => setActiveTool(null)} />}
-        {activeTool === 'qr' && <QrApp onClose={() => setActiveTool(null)} />}
-        {activeTool === 'currency' && <CurrencyApp onClose={() => setActiveTool(null)} />}
+        {activeTool === 'calc' && (
+          <Suspense fallback={<div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center font-mono text-blue-400 animate-pulse">Cargando Calculadora...</div>}>
+            <CalculatorApp onClose={() => setActiveTool(null)} />
+          </Suspense>
+        )}
+        {activeTool === 'notes' && (
+          <Suspense fallback={<div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center font-mono text-amber-400 animate-pulse">Cargando Notas...</div>}>
+            <NotesApp onClose={() => setActiveTool(null)} />
+          </Suspense>
+        )}
+        {activeTool === 'qr' && (
+          <Suspense fallback={<div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center font-mono text-purple-400 animate-pulse">Cargando Código QR...</div>}>
+            <QrApp onClose={() => setActiveTool(null)} />
+          </Suspense>
+        )}
+        {activeTool === 'currency' && (
+          <Suspense fallback={<div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center font-mono text-emerald-400 animate-pulse">Cargando Conversor...</div>}>
+            <CurrencyApp onClose={() => setActiveTool(null)} />
+          </Suspense>
+        )}
       </AnimatePresence>
       <div className="max-w-7xl mx-auto space-y-8">
         

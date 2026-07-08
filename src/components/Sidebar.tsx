@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   Home, Compass, Trophy, Gamepad2, 
   User, Users, Download, Heart, Shield, LogOut, X, BrainCircuit, Settings,
@@ -41,7 +42,7 @@ const getMenuItems = (isAdmin: boolean, t: any) => [
   ]}
 ];
 
-export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, userProfile, onLogout, webLogo, platformName: propPlatformName = 'NexusPlay' }: SidebarProps) {
+const Sidebar = React.memo(function Sidebar({ isOpen, onClose, onAction, isAdmin, session, userProfile, onLogout, webLogo, platformName: propPlatformName = 'NexusPlay' }: SidebarProps) {
   const { t } = useAppStore();
   const MENU_ITEMS = getMenuItems(isAdmin, t);
   const displayLogo = webLogo || localStorage.getItem('nexus_web_logo');
@@ -180,4 +181,8 @@ export default function Sidebar({ isOpen, onClose, onAction, isAdmin, session, u
       )}
     </AnimatePresence>
   );
-}
+});
+
+Sidebar.displayName = 'Sidebar';
+
+export default Sidebar;

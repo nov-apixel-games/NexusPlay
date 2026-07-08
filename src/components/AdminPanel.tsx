@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   Shield, Trash2, CheckCircle, XCircle, ChevronLeft, BarChart, 
   Smartphone, Users, Code, MessageSquare, List, Settings, BrainCircuit,
@@ -10,14 +10,18 @@ import { supabase } from '../lib/supabase';
 import { deleteFromCloudinary, deleteFolderFromCloudinary } from '../lib/cloudinary';
 import { AppItem, DevRequest } from '../types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { 
-  AdminDashboard, AdminUsers 
-} from './admin/AdminViews1';
-import { AdminSettings, AdminAI, AdminNotifications, AdminDatabaseTools
-} from './admin/AdminViews2';
+
+const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./admin/AdminUsers'));
+const AdminApps = lazy(() => import('./admin/AdminApps'));
+const AdminNotifications = lazy(() => import('./admin/AdminNotifications'));
+const AdminStatistics = lazy(() => import('./admin/AdminStatistics'));
+const AdminSettings = lazy(() => import('./admin/AdminViews2').then(m => ({ default: m.AdminSettings })));
+const AdminAI = lazy(() => import('./admin/AdminViews2').then(m => ({ default: m.AdminAI })));
+const AdminDatabaseTools = lazy(() => import('./admin/AdminViews2').then(m => ({ default: m.AdminDatabaseTools })));
 
 import { useAppStore } from '../store/useAppStore';
-import { AdminSecurity } from './admin/AdminSecurity';
+const AdminSecurity = lazy(() => import('./admin/AdminSecurity').then(m => ({ default: m.AdminSecurity })));
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -55,7 +59,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
   const [users, setUsers] = useState<any[]>([]);
   const [allReviews, setAllReviews] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, pending: 0, approved: 0, msgs: 0, reviews: 0 });
-  const [searchQuery, setSearchQuery] = useState('');
+  
   
   const [maintenance, setMaintenance] = useState(() => localStorage.getItem('nexus_maintenance') === 'true');
   const [logs, setLogs] = useState<any[]>(() => {
@@ -90,10 +94,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
     addLog('SISTEMA', 'Toast', message, type);
   };
 
-  // Custom Modal for Delete
-  const [appToDelete, setAppToDelete] = useState<AppItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
+
 
   // AdSense y métricas reales
   const [adsConfig, setAdsConfig] = useState<any>({ publisherId: '', clientId: '', active: false });
@@ -303,113 +304,6 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
   // --- ACCIONES BACKEND RESTRICCIONES ---
 
-  // Gestión de Apps
-  const handleAppStatus = async (id: string, status: 'published' | 'rejected') => {
-;
-    const { error } = await supabase.from('apps').update({ status }).eq('id', id);
-    if (!error) {
-;
-      addLog('ESTADO APP', id, `Estado cambiado a ${status}`, 'success');
-      setApps((prev: AppItem[]) => prev.map(a => a.id === id ? { ...a, status } : a));
-    } else {
-;
-      addLog('ESTADO APP', id, `Error: ${error.message}`, 'error');
-    }
-  };
-
-  const toggleFeatured = async (app: AppItem) => {
-    const newFeatured = !app.featured;
-;
-    const { error } = await supabase.from('apps').update({ featured: newFeatured }).eq('id', app.id);
-    if (error) {
-;
-       addLog('DESTACAR APP', app.name, `Error: ${error.message}`, 'error');
-    } else {
-;
-       addLog('DESTACAR APP', app.name, `App marcada como featured=${newFeatured}`, 'success');
-       setApps((prev: AppItem[]) => prev.map(a => a.id === app.id ? { ...a, featured: newFeatured } : a));
-    }
-  };
-
-  const handleAppDeleteConfirm = async () => {
-    if (!appToDelete) return;
-    
-    setIsDeleting(true);
-    setDeleteError('');
-;
-    addLog('ELIMINAR APP', appToDelete.name, `Iniciada secuencia de purga profunda...`, 'info');
-
-    try {
-      // Intentamos borrar la carpeta entera de Cloudinary generada para esta app
-      let clFolder = true;
-      const folderName = appToDelete.name.trim() || appToDelete.developer?.trim() || 'unknown_app';
-      clFolder = await deleteFolderFromCloudinary(folderName);
-;
-
-      // Por si acaso, intentamos borrar los IDs individuales también para asegurar que no queden rastros antiguos
-      let clIcon = true;
-      if (appToDelete.iconPublicId) {
-         clIcon = await deleteFromCloudinary(appToDelete.iconPublicId);
-;
-      }
-      let clScreens = true;
-      for (const pid of (appToDelete.screenshotsPublicIds || [])) {
-         const sr = await deleteFromCloudinary(pid);
-         if (!sr) clScreens = false;
-;
-      }
-
-      const { error } = await supabase.from('apps').delete().eq('id', appToDelete.id);
-      
-      if (error) {
-         throw new Error(`Fallo en BD: ${error.message}`);
-      }
-
-;
-      addLog('ELIMINAR APP', appToDelete.name, `Purgada. Cloudinary Icon: ${clIcon} Screens: ${clScreens}`, 'success');
-
-      setApps((prev: AppItem[]) => prev.filter(a => a.id !== appToDelete.id));
-      setAppToDelete(null);
-    } catch (e: any) {
-;
-      setDeleteError(e.message);
-      addLog('ELIMINAR APP', appToDelete.name, `Crash Crítico: ${e.message}`, 'error');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // Gestión de Usuarios
-  const setRole = async (user: any, role: string) => {
-;
-    const { error } = await supabase.from('profiles').update({ role }).eq('id', user.id);
-    if (error) {
-;
-       addLog('CAMBIO ROL USUARIO', user.email || user.id, `Error: ${error.message}`, 'error');
-    } else {
-;
-       addLog('CAMBIO ROL USUARIO', user.email || user.id, `Rol cambiado a ${role}`, 'success');
-       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role } : u));
-    }
-  };
-
-  const deleteUser = async (user: any) => {
-    if (!window.confirm(`¿Eliminar definitivamente al usuario ${user.email}? Esto afectará sus relaciones.`)) return;
-;
-    
-    // Solo borramos la entrada de profiles.
-    const { error } = await supabase.from('profiles').delete().eq('id', user.id);
-    if (error) {
-;
-       addLog('ELIMINAR USUARIO', user.email || user.id, `Fallo: ${error.message}`, 'error');
-       alert("Error eliminando perfil: " + error.message);
-    } else {
-;
-       addLog('ELIMINAR USUARIO', user.email || user.id, `Usuario eliminado`, 'success');
-       setUsers(prev => prev.filter(u => u.id !== user.id));
-    }
-  };
-
   // Gestión de Desarrolladores
   const handleDevRequest = async (req: DevRequest, approve: boolean) => {
     const status = approve ? 'approved' : 'rejected';
@@ -487,45 +381,6 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
   return (
     <div className="fixed inset-0 z-[100] bg-nexus-bg flex text-nexus-text font-sans selection:bg-red-500/30">
       
-      {/* Modal PURGAR */}
-      {appToDelete && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-nexus-bg/80 backdrop-blur-sm" onClick={() => !isDeleting && setAppToDelete(null)} />
-          <div className="relative bg-nexus-card border border-red-500/30 p-8 rounded-3xl max-w-lg w-full shadow-[0_0_50px_rgba(220,38,38,0.2)] animate-fade-in">
-             <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 bg-red-950/40 rounded-full flex items-center justify-center border border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.4)]">
-                   <AlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-             </div>
-             <h3 className="text-2xl font-black text-center text-nexus-text mb-2 uppercase tracking-tighter">{t("admin.confirmPurge") || "Confirmar Purga"}</h3>
-             <p className="text-nexus-text-sec text-center mb-6">¿Estás absolutamente seguro de que deseas obliterar la aplicación <span className="text-red-400 font-bold">"{appToDelete.name}"</span>? Esta acción es irreversible, eliminará los archivos binarios de visualización (Cloudinary) y borrará los registros cruzados en la base de datos maestra (Supabase).</p>
-             
-             {deleteError && (
-               <div className="p-4 bg-red-950/30 border border-red-900/50 rounded-xl mb-6 flex items-start gap-3">
-                 <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                 <p className="text-red-300 text-sm font-mono break-words">{deleteError}</p>
-               </div>
-             )}
-
-             <div className="flex gap-4">
-                <button 
-                  onClick={() => setAppToDelete(null)}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-3 rounded-xl border border-nexus-border hover:bg-nexus-card font-bold text-nexus-text transition-colors disabled:opacity-50"
-                >{t("admin.cancel") || "Cancelar"}</button>
-                <button 
-                  onClick={handleAppDeleteConfirm}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-nexus-text font-black shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                 type="button" >
-                  {isDeleting ? <div className="w-5 h-5 border-2 border-nexus-border border-t-white rounded-full animate-spin" /> : <Trash2 className="w-5 h-5" />}
-                  {isDeleting ? (t('admin.purging') || 'Purgando...') : (t('admin.purgeApp') || 'PURGAR APP')}
-                </button>
-             </div>
-          </div>
-        </div>
-      )}
-
       {/* Mobile Top Header */}
       <div className="md:hidden absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-slate-950 to-transparent z-40 flex items-center px-4 justify-between pointer-events-none">
         <button 
@@ -564,7 +419,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            {menu.map(m => (
              <button 
                key={m.id}
-               onClick={() => { setActiveTab(m.id); setSearchQuery(''); setIsMobileMenuOpen(false); }}
+               onClick={() => { setActiveTab(m.id); setIsMobileMenuOpen(false); }}
                className={`w-full flex items-center gap-3 md:gap-4 px-4 py-3 md:px-5 md:py-4 rounded-xl md:rounded-2xl font-bold transition-all text-sm md:text-sm ${
                  activeTab === m.id ? 'bg-gradient-to-r from-red-500/10 to-transparent text-red-400 border border-red-500/20 shadow-inner' : 'text-nexus-text-sec hover:bg-nexus-card/50 hover:text-nexus-text'
                }`}
@@ -599,6 +454,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
       {/* AREA PRINCIPAL */}
       <main className="flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 to-slate-950 p-4 pt-20 sm:p-6 md:p-12 custom-scrollbar relative w-full overflow-x-hidden">
         <div className="max-w-6xl mx-auto space-y-8 md:space-y-10 pb-20 w-full">
+          <Suspense fallback={<div className="flex h-[300px] items-center justify-center font-mono text-red-500 animate-pulse">{t('app.loading') || 'Cargando módulo...'}</div>}>
            
            {/* DASHBOARD */}
            {activeTab === 'dashboard' && (
@@ -606,70 +462,10 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
            )}
 
            {/* APLICACIONES */}
-           {activeTab === 'apps' && (
-             <div className="space-y-8 animate-fade-in">
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 w-full lg:max-w-none">
-                  <div>
-                    <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.dirEntity") || "Directorio de Entidades"}</h3>
-                    <p className="text-red-400 text-sm md:text-base">{t("admin.controlMaster") || "Control maestro de software publicadas."}</p>
-                  </div>
-                  <div className="relative w-full sm:max-w-sm">
-                    <input 
-                      type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                      placeholder={t("admin.searchId") || "Identificador ID o Nombre..."}
-                      className="w-full bg-nexus-surface border border-red-900/30 text-nexus-text rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-red-500 text-sm md:text-base"
-                    />
-                    <Search className="w-4 h-4 text-nexus-text-sec absolute left-4 top-1/2 -translate-y-1/2" />
-                  </div>
-                </header>
-                <div className="space-y-4 w-full">
-                  {apps.length === 0 && <p className="text-nexus-text-sec bg-nexus-surface/40 p-10 rounded-3xl border border-red-500/10 text-center">{t("admin.noResults") || "Sin resultados."}</p>}
-                  {apps.filter(x => x.name.toLowerCase().includes(searchQuery.toLowerCase())).map(app => (
-                    <div key={app.id} className={`bg-nexus-card/40 border ${app.featured ? 'border-amber-500/30' : 'border-red-500/10'} p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-red-500/30 transition-colors shadow-lg backdrop-blur-sm`}>
-                       <div className="flex items-center gap-5">
-                         <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-2xl object-cover bg-nexus-bg border border-nexus-border shadow-md" />
-                         <div>
-                           <div className="flex items-center gap-2 mb-1">
-                             <h4 className="font-bold text-nexus-text text-lg leading-tight">{app.name}</h4>
-                             {app.featured && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
-                           </div>
-                           <p className="text-sm text-nexus-text-sec">{app.developer} <span className="mx-2 text-red-900/50">|</span> <span className={`font-bold ${app.status === 'pending' ? 'text-orange-500' : app.status === 'published' ? 'text-green-500' : 'text-red-500'}`}>{app.status.toUpperCase()}</span> <span className="mx-2 text-red-900/50">|</span> <Download className="w-3 h-3 inline mr-1" /> {app.downloads || 0}</p>
-                           <p className="text-xs text-gray-600 mt-1 font-mono">ID: {app.id} • Creada: {app.date ? new Date(app.date).toLocaleDateString() : 'Desconocida'}</p>
-                         </div>
-                       </div>
-                       
-                       <div className="flex flex-wrap gap-2 shrink-0">
-                         {app.status === 'pending' && (
-                           <>
-                             <button onClick={() => handleAppStatus(app.id, 'published')} className="bg-green-950/30 border border-green-900/30 text-green-500 hover:bg-green-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all">{t("admin.approve") || "Aprobar"}</button>
-                             <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-orange-950/30 border border-orange-900/30 text-orange-500 hover:bg-orange-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all">{t("admin.reject") || "Rechazar"}</button>
-                           </>
-                         )}
-                         {app.status === 'published' && (
-                           <>
-                             <button onClick={() => handleAppStatus(app.id, 'rejected')} className="bg-nexus-card text-nexus-text-sec border border-nexus-border hover:bg-nexus-card-hover hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
-                               <EyeOff className="w-3 h-3" /> {t("admin.hide") || "Ocultar"}
-                             </button>
-                             <button onClick={() => toggleFeatured(app)} className={`${app.featured ? 'bg-amber-900/20 text-amber-500 border-amber-900/30 hover:bg-amber-900 hover:text-nexus-text' : 'bg-nexus-card text-amber-500/70 border-nexus-border hover:bg-amber-900/20 hover:text-amber-500'} border px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1`}>
-                                <Star className="w-3 h-3" /> {app.featured ? (t('admin.norm') || 'Normalizar') : (t('admin.feat') || 'Destacar')}
-                             </button>
-                           </>
-                         )}
-                         <a href={`/app/${app.id}`} target="_blank" rel="noreferrer" className="bg-blue-950/30 border border-blue-900/30 text-blue-500 hover:bg-blue-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
-                            <Eye className="w-3 h-3" /> {t("admin.view") || "Ver"}
-                         </a>
-                         <button onClick={() => alert("Función " + (t("admin.edit") || "Editar") + " en desarrollo")} className="bg-gray-950/30 border border-gray-900/30 text-nexus-text-sec hover:bg-gray-700 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
-                             <Edit className="w-3 h-3" /> Editar
-                          </button>
-                          <button onClick={() => setAppToDelete(app)} className="bg-red-950/30 border border-red-900/30 text-red-500 hover:bg-red-600 hover:text-nexus-text px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 group">
-                           <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> Purgar
-                         </button>
-                       </div>
-                    </div>
-                  ))}
-                </div>
-             </div>
-           )}
+            {activeTab === 'apps' && (
+              <AdminApps apps={apps} setApps={setApps} addToast={addToast} addLog={addLog} />
+            )}
+           
 
            {/* MONETIZACIÓN */}
            {activeTab === 'monetization' && (
@@ -774,75 +570,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
 
            {/* ANALYTICS */}
            {activeTab === 'analytics' && (
-             <div className="space-y-8 animate-fade-in w-full">
-                <header>
-                  <h3 className="text-3xl md:text-4xl font-black tracking-tighter text-nexus-text">{t("admin.telemetry") || "Telemetría Avanzada (Real)"}</h3>
-                  <p className="text-red-400 text-sm md:text-base">{t("admin.telemetryDesc") || "Métricas, crecimiento y engagement extraídos directamente de la base de datos."}</p>
-                </header>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-                   <div className="bg-nexus-card border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl w-full">
-                      <h4 className="text-xl font-bold text-nexus-text mb-8">{t("admin.newUsers") || "Nuevos Usuarios (Últimos 7 días)"}</h4>
-                      <div className="w-full h-72">
-                         <ResponsiveContainer width="100%" height="100%">
-                           <AreaChart data={last7Days} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                             <defs>
-                                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                                </linearGradient>
-                             </defs>
-                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                             <XAxis dataKey="name" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
-                             <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                             <RechartsTooltip contentStyle={{ backgroundColor: '#0a0000', borderColor: '#1e3a8a', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} cursor={{ stroke: '#ffffff20' }} />
-                             <Area type="monotone" dataKey="nuevos_usuarios" name="Usuarios" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorUsers)" />
-                           </AreaChart>
-                         </ResponsiveContainer>
-                      </div>
-                   </div>
-
-                   <div className="bg-nexus-card border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl w-full">
-                      <h4 className="text-xl font-bold text-nexus-text mb-8">{t("admin.newApps") || "Nuevas Aplicaciones (Últimos 7 días)"}</h4>
-                      <div className="w-full h-72">
-                         <ResponsiveContainer width="100%" height="100%">
-                           <LineChart data={last7Days} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                             <XAxis dataKey="name" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
-                             <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                             <RechartsTooltip contentStyle={{ backgroundColor: '#0a0000', borderColor: '#7f1d1d', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} cursor={{ stroke: '#ffffff20' }} />
-                             <Line type="monotone" dataKey="nuevas_apps" name="Apps" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#f87171' }} />
-                           </LineChart>
-                         </ResponsiveContainer>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="bg-nexus-card border border-red-900/20 p-6 md:p-8 rounded-3xl shadow-xl">
-                   <h4 className="text-xl font-bold text-nexus-text mb-6">{t("admin.topApps") || "Top Entidades Más Descargadas (Real)"}</h4>
-                   <div className="space-y-4">
-                     {apps.filter(a => a.status === 'published' && parseInt(String(a.downloads || 0)) > 0).sort((a,b) => parseInt(String(b.downloads || 0)) - parseInt(String(a.downloads || 0))).slice(0, 3).map((app, i) => (
-                       <div key={app.id} className="flex items-center justify-between p-4 bg-nexus-surface border border-nexus-border rounded-2xl">
-                          <div className="flex items-center gap-4">
-                             <div className="text-2xl font-black text-red-900/50 w-8 text-center">{i + 1}</div>
-                             <img src={app.icon} alt={app.name} className="w-12 h-12 rounded-xl object-cover bg-black border border-nexus-border" />
-                             <div>
-                                <h5 className="font-bold text-nexus-text">{app.name}</h5>
-                                <p className="text-xs text-nexus-text-sec">{app.developer}</p>
-                             </div>
-                          </div>
-                          <div className="text-right">
-                             <p className="font-black text-lg text-nexus-text">{app.downloads || 0}</p>
-                             <p className="text-xs text-nexus-text-sec uppercase tracking-widest">{t("admin.realInstalls") || "Instalaciones Reales"}</p>
-                          </div>
-                       </div>
-                     ))}
-                     {apps.filter(a => a.status === 'published' && parseInt(String(a.downloads || 0)) > 0).length === 0 && (
-                       <p className="text-nexus-text-sec text-sm text-center p-6 border border-nexus-border rounded-2xl bg-nexus-surface">Ninguna aplicación ha registrado descargas todavía.</p>
-                     )}
-                   </div>
-                </div>
-             </div>
+             <AdminStatistics apps={apps} users={users} />
            )}
 
            {/* INFRAESTRUCTURA Y SISTEMA */}
@@ -1161,6 +889,7 @@ export default function AdminPanel({ onBack, userProfile, apps, setApps, devRequ
              />
            )}
 
+          </Suspense>
         </div>
       </main>
     </div>

@@ -1,3 +1,4 @@
+import React from 'react';
 import { BookOpen, Wrench, Music, Camera, Gamepad2, Users, ChevronRight, Briefcase, Film, Brain, Box, Monitor, Zap } from 'lucide-react';
 import { CATEGORIES } from '../data';
 import { AppItem } from '../types';
@@ -8,7 +9,7 @@ const ICON_MAP: Record<string, any> = {
   BookOpen, Wrench, Music, Camera, Gamepad2, Users, Briefcase, Film, Brain, Box, Monitor
 };
 
-export default function CategorySection({ apps = [], onCategoryClick, onSeeAll }: { apps?: AppItem[], onCategoryClick?: (catId: string) => void, onSeeAll?: () => void }) {
+const CategorySection = React.memo(function CategorySection({ apps = [], onCategoryClick, onSeeAll }: { apps?: AppItem[], onCategoryClick?: (catId: string) => void, onSeeAll?: () => void }) {
   const { t } = useAppStore();
   // Count apps by category
   const categoryCounts = apps.reduce((acc, app) => {
@@ -72,5 +73,9 @@ export default function CategorySection({ apps = [], onCategoryClick, onSeeAll }
       </div>
     </section>
   );
-}
+});
+
+CategorySection.displayName = 'CategorySection';
+
+export default CategorySection;
 

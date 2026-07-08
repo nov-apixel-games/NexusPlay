@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import GoogleAdSense from './components/GoogleAdSense';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -63,6 +63,36 @@ export const DEFAULT_SETTINGS = {
   slogan: 'La plataforma digital de nueva generación',
   maintenanceMode: false,
 };
+
+export const mapDbAppToAppItem = (d: any): AppItem => ({
+  id: d.id,
+  name: d.app_name,
+  developer: d.company_name,
+  developerId: d.developer_id,
+  description: d.description,
+  category: d.category,
+  size: d.size,
+  version: d.version,
+  version_code: d.version_code,
+  changelog: d.changelog,
+  previous_versions: d.previous_versions || [],
+  icon: d.icon_url,
+  iconPublicId: d.icon_public_id,
+  screenshots: d.screenshots,
+  screenshotsPublicIds: d.screenshots_public_ids,
+  downloadUrl: d.download_url,
+  status: d.status,
+  featured: d.featured,
+  rating: typeof d.rating === 'string' ? parseFloat(d.rating) : d.rating || 5.0,
+  downloads: d.downloads,
+  price: d.price,
+  date: d.created_at,
+  updated_at: d.updated_at,
+  download_count: d.download_count || 0,
+  view_count: d.view_count || 0,
+  favorites_count: d.favorites_count || 0,
+  likes_count: d.likes_count || 0,
+});
 
 export default function App() {
   const { t } = useAppStore();
@@ -124,7 +154,20 @@ export default function App() {
   }, [session?.user?.id, fetchFavorites, clearFavorites]);
 
   // Data fetching state
-  const [apps, setApps] = useState<AppItem[]>([]);
+  const [apps, setApps] = useState<AppItem[]>(() => {
+    try {
+      const cached = localStorage.getItem('nexus_cached_apps');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          return parsed.map(mapDbAppToAppItem);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse cached apps on init", e);
+    }
+    return [];
+  });
   const [platformName, setPlatformName] = useState('NexusPlay');
   const [webLogo, setWebLogo] = useState('https://res.cloudinary.com/dpp9889/image/upload/v1/logos/nexus_logo.png');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -171,7 +214,7 @@ export default function App() {
   };
   const [aiConfig, setAiConfig] = useState<AIConfig>(DEFAULT_AI_CONFIG);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     // 1. Limpieza total de estados locales
     setSession(null);
     setUserProfile(null);
@@ -196,7 +239,6 @@ export default function App() {
         document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
       }
 
-;
     } catch (e) {
       console.warn("Error en proceso de logout:", e);
     }
@@ -209,7 +251,7 @@ export default function App() {
       const baseUrl = window.location.origin + window.location.pathname;
       window.location.href = `${baseUrl}?v=${Date.now()}`;
     }, 400);
-  };
+  }, [addToast]);
 
 
 
@@ -473,37 +515,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  const mapDbAppToAppItem = (d: any): AppItem => ({
-    id: d.id,
-    name: d.app_name,
-    developer: d.company_name,
-    developerId: d.developer_id,
-    description: d.description,
-    category: d.category,
-    size: d.size,
-    version: d.version,
-    version_code: d.version_code,
-    changelog: d.changelog,
-    previous_versions: d.previous_versions || [],
-    icon: d.icon_url,
-    iconPublicId: d.icon_public_id,
-    screenshots: d.screenshots,
-    screenshotsPublicIds: d.screenshots_public_ids,
-    downloadUrl: d.download_url,
-    status: d.status,
-    featured: d.featured,
-    rating: typeof d.rating === 'string' ? parseFloat(d.rating) : d.rating || 5.0,
-    downloads: d.downloads,
-    price: d.price,
-    date: d.created_at,
-    updated_at: d.updated_at,
-    download_count: d.download_count || 0,
-    view_count: d.view_count || 0,
-    favorites_count: d.favorites_count || 0,
-    likes_count: d.likes_count || 0,
-  });
-
-  const fetchApps = async () => {
+  const fetchApps = useCallback(async () => {
     try {
       if (!navigator.onLine) {
         throw new Error("Dispositivo sin conexión a internet");
@@ -536,7 +548,7 @@ export default function App() {
         }
       }
     }
-  };
+  }, [addToast]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -632,7 +644,7 @@ export default function App() {
 
   const [devPanelInitialTab, setDevPanelInitialTab] = useState<'upload' | 'my-apps' | 'requirements'>('upload');
 
-  const handleActivateDeveloper = async () => {
+  const handleActivateDeveloper = useCallback(async () => {
     if (!session || !userProfile?.id) return;
     
     try {
@@ -652,9 +664,9 @@ export default function App() {
     } catch (error: any) {
       addToast("Error al activar cuenta: " + error.message, 'error');
     }
-  };
+  }, [session, userProfile, addToast]);
 
-  const handleAction = (id: string) => {
+  const handleAction = useCallback((id: string) => {
     if (id === 'admin-panel') {
       if (!isAdmin) {
         addToast('Acceso restringido. Requiere permisos de administrador.', 'error');
@@ -673,15 +685,15 @@ export default function App() {
       setViewHistory(prev => [...prev, id]);
       setActiveView(id);
     }
-  };
+  }, [isAdmin, addToast, session]);
 
-  const handleAppClick = (app: AppItem) => {
+  const handleAppClick = useCallback((app: AppItem) => {
     const nextView = `app/${app.id}`;
     setViewHistory(prev => [...prev, nextView]);
     setActiveView(nextView);
-  };
+  }, []);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (viewHistory.length > 1) {
       const newHistory = [...viewHistory];
       newHistory.pop(); // Remove current view
@@ -691,18 +703,18 @@ export default function App() {
     } else {
       setActiveView('home');
     }
-  };
+  }, [viewHistory]);
 
-  const handleAddApp = async () => {
+  const handleAddApp = useCallback(async () => {
     addToast('¡Aplicación lanzada con éxito y en espera de revisión!', 'success');
     fetchApps();
-  };
+  }, [addToast, fetchApps]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeView]);
 
-  const publishedApps = apps.filter(a => a.status === 'published');
+  const publishedApps = useMemo(() => apps.filter(a => a.status === 'published'), [apps]);
 
   const renderActiveView = (view: string) => {
     if (view?.startsWith('app/')) {

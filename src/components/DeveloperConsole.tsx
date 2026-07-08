@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   LayoutDashboard, Package, Upload, Settings, LogOut, 
   ChevronRight, ArrowRight, ArrowLeft, Star, Download, ShieldCheck, MessageSquare, Activity, Plus, Smartphone, Trash2, Edit, ExternalLink, Search, Filter, Check, Menu, X as CloseIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import PublishingWizard from './PublishingWizard';
-import { DeveloperAnalytics } from './DeveloperAnalytics';
+
+const PublishingWizard = lazy(() => import('./PublishingWizard'));
+const DeveloperAnalytics = lazy(() => import('./DeveloperAnalytics').then(m => ({ default: m.DeveloperAnalytics })));
 
 interface DeveloperConsoleProps {
   userId: string;
@@ -180,11 +181,13 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col min-w-0 h-full">
          {activeTab === 'publish' ? (
-           <PublishingWizard 
-             developerId={userId} 
-             onSuccess={handleAppPublished} 
-             onCancel={() => setActiveTab('dashboard')} 
-           />
+           <Suspense fallback={<div className="flex-1 flex items-center justify-center font-mono text-cyan-400 animate-pulse bg-nexus-card">{t('app.loading') || 'Cargando asistente...'}</div>}>
+             <PublishingWizard 
+               developerId={userId} 
+               onSuccess={handleAppPublished} 
+               onCancel={() => setActiveTab('dashboard')} 
+             />
+           </Suspense>
          ) : (
            <>
               {/* Top Bar */}
@@ -421,7 +424,9 @@ export default function DeveloperConsole({ userId, userProfile, onClose, onAddAp
                     )}
 
                     {activeTab === 'analytics' && (
-                       <DeveloperAnalytics apps={apps} stats={stats} />
+                       <Suspense fallback={<div className="flex h-[300px] items-center justify-center font-mono text-cyan-400 animate-pulse">{t('app.loading') || 'Cargando analíticas...'}</div>}>
+                         <DeveloperAnalytics apps={apps} stats={stats} />
+                       </Suspense>
                     )}
 
                     {activeTab === 'settings' && (

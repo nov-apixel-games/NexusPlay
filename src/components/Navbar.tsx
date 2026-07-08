@@ -1,6 +1,6 @@
 import { Search, Bell, LogIn, User as UserIcon, Sparkles, Camera, Check, Loader2, Upload, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { useAppStore } from '../store/useAppStore';
@@ -27,7 +27,7 @@ const AVATAR_PRESETS = [
   { name: 'Fiebre Volcánica', url: 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?auto=format&fit=crop&w=150&q=80' },
 ];
 
-export default function Navbar({ 
+const Navbar = React.memo(function Navbar({ 
   onMenuClick, 
   userProfile, 
   session, 
@@ -779,4 +779,8 @@ export default function Navbar({
       </AnimatePresence>
     </nav>
   );
-}
+});
+
+Navbar.displayName = 'Navbar';
+
+export default Navbar;

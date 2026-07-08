@@ -1,5 +1,5 @@
 import { useAppStore } from '../../store/useAppStore';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Gamepad2, Compass, Trophy, Star, ShieldCheck, Download, Layers, Settings, User, Search, Loader2, Zap, ArrowRight, Heart, Camera, Check, Shuffle, Upload, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AppCard } from '../AppGrid';
@@ -7,27 +7,34 @@ import { AppItem } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
 
+const getDownloadsNum = (app: any): number => {
+  if (!app) return 0;
+  if (typeof app === 'number') return app;
+  if (typeof app === 'string') return parseInt(app.replace(/[^0-9]/g, '')) || 0;
+  if (typeof app.download_count === 'number') return app.download_count;
+  const d = app.downloads;
+  if (typeof d === 'number') return d;
+  if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
+  return 0;
+};
+
 export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
   const { t } = useAppStore();
-  const gameApps = apps.filter(a => a.category.toLowerCase() === 'juegos' || a.category.toLowerCase() === 'acción' || a.category.toLowerCase() === 'aventura' || a.category.toLowerCase() === 'estrategia');
+  const gameApps = useMemo(() => {
+    return apps.filter(a => a.category.toLowerCase() === 'juegos' || a.category.toLowerCase() === 'acción' || a.category.toLowerCase() === 'aventura' || a.category.toLowerCase() === 'estrategia');
+  }, [apps]);
   
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [sortBy, setSortBy] = useState<'downloads'|'rating'>('downloads');
 
-  const getDownloadsNum = (app: any) => {
-    if (typeof app.download_count === 'number') return app.download_count;
-    const d = app.downloads;
-    if (typeof d === 'number') return d;
-    if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
-    return 0;
-  };
-
-  const filtered = gameApps
-    .filter(a => activeCategory === 'Todos' || a.category.toLowerCase() === activeCategory.toLowerCase())
-    .sort((a, b) => {
-      if(sortBy === 'downloads') return getDownloadsNum(b) - getDownloadsNum(a);
-      return b.rating - a.rating;
-    });
+  const filtered = useMemo(() => {
+    return gameApps
+      .filter(a => activeCategory === 'Todos' || a.category.toLowerCase() === activeCategory.toLowerCase())
+      .sort((a, b) => {
+        if(sortBy === 'downloads') return getDownloadsNum(b) - getDownloadsNum(a);
+        return b.rating - a.rating;
+      });
+  }, [gameApps, activeCategory, sortBy]);
 
   return (
     <div className="pt-24 px-6 max-w-7xl mx-auto pb-16">
@@ -58,12 +65,6 @@ export function GamesView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: 
 
 export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], onAppClick?: (app: AppItem) => void, onAction?: (action: string) => void }) {
   const { t } = useAppStore();
-  const getDownloadsNum = (d: any) => {
-
-    if (typeof d === 'number') return d;
-    if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
-    return 0;
-  };
 
   const [activeTab, setActiveTab] = useState<'feed' | 'packs'>('feed');
   const [feedItems, setFeedItems] = useState<any[]>([]);
@@ -110,7 +111,9 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
 
   const packs: any[] = [];
 
-  const trends = apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 4);
+  const trends = useMemo(() => {
+    return apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 4);
+  }, [apps]);
 
   return (
     <div className="pt-24 px-4 sm:px-6 max-w-7xl mx-auto pb-16">
@@ -247,14 +250,9 @@ export function ExploreView({ apps, onAppClick, onAction }: { apps: AppItem[], o
 
 export function RankingView({ apps, onAppClick }: { apps: AppItem[], onAppClick?: (app: AppItem) => void }) {
   const { t } = useAppStore();
-  const getDownloadsNum = (app: any) => {
-    if (typeof app.download_count === 'number') return app.download_count;
-    const d = app.downloads;
-    if (typeof d === 'number') return d;
-    if (typeof d === 'string') return parseInt(d.replace(/[^0-9]/g, '')) || 0;
-    return 0;
-  };
-  const sortedByDownloads = apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 100);
+  const sortedByDownloads = useMemo(() => {
+    return apps.slice().sort((a, b) => getDownloadsNum(b) - getDownloadsNum(a)).slice(0, 100);
+  }, [apps]);
   
   return (
     <div className="pt-24 px-6 max-w-4xl mx-auto pb-16">

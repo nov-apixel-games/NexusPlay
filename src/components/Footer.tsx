@@ -1,3 +1,4 @@
+import React from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { 
   ShieldCheck, FileText, Cookie, Info, Mail, HelpCircle, Heart
@@ -5,7 +6,7 @@ import {
 import { SupportEmailBox } from './SupportEmailBox';
 import { DiscordCommunityBox } from './DiscordCommunityBox';
 
-export default function Footer({ onNavigate }: { onNavigate: (view: string) => void }) {
+const Footer = React.memo(function Footer({ onNavigate }: { onNavigate: (view: string) => void }) {
   const { t } = useAppStore();
   return (
     <footer className="w-full bg-nexus-card border-t border-nexus-border pt-16 pb-32 sm:pb-8 mt-20 relative z-10">
@@ -95,4 +96,8 @@ export default function Footer({ onNavigate }: { onNavigate: (view: string) => v
       </div>
     </footer>
   );
-}
+});
+
+Footer.displayName = 'Footer';
+
+export default Footer;

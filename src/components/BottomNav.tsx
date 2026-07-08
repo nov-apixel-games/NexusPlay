@@ -1,3 +1,4 @@
+import React from 'react';
 import { Home, Gamepad2, User, Users, AppWindow } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
@@ -6,7 +7,7 @@ interface BottomNavProps {
   onNavigate: (view: string) => void;
 }
 
-export default function BottomNav({ activeView, onNavigate }: BottomNavProps) {
+const BottomNav = React.memo(function BottomNav({ activeView, onNavigate }: BottomNavProps) {
   const { t } = useAppStore();
   
   return (
@@ -23,7 +24,11 @@ export default function BottomNav({ activeView, onNavigate }: BottomNavProps) {
       <NavItem icon={User} label={t('nav.profile')} active={activeView === 'profile'} onClick={() => onNavigate('profile')} />
     </div>
   );
-}
+});
+
+BottomNav.displayName = 'BottomNav';
+
+export default BottomNav;
 
 function NavItem({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick: () => void }) {
   return (
