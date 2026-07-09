@@ -72,7 +72,35 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
     { id: 'preview', label: t("wiz.preview") || 'Vista Previa', icon: Eye }
   ];
 
+  const validateStep = (step: Step): { valid: boolean; error: string | null } => {
+    switch (step) {
+      case 'info':
+        if (!formData.app_name.trim()) return { valid: false, error: 'El nombre de la aplicación es obligatorio.' };
+        if (!formData.company_name.trim()) return { valid: false, error: 'El nombre del desarrollador es obligatorio.' };
+        if (!formData.short_description.trim()) return { valid: false, error: 'La descripción corta es obligatoria.' };
+        return { valid: true, error: null };
+      case 'resources':
+        if (!files.iconUrl) return { valid: false, error: 'Debes subir un ícono para la aplicación.' };
+        if (files.screenshots.length === 0) return { valid: false, error: 'Debes subir al menos una captura de pantalla.' };
+        return { valid: true, error: null };
+      case 'apk':
+        if (!formData.apk_url.trim()) return { valid: false, error: 'La URL de descarga (APK) es obligatoria.' };
+        if (!formData.apk_url.startsWith('http')) return { valid: false, error: 'La URL debe comenzar con http:// o https://' };
+        return { valid: true, error: null };
+      case 'config':
+        if (!formData.version.trim()) return { valid: false, error: 'La versión es obligatoria.' };
+        return { valid: true, error: null };
+      case 'preview':
+        return { valid: true, error: null };
+      default:
+        return { valid: true, error: null };
+    }
+  };
+
   const handleNext = () => {
+    const { valid } = validateStep(currentStep);
+    if (!valid) return;
+    
     const currentIndex = steps.findIndex(s => s.id === currentStep);
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1].id);
@@ -160,6 +188,17 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
 
   const handlePublish = async () => {
     setUiError(null);
+
+    // Validate all steps before publishing
+    for (const stepObj of steps) {
+      const { valid, error } = validateStep(stepObj.id);
+      if (!valid) {
+        setCurrentStep(stepObj.id);
+        setUiError(error);
+        return;
+      }
+    }
+
     if (!formData.apk_url || !formData.apk_url.startsWith('http')) {
       setUiError(t("wiz.errLink") || "Falta un enlace de descarga APK válido.");
       return;
@@ -710,7 +749,7 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
            </button>
  
            <div className="flex-1 w-full flex flex-col items-center">
-             {isPublishing && (
+             {isPublishing ? (
                <div className="w-full max-w-md space-y-2 mb-2 lg:mb-0">
                   <div className="flex justify-between text-[8px] lg:text-[10px] font-black uppercase tracking-widest text-cyan-400">
                     <span className="truncate max-w-[70%]">{status}</span>
@@ -724,6 +763,19 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
                     />
                   </div>
                </div>
+             ) : (
+                !validateStep(currentStep).valid && (
+                  <div className="text-red-400 text-[10px] lg:text-xs font-bold bg-red-400/10 px-4 py-2 rounded-xl border border-red-400/20 text-center flex items-center gap-2">
+                     <AlertCircle className="w-4 h-4" />
+                     {validateStep(currentStep).error}
+                  </div>
+                )
+             )}
+             {uiError && !isPublishing && currentStep === 'preview' && (
+                <div className="text-red-400 text-[10px] lg:text-xs font-bold bg-red-400/10 px-4 py-2 rounded-xl border border-red-400/20 text-center flex items-center gap-2 mt-2">
+                   <AlertCircle className="w-4 h-4" />
+                   {uiError}
+                </div>
              )}
            </div>
  
@@ -742,7 +794,8 @@ export default function PublishingWizard({ developerId, onSuccess, onCancel }: P
            ) : (
              <button 
                onClick={handleNext}
-               className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 bg-white text-nexus-bg font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl hover:bg-cyan-400 active:scale-95 transition-all shadow-xl shadow-white/5"
+               disabled={!validateStep(currentStep).valid}
+               className={`w-full sm:w-auto flex items-center justify-center gap-3 px-8 lg:px-10 py-3 lg:py-4 font-black text-[10px] lg:text-sm uppercase rounded-xl lg:rounded-2xl transition-all shadow-xl ${!validateStep(currentStep).valid ? 'bg-nexus-card text-nexus-text-sec opacity-50 cursor-not-allowed' : 'bg-white text-nexus-bg hover:bg-cyan-400 active:scale-95 shadow-white/5'}`}
               type="button" >
                SIGUIENTE <ArrowRight className="w-5 h-5" />
              </button>

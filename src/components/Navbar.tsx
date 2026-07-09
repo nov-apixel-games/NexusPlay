@@ -335,13 +335,13 @@ const Navbar = React.memo(function Navbar({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-                      className="absolute right-0 top-14 w-80 sm:w-96 bg-nexus-card/80 backdrop-blur-2xl border border-nexus-border rounded-[24px] shadow-lg overflow-hidden z-50"
+                      className="fixed sm:absolute top-[72px] sm:top-[calc(100%+0.5rem)] left-[4vw] sm:left-auto right-[4vw] sm:right-0 w-auto sm:w-96 bg-nexus-card/95 backdrop-blur-2xl border border-nexus-border rounded-[24px] shadow-2xl overflow-hidden z-50 flex flex-col"
                     >
-                       <div className="p-5 border-b border-nexus-border flex items-center justify-between">
+                       <div className="p-5 border-b border-nexus-border flex items-center justify-between shrink-0">
                          <h3 className="font-black text-nexus-text text-[15px] flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-400" /> {t('nav.notifications') || 'Notificaciones'}</h3>
                          {unreadCount > 0 && <span className="text-[10px] font-black tracking-widest bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-lg uppercase border border-cyan-500/20">{unreadCount} {t('nav.new') || 'Nuevas'}</span>}
                        </div>
-                       <div className="max-h-96 overflow-y-auto pr-1">
+                       <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto p-2 custom-scrollbar">
                          {notifications.length === 0 ? (
                            <div className="p-10 text-center flex flex-col items-center gap-3">
                              <Sparkles className="w-8 h-8 text-gray-600" />
@@ -352,10 +352,10 @@ const Navbar = React.memo(function Navbar({
                              <div 
                                 key={notif.id} 
                                 onClick={() => markAsRead(notif.id)}
-                                className={`p-4 sm:p-5 border-b border-nexus-border cursor-pointer transition-colors ${notif.read ? 'opacity-50 hover:bg-nexus-card hover:opacity-100' : 'bg-cyan-900/10 hover:bg-cyan-900/20 border-l-[3px] border-l-cyan-500'}`}
+                                className={`p-4 sm:p-5 mb-2 rounded-2xl border border-transparent cursor-pointer transition-colors ${notif.read ? 'opacity-50 hover:bg-nexus-surface hover:opacity-100 hover:border-nexus-border' : 'bg-cyan-900/10 hover:bg-cyan-900/20 border-l-[3px] border-l-cyan-500'}`}
                              >
                                  <div className="font-black text-[13px] text-nexus-text mb-1 drop-shadow-sm">{notif.title}</div>
-                                 <div className="text-[12px] text-nexus-text-sec leading-relaxed font-medium break-words whitespace-pre-wrap">{notif.message}</div>
+                                 <div className="text-[12px] text-nexus-text-sec leading-relaxed font-medium whitespace-normal break-words">{notif.message}</div>
                              </div>
                            ))
                          )}

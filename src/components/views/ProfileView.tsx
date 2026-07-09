@@ -13,10 +13,13 @@ const PROFILE_AVATAR_PRESETS = [
   { name: 'Fiebre Volcánica', url: 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?auto=format&fit=crop&w=150&q=80' },
 ];
 
-export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction }: { 
+export function ProfileView({ session, userProfile, onLoginClick, onLogoutClick, onSettingsClick, onProfileUpdate, onDeveloperAction }: { 
   session?: any, 
   userProfile?: any, 
   onLoginClick?: () => void,
+  onLogoutClick?: () => void,
+  onSettingsClick?: () => void,
+  onProfileUpdate?: (profile: any) => void,
   onDeveloperAction?: (action: 'activate' | 'open') => void 
 }) {
   const { t } = useAppStore();
