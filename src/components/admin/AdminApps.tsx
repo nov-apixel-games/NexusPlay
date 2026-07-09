@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { 
   Smartphone, Search, Star, Download, Eye, EyeOff, Edit, Trash2, AlertTriangle, XCircle 
@@ -17,6 +17,32 @@ interface AdminAppsProps {
 export default function AdminApps({ apps, setApps, addToast, addLog }: AdminAppsProps) {
   const { t } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const filteredAppsList = useMemo(() => {
+    const term = debouncedSearchQuery.trim().toLowerCase();
+    if (!term) return apps;
+    const len = apps.length;
+    const result: AppItem[] = [];
+    for (let i = 0; i < len; i++) {
+      const app = apps[i];
+      if (
+        app.name.toLowerCase().includes(term) ||
+        app.id.toLowerCase().includes(term) ||
+        (app.developer && app.developer.toLowerCase().includes(term))
+      ) {
+        result.push(app);
+      }
+    }
+    return result;
+  }, [apps, debouncedSearchQuery]);
   const [appToDelete, setAppToDelete] = useState<AppItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -156,8 +182,8 @@ export default function AdminApps({ apps, setApps, addToast, addLog }: AdminApps
       </header>
 
       <div className="space-y-4 w-full">
-        {apps.length === 0 && <p className="text-nexus-text-sec bg-nexus-surface/40 p-10 rounded-3xl border border-red-500/10 text-center">{t("admin.noResults") || "Sin resultados."}</p>}
-        {apps.filter(x => x.name.toLowerCase().includes(searchQuery.toLowerCase())).map(app => (
+        {filteredAppsList.length === 0 && <p className="text-nexus-text-sec bg-nexus-surface/40 p-10 rounded-3xl border border-red-500/10 text-center">{t("admin.noResults") || "Sin resultados."}</p>}
+        {filteredAppsList.map(app => (
           <div key={app.id} className={`bg-nexus-card/40 border ${app.featured ? 'border-amber-500/30' : 'border-red-500/10'} p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-red-500/30 transition-colors shadow-lg backdrop-blur-sm`}>
              <div className="flex items-center gap-5">
                <img src={app.icon} alt={app.name} className="w-16 h-16 rounded-2xl object-cover bg-nexus-bg border border-nexus-border shadow-md" referrerPolicy="no-referrer" />

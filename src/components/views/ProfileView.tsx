@@ -1,22 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { User, LogOut, Settings, Edit3, Image as ImageIcon, Check, Loader2, Sparkles, Activity, Star, Calendar, Trophy, Compass, Shield, CloudOff, Trash2, Users } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useAppStore } from '../../store/useAppStore';
+import { Compass, ShieldCheck, Trophy, Star, Settings, User, Loader2, ArrowRight, Camera, Check, Shuffle, Upload, Gamepad2, Layers } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { uploadToCloudinary } from '../../lib/cloudinary';
-import { useAppStore } from '../../store/useAppStore';
-import { useFavoritesStore } from '../../store/useFavoritesStore';
-import { useOfflineStore } from '../../store/useOfflineStore';
 
+const PROFILE_AVATAR_PRESETS = [
+  { name: 'Onda Futura', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Brillo Cyber', url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Orbe Halógeno', url: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Estrellas Cósmicas', url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Oculto Esmeralda', url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=150&q=80' },
+  { name: 'Fiebre Volcánica', url: 'https://images.unsplash.com/photo-1618005198143-e5283b519a7f?auto=format&fit=crop&w=150&q=80' },
+];
 
-export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction, onLogoutClick, onSettingsClick, onProfileUpdate }: { 
+export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAction }: { 
   session?: any, 
   userProfile?: any, 
   onLoginClick?: () => void,
-  onDeveloperAction?: (action: 'activate' | 'open') => void,
-  onLogoutClick?: () => void,
-  onSettingsClick?: () => void,
-  onProfileUpdate?: (profile: any) => void
+  onDeveloperAction?: (action: 'activate' | 'open') => void 
 }) {
-  const { t, language } = useAppStore();
+  const { t } = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState('');
   const [realName, setRealName] = useState('');
@@ -24,87 +27,14 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-
-  // Real stats
-  const [realStats, setRealStats] = useState({
-      favorites: 0,
-      published: 0,
-      activeDays: 0,
-  });
   
-  const [followedCommunities, setFollowedCommunities] = useState<any[]>([]);
-
-  const metadata = session?.user?.user_metadata || {};
-
-  useEffect(() => {
-    if (userProfile || session) {
-      const initialUser = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
-      setUsername(initialUser);
-      setRealName(userProfile?.real_name || metadata.full_name || '');
-      setAvatarUrl(userProfile?.avatar_url || metadata.avatar_url || '');
-      setBio(userProfile?.bio || metadata.bio || '');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile, session]);
-
-  const { favoriteIds } = useFavoritesStore();
-  const { offlineApps, removeOffline } = useOfflineStore();
-  const offlineAppsList = Object.values(offlineApps);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-       loadRealStats(session.user.id);
-       loadFollowedCommunities(session.user.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, favoriteIds.size]);
-  
-  const loadFollowedCommunities = async (userId: string) => {
-    try {
-      // Get the distinct community IDs the user is a member of
-      const { data, error } = await supabase
-        .from('community_members')
-        .select('community_id')
-        .eq('user_id', userId);
-        
-      if (!error && data) {
-         const commIds = data.map(d => d.community_id);
-         if (commIds.length > 0) {
-           const { data: comms } = await supabase.from('communities').select('*').in('id', commIds);
-           if (comms) setFollowedCommunities(comms);
-         } else {
-           setFollowedCommunities([]);
-         }
-      }
-    } catch(e) {
-      console.warn("Could not load communities", e);
-    }
-  };
-
-  const loadRealStats = async (userId: string) => {
-    try {
-      // Published
-      const { count: pubCount } = await supabase.from('apps').select('id', { count: 'exact', head: true }).eq('developer_id', userId);
-      
-      // Active Days calculation
-      const createdAt = new Date(userProfile?.created_at || session?.user?.created_at || new Date());
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - createdAt.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-
-      setRealStats({
-          favorites: favoriteIds.size,
-          published: pubCount || 0,
-          activeDays: diffDays,
-      });
-    } catch(e) {
-      console.warn("Could not load stats", e);
-    }
-  };
+  // Custom states for drag-and-drop and AI generator
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [aiPresetSeed, setAiPresetSeed] = useState('');
+  const [aiPresetStyle, setAiPresetStyle] = useState('bottts');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,58 +46,91 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
       if (res && res.secure_url) {
         setAvatarUrl(res.secure_url);
       } else {
-         setError(t('settings.uploadError') || 'Error al subir la imagen.');
+        throw new Error('No se recibió la dirección web de la imagen subida.');
       }
     } catch (err: any) {
+      console.error(err);
       setError(err.message || 'Error al subir la imagen.');
     } finally {
       setUploading(false);
     }
   };
 
+  // Default values combining DB and metadata
+  const metadata = session?.user?.user_metadata || {};
+
+  useEffect(() => {
+    if (userProfile || session) {
+      const initialUser = userProfile?.username || session?.user?.email?.split('@')[0] || 'Usuario';
+      setUsername(initialUser);
+      setRealName(userProfile?.real_name || metadata.full_name || '');
+      setAvatarUrl(userProfile?.avatar_url || metadata.avatar_url || '');
+      setBio(metadata.bio || '');
+      setAiPresetSeed(initialUser);
+    }
+  }, [userProfile, session]);
+
+  if (!session) {
+    return (
+      <div className="pt-24 px-6 max-w-3xl mx-auto pb-16 flex flex-col items-center text-center space-y-6">
+        <div className="w-24 h-24 rounded-full bg-nexus-card border border-nexus-border flex items-center justify-center mb-4">
+          <User className="w-10 h-10 text-nexus-text-sec" />
+        </div>
+        <h1 className="text-3xl font-black">{t("main.yourAccount") || "Tu Cuenta Nexus"}</h1>
+        <p className="text-nexus-text-sec max-w-sm">Inicia sesión o regístrate para acceder a tus descargas, guardar favoritos, crear packs y ganar experiencia en NexusPlay.</p>
+        <button 
+          onClick={onLoginClick}
+          className="mt-4 px-8 py-3 bg-cyan-500 text-nexus-bg font-bold rounded-xl hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20"
+         type="button" >
+          Iniciar sesión / Registrarse
+        </button>
+      </div>
+    );
+  }
+
+  const isAdmin = userProfile?.role === 'admin';
+  const isDeveloper = userProfile?.role === 'developer' || isAdmin;
+  const initial = username.charAt(0).toUpperCase();
+
   const handleSaveProfile = async () => {
     setSaving(true);
     setError(null);
-    setSuccessMsg(null);
     try {
-      if (username.length < 3) throw new Error(t('profile.usernameError') || "El nombre debe tener al menos 3 caracteres");
+      if (username.length < 3) throw new Error("El nombre de usuario debe tener al menos 3 caracteres");
       
       await supabase.auth.updateUser({
         data: { avatar_url: avatarUrl, full_name: realName, bio: bio }
       });
 
+      let updateErr: any = null;
       const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '');
 
       let attempts = 0;
-      let finalErr = null;
       while (attempts < 3) {
         const { error } = await supabase
           .from('profiles')
-          .update({ username: cleanUsername, real_name: realName, avatar_url: avatarUrl, bio: bio })
+          .update({ username: cleanUsername, real_name: realName, avatar_url: avatarUrl })
           .eq('id', session.user.id);
         
-        finalErr = error;
-        if (!error) break;
+        updateErr = error;
+        if (!error) {
+          break;
+        }
         if (error.message && error.message.includes('schema cache')) {
           attempts++;
+          console.warn(`[ProfileView Profile Update] Schema cache error. Retrying attempt ${attempts} in 600ms...`);
           await new Promise(r => setTimeout(r, 600));
         } else {
           break;
         }
       }
         
-      if (finalErr && finalErr.code !== '23505') {
-         throw new Error(finalErr.message || 'Error en base de datos');
+      if (updateErr && updateErr.code !== '23505') {
+         console.warn("DB update issue", updateErr);
       }
       
       setIsEditing(false);
-      setSuccessMsg("Perfil actualizado correctamente");
-      setTimeout(() => setSuccessMsg(null), 3000);
-      
-      if (onProfileUpdate) {
-        onProfileUpdate({ username: cleanUsername, real_name: realName, avatar_url: avatarUrl, bio: bio });
-      }
-      
+      window.location.reload();
     } catch(err: any) {
       setError(err.message || 'Error al guardar el perfil.');
     } finally {
@@ -175,307 +138,474 @@ export function ProfileView({ session, userProfile, onLoginClick, onDeveloperAct
     }
   };
 
-  if (!session) {
-    return (
-      <div className="pt-24 px-6 max-w-3xl mx-auto pb-16 flex flex-col items-center text-center space-y-6">
-        <div className="w-24 h-24 rounded-full bg-nexus-card border border-nexus-border flex items-center justify-center mb-4 text-nexus-text-sec">
-          <User className="w-10 h-10" />
-        </div>
-        <h1 className="text-3xl font-black">{t('profile.title') || 'Tu Cuenta Nexus'}</h1>
-        <p className="text-nexus-text-sec max-w-sm">{t('profile.desc') || 'Inicia sesión para acceder.'}</p>
-        <button onClick={onLoginClick} className="mt-4 px-8 py-3 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/20" type="button" >
-          {t('menu.login') || 'Iniciar sesión'}
-        </button>
-      </div>
-    );
-  }
-
-  const email = session.user?.email || '';
-  const isAdmin = userProfile?.role === 'admin';
-  const isDeveloper = userProfile?.role === 'developer' || isAdmin;
-  const initial = username.charAt(0).toUpperCase();
-
-  const xp = Number(userProfile?.xp || metadata.xp || 0) || 0;
+  const xp = userProfile?.xp || metadata.xp || 0;
   const level = Math.floor(xp / 1000) + 1;
-  const currentLevelXp = xp % 1000;
   const nextLevelXp = level * 1000;
+  const currentLevelXp = xp % 1000;
   const progressPercent = (currentLevelXp / 1000) * 100;
 
-  let joinDate = '-';
-  try {
-    if (userProfile?.created_at) {
-      const date = new Date(userProfile.created_at);
-      if (!isNaN(date.getTime())) {
-        joinDate = date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long' });
-      }
-    }
-  } catch (e) {
-    console.error("Invalid join date", e);
-  }
+  const stats = {
+    favorites: userProfile?.favorites_count || 0,
+    quests: userProfile?.completed_quests || 0,
+    games: userProfile?.published_games || 0,
+  };
 
   return (
-    <div className="pt-20 px-4 sm:px-6 max-w-5xl mx-auto pb-20 space-y-6 sm:space-y-8 animate-in mt-2 relative">
-      {successMsg && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-full font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)] z-50 flex items-center gap-2">
-          <Check className="w-5 h-5" /> {successMsg}
-        </div>
-      )}
-
-      {/* HEADER HERO */}
-      <div className="glass-panel overflow-hidden border border-nexus-border shadow-2xl relative rounded-3xl pb-8 sm:pb-0">
-         <div className="h-40 sm:h-48 bg-gradient-to-tr from-cyan-900/50 to-purple-900/50 w-full absolute top-0" />
-         
-         <div className="pt-20 sm:pt-28 pb-6 px-6 sm:px-10 flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8 relative z-10 w-full">
-            <div className="relative group shrink-0">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-[2rem] sm:rounded-full overflow-hidden border-4 border-nexus-bg bg-nexus-card shadow-2xl relative">
-                 {avatarUrl ? (
-                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                 ) : (
-                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-cyan-500 to-purple-500 text-white text-5xl font-black">
-                     {initial}
-                   </div>
-                 )}
-                 {uploading && (
-                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white backdrop-blur-sm z-10">
-                     <Loader2 className="w-8 h-8 animate-spin" />
-                   </div>
-                 )}
-              </div>
-              {isEditing && (
-                <button onClick={() => fileInputRef.current?.click()} className="absolute -bottom-2 -right-2 p-3 bg-cyan-500 text-white rounded-2xl sm:rounded-full shadow-lg border-4 border-nexus-bg hover:bg-cyan-400 hover:scale-105 transition-all z-20">
-                  <ImageIcon className="w-5 h-5" />
-                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-                </button>
-              )}
-            </div>
-            
-            <div className="flex-1 text-center sm:text-left w-full">
-               {isEditing ? (
-                  <div className="space-y-4 max-w-lg w-full mb-4 bg-nexus-bg/50 p-5 rounded-2xl border border-nexus-border backdrop-blur-md relative z-10 mt-4 sm:mt-0">
-                     <div>
-                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">{t("profile.username") || "Nombre de Usuario"}</label>
-                       <input value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 font-bold focus:border-cyan-500/50 outline-none transition-colors" placeholder="Usuario" />
-                     </div>
-                     <div>
-                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">{t("profile.displayName") || "Nombre Visible (Opcional)"}</label>
-                       <input value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 font-bold focus:border-cyan-500/50 outline-none transition-colors" placeholder="Nombre completo" />
-                     </div>
-                     <div>
-                       <label className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 block">{t("profile.about") || "Acerca de ti"}</label>
-                       <textarea value={bio} onChange={e => setBio(e.target.value)} className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 resize-none h-24 font-medium focus:border-cyan-500/50 outline-none transition-colors leading-relaxed" placeholder={t("profile.addBio") || "Añade tu bio..."} maxLength={200} />
-                     </div>
-                     {error && <p className="text-red-500 text-sm font-bold bg-red-500/10 p-3 rounded-lg border border-red-500/20 flex items-center gap-2"><Trophy className="w-4 h-4"/> {error}</p>}
-                     
-                     <div className="flex flex-col-reverse sm:flex-row justify-start gap-3 sm:gap-4 mt-6">
-                        <button onClick={() => { setIsEditing(false); setError(null); }} className="w-full sm:w-auto px-6 py-3 bg-nexus-card border border-nexus-border text-nexus-text rounded-xl font-black hover:bg-nexus-card-hover transition-colors">
-                          Cancelar
-                        </button>
-                        <button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full sm:w-auto px-8 py-3 bg-cyan-500 text-white font-black rounded-xl hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors shadow-lg shadow-cyan-500/20" type="button" >
-                          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                          {saving ? t("profile.saving") || "Guardando..." : t("profile.save") || "Guardar Perfil"}
-                        </button>
-                     </div>
-                  </div>
+    <div className="pt-24 px-4 sm:px-6 max-w-4xl mx-auto pb-16 space-y-6 sm:space-y-8">
+      {/* Profile Banner & Info */}
+      <div className="glass-panel rounded-[2rem] border-nexus-border overflow-hidden">
+        <div className="h-32 sm:h-48 bg-gradient-to-br from-cyan-900/40 to-purple-900/40 relative">
+           <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&q=80&w=2800" className="w-full h-full object-cover opacity-30" alt="" />
+           <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg to-transparent" />
+         </div>
+        
+        <div className="p-4 sm:p-8 pt-0 relative z-10 flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16 sm:-mt-20">
+          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2rem] bg-gradient-to-tr from-cyan-400 to-purple-500 p-1 flex-shrink-0 shadow-2xl relative group">
+            <div className="w-full h-full bg-nexus-card rounded-[1.8rem] flex items-center justify-center text-4xl sm:text-5xl font-black overflow-hidden relative">
+               {avatarUrl ? (
+                 <img 
+                   src={avatarUrl} 
+                   alt={username} 
+                   className="w-full h-full object-cover" 
+                   onError={(e) => {
+                     e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`;
+                   }}
+                 />
                ) : (
-                  <div className="sm:pb-4">
-                    <h1 className="text-3xl sm:text-4xl font-black text-nexus-text drop-shadow-sm">{realName || username}</h1>
-                    <p className="text-nexus-text-sec flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-1 sm:gap-2 mt-2 font-medium">
-                      <span className="bg-nexus-bg px-2 py-0.5 rounded-md border border-nexus-border text-sm">@{username}</span>
-                      <span className="hidden sm:inline opacity-50">•</span>
-                      <span className="text-sm opacity-80">{email}</span>
-                    </p>
-                    <p className="text-nexus-text mt-4 max-w-lg mx-auto sm:mx-0 line-clamp-3 leading-relaxed font-medium bg-nexus-bg/30 p-3 rounded-xl border border-nexus-border/50">
-                      {bio || <span className="opacity-50 italic">{t("profile.noBio") || "Todavía no has escrito una biografía."}</span>}
-                    </p>
-                    
-                    <div className="mt-6 flex flex-wrap gap-3 justify-center sm:justify-start w-full">
-                       <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm group">
-                          <Edit3 className="w-4 h-4 group-hover:scale-110 transition-transform text-cyan-400" /> {t("profile.edit") || "Editar"}
-                       </button>
-                       <button onClick={onSettingsClick} className="flex-1 sm:flex-none px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-2xl font-black flex items-center justify-center gap-2 transition-all shadow-sm" type="button" >
-                          <Settings className="w-4 h-4 text-nexus-text-sec" />
-                       </button>
-                       <button onClick={onLogoutClick} className="w-full sm:w-auto px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-2xl font-black flex items-center justify-center gap-2 transition-all sm:ml-auto" type="button" >
-                          <LogOut className="w-4 h-4" /> {t("profile.logout") || "Salir"}
-                       </button>
-                    </div>
-                  </div>
+                 <span>{initial}</span>
                )}
             </div>
-         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 pt-4">
-         {/* DETAILS */}
-         <div className="col-span-1 space-y-6 sm:space-y-8">
-            <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] space-y-4">
-               <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-                 <Shield className="w-4 h-4" /> {t("profile.role") || "Rol"}
-               </h3>
-               
-               <div className="flex items-center gap-4">
-                 <div className={`p-4 rounded-2xl ${isAdmin ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : isDeveloper ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
-                   {isAdmin ? <Shield className="w-8 h-8" /> : isDeveloper ? <Sparkles className="w-8 h-8" /> : <User className="w-8 h-8" />}
-                 </div>
-                 <div>
-                   <p className="text-2xl font-black capitalize tracking-tight">{userProfile?.role || 'Mortal'}</p>
-                   <p className="text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mt-1">{t("profile.currentStatus") || "Status Actual"}</p>
-                 </div>
+            <div className="absolute -bottom-3 -right-3 bg-nexus-card rounded-full p-1.5 shadow-xl border border-nexus-border">
+               <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center font-black text-nexus-bg text-xs">
+                 {level}
                </div>
             </div>
-
-            <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] space-y-4">
-               <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80 mb-6">
-                 <Calendar className="w-4 h-4" /> {t("profile.activity") || "Actividad"}
-               </h3>
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-nexus-bg/50 rounded-xl border border-nexus-border">
-                     <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">{t("profile.memberSince") || "Miembro desde"}</span>
-                     <span className="font-black text-sm">{joinDate}</span>
+          </div>
+          
+          <div className="text-center sm:text-left flex-1 min-w-0 mt-2 sm:mt-0 pb-2">
+            {!isEditing ? (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-black truncate drop-shadow-md">{username}</h1>
+                  <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+                    <div className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-black border border-green-500/20 uppercase tracking-widest">{t("main.verified") || "Verificado"}</div>
+                    {isAdmin && (
+                      <div className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-black border border-amber-500/20 uppercase tracking-widest">Admin</div>
+                    )}
+                    {isDeveloper && !isAdmin && (
+                      <div className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-black border border-cyan-500/20 uppercase tracking-widest">Dev</div>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-nexus-bg/50 rounded-xl border border-nexus-border">
-                     <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">{t("profile.activeDays") || "Días activos"}</span>
-                     <span className="font-black text-sm flex items-center gap-1.5"><Activity className="w-4 h-4 text-emerald-400" /> {realStats.activeDays}</span>
-                  </div>
-               </div>
-            </div>
-         </div>
-
-         {/* STATS */}
-         <div className="col-span-1 lg:col-span-2">
-            <div className="glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem] h-full flex flex-col">
-               <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 mb-6 sm:mb-8 opacity-80">
-                 <Trophy className="w-4 h-4" /> {t("profile.realStats") || "Estadísticas Reales"}
-               </h3>
-               
-               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 flex-1">
-                  <StatCard icon={<Star className="w-6 h-6 text-yellow-400" />} label={t("profile.favSaved") || "Favoritos Guardados"} value={realStats.favorites} bg="bg-yellow-500/10 border-yellow-500/20" />
-                  <StatCard icon={<Compass className="w-6 h-6 text-blue-400" />} label={t("profile.appsPublished") || "Apps Publicadas"} value={realStats.published} bg="bg-blue-500/10 border-blue-500/20" />
-                  <StatCard icon={<Activity className="w-6 h-6 text-emerald-400" />} label={t("profile.activeDays") || "Días Activos"} value={realStats.activeDays} bg="bg-emerald-500/10 border-emerald-500/20" />
-               </div>
-
-               {(!isDeveloper) && (
-                 <div className="mt-8 p-6 sm:p-8 bg-gradient-to-br from-nexus-bg to-nexus-card rounded-[2rem] border-2 border-dashed border-nexus-border/80 flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left transition-all hover:border-cyan-500/30 group">
-                   <div className="p-5 bg-cyan-500/10 text-cyan-400 rounded-2xl shrink-0 group-hover:scale-110 group-hover:bg-cyan-400 group-hover:text-white transition-all">
-                     <Sparkles className="w-8 h-8" />
+                </div>
+                {realName && <p className="text-nexus-text font-medium mb-1 truncate text-sm sm:text-base">{realName}</p>}
+                {bio ? (
+                   <p className="text-nexus-text-sec text-sm mb-4 max-w-lg italic">"{bio}"</p>
+                ) : (
+                   <p className="text-nexus-text-sec text-xs sm:text-sm mb-4">Sin biografía establecida.</p>
+                )}
+                
+                <div className="flex items-center justify-center sm:justify-start gap-4 mb-4">
+                   <div className="text-center">
+                     <div className="text-lg font-black text-nexus-text">{stats.games}</div>
+                     <div className="text-[10px] text-nexus-text-sec uppercase tracking-widest">{t('nav.games')}</div>
                    </div>
-                   <div>
-                     <h4 className="font-black text-xl mb-2 text-nexus-text drop-shadow-sm">{t("profile.creator") || "Conviértete en Creador"}</h4>
-                     <p className="text-nexus-text-sec text-sm leading-relaxed mb-5 max-w-md font-medium">{t("profile.creatorDesc") || "¿Tienes una aplicación web, un juego o quieres publicar mods? Conviértete en desarrollador verificado y monetiza tus juegos."}</p>
-                     <button onClick={() => onDeveloperAction?.('open')} className="px-6 py-3 bg-cyan-500 text-white border border-cyan-400/50 rounded-xl font-black hover:bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all">
-                       Aplicar ahora
+                   <div className="w-[1px] h-6 bg-nexus-card-hover" />
+                   <div className="text-center">
+                     <div className="text-lg font-black text-nexus-text">{stats.favorites}</div>
+                     <div className="text-[10px] text-nexus-text-sec uppercase tracking-widest">Favs</div>
+                   </div>
+                   <div className="w-[1px] h-6 bg-nexus-card-hover" />
+                   <div className="text-center">
+                     <div className="text-lg font-black text-nexus-text">{stats.quests}</div>
+                     <div className="text-[10px] text-nexus-text-sec uppercase tracking-widest">Misiones</div>
+                   </div>
+                </div>
+
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="px-5 py-2 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  Editar Perfil Social
+                </button>
+              </>
+            ) : (
+              <div className="space-y-6 w-full bg-nexus-card/80 p-6 sm:p-8 rounded-[2rem] border border-nexus-border backdrop-blur-md text-left shadow-2xl relative overflow-hidden">
+                 {error && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold mb-5">{error}</div>}
+                 
+                 {/* Live preview banner card */}
+                 <div className="mb-6 p-4 rounded-2xl bg-nexus-card border border-nexus-border shadow-inner relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-[40px] pointer-events-none" />
+                   
+                   <span className="absolute top-3 right-3 text-[8px] uppercase tracking-wider font-mono font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded-full border border-cyan-400/10">Identidad Actualizada</span>
+                   
+                   <div className="flex items-center gap-4">
+                     <div className="w-16 h-16 rounded-2xl bg-nexus-card border border-nexus-border overflow-hidden relative shadow-lg shrink-0 flex items-center justify-center font-black text-xl text-nexus-text">
+                       {avatarUrl ? (
+                         <img 
+                           src={avatarUrl} 
+                           className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                           alt="Quick Preview" 
+                           onError={(e) => {
+                             e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || 'nexus')}`;
+                           }}
+                         />
+                       ) : (
+                         <span>{(username || 'U').charAt(0).toUpperCase()}</span>
+                       )}
+                       <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-nexus-bg text-[9px] font-black rounded-full px-1.5 py-0.5 border border-slate-950 scale-90">
+                         Lvl {level}
+                       </div>
+                     </div>
+                     <div className="min-w-0 flex-1">
+                       <div className="flex items-center gap-2">
+                         <h4 className="text-nexus-text font-black text-base truncate font-mono">@{username || 'jugador_nexus'}</h4>
+                         <span className="px-1.5 py-0.5 bg-cyan-400/10 text-cyan-400 text-[8px] font-black uppercase rounded border border-cyan-400/20">{t("main.player") || "Jugador"}</span>
+                       </div>
+                       <p className="text-nexus-text-sec text-xs truncate mt-0.5">{realName || 'Tu Nombre o Alias'}</p>
+                       <p className="text-nexus-text-sec text-[10px] italic truncate mt-1">"{bio || 'Sin biografía establecida.'}"</p>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* PHOTO PICKER TABS */}
+                 <div className="mb-5">
+                   <div className="grid grid-cols-3 gap-1 bg-nexus-card p-1 rounded-2xl border border-nexus-border mb-4">
+                     <button
+                       type="button"
+                       onClick={() => {
+                         if (avatarUrl.includes('unsplash.com') || avatarUrl.includes('api.dicebear.com')) {
+                           setAvatarUrl('');
+                         }
+                       }}
+                       className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                         !avatarUrl.includes('unsplash.com') && !avatarUrl.includes('api.dicebear.com') ? 'bg-cyan-500 text-nexus-bg font-black shadow-nexus-glow' : 'text-nexus-text-sec hover:text-nexus-text'
+                       }`}
+                     >
+                       📂 Subir Custom
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         const seed = aiPresetSeed || username || 'nexus';
+                         setAvatarUrl(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(seed)}`);
+                       }}
+                       className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                         avatarUrl.includes('api.dicebear.com') ? 'bg-cyan-500 text-nexus-bg font-black shadow-nexus-glow' : 'text-nexus-text-sec hover:text-nexus-text'
+                       }`}
+                     >
+                       ⚡ Avatar IA
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setAvatarUrl(PROFILE_AVATAR_PRESETS[0].url);
+                       }}
+                       className={`py-2 px-1 text-[10px] sm:text-[11px] font-bold text-center rounded-xl transition-all cursor-pointer uppercase tracking-wider ${
+                         avatarUrl.includes('unsplash.com') ? 'bg-cyan-500 text-nexus-bg font-black shadow-nexus-glow' : 'text-nexus-text-sec hover:text-nexus-text'
+                       }`}
+                     >
+                       💎 PRESETS
                      </button>
                    </div>
+
+                   {/* TAB CONTENT: 1. UPLOAD CUSTOM */}
+                   {!avatarUrl.includes('unsplash.com') && !avatarUrl.includes('api.dicebear.com') && (
+                     <div 
+                       onDragOver={(e) => {
+                         e.preventDefault();
+                         setIsDragActive(true);
+                       }}
+                       onDragLeave={() => setIsDragActive(false)}
+                       onDrop={async (e) => {
+                         e.preventDefault();
+                         setIsDragActive(false);
+                         const file = e.dataTransfer.files?.[0];
+                         if (file && file.type?.startsWith('image/')) {
+                           try {
+                             setUploading(true);
+                             setError(null);
+                             const res = await uploadToCloudinary(file, 'avatars');
+                             if (res && res.secure_url) {
+                               setAvatarUrl(res.secure_url);
+                             } else {
+                               throw new Error('No se recibió la dirección web de la imagen subida.');
+                             }
+                           } catch (err: any) {
+                             console.error(err);
+                             setError(err.message || 'Error al subir la imagen.');
+                           } finally {
+                             setUploading(false);
+                           }
+                         }
+                       }}
+                       onClick={() => {
+                         if (!uploading) fileInputRef.current?.click();
+                       }}
+                       className={`relative w-full h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 text-center cursor-pointer overflow-hidden ${
+                         isDragActive 
+                           ? 'border-cyan-400 bg-cyan-950/20 shadow-nexus-glow' 
+                           : 'border-nexus-border hover:border-cyan-400/50 bg-nexus-surface hover:bg-nexus-card'
+                       }`}
+                     >
+                       {uploading ? (
+                         <div className="flex flex-col items-center gap-2">
+                           <Loader2 className="w-7 h-7 text-cyan-400 animate-spin" />
+                           <span className="text-xs uppercase font-black tracking-widest text-cyan-400 animate-pulse">Subiendo a Cloudinary...</span>
+                         </div>
+                       ) : avatarUrl ? (
+                         <div className="absolute inset-0 flex items-center justify-center group">
+                           <img src={avatarUrl} className="w-full h-full object-cover opacity-80" alt="Uploaded Profile" />
+                           <div className="absolute inset-0 bg-nexus-surface opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-xs font-black transition-opacity text-nexus-text gap-1 uppercase">
+                             <Upload className="w-4 h-4 text-cyan-400" /> Cambiar Imagen
+                           </div>
+                         </div>
+                       ) : (
+                         <div className="flex flex-col items-center">
+                           <div className="p-2.5 bg-cyan-500/10 rounded-xl text-cyan-400 mb-2">
+                             <Camera className="w-5 h-5" />
+                           </div>
+                           <p className="text-xs font-bold text-gray-200">{t("main.dropImage") || "Suelta tu imagen o Haz Clic para subir"}</p>
+                           <p className="text-[9px] text-nexus-text-sec uppercase tracking-widest mt-1">PNG, JPG, WEBP (SE GUARDA EN CLOUDINARY)</p>
+                         </div>
+                       )}
+                       <input 
+                         type="file" 
+                         ref={fileInputRef} 
+                         onChange={handleFileUpload} 
+                         className="hidden" 
+                         accept="image/*" 
+                       />
+                     </div>
+                   )}
+
+                   {/* TAB CONTENT: 2. AI AVATAR ENGINE */}
+                   {avatarUrl.includes('api.dicebear.com') && (
+                     <div className="space-y-4 bg-nexus-surface/80 p-4 rounded-2xl border border-nexus-border">
+                       <div className="flex items-center gap-3">
+                         <div className="w-12 h-12 bg-nexus-card border border-nexus-border rounded-xl shrink-0 overflow-hidden flex items-center justify-center p-1.5 shadow-inner">
+                           <img 
+                             src={avatarUrl} 
+                             className="w-full h-full object-contain" 
+                             alt="AI Generator Output" 
+                           />
+                         </div>
+                         <div>
+                           <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest font-mono">{t("main.generatingAI") || "Generando por IA"}</span>
+                           <p className="text-xs font-bold text-nexus-text">Generación Dinámica Directa</p>
+                         </div>
+                       </div>
+
+                       <div className="grid grid-cols-4 gap-1.5">
+                         {[
+                           { id: 'bottts', label: 'Robots' },
+                           { id: 'pixel-art', label: 'Pixeles' },
+                           { id: 'avataaars', label: 'Gente' },
+                           { id: 'micah', label: 'Abstract' }
+                         ].map((style) => (
+                           <button
+                             key={style.id}
+                             type="button"
+                             onClick={() => {
+                               setAiPresetStyle(style.id);
+                               const seed = aiPresetSeed || username || 'nexus';
+                               setAvatarUrl(`https://api.dicebear.com/7.x/${style.id}/svg?seed=${encodeURIComponent(seed)}`);
+                             }}
+                             className={`py-2 px-1 text-[9px] uppercase tracking-wider font-extrabold rounded-lg transition-all border ${
+                               aiPresetStyle === style.id 
+                                 ? 'bg-cyan-500/15 border-cyan-400 text-cyan-400' 
+                                 : 'bg-nexus-card border-transparent text-nexus-text-sec hover:text-nexus-text'
+                             }`}
+                           >
+                             {style.label}
+                           </button>
+                         ))}
+                       </div>
+
+                       <div className="flex gap-2">
+                         <div className="relative flex-1">
+                           <input
+                             type="text"
+                             value={aiPresetSeed}
+                             onChange={(e) => {
+                               const val = e.target.value;
+                               setAiPresetSeed(val);
+                               setAvatarUrl(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val || 'nexus')}`);
+                             }}
+                             placeholder="Semilla (ej. Juan, Matrix, Cyberpunk)"
+                             className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-3.5 py-2.5 text-nexus-text text-xs font-mono outline-none focus:border-cyan-400"
+                           />
+                         </div>
+                         <button
+                           type="button"
+                           onClick={() => {
+                             const val = 'nexus_' + Math.floor(Math.random() * 89999 + 10000);
+                             setAiPresetSeed(val);
+                             setAvatarUrl(`https://api.dicebear.com/7.x/${aiPresetStyle}/svg?seed=${encodeURIComponent(val)}`);
+                           }}
+                           className="p-2.5 bg-nexus-surface hover:bg-nexus-card-hover border border-nexus-border rounded-xl text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer"
+                           title="Randomizar semilla"
+                         >
+                           <Shuffle className="w-4 h-4" />
+                         </button>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* TAB CONTENT: 3. PREMIUM PRESETS */}
+                   {avatarUrl.includes('unsplash.com') && (
+                     <div className="space-y-2">
+                       <div className="grid grid-cols-6 gap-2 bg-nexus-card/80 p-3 rounded-2xl border border-nexus-border">
+                         {PROFILE_AVATAR_PRESETS.map((preset, index) => {
+                           const isSelected = avatarUrl === preset.url;
+                           return (
+                             <div 
+                               key={index} 
+                               onClick={() => setAvatarUrl(preset.url)}
+                               className={`relative cursor-pointer aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-cyan-400 scale-105 shadow-nexus-glow' : 'border-transparent hover:scale-105'}`}
+                               title={preset.name}
+                             >
+                               <img src={preset.url} className="w-full h-full object-cover" alt={preset.name} />
+                               {isSelected && (
+                                 <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
+                                   <Check className="w-4 h-4 text-cyan-400 font-extrabold stroke-[3]" />
+                                 </div>
+                               )}
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   )}
                  </div>
-               )}
-            </div>
-         </div>
-      </div>
 
-      {/* OFFLINE APPS */}
-      <div className="mt-6 sm:mt-8 glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem]">
-         <div className="flex items-center justify-between mb-6">
-            <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-              <CloudOff className="w-4 h-4" /> {t("profile.offlineApps") || "Aplicaciones Offline"}
-            </h3>
-            <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">
-              {offlineAppsList.length > 0 ? `${offlineAppsList.length} Apps Almacenadas` : t('profile.empty') || 'Vacío'}
-            </span>
-         </div>
-         
-         {offlineAppsList.length > 0 ? (
-           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-             {offlineAppsList.map(app => (
-               <div key={app.id} className="bg-nexus-bg border border-nexus-border p-4 rounded-[1.5rem] flex flex-col gap-3 group relative overflow-hidden">
-                  <div className="flex items-center gap-3">
-                    <img src={app.icon} alt={app.name} className="w-12 h-12 rounded-[14px] object-cover bg-nexus-surface" />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-[13px] text-nexus-text truncate group-hover:text-cyan-400 transition-colors">
-                        <a href={app.downloadUrl || '#'} target="_blank" rel="noopener noreferrer">{app.name}</a>
-                      </h4>
-                      <p className="text-[10px] text-cyan-500/80 uppercase tracking-widest font-black mt-0.5">
-                        {app.category}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-1 px-1">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">{t("profile.size") || "Tamaño"}</span>
-                      <span className="text-[11px] font-black">{app.sizeBytes ? (app.sizeBytes / 1024 / 1024).toFixed(2) : '0.00'} MB</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[9px] text-nexus-text-sec uppercase tracking-widest font-bold">{t("profile.date") || "Fecha"}</span>
-                      <span className="text-[11px] font-black">{new Date(app.downloadedAt).toLocaleDateString()}</span>
-                    </div>
-                    <button 
-                      onClick={() => removeOffline(app.id)}
-                      className="p-2 border border-red-500/20 text-red-400 rounded-xl bg-red-500/5 hover:bg-red-500/10 transition-colors"
-                      title="Eliminar descarga offline"
+                 <div className="space-y-4">
+                   <div>
+                     <div className="flex justify-between items-center mb-1.5">
+                       <label className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest font-mono">Nombre de Usuario (Único)</label>
+                       {username.length >= 3 ? (
+                         <span className="text-[9px] uppercase font-mono text-green-400 font-extrabold">✓ VÁLIDO</span>
+                       ) : (
+                         <span className="text-[9px] uppercase font-mono text-yellow-500 font-extrabold">MIN 3 CARACT.</span>
+                       )}
+                     </div>
+                     <input type="text" value={username} onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))} className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-4 py-3 text-nexus-text outline-none focus:border-cyan-500 focus:bg-nexus-surface transition-all font-semibold font-mono text-[13px]" placeholder="usuario_123" />
+                     <span className="text-[8px] text-nexus-text-sec font-bold block mt-1.5 uppercase tracking-wider">Solo se permiten letras, números y guiones bajos (_).</span>
+                   </div>
+                   
+                   <div>
+                     <label className="block text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 font-mono">{t("main.displayName") || "Nombre Visible"}</label>
+                     <input type="text" value={realName} onChange={e => setRealName(e.target.value)} className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-4 py-3 text-nexus-text outline-none focus:border-cyan-500 focus:bg-nexus-surface transition-all font-semibold text-[13px]" placeholder="Tu Nombre Real" />
+                   </div>
+
+                   <div>
+                     <div className="flex justify-between text-[10px] font-black text-nexus-text-sec uppercase tracking-widest mb-1.5 font-mono">
+                       <span>{t("main.shortBio") || "Biografía corta o Estado"}</span>
+                       <span className="text-nexus-text-sec font-bold">{bio.length}/100</span>
+                     </div>
+                     <textarea value={bio} onChange={e => setBio(e.target.value)} maxLength={100} rows={2} className="w-full bg-nexus-surface border border-nexus-border rounded-xl px-4 py-3 text-nexus-text outline-none focus:border-cyan-500 focus:bg-nexus-surface transition-all font-semibold text-[13px] resize-none" placeholder="Amo los juegos Indie..." />
+                   </div>
+                   
+                   <div className="flex items-center gap-3 pt-4 border-t border-nexus-border">
+                     <button 
+                       onClick={handleSaveProfile} 
+                       disabled={saving || uploading || username.length < 3} 
+                       className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 text-nexus-bg font-black uppercase tracking-widest rounded-xl text-[11px] transition-all duration-300 shadow-nexus-glow flex items-center justify-center gap-2 cursor-pointer"
+                      type="button" >
+                       {saving ? (
+                         <>
+                           <Loader2 className="w-4 h-4 animate-spin stroke-[3]" /> Guardando...
+                         </>
+                       ) : 'Guardar Cambios'}
+                     </button>
+                     <button 
+                       onClick={() => {
+                         setIsEditing(false); setError(null);
+                         setUsername(userProfile?.username || ''); setRealName(userProfile?.real_name || '');
+                         setAvatarUrl(userProfile?.avatar_url || ''); setBio(metadata.bio || '');
+                       }} 
+                       disabled={saving || uploading} 
+                      className="px-6 py-2.5 bg-nexus-surface border border-nexus-border text-nexus-text font-bold rounded-xl hover:bg-nexus-surface-hover transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      Cancelar
+                     </button>
                   </div>
-               </div>
-             ))}
-           </div>
-         ) : (
-           <div className="py-8 flex flex-col items-center justify-center text-center">
-              <CloudOff className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
-              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">{t("profile.noOfflineApps") || "No tienes aplicaciones guardadas para jugar sin Internet."}</p>
-           </div>
-         )}
+                </div>
+              </div>
+             )}
+             
+          </div>
+        </div>
       </div>
 
-      {/* FOLLOWED COMMUNITIES */}
-      <div className="mt-6 sm:mt-8 glass-panel p-6 sm:p-8 border-nexus-border rounded-[2rem]">
-         <div className="flex items-center justify-between mb-6">
-            <h3 className="font-black text-nexus-text uppercase tracking-widest text-xs flex items-center gap-2 opacity-80">
-              <Users className="w-4 h-4" /> {t('community.followed') || "Comunidades Seguidas"}
-            </h3>
-            <span className="text-xs font-bold text-nexus-text-sec uppercase tracking-widest">
-              {followedCommunities.length > 0 ? `${followedCommunities.length} Comunidades` : 'Ninguna'}
-            </span>
-         </div>
-         
-         {followedCommunities.length > 0 ? (
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-             {followedCommunities.map(comm => (
-               <div key={comm.id} className="bg-nexus-bg border border-nexus-border p-4 rounded-[1.5rem] flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black border border-cyan-500/50 rounded-[12px] shrink-0 overflow-hidden relative">
-                     {comm.image_url ? (
-                       <img src={comm.image_url} className="w-full h-full object-cover" alt="" />
-                     ) : (
-                       <div className="w-full h-full flex items-center justify-center text-cyan-400 font-black text-xl uppercase">{comm.name?.[0]}</div>
-                     )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-black text-[14px] text-nexus-text truncate">{comm.name}</h4>
-                    <p className="text-[10px] text-nexus-text-sec uppercase tracking-widest font-bold mt-0.5 truncate">{t(`cat.${comm.category}`) || comm.category}</p>
-                  </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Nivel y XP */}
+        <div className="glass-panel p-6 rounded-3xl border-nexus-border bg-gradient-to-br from-yellow-900/10 to-transparent">
+           <h3 className="font-black mb-4 flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-500" /> Progreso de Nivel</h3>
+           <div className="flex items-center gap-4 mb-3">
+              <div className="text-3xl font-black text-yellow-500">{level}</div>
+               <div className="flex-1">
+                 <div className="flex justify-between text-[10px] font-bold text-nexus-text-sec mb-1 uppercase tracking-widest">
+                    <span>{t("main.currentXP") || "XP Actual"}</span>
+                    <span>Nivel {level + 1}</span>
+                 </div>
+                 <div className="w-full h-3 bg-nexus-surface rounded-full overflow-hidden border border-nexus-border">
+                    <div className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400" style={{ width: `${progressPercent}%` }} />
+                 </div>
+                 <div className="text-[10px] text-yellow-500/70 text-right mt-1 font-mono">
+                    {currentLevelXp} / 1000 XP
+                 </div>
                </div>
-             ))}
            </div>
-         ) : (
-           <div className="py-8 flex flex-col items-center justify-center text-center">
-              <Compass className="w-12 h-12 text-nexus-text-sec opacity-50 mb-3" />
-              <p className="text-sm font-medium text-nexus-text-sec uppercase tracking-widest">{t('community.none') || "No sigues ninguna comunidad en Nexus Hub todavía."}</p>
-           </div>
-         )}
-      </div>
-    </div>
-  );
-}
+           <p className="text-xs text-nexus-text-sec font-medium leading-relaxed">Completa <span className="text-cyan-400 cursor-pointer hover:underline">{t("main.communityMissions") || "Misiones de Comunidad"}</span> descargando apps y comentando en foros para ganar más XP.</p>
+        </div>
 
-function StatCard({ icon, label, value, bg }: any) {
-  return (
-    <div className="p-5 sm:p-6 bg-nexus-bg border border-nexus-border rounded-[1.5rem] flex flex-col items-center sm:items-start text-center sm:text-left space-y-4 shadow-sm hover:scale-105 transition-transform">
-       <div className={`p-4 rounded-2xl border ${bg}`}>
-          {icon}
-       </div>
-       <div>
-         <p className="text-3xl font-black text-nexus-text truncate tracking-tighter">{value !== undefined && value !== null ? value.toLocaleString() : '0'}</p>
-         <p className="text-[10px] sm:text-xs text-nexus-text-sec uppercase tracking-widest font-black mt-1 line-clamp-2 leading-tight">{label}</p>
-       </div>
+        {/* Insignias / Badges */}
+        <div className="glass-panel p-6 rounded-3xl border-nexus-border col-span-1 md:col-span-2 bg-nexus-card">
+           <h3 className="font-black mb-4 flex items-center gap-2"><Star className="w-5 h-5 text-cyan-400" /> Mis Insignias</h3>
+           <div className="flex flex-wrap gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-900/60 to-blue-900/60 border border-cyan-500/30 flex flex-col items-center justify-center relative group cursor-pointer hover:scale-105 transition-transform shadow-lg cursor-help text-center p-1" title="Pionero: Te uniste en los primeros meses.">
+                 <Compass className="w-6 h-6 text-cyan-400 mb-1 drop-shadow-md" />
+                 <span className="text-[8px] font-black uppercase text-cyan-200">Pionero</span>
+              </div>
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-900/60 to-pink-900/60 border border-purple-500/30 flex flex-col items-center justify-center relative group cursor-pointer hover:scale-105 transition-transform shadow-lg cursor-help text-center p-1" title="Verificado: Vinculaste cuenta válida.">
+                 <ShieldCheck className="w-6 h-6 text-purple-400 mb-1 drop-shadow-md" />
+                 <span className="text-[8px] font-black uppercase text-purple-200">Verificado</span>
+              </div>
+              <div className="w-16 h-16 rounded-2xl bg-nexus-card border border-nexus-border border-dashed flex flex-col items-center justify-center opacity-50 grayscale hover:grayscale-0 transition-all cursor-not-allowed">
+                 <Gamepad2 className="w-6 h-6 text-nexus-text-sec mb-1" />
+                 <span className="text-[8px] font-bold uppercase text-nexus-text-sec">?</span>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Sección de Desarrollador */}
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border-cyan-500/20 hover:border-cyan-500/40 transition-all bg-gradient-to-br from-black to-cyan-900/20 shadow-xl group">
+           <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+            <Layers className={`w-6 h-6 ${isDeveloper ? 'text-cyan-400' : 'text-nexus-text-sec'}`} /> 
+            {isDeveloper ? 'Espacio Creador' : 'Conviértete en Dev'}
+          </h3>
+           <p className="text-sm text-nexus-text mb-6 font-medium leading-relaxed max-w-xs">
+            {isDeveloper 
+              ? 'Abre tu panel para publicar nuevas obras, gestionar colecciones y revisar métricas.' 
+              : 'Publica tus propias apps, construye tu comunidad y gana insignias únicas.'}
+          </p>
+           <button 
+             onClick={() => onDeveloperAction?.(isDeveloper ? 'open' : 'activate')}
+             className={`px-6 py-3 rounded-xl text-sm font-black transition-all shadow-lg active:scale-95 flex items-center gap-2 ${isDeveloper ? 'bg-cyan-500 text-nexus-bg hover:bg-cyan-400 shadow-cyan-500/20' : 'bg-nexus-card-hover hover:bg-nexus-card text-nexus-text'}`}
+           >
+             {isDeveloper ? 'Ir a My Studio' : 'Activar Modo Creador'} <ArrowRight className="w-4 h-4" />
+           </button>
+        </div>
+
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border-nexus-border hover:border-nexus-border transition-colors bg-nexus-card">
+           <h3 className="text-xl font-black mb-2 flex items-center gap-2"><Settings className="w-6 h-6 text-nexus-text-sec" /> Configuración</h3>
+           <p className="text-sm text-nexus-text-sec mb-6 font-medium leading-relaxed max-w-xs">Ajusta preferencias de privacidad, seguridad de la cuenta y notificaciones.</p>
+           <button className="px-6 py-3 bg-nexus-card hover:bg-nexus-card-hover border border-nexus-border text-nexus-text rounded-xl text-sm font-bold transition-colors">{t("main.openSettings") || "Abrir Ajustes"}</button>
+        </div>
+      </div>
     </div>
   );
 }

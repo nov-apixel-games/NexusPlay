@@ -284,6 +284,15 @@ export function AppDetailView({
                       onClick={() => {
                          incrementDownloads();
                          localStorage.setItem(`nexus_app_version_${app.id}`, app.version || '1.0');
+                         try {
+                           const existingIds = JSON.parse(localStorage.getItem('nexus_downloaded_ids') || '[]');
+                           if (!existingIds.includes(app.id)) {
+                             existingIds.push(app.id);
+                             localStorage.setItem('nexus_downloaded_ids', JSON.stringify(existingIds));
+                           }
+                         } catch (e) {
+                           console.error('Error saving download to history', e);
+                         }
                       }}
                       className="group relative flex-1 sm:flex-initial"
                     >

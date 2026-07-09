@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { BrainCircuit, Send, Trash2, ArrowLeft, Star, Download, Cpu, Gamepad2, Battery, MessageSquarePlus, Copy, Share2, RotateCcw, Check, Menu, X, MessageSquare, Pin, Search, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
@@ -46,6 +46,29 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const filteredConversations = useMemo(() => {
+    const term = debouncedSearchQuery.trim().toLowerCase();
+    const sorted = [...conversations].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || b.createdAt - a.createdAt);
+    if (!term) return sorted;
+    const len = sorted.length;
+    const result = [];
+    for (let i = 0; i < len; i++) {
+      const conv = sorted[i];
+      if (conv.title.toLowerCase().includes(term)) {
+        result.push(conv);
+      }
+    }
+    return result;
+  }, [conversations, debouncedSearchQuery]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   
@@ -301,10 +324,7 @@ export default function NexusAIChat({ onBack, apps, onAppClick, userProfile }: N
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-           {conversations
-             .filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
-             .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || b.createdAt - a.createdAt)
-             .map(conv => (
+           {filteredConversations.map(conv => (
                <div key={conv.id} className={`group relative flex items-center gap-2 p-2.5 rounded-xl cursor-pointer transition-colors ${currentId === conv.id ? 'bg-blue-500/10 text-blue-500' : 'text-nexus-text hover:bg-nexus-card-hover'}`} onClick={() => { setCurrentId(conv.id); setIsSidebarOpen(false); }}>
                   <MessageSquare className={`w-4 h-4 shrink-0 ${currentId === conv.id ? 'text-blue-500' : 'text-nexus-text-sec'}`} />
                   
