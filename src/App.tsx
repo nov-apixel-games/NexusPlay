@@ -20,6 +20,7 @@ import Footer from './components/Footer';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { UpdateChecker } from './components/UpdateChecker';
 
 const ContactView = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.ContactView })));
 const LegalPage = lazy(() => import('./components/views/LegalViews').then(m => ({ default: m.LegalPage })));
@@ -1165,6 +1166,7 @@ export default function App() {
     <div className="min-h-screen max-w-[100vw] overflow-x-hidden bg-nexus-bg text-nexus-text font-sans selection:bg-nexus-cyan/30 flex flex-col relative w-full">
       <GoogleAdSense />
       <OfflineIndicator />
+      <UpdateChecker />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       {showOnboarding && onboardingSession && (
         <Suspense fallback={null}>
