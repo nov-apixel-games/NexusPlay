@@ -85,108 +85,108 @@ define(['./workbox-5d155c7a'], (function (workbox) { 'use strict';
     "revision": "4efa1483b944bd1bfd97d7dcf54a0a4d"
   }, {
     "url": "index.html",
-    "revision": "dda48e6cb32a75ace0ac9807c99684d9"
+    "revision": "3f4ec3d3813c9b5080003d8b607c8f3b"
   }, {
     "url": "assets/workbox-window.prod.es5-BBnX5xw4.js",
     "revision": null
   }, {
-    "url": "assets/web-CGaP4jEo.js",
+    "url": "assets/web-BpeTXd5G.js",
     "revision": null
   }, {
-    "url": "assets/supabase-DQh0Fvtg.js",
+    "url": "assets/supabase-BBW35TZ1.js",
     "revision": null
   }, {
-    "url": "assets/recharts-BkbAYVge.js",
+    "url": "assets/recharts-rE9rgHz-.js",
     "revision": null
   }, {
-    "url": "assets/react-vendor-Cg_rRddc.js",
+    "url": "assets/react-vendor-CgOX0qZ8.js",
     "revision": null
   }, {
     "url": "assets/phaser--MIaX3ER.js",
     "revision": null
   }, {
-    "url": "assets/monaco-BfLCcPUg.js",
+    "url": "assets/monaco-QhoggJMa.js",
     "revision": null
   }, {
-    "url": "assets/lucide-tgxckoTE.js",
+    "url": "assets/lucide-CQeYRNPs.js",
     "revision": null
   }, {
-    "url": "assets/index-DuF8zkEI.js",
+    "url": "assets/index-CmEpoVn1.js",
     "revision": null
   }, {
-    "url": "assets/index-BQ1VF3eH.js",
+    "url": "assets/index-CMlJzrel.js",
     "revision": null
   }, {
-    "url": "assets/index-BKsVf6H8.css",
+    "url": "assets/index-BKM51kyT.css",
     "revision": null
   }, {
-    "url": "assets/SmartTools-CJ3rIhGV.js",
+    "url": "assets/SmartTools-BtouTSuq.js",
     "revision": null
   }, {
-    "url": "assets/SmartHubView-QIysCAbK.js",
+    "url": "assets/SmartHubView-olZmDFoi.js",
     "revision": null
   }, {
-    "url": "assets/SettingsView-BYdBxPzs.js",
+    "url": "assets/SettingsView-B8BlifT1.js",
     "revision": null
   }, {
-    "url": "assets/PublishingWizard-LdaQKKhM.js",
+    "url": "assets/PublishingWizard-CmUl_p5p.js",
     "revision": null
   }, {
-    "url": "assets/ProfileView-W_f4RJ3s.js",
+    "url": "assets/ProfileView-yz3MfbZO.js",
     "revision": null
   }, {
-    "url": "assets/OnboardingView-DxKBjGTH.js",
+    "url": "assets/OnboardingView-DN_sKbZb.js",
     "revision": null
   }, {
-    "url": "assets/NexusStudio-C5ravk8G.js",
+    "url": "assets/NexusStudio-CaZS-61Z.js",
     "revision": null
   }, {
-    "url": "assets/NexusHub-CBm_aKri.js",
+    "url": "assets/NexusHub-Cgm6xBSu.js",
     "revision": null
   }, {
-    "url": "assets/MainViews-DVf1u0R6.js",
+    "url": "assets/MainViews-DBzXHaol.js",
     "revision": null
   }, {
-    "url": "assets/LegalViews-yarrCobC.js",
+    "url": "assets/LegalViews-BKEuNgrU.js",
     "revision": null
   }, {
-    "url": "assets/GamesHubView-CL33pJdz.js",
+    "url": "assets/GamesHubView-tVqFi7Vf.js",
     "revision": null
   }, {
-    "url": "assets/GameStudioEditor-8DH5j13E.js",
+    "url": "assets/GameStudioEditor-BNKo8lgg.js",
     "revision": null
   }, {
-    "url": "assets/DeveloperPanel-DWwDYPfx.js",
+    "url": "assets/DeveloperPanel-D1Atl5oY.js",
     "revision": null
   }, {
-    "url": "assets/DeveloperAnalytics-Co2wkJOc.js",
+    "url": "assets/DeveloperAnalytics-COaxO2Er.js",
     "revision": null
   }, {
-    "url": "assets/AuthModal-UbUVrJx0.js",
+    "url": "assets/AuthModal-D9o-MAtR.js",
     "revision": null
   }, {
-    "url": "assets/AppDetailView-BLSGGCZl.js",
+    "url": "assets/AppDetailView-BQYoxg5s.js",
     "revision": null
   }, {
-    "url": "assets/AdminViews2-BFpk6zLM.js",
+    "url": "assets/AdminViews2-D77Dwaec.js",
     "revision": null
   }, {
-    "url": "assets/AdminUsers-CM7DY0cZ.js",
+    "url": "assets/AdminUsers-ZCiaXvoj.js",
     "revision": null
   }, {
-    "url": "assets/AdminStatistics-hc4yHWQi.js",
+    "url": "assets/AdminStatistics-C7gEJmWR.js",
     "revision": null
   }, {
-    "url": "assets/AdminSecurity-DBiDoqwY.js",
+    "url": "assets/AdminSecurity-CfSfm7Ud.js",
     "revision": null
   }, {
-    "url": "assets/AdminNotifications-MHoMoCkv.js",
+    "url": "assets/AdminNotifications-D03nDPZf.js",
     "revision": null
   }, {
-    "url": "assets/AdminDashboard-CfMdjqDS.js",
+    "url": "assets/AdminDashboard-D-_Jy8P7.js",
     "revision": null
   }, {
-    "url": "assets/AdminApps-Bt15VopO.js",
+    "url": "assets/AdminApps-DXDEyRsK.js",
     "revision": null
   }, {
     "url": "manifest.webmanifest",
